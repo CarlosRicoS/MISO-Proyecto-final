@@ -1,0 +1,43 @@
+name: Setup S3 TFState Bucket
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        type: choice
+        required: true
+        description: 'Select the target environment'
+        options:
+          - develop
+      bucket-name:
+        description: 'Name of the S3 bucket to create for Terraform state'
+        required: true
+jobs:
+  setup-s3-bucket:
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        id: aws-credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: us-east-1
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      - name: Create S3 bucket for Terraform state
+        id: create-bucket
+        shell: bash
+        env:
+          BUCKET_NAME: ${{ inputs.bucket-name }}
+          REGION: us-east-1
+        run: |
+          # Check if the bucket already exists
+          if aws s3api head-bucket --bucket "$BUCKET_NAME" 2>/dev/null; then
+            echo "Bucket $BUCKET_NAME already exists."
+          else
+            # Create the S3 bucket
+            aws s3api create-bucket --bucket $BUCKET_NAME --region $REGION --debug
+          fi

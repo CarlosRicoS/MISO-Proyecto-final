@@ -1,0 +1,96 @@
+name: Terraform apply
+author: ahenao
+description: Terraform Apply
+inputs:
+  aws-region:
+    description: 'AWS region where the ECR repository is located'
+    required: true
+    default: 'us-east-1'
+  aws-access-key-id:
+    description: 'AWS Access Key ID'
+    required: true
+  aws-secret-access-key:
+    description: 'AWS Secret Access Key'
+    required: true
+  aws-session-token:
+    description: 'AWS Session Token (if using temporary credentials)'
+    required: false
+    default: ''
+  terraform_stack:
+    description: 'Terraform stack to be deployed'
+    required: true
+  terraform_version:
+    description: 'Terraform version'
+    required: false
+    default: 1.13.1
+  terraform_environment:
+    description: 'Terraform environment to be used'
+    required: true
+  terraform_env_vars:
+    description: 'Additional environment variables in JSON format (e.g., {"TF_VAR_db_username": "admin", "TF_VAR_db_password": "secret"})'
+    required: false
+    default: '{}'
+outputs:
+  terraform_outputs:
+    description: 'All terraform outputs in JSON format'
+    value: ${{ steps.get-terraform-outputs.outputs.terraform_outputs }}
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Configure AWS credentials
+      id: aws-credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-region: ${{ inputs.aws-region }}
+        aws-access-key-id: ${{ inputs.aws-access-key-id }}
+        aws-secret-access-key: ${{ inputs.aws-secret-access-key }}
+        aws-session-token: ${{ inputs.aws-session-token }}
+
+    - name: Set additional environment variables
+      id: set-env-vars
+      shell: bash
+      run: |
+        echo "Setting additional environment variables..."
+        echo '${{ inputs.terraform_env_vars }}' | jq -r 'to_entries[] | "\(.key)=\(.value)"' >> $GITHUB_ENV
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: ${{ inputs.terraform_version }}
+
+    - name: Terraform Init
+      id: terraform-init
+      shell: bash
+      run: terraform -chdir=$(pwd)/terraform/stacks/${{ inputs.terraform_stack }} init -backend-config=$(pwd)/terraform/environments/${{ inputs.terraform_environment }}/${{ inputs.terraform_stack }}/backend.tfvars
+
+    - name: Terraform Validate
+      id: terraform-validate
+      shell: bash
+      run: terraform -chdir=$(pwd)/terraform/stacks/${{ inputs.terraform_stack }} validate
+
+    - name: Terraform Plan
+      id: terraform-plan
+      shell: bash
+      run: terraform -chdir=$(pwd)/terraform/stacks/${{ inputs.terraform_stack }} plan -var-file=$(pwd)/terraform/environments/${{ inputs.terraform_environment }}/${{ inputs.terraform_stack }}/terraform.tfvars -out=.tfplan
+
+    - name: Terraform Apply
+      id: terraform-apply
+      shell: bash
+      run: terraform -chdir=$(pwd)/terraform/stacks/${{ inputs.terraform_stack }} apply .tfplan
+
+    - name: Get Terraform Outputs
+      id: get-terraform-outputs
+      shell: bash
+      run: |
+        echo "Getting terraform outputs..."
+        cd terraform/stacks/${{ inputs.terraform_stack }}
+        
+        # Get all outputs in JSON format
+        TERRAFORM_OUTPUTS=$(terraform output -json 2>/dev/null || echo '{}')
+        
+        # Escape the JSON for GitHub Actions output
+        ESCAPED_OUTPUTS=$(echo "$TERRAFORM_OUTPUTS" | jq -c .)
+        echo "terraform_outputs=$ESCAPED_OUTPUTS" >> $GITHUB_OUTPUT
