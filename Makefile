@@ -8,11 +8,18 @@
 #   make tf-apply STACK=ecs_cluster
 #   make tf-destroy STACK=ecs_cluster ENV=develop
 #   make tf-all STACK=ecs_cluster ENV=develop
+#
+# Docker/ECR Usage:
+#   make ecr-login
+#   make docker-build SERVICE=hello_world
+#   make docker-push SERVICE=hello_world
+#   make docker-deploy SERVICE=hello_world
 # ============================================
 
 # Variables (override from command line)
-STACK ?= ecs_cluster
-ENV   ?= develop
+STACK   ?= ecs_cluster
+ENV     ?= develop
+SERVICE ?= hello_world
 
 # Derived paths
 ROOT_DIR       := $(shell pwd)
@@ -22,7 +29,15 @@ BACKEND_TFVARS := $(ENVS_DIR)/backend.tfvars
 TFVARS         := $(ENVS_DIR)/terraform.tfvars
 CHDIR          := -chdir=$(STACKS_DIR)
 
-# ---- Targets ----
+# AWS/ECR variables
+AWS_REGION     ?= us-east-1
+AWS_ACCOUNT_ID := $(shell aws sts get-caller-identity --query Account --output text)
+ECR_REPO       ?= api_$(SERVICE)
+ECR_URL        := $(AWS_ACCOUNT_ID).dkr.ecr.$(AWS_REGION).amazonaws.com/$(ECR_REPO)
+IMAGE_TAG      ?= latest
+SERVICE_DIR    := $(ROOT_DIR)/services/$(SERVICE)
+
+# ---- Terraform Targets ----
 
 .PHONY: tf-init tf-validate tf-plan tf-apply tf-destroy tf-all
 
@@ -48,4 +63,24 @@ tf-destroy:
 
 ## Run init, validate, plan, and apply in sequence
 tf-all: tf-init tf-validate tf-plan tf-apply
+
+# ---- Docker/ECR Targets ----
+
+.PHONY: ecr-login docker-build docker-push docker-deploy
+
+## Login to ECR
+ecr-login:
+	aws ecr get-login-password --region $(AWS_REGION) | docker login --username AWS --password-stdin $(AWS_ACCOUNT_ID).dkr.ecr.$(AWS_REGION).amazonaws.com
+
+## Build Docker image
+docker-build:
+	docker build -t $(ECR_REPO):$(IMAGE_TAG) $(SERVICE_DIR)
+
+## Tag and push Docker image to ECR
+docker-push:
+	docker tag $(ECR_REPO):$(IMAGE_TAG) $(ECR_URL):$(IMAGE_TAG)
+	docker push $(ECR_URL):$(IMAGE_TAG)
+
+## Build, tag, and push in one step
+docker-deploy: ecr-login docker-build docker-push
 
