@@ -8,6 +8,6 @@ async def root():
     return {"message": "Hello World"}
 
 
-@app.get("/hello/{name}")
+@app.get("/api/health")
 async def say_hello(name: str):
-    return {"message": f"Hello {name}"}
+    return {"message": "OK"}
