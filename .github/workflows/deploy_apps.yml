@@ -18,6 +18,9 @@ jobs:
           - name: hello_world
             language: python
             context-path: services/hello_world
+          - name: other_service
+            ecr-repo: api_other_service
+            context-path: services/other_service
     name: Test ${{ matrix.name }}
     steps:
       - name: Checkout repository
@@ -71,6 +74,9 @@ jobs:
           - name: hello_world
             ecr-repo: api_hello_world
             context-path: services/hello_world
+          - name: other_service
+            ecr-repo: api_other_service
+            context-path: services/other_service
     name: Build and Push ${{ matrix.name }}
     steps:
       - name: Checkout repository
