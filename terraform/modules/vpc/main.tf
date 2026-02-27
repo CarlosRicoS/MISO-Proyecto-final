@@ -106,6 +106,10 @@ resource "aws_subnet" "private" {
   lifecycle {
     create_before_destroy = true
   }
+
+  tags = {
+    is_public = false
+  }
 }
 
 resource "aws_route_table" "private" {

@@ -1,7 +1,5 @@
-module "ecr_repository_hello_world" {
-  source           = "../../modules/ecr"
-  keep_tags_number = var.keep_tags_number
-  repository_name  = var.repository_name_hello_world_app
+data "aws_ssm_parameter" "ecr_repository_url" {
+  name = "/${var.project_name}/ecr/${var.ecr_repository_name}/repository_url"
 }
 
 module "ecsTaskExecutionRole" {
@@ -33,8 +31,8 @@ module "ecs_service_hello_world" {
   desired_count_tasks     = var.desired_count_tasks
   vpc_cidr                = var.vpc_cidr
   container_port          = var.container_port
-  ec2_image_uri           = "${module.ecr_repository_hello_world.repository_url}:latest"
+  ec2_image_uri           = "${data.aws_ssm_parameter.ecr_repository_url.value}:latest"
   ecs_task_size           = var.ecs_task_size
   ecs-task-execution-role = module.ecsTaskExecutionRole.role_arn
-  ecr_repository_name     = var.repository_name_hello_world_app
+  ecr_repository_name     = var.ecr_repository_name
 }

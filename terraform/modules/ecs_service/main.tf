@@ -130,10 +130,10 @@ resource "aws_appautoscaling_policy" "service" {
 
 resource "aws_lb" "service" {
   name               = "${var.service_name}-ecs-alb"
-  internal           = false
+  internal           = true
   load_balancer_type = "application"
   security_groups    = [aws_security_group.security_group.id]
-  subnets            = data.aws_subnets.public.ids
+  subnets            = data.aws_subnets.private.ids
 
   enable_cross_zone_load_balancing = true
   idle_timeout                     = 60
@@ -152,4 +152,10 @@ resource "aws_lb_listener" "service" {
     type             = "forward"
     target_group_arn = aws_lb_target_group.service.arn
   }
+}
+
+resource "aws_ssm_parameter" "alb_listener_arn" {
+  name  = "/${var.project_name}/${var.service_name}/alb_listener_arn"
+  type  = "String"
+  value = aws_lb_listener.service.arn
 }

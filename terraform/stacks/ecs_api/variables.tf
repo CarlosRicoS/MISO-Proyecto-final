@@ -3,16 +3,9 @@ variable "aws_region" {
   default = "us-east-1"
 }
 
-variable "keep_tags_number" {
-  description = "The number of image tags to retain in the registry."
-  type        = number
-  default     = 5
-}
-
-variable "repository_name_hello_world_app" {
-  description = "The name of the Hello World APP repository in the Amazon ECR service."
+variable "ecr_repository_name" {
+  description = "Name of the ECR repository for this service."
   type        = string
-  nullable    = false
 }
 
 variable "project_name" {
