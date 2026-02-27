@@ -8,26 +8,6 @@ module "vpc" {
   private_subnets = var.private_subnets
 }
 
-module "ecsTaskExecutionRole" {
-  source = "../../modules/iam"
-
-  role_name        = "ecsTaskExecutionRole"
-  role_description = "Allows ECS tasks to call AWS services on your behalf."
-
-  service_principal = [
-    "ecs-tasks.amazonaws.com"
-  ]
-
-  managed_policy_arns = [
-    "arn:aws:iam::aws:policy/AmazonSSMFullAccess",
-    "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess",
-    "arn:aws:iam::aws:policy/AmazonS3FullAccess",
-    "arn:aws:iam::aws:policy/AmazonSQSFullAccess",
-    "arn:aws:iam::aws:policy/AmazonAPIGatewayInvokeFullAccess",
-    "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy",
-  ]
-}
-
 module "ecsInstanceRole" {
   source = "../../modules/iam"
 
