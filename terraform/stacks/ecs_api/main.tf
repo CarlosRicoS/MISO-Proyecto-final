@@ -1,74 +1,86 @@
+locals {
+  any_service_needs_db = anytrue([for s in var.services : s.create_database])
+  services_with_db     = { for k, v in var.services : k => v if v.create_database }
+}
+
+# --- ECR repository URL lookup per service ---
+
 data "aws_ssm_parameter" "ecr_repository_url" {
-  name = "/${var.project_name}/ecr/${var.ecr_repository_name}/repository_url"
+  for_each = var.services
+  name     = "/${var.project_name}/ecr/${each.value.ecr_repository_name}/repository_url"
 }
 
 # --- Optional per-service database on shared RDS instance ---
 
 data "aws_ssm_parameter" "db_host" {
-  count = var.create_database ? 1 : 0
+  count = local.any_service_needs_db ? 1 : 0
   name  = "/${var.project_name}/rds/host"
 }
 
 data "aws_ssm_parameter" "db_port" {
-  count = var.create_database ? 1 : 0
+  count = local.any_service_needs_db ? 1 : 0
   name  = "/${var.project_name}/rds/port"
 }
 
 data "aws_ssm_parameter" "db_username" {
-  count = var.create_database ? 1 : 0
+  count = local.any_service_needs_db ? 1 : 0
   name  = "/${var.project_name}/rds/username"
 }
 
 data "aws_ssm_parameter" "db_password" {
-  count           = var.create_database ? 1 : 0
+  count           = local.any_service_needs_db ? 1 : 0
   name            = "/${var.project_name}/rds/password"
   with_decryption = true
 }
 
 provider "postgresql" {
-  host     = var.create_database ? data.aws_ssm_parameter.db_host[0].value : "localhost"
-  port     = var.create_database ? tonumber(data.aws_ssm_parameter.db_port[0].value) : 5432
-  username = var.create_database ? data.aws_ssm_parameter.db_username[0].value : "unused"
-  password = var.create_database ? data.aws_ssm_parameter.db_password[0].value : "unused"
+  host     = local.any_service_needs_db ? data.aws_ssm_parameter.db_host[0].value : "localhost"
+  port     = local.any_service_needs_db ? tonumber(data.aws_ssm_parameter.db_port[0].value) : 5432
+  username = local.any_service_needs_db ? data.aws_ssm_parameter.db_username[0].value : "unused"
+  password = local.any_service_needs_db ? data.aws_ssm_parameter.db_password[0].value : "unused"
   sslmode  = "require"
 }
 
 resource "postgresql_database" "service" {
-  count = var.create_database ? 1 : 0
-  name  = replace(var.service_name, "-", "_")
+  for_each = local.services_with_db
+  name     = replace(each.key, "-", "_")
 }
 
 resource "aws_ssm_parameter" "service_db_host" {
-  count     = var.create_database ? 1 : 0
-  name      = "/${var.project_name}/${var.service_name}/db_host"
+  for_each  = local.services_with_db
+  name      = "/${var.project_name}/${each.key}/db_host"
   type      = "SecureString"
   value     = data.aws_ssm_parameter.db_host[0].value
   overwrite = true
 }
 
 resource "aws_ssm_parameter" "service_db_name" {
-  count     = var.create_database ? 1 : 0
-  name      = "/${var.project_name}/${var.service_name}/db_name"
+  for_each  = local.services_with_db
+  name      = "/${var.project_name}/${each.key}/db_name"
   type      = "String"
-  value     = postgresql_database.service[0].name
+  value     = postgresql_database.service[each.key].name
   overwrite = true
 }
 
 resource "aws_ssm_parameter" "service_db_username" {
-  count     = var.create_database ? 1 : 0
-  name      = "/${var.project_name}/${var.service_name}/db_username"
+  for_each  = local.services_with_db
+  name      = "/${var.project_name}/${each.key}/db_username"
   type      = "SecureString"
   value     = data.aws_ssm_parameter.db_username[0].value
   overwrite = true
+  depends_on = [aws_ssm_parameter.service_db_host]
 }
 
 resource "aws_ssm_parameter" "service_db_password" {
-  count     = var.create_database ? 1 : 0
-  name      = "/${var.project_name}/${var.service_name}/db_password"
+  for_each  = local.services_with_db
+  name      = "/${var.project_name}/${each.key}/db_password"
   type      = "SecureString"
   value     = data.aws_ssm_parameter.db_password[0].value
   overwrite = true
+  depends_on = [aws_ssm_parameter.service_db_username]
 }
+
+# --- Shared IAM role for all ECS tasks ---
 
 module "ecsTaskExecutionRole" {
   source = "../../modules/iam"
@@ -90,27 +102,31 @@ module "ecsTaskExecutionRole" {
   ]
 }
 
-module "ecs_service_hello_world" {
-  source = "../../modules/ecs_service"
+# --- ECS service per entry in the services map ---
+
+module "ecs_service" {
+  for_each = var.services
+  source   = "../../modules/ecs_service"
 
   project_name              = var.project_name
   aws_region                = var.aws_region
-  service_name              = var.service_name
-  desired_count_tasks       = var.desired_count_tasks
+  service_name              = each.key
+  desired_count_tasks       = each.value.desired_count_tasks
   vpc_cidr                  = var.vpc_cidr
-  container_port            = var.container_port
-  ec2_image_uri             = "${data.aws_ssm_parameter.ecr_repository_url.value}:latest"
-  ecs_task_size             = var.ecs_task_size
+  container_port            = each.value.container_port
+  ec2_image_uri             = "${data.aws_ssm_parameter.ecr_repository_url[each.key].value}:latest"
+  ecs_task_size             = each.value.ecs_task_size
   ecs-task-execution-role   = module.ecsTaskExecutionRole.role_arn
-  ecr_repository_name       = var.ecr_repository_name
-  container_name            = var.container_name
+  ecr_repository_name       = each.value.ecr_repository_name
+  container_name            = each.value.container_name
   capacity_provider_name    = var.capacity_provider_name
-  force_new_deployment      = var.force_new_deployment
-  placement_constraint_type = var.placement_constraint_type
-  runtime_platform          = var.runtime_platform
-  health_check              = var.health_check
-  deregistration_delay      = var.deregistration_delay
-  autoscaling               = var.autoscaling
-  alb_internal              = var.alb_internal
-  alb_idle_timeout          = var.alb_idle_timeout
+  force_new_deployment      = each.value.force_new_deployment
+  placement_constraint_type = each.value.placement_constraint_type
+  runtime_platform          = each.value.runtime_platform
+  health_check              = each.value.health_check
+  deregistration_delay      = each.value.deregistration_delay
+  autoscaling               = each.value.autoscaling
+  alb_internal              = each.value.alb_internal
+  alb_idle_timeout          = each.value.alb_idle_timeout
 }
+
