@@ -36,4 +36,5 @@ module "ecs_service_hello_world" {
   ec2_image_uri           = "${module.ecr_repository_hello_world.repository_url}:latest"
   ecs_task_size           = var.ecs_task_size
   ecs-task-execution-role = module.ecsTaskExecutionRole.role_arn
+  ecr_repository_name     = var.repository_name_hello_world_app
 }

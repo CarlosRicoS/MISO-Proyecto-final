@@ -76,3 +76,15 @@ variable "container_command" {
   type        = list(string)
   default     = null
 }
+
+variable "ecr_repository_name" {
+  description = "Name of the ECR repository"
+  type        = string
+}
+
+variable "ecr_image_tag" {
+  description = "Image tag to deploy"
+  type        = string
+  default     = "latest"
+}
+

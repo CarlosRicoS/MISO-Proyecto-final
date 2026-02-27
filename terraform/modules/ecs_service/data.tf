@@ -112,3 +112,7 @@ resource "aws_ssm_parameter" "db_password" {
   }
 }
 
+data "aws_ecr_image" "service" {
+  repository_name = var.ecr_repository_name
+  image_tag       = var.ecr_image_tag
+}
