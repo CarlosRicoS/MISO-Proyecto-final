@@ -84,3 +84,12 @@ docker-push:
 ## Build, tag, and push in one step
 docker-deploy: ecr-login docker-build docker-push
 
+# ---- Test Targets ----
+
+.PHONY: unittest-uv
+
+DIR ?= .
+
+## Run unit tests with uv and pytest
+unittest-uv:
+	cd $(DIR) && uv sync --group dev && uv run pytest tests/ -v
