@@ -1,0 +1,77 @@
+name: PR Validation
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - name: hello_world
+            language: python
+            context-path: services/hello_world
+    name: Test ${{ matrix.name }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run Python tests
+        if: matrix.language == 'python'
+        uses: ./.github/actions/test-python
+        with:
+          context-path: ${{ matrix.context-path }}
+
+  build_and_push:
+    runs-on: ubuntu-latest
+    environment: develop
+    needs: [test]
+    strategy:
+      matrix:
+        include:
+          - name: hello_world
+            ecr-repo: api_hello_world
+            context-path: services/hello_world
+    name: Build ${{ matrix.name }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build and Push Docker Image to ECR
+        uses: ./.github/actions/build_image
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          ecr-repo: ${{ matrix.ecr-repo }}
+          image-tag: ${{ github.sha }}
+          context-path: ${{ matrix.context-path }}
+
+  terraform_plan:
+    runs-on: ubuntu-latest
+    environment: develop
+    needs: [test, build_and_push]
+    strategy:
+      fail-fast: false
+      matrix:
+        stack:
+          - ecs_cluster
+          - container_registry
+          - database
+          - ecs_api
+          - api_gateway
+    name: Plan ${{ matrix.stack }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Terraform Plan
+        uses: ./.github/actions/terraform_plan
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          terraform_environment: develop
+          terraform_stack: ${{ matrix.stack }}

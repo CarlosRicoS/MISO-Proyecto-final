@@ -1,0 +1,80 @@
+name: Terraform Plan
+author: ay.henao
+description: Run Terraform init, validate, and plan without applying
+inputs:
+  aws-region:
+    description: 'AWS region'
+    required: true
+    default: 'us-east-1'
+  aws-access-key-id:
+    description: 'AWS Access Key ID'
+    required: true
+  aws-secret-access-key:
+    description: 'AWS Secret Access Key'
+    required: true
+  aws-session-token:
+    description: 'AWS Session Token (if using temporary credentials)'
+    required: false
+    default: ''
+  terraform_stack:
+    description: 'Terraform stack to plan'
+    required: true
+  terraform_version:
+    description: 'Terraform version'
+    required: false
+    default: 1.14.1
+  terraform_environment:
+    description: 'Terraform environment to be used'
+    required: true
+  terraform_env_vars:
+    description: 'Additional environment variables in JSON format'
+    required: false
+    default: '{}'
+outputs:
+  plan_output:
+    description: 'Terraform plan output'
+    value: ${{ steps.terraform-plan.outputs.stdout }}
+  plan_exitcode:
+    description: 'Terraform plan exit code'
+    value: ${{ steps.terraform-plan.outputs.exitcode }}
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Configure AWS credentials
+      id: aws-credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-region: ${{ inputs.aws-region }}
+        aws-access-key-id: ${{ inputs.aws-access-key-id }}
+        aws-secret-access-key: ${{ inputs.aws-secret-access-key }}
+        aws-session-token: ${{ inputs.aws-session-token }}
+
+    - name: Set additional environment variables
+      id: set-env-vars
+      shell: bash
+      run: |
+        echo "Setting additional environment variables..."
+        echo '${{ inputs.terraform_env_vars }}' | jq -r 'to_entries[] | "\(.key)=\(.value)"' >> $GITHUB_ENV
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: ${{ inputs.terraform_version }}
+
+    - name: Terraform Init
+      id: terraform-init
+      shell: bash
+      run: terraform -chdir=$(pwd)/terraform/stacks/${{ inputs.terraform_stack }} init -backend-config=$(pwd)/terraform/environments/${{ inputs.terraform_environment }}/${{ inputs.terraform_stack }}/backend.tfvars
+
+    - name: Terraform Validate
+      id: terraform-validate
+      shell: bash
+      run: terraform -chdir=$(pwd)/terraform/stacks/${{ inputs.terraform_stack }} validate
+
+    - name: Terraform Plan
+      id: terraform-plan
+      shell: bash
+      run: terraform -chdir=$(pwd)/terraform/stacks/${{ inputs.terraform_stack }} plan -var-file=$(pwd)/terraform/environments/${{ inputs.terraform_environment }}/${{ inputs.terraform_stack }}/terraform.tfvars -no-color
