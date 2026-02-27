@@ -9,5 +9,5 @@ async def root():
 
 
 @app.get("/api/health")
-async def say_hello(name: str):
+async def say_hello():
     return {"message": "OK"}
