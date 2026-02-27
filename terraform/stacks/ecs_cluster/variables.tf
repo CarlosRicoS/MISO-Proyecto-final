@@ -46,3 +46,26 @@ variable "asg_capacity" {
     "min_size"         = 3
   }
 }
+
+variable "managed_scaling" {
+  description = "Managed scaling configuration for the ECS capacity provider"
+  type = object({
+    instance_warmup_period    = optional(number, 120)
+    maximum_scaling_step_size = optional(number, 1)
+    minimum_scaling_step_size = optional(number, 1)
+    target_capacity           = optional(number, 100)
+  })
+  default = {}
+}
+
+variable "capacity_provider_base" {
+  description = "Base value for the default capacity provider strategy"
+  type        = number
+  default     = 1
+}
+
+variable "capacity_provider_weight" {
+  description = "Weight for the default capacity provider strategy"
+  type        = number
+  default     = 100
+}

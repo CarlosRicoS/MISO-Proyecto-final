@@ -35,4 +35,7 @@ module "ecs" {
   iam_instance_profile_name = module.ecsInstanceRole.instance_profile_name
   subnet_ids                = module.vpc.public_subnet_ids
   vpc_id                    = module.vpc.vpc_id
+  managed_scaling           = var.managed_scaling
+  capacity_provider_base    = var.capacity_provider_base
+  capacity_provider_weight  = var.capacity_provider_weight
 }

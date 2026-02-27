@@ -12,3 +12,12 @@ asg_capacity = {
   "max_size"         = 6
   "min_size"         = 3
 }
+
+managed_scaling = {
+  "instance_warmup_period"    = 120
+  "maximum_scaling_step_size" = 1
+  "minimum_scaling_step_size" = 1
+  "target_capacity"           = 100
+}
+capacity_provider_base   = 1
+capacity_provider_weight = 100

@@ -46,7 +46,9 @@ resource "aws_launch_template" "ecs_cluster" {
     create_before_destroy = true
   }
 
-  user_data = filebase64("${path.module}/ec2-ecs.sh")
+  user_data = base64encode(templatefile("${path.module}/ec2-ecs.sh.tpl", {
+    cluster_name = aws_ecs_cluster.ecs_cluster.name
+  }))
 }
 
 resource "aws_autoscaling_group" "ecs_cluster" {
@@ -75,11 +77,11 @@ resource "aws_ecs_capacity_provider" "ecs_cluster" {
     auto_scaling_group_arn = aws_autoscaling_group.ecs_cluster.arn
 
     managed_scaling {
-      instance_warmup_period    = 120
-      maximum_scaling_step_size = 1
-      minimum_scaling_step_size = 1
+      instance_warmup_period    = var.managed_scaling.instance_warmup_period
+      maximum_scaling_step_size = var.managed_scaling.maximum_scaling_step_size
+      minimum_scaling_step_size = var.managed_scaling.minimum_scaling_step_size
       status                    = "ENABLED"
-      target_capacity           = 100
+      target_capacity           = var.managed_scaling.target_capacity
     }
   }
 }
@@ -90,8 +92,8 @@ resource "aws_ecs_cluster_capacity_providers" "ecs_cluster" {
   capacity_providers = [aws_ecs_capacity_provider.ecs_cluster.name]
 
   default_capacity_provider_strategy {
-    base              = 1
-    weight            = 100
+    base              = var.capacity_provider_base
+    weight            = var.capacity_provider_weight
     capacity_provider = aws_ecs_capacity_provider.ecs_cluster.name
   }
 }

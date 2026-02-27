@@ -1,5 +1,4 @@
 #!/bin/bash
-# Update package lists
 # Redirect stdout/stderr to a log file and the system console
 exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
 
@@ -37,7 +36,7 @@ echo "Docker installation complete."
 echo "Installing ECS Service..."
 curl -O https://s3.us-east-1.amazonaws.com/amazon-ecs-agent-us-east-1/amazon-ecs-init-latest.amd64.deb
 dpkg -i amazon-ecs-init-latest.amd64.deb
-echo ECS_CLUSTER=final-project-miso-ecs-cluster >> /etc/ecs/ecs.config
+echo ECS_CLUSTER=${cluster_name} >> /etc/ecs/ecs.config
 
 # Ensure ECS starts after cloud-init is complete
 systemctl daemon-reexec

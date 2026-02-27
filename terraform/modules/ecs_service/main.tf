@@ -9,20 +9,20 @@ resource "aws_ecs_service" "service" {
     security_groups = [data.aws_security_group.ecs_sg.id]
   }
 
-  force_new_deployment = true
+  force_new_deployment = var.force_new_deployment
   placement_constraints {
-    type = "distinctInstance"
+    type = var.placement_constraint_type
   }
 
   capacity_provider_strategy {
-    capacity_provider = "capacity-provider"
+    capacity_provider = var.capacity_provider_name
     weight            = 100
   }
 
   load_balancer {
     target_group_arn = aws_lb_target_group.service.arn
-    container_name   = "web_app"
-    container_port   = 80
+    container_name   = var.container_name
+    container_port   = var.container_port
   }
 }
 
@@ -32,15 +32,15 @@ resource "aws_ecs_task_definition" "service" {
   network_mode       = "awsvpc"
   task_role_arn      = var.ecs-task-execution-role
   execution_role_arn = var.ecs-task-execution-role
-  cpu                = 1024
+  cpu                = var.ecs_task_size.cpu
   runtime_platform {
-    operating_system_family = "LINUX"
-    cpu_architecture        = "X86_64"
+    operating_system_family = var.runtime_platform.os_family
+    cpu_architecture        = var.runtime_platform.cpu_architecture
   }
 
   container_definitions = jsonencode([
     {
-      name        = "web_app"
+      name        = var.container_name
       image       = "${var.ec2_image_uri}@${data.aws_ecr_image.service.image_digest}"
       cpu         = var.ecs_task_size.cpu
       memory      = var.ecs_task_size.memory
@@ -51,7 +51,7 @@ resource "aws_ecs_task_definition" "service" {
       portMappings = [
         {
           containerPort = var.container_port
-          hostPort      = 80
+          hostPort      = var.container_port
           protocol      = "tcp"
         }
       ]
@@ -88,24 +88,24 @@ resource "aws_lb_target_group" "service" {
   target_type = "ip"
   vpc_id      = data.aws_vpc.vpc.id
 
-  deregistration_delay = 30
+  deregistration_delay = var.deregistration_delay
 
   health_check {
     enabled             = true
-    path                = "/api/health"
+    path                = var.health_check.path
     port                = "traffic-port"
     protocol            = "HTTP"
-    matcher             = "200"
-    interval            = 15
-    timeout             = 5
-    healthy_threshold   = 2
-    unhealthy_threshold = 2
+    matcher             = var.health_check.matcher
+    interval            = var.health_check.interval
+    timeout             = var.health_check.timeout
+    healthy_threshold   = var.health_check.healthy_threshold
+    unhealthy_threshold = var.health_check.unhealthy_threshold
   }
 }
 
 resource "aws_appautoscaling_target" "service" {
-  max_capacity       = 6
-  min_capacity       = 2
+  max_capacity       = var.autoscaling.max_capacity
+  min_capacity       = var.autoscaling.min_capacity
   resource_id        = "service/${data.aws_ecs_cluster.ecs_cluster.cluster_name}/${aws_ecs_service.service.name}"
   scalable_dimension = "ecs:service:DesiredCount"
   service_namespace  = "ecs"
@@ -123,20 +123,20 @@ resource "aws_appautoscaling_policy" "service" {
       predefined_metric_type = "ECSServiceAverageCPUUtilization"
     }
 
-    target_value       = 40.0
-    scale_out_cooldown = 30
+    target_value       = var.autoscaling.target_cpu_utilization
+    scale_out_cooldown = var.autoscaling.scale_out_cooldown
   }
 }
 
 resource "aws_lb" "service" {
   name               = "${var.service_name}-ecs-alb"
-  internal           = true
+  internal           = var.alb_internal
   load_balancer_type = "application"
   security_groups    = [aws_security_group.security_group.id]
   subnets            = data.aws_subnets.private.ids
 
   enable_cross_zone_load_balancing = true
-  idle_timeout                     = 60
+  idle_timeout                     = var.alb_idle_timeout
 
   tags = {
     Name = "${var.service_name}-load-balancer"

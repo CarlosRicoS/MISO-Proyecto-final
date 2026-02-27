@@ -25,14 +25,24 @@ module "ecsTaskExecutionRole" {
 module "ecs_service_hello_world" {
   source = "../../modules/ecs_service"
 
-  project_name            = var.project_name
-  aws_region              = var.aws_region
-  service_name            = var.service_name
-  desired_count_tasks     = var.desired_count_tasks
-  vpc_cidr                = var.vpc_cidr
-  container_port          = var.container_port
-  ec2_image_uri           = "${data.aws_ssm_parameter.ecr_repository_url.value}:latest"
-  ecs_task_size           = var.ecs_task_size
-  ecs-task-execution-role = module.ecsTaskExecutionRole.role_arn
-  ecr_repository_name     = var.ecr_repository_name
+  project_name              = var.project_name
+  aws_region                = var.aws_region
+  service_name              = var.service_name
+  desired_count_tasks       = var.desired_count_tasks
+  vpc_cidr                  = var.vpc_cidr
+  container_port            = var.container_port
+  ec2_image_uri             = "${data.aws_ssm_parameter.ecr_repository_url.value}:latest"
+  ecs_task_size             = var.ecs_task_size
+  ecs-task-execution-role   = module.ecsTaskExecutionRole.role_arn
+  ecr_repository_name       = var.ecr_repository_name
+  container_name            = var.container_name
+  capacity_provider_name    = var.capacity_provider_name
+  force_new_deployment      = var.force_new_deployment
+  placement_constraint_type = var.placement_constraint_type
+  runtime_platform          = var.runtime_platform
+  health_check              = var.health_check
+  deregistration_delay      = var.deregistration_delay
+  autoscaling               = var.autoscaling
+  alb_internal              = var.alb_internal
+  alb_idle_timeout          = var.alb_idle_timeout
 }
