@@ -22,7 +22,7 @@ inputs:
   terraform_version:
     description: 'Terraform version'
     required: false
-    default: 1.13.1
+    default: 1.14.1
   terraform_environment:
     description: 'Terraform environment to be used'
     required: true
