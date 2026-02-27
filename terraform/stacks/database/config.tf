@@ -14,9 +14,9 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 6"
     }
-    postgresql = {
-      source  = "cyrilgdn/postgresql"
-      version = "~> 1.25"
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3"
     }
   }
   backend "s3" {}

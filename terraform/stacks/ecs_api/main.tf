@@ -2,6 +2,74 @@ data "aws_ssm_parameter" "ecr_repository_url" {
   name = "/${var.project_name}/ecr/${var.ecr_repository_name}/repository_url"
 }
 
+# --- Optional per-service database on shared RDS instance ---
+
+data "aws_ssm_parameter" "db_host" {
+  count = var.create_database ? 1 : 0
+  name  = "/${var.project_name}/rds/host"
+}
+
+data "aws_ssm_parameter" "db_port" {
+  count = var.create_database ? 1 : 0
+  name  = "/${var.project_name}/rds/port"
+}
+
+data "aws_ssm_parameter" "db_username" {
+  count = var.create_database ? 1 : 0
+  name  = "/${var.project_name}/rds/username"
+}
+
+data "aws_ssm_parameter" "db_password" {
+  count           = var.create_database ? 1 : 0
+  name            = "/${var.project_name}/rds/password"
+  with_decryption = true
+}
+
+provider "postgresql" {
+  host     = var.create_database ? data.aws_ssm_parameter.db_host[0].value : "localhost"
+  port     = var.create_database ? tonumber(data.aws_ssm_parameter.db_port[0].value) : 5432
+  username = var.create_database ? data.aws_ssm_parameter.db_username[0].value : "unused"
+  password = var.create_database ? data.aws_ssm_parameter.db_password[0].value : "unused"
+  sslmode  = "require"
+}
+
+resource "postgresql_database" "service" {
+  count = var.create_database ? 1 : 0
+  name  = replace(var.service_name, "-", "_")
+}
+
+resource "aws_ssm_parameter" "service_db_host" {
+  count     = var.create_database ? 1 : 0
+  name      = "/${var.project_name}/${var.service_name}/db_host"
+  type      = "SecureString"
+  value     = data.aws_ssm_parameter.db_host[0].value
+  overwrite = true
+}
+
+resource "aws_ssm_parameter" "service_db_name" {
+  count     = var.create_database ? 1 : 0
+  name      = "/${var.project_name}/${var.service_name}/db_name"
+  type      = "String"
+  value     = postgresql_database.service[0].name
+  overwrite = true
+}
+
+resource "aws_ssm_parameter" "service_db_username" {
+  count     = var.create_database ? 1 : 0
+  name      = "/${var.project_name}/${var.service_name}/db_username"
+  type      = "SecureString"
+  value     = data.aws_ssm_parameter.db_username[0].value
+  overwrite = true
+}
+
+resource "aws_ssm_parameter" "service_db_password" {
+  count     = var.create_database ? 1 : 0
+  name      = "/${var.project_name}/${var.service_name}/db_password"
+  type      = "SecureString"
+  value     = data.aws_ssm_parameter.db_password[0].value
+  overwrite = true
+}
+
 module "ecsTaskExecutionRole" {
   source = "../../modules/iam"
 

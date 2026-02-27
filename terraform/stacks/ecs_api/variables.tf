@@ -120,3 +120,9 @@ variable "alb_idle_timeout" {
   type        = number
   default     = 60
 }
+
+variable "create_database" {
+  description = "Whether to create a PostgreSQL database for this service on the shared RDS instance."
+  type        = bool
+  default     = false
+}

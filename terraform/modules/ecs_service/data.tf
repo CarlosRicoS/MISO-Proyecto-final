@@ -93,36 +93,6 @@ resource "aws_ssm_parameter" "session_token" {
   }
 }
 
-resource "aws_ssm_parameter" "db_host" {
-  name  = "/${var.project_name}/${var.service_name}/db_host"
-  type  = "SecureString"
-  value = "placeholder"
-
-  lifecycle {
-    ignore_changes = [value]
-  }
-}
-
-resource "aws_ssm_parameter" "db_username" {
-  name  = "/${var.project_name}/${var.service_name}/db_username"
-  type  = "SecureString"
-  value = "placeholder"
-
-  lifecycle {
-    ignore_changes = [value]
-  }
-}
-
-resource "aws_ssm_parameter" "db_password" {
-  name  = "/${var.project_name}/${var.service_name}/db_password"
-  type  = "SecureString"
-  value = "placeholder"
-
-  lifecycle {
-    ignore_changes = [value]
-  }
-}
-
 data "aws_ecr_image" "service" {
   repository_name = var.ecr_repository_name
   image_tag       = var.ecr_image_tag

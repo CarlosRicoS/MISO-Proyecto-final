@@ -75,9 +75,6 @@ resource "aws_ecs_task_definition" "service" {
     aws_ssm_parameter.access_key_id,
     aws_ssm_parameter.secret_access_key,
     aws_ssm_parameter.session_token,
-    aws_ssm_parameter.db_host,
-    aws_ssm_parameter.db_username,
-    aws_ssm_parameter.db_password
   ]
 }
 

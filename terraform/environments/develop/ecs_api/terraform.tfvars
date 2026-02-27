@@ -36,3 +36,5 @@ autoscaling = {
 }
 alb_internal     = true
 alb_idle_timeout = 60
+
+create_database = true
