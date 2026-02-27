@@ -43,3 +43,19 @@ systemctl daemon-reexec
 systemctl daemon-reload
 systemctl enable ecs
 systemctl start ecs
+
+# cAdvisor for container metrics
+echo "Starting cAdvisor..."
+docker run -d \
+  --name=cadvisor \
+  --restart=always \
+  --volume=/:/rootfs:ro \
+  --volume=/var/run:/var/run:ro \
+  --volume=/sys:/sys:ro \
+  --volume=/var/lib/docker/:/var/lib/docker:ro \
+  --volume=/dev/disk/:/dev/disk:ro \
+  --privileged \
+  --device=/dev/kmsg \
+  -p 8080:8080 \
+  gcr.io/cadvisor/cadvisor:v0.49.1
+echo "cAdvisor started."
