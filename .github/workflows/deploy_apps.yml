@@ -18,6 +18,9 @@ jobs:
           - name: hello_world
             language: python
             context-path: services/hello_world
+          - name: other_service
+            ecr-repo: api_other_service
+            context-path: services/other_service
     name: Test ${{ matrix.name }}
     steps:
       - name: Checkout repository
@@ -71,6 +74,9 @@ jobs:
           - name: hello_world
             ecr-repo: api_hello_world
             context-path: services/hello_world
+          - name: other_service
+            ecr-repo: api_other_service
+            context-path: services/other_service
     name: Build and Push ${{ matrix.name }}
     steps:
       - name: Checkout repository
@@ -84,6 +90,23 @@ jobs:
           ecr-repo: ${{ matrix.ecr-repo }}
           image-tag: latest
           context-path: ${{ matrix.context-path }}
+
+  deploy_monitoring_stack:
+    environment: ${{ inputs.environment }}
+    runs-on: ubuntu-latest
+    needs: [deploy_ecs_cluster_stack]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Deploy monitoring stack
+        uses: ./.github/actions/terraform_apply
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          terraform_environment: ${{ inputs.environment }}
+          terraform_stack: monitoring
 
   deploy_database_stack:
     environment: ${{ inputs.environment }}
