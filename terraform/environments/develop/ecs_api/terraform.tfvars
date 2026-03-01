@@ -5,12 +5,9 @@ vpc_cidr     = "172.16.0.0/16"
 capacity_provider_name = "capacity-provider"
 
 services = {
-  "hello-world" = {
-    ecr_repository_name = "api_hello_world"
-    create_database     = true
-  }
   "pms" = {
     ecr_repository_name = "api_pms"
+    container_name      = "api_pms"
     create_database     = false
     desired_count_tasks = 1
     autoscaling = {
@@ -26,7 +23,49 @@ services = {
     secrets = [
       {
         name      = "PROPERTIES_SERVICE_URL"
-        valueFrom = "/final-project-miso/hello-world/alb_listener_arn"
+        valueFrom = "/final-project-miso/poc-properties/service_url"
+      }
+    ]
+  }
+  "poc-properties" = {
+    ecr_repository_name = "api_poc_properties"
+    container_name      = "api_poc_properties"
+    create_database     = true
+    container_port      = 8080
+    desired_count_tasks = 1
+    health_check = {
+      path = "/api/actuator/health"
+    }
+    autoscaling = {
+      max_capacity = 4
+      min_capacity = 1
+    }
+    environment_variables = [
+      {
+        name  = "JPA_SHOW_SQL"
+        value = "false"
+      },
+      {
+        name  = "JPA_DDL_AUTO"
+        value = "none"
+      }
+    ]
+    secrets = [
+      {
+        name      = "DB_USERNAME"
+        valueFrom = "/final-project-miso/poc-properties/db_username"
+      },
+      {
+        name      = "DB_PASSWORD"
+        valueFrom = "/final-project-miso/poc-properties/db_password"
+      },
+      {
+        name      = "DB_HOST"
+        valueFrom = "/final-project-miso/poc-properties/db_host"
+      },
+      {
+        name      = "DB_NAME"
+        valueFrom = "/final-project-miso/poc-properties/db_name"
       }
     ]
   }
