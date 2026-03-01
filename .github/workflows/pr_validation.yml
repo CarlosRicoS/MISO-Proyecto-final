@@ -10,9 +10,6 @@ jobs:
     strategy:
       matrix:
         include:
-          - name: hello_world
-            language: python
-            context-path: services/hello_world
           - name: pms
             language: python
             context-path: services/pms

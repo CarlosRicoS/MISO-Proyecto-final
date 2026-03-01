@@ -98,6 +98,10 @@ resource "aws_lb_target_group" "service" {
     healthy_threshold   = var.health_check.healthy_threshold
     unhealthy_threshold = var.health_check.unhealthy_threshold
   }
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 resource "aws_appautoscaling_target" "service" {
