@@ -30,7 +30,7 @@ You need to update three Terraform stacks in `terraform/environments/develop/`:
 Edit `terraform/environments/develop/container_registry/terraform.tfvars`:
 Add your new repository name to the `repository_names` list.
 ```hcl
-repository_names = ["api_hello_world", "api_other_service", "api_my_new_service"]
+repository_names = ["api_hello_world", "api_pms", "api_my_new_service"]
 ```
 
 #### B. ECS Service
@@ -51,7 +51,7 @@ services = {
 Edit `terraform/environments/develop/api_gateway/terraform.tfvars`:
 Add your service name to the `service_names` list to expose it via the API Gateway.
 ```hcl
-service_names = ["hello-world", "other-service", "my-new-service"]
+service_names = ["hello-world", "pms", "my-new-service"]
 ```
 
 ### 3. Update CI/CD Workflow

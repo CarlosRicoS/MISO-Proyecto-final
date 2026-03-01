@@ -9,10 +9,6 @@ services = {
     ecr_repository_name = "api_hello_world"
     create_database     = true
   }
-  "other-service" = {
-    ecr_repository_name = "api_other_service"
-    create_database     = true
-  }
   "pms" = {
     ecr_repository_name = "api_pms"
     create_database     = false
