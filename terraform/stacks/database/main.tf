@@ -37,4 +37,5 @@ module "rds" {
   db_name                  = var.db_name
   db_username              = var.db_username
   db_publicly_accessible   = var.db_publicly_accessible
+  db_max_connections       = var.db_max_connections
 }

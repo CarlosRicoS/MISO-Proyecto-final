@@ -53,3 +53,9 @@ variable "db_publicly_accessible" {
   type        = bool
   default     = false
 }
+
+variable "db_max_connections" {
+  description = "Maximum number of connections to the database. For db.t3.micro, 150-200 is reasonable. Higher values may cause OOM."
+  type        = number
+  default     = 150
+}
