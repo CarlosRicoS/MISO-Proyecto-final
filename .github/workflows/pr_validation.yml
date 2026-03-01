@@ -31,9 +31,6 @@ jobs:
     strategy:
       matrix:
         include:
-          - name: hello_world
-            ecr-repo: api_hello_world
-            context-path: services/hello_world
           - name: pms
             ecr-repo: api_pms
             context-path: services/pms
