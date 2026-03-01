@@ -1,6 +1,19 @@
 locals {
   any_service_needs_db = anytrue([for s in var.services : s.create_database])
   services_with_db     = { for k, v in var.services : k => v if v.create_database }
+  secret_param_paths   = toset(flatten([
+    for config in values(var.services) : [
+      for s in lookup(config, "secrets", []) : s.valueFrom
+      if startswith(s.valueFrom, "/")
+    ]
+  ]))
+}
+
+# --- SSM parameter lookup for secrets (resolve paths to ARNs) ---
+
+data "aws_ssm_parameter" "secret_ref" {
+  for_each = local.secret_param_paths
+  name     = each.value
 }
 
 # --- ECR repository URL lookup per service ---
@@ -128,5 +141,10 @@ module "ecs_service" {
   autoscaling               = each.value.autoscaling
   alb_internal              = each.value.alb_internal
   alb_idle_timeout          = each.value.alb_idle_timeout
+  environment_variables     = lookup(each.value, "environment_variables", [])
+  secrets = [for s in lookup(each.value, "secrets", []) : {
+    name      = s.name
+    valueFrom = startswith(s.valueFrom, "arn:") ? s.valueFrom : data.aws_ssm_parameter.secret_ref[s.valueFrom].arn
+  }]
 }
 

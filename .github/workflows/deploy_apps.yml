@@ -21,6 +21,9 @@ jobs:
           - name: other_service
             ecr-repo: api_other_service
             context-path: services/other_service
+          - name: pms
+            language: python
+            context-path: services/pms
     name: Test ${{ matrix.name }}
     steps:
       - name: Checkout repository
@@ -77,6 +80,9 @@ jobs:
           - name: other_service
             ecr-repo: api_other_service
             context-path: services/other_service
+          - name: pms
+            ecr-repo: api_pms
+            context-path: services/pms
     name: Build and Push ${{ matrix.name }}
     steps:
       - name: Checkout repository
