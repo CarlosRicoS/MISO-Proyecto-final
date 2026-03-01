@@ -1,9 +1,9 @@
 services:
-  api:
+  api-pms:
     build:
       context: .
       dockerfile: ./Dockerfile
-    image: api-hello-world
+    image: api-pms
     ports:
       - "80:80"
     volumes:

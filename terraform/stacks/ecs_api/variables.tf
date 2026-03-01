@@ -53,5 +53,13 @@ variable "services" {
     }), {})
     alb_internal     = optional(bool, true)
     alb_idle_timeout = optional(number, 60)
+    environment_variables = optional(list(object({
+      name  = string
+      value = string
+    })), [])
+    secrets = optional(list(object({
+      name      = string
+      valueFrom = string # SSM parameter path (e.g. /project/service/param) or full ARN
+    })), [])
   }))
 }
