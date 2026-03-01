@@ -1,0 +1,11 @@
+services:
+  api-pms:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    image: api-pms
+    ports:
+      - "80:80"
+    volumes:
+      - .:/src/app
+    restart: always
