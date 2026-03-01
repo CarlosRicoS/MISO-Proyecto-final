@@ -17,7 +17,7 @@ services = {
     environment_variables = [
       {
         name  = "PROPERTIES_ENDPOINT"
-        value = "api/properties/lock"
+        value = "api/property/lock"
       }
     ]
     secrets = [
@@ -37,8 +37,10 @@ services = {
       path = "/api/actuator/health"
     }
     autoscaling = {
-      max_capacity = 4
-      min_capacity = 1
+      max_capacity           = 6
+      min_capacity           = 1
+      target_cpu_utilization = 35
+      scale_out_cooldown     = 30
     }
     environment_variables = [
       {
@@ -48,6 +50,10 @@ services = {
       {
         name  = "JPA_DDL_AUTO"
         value = "none"
+      },
+      {
+        name  = "HIKARI_MAX_POOL_SIZE"
+        value = "20"
       }
     ]
     secrets = [
