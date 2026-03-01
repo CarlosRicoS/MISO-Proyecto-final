@@ -13,9 +13,9 @@ ENV PATH="/root/.local/bin:${PATH}"
 WORKDIR /app
 
 COPY ./pyproject.toml .
-COPY ./uv.lock .
+# No uv.lock yet, it will be generated during sync
 
-RUN uv sync --frozen
+RUN uv sync
 
 FROM python:3.12-slim-bookworm AS production
 
@@ -27,13 +27,12 @@ WORKDIR /app
 
 COPY main.py .
 
-
-COPY --from=builder --chown=app:app /app/.venv .venv
+COPY --from=builder --chown=appuser:appuser /app/.venv .venv
 
 COPY --from=builder  /app/pyproject.toml pyproject.toml
 
 ENV PATH="/app/.venv/bin:$PATH"
 
-ENV PYTHONPATH="/app/src:$PYTHONPATH"
+ENV PYTHONPATH="/app:$PYTHONPATH"
 
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80"]

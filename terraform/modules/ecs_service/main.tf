@@ -156,3 +156,9 @@ resource "aws_ssm_parameter" "alb_listener_arn" {
   type  = "String"
   value = aws_lb_listener.service.arn
 }
+
+resource "aws_ssm_parameter" "service_url" {
+  name  = "/${var.project_name}/${var.service_name}/service_url"
+  type  = "String"
+  value = "http://${aws_lb.service.dns_name}"
+}
