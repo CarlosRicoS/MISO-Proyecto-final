@@ -29,18 +29,19 @@ services = {
     ]
   }
   "poc-properties" = {
-    ecr_repository_name = "api_poc_properties"
-    container_name      = "api_poc_properties"
-    ecs_task_size       = { cpu = 1024, memory = 615 }
-    create_database     = true
-    container_port      = 8080
-    desired_count_tasks = 3
+    ecr_repository_name       = "api_poc_properties"
+    container_name            = "api_poc_properties"
+    ecs_task_size             = { cpu = 1024, memory = 615 }
+    create_database           = true
+    container_port            = 8080
+    desired_count_tasks       = 2
+    placement_constraint_type = ""
     health_check = {
       path = "/api/actuator/health"
     }
     autoscaling = {
       max_capacity           = 6
-      min_capacity           = 1
+      min_capacity           = 2
       target_cpu_utilization = 35
       scale_out_cooldown     = 30
     }

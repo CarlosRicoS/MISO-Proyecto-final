@@ -31,7 +31,7 @@ variable "services" {
     ecs_task_size             = optional(map(any), { cpu = 1024, memory = 1024 })
     container_name            = optional(string, "web_app")
     force_new_deployment      = optional(bool, true)
-    placement_constraint_type = optional(string, "distinctInstance")
+    placement_constraint_type = optional(string, "distinctInstance") # Use "" to allow multiple tasks per instance
     runtime_platform = optional(object({
       os_family        = optional(string, "LINUX")
       cpu_architecture = optional(string, "X86_64")

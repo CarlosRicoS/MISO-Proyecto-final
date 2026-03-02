@@ -10,8 +10,12 @@ resource "aws_ecs_service" "service" {
   }
 
   force_new_deployment = var.force_new_deployment
-  placement_constraints {
-    type = var.placement_constraint_type
+
+  dynamic "placement_constraints" {
+    for_each = var.placement_constraint_type != null && var.placement_constraint_type != "" ? [1] : []
+    content {
+      type = var.placement_constraint_type
+    }
   }
 
   capacity_provider_strategy {
