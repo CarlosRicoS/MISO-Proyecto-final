@@ -34,6 +34,6 @@ async def test_lock_property_forward():
         
         # Check that it called the correct payload (mapped to properties format)
         args, kwargs = mock_post.call_args
-        assert kwargs["json"]["propertyDetailId"] == payload["property_id"]
-        assert kwargs["json"]["startDate"] == "01/03/2026"
-        assert kwargs["json"]["endDate"] == "05/03/2026"
+        assert kwargs["json"]["property_id"] == payload["property_id"]
+        assert kwargs["json"]["start_date"] == "2026-03-01"
+        assert kwargs["json"]["end_date"] == "2026-03-05"
