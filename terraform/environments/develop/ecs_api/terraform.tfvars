@@ -8,6 +8,7 @@ services = {
   "pms" = {
     ecr_repository_name = "api_pms"
     container_name      = "api_pms"
+    ecs_task_size       = { cpu = 1024, memory = 615 }
     create_database     = false
     desired_count_tasks = 1
     autoscaling = {
@@ -17,7 +18,7 @@ services = {
     environment_variables = [
       {
         name  = "PROPERTIES_ENDPOINT"
-        value = "api/properties/lock"
+        value = "api/property/lock"
       }
     ]
     secrets = [
@@ -28,17 +29,21 @@ services = {
     ]
   }
   "poc-properties" = {
-    ecr_repository_name = "api_poc_properties"
-    container_name      = "api_poc_properties"
-    create_database     = true
-    container_port      = 8080
-    desired_count_tasks = 1
+    ecr_repository_name       = "api_poc_properties"
+    container_name            = "api_poc_properties"
+    ecs_task_size             = { cpu = 1024, memory = 615 }
+    create_database           = true
+    container_port            = 8080
+    desired_count_tasks       = 4
+    placement_constraint_type = ""
     health_check = {
       path = "/api/actuator/health"
     }
     autoscaling = {
-      max_capacity = 4
-      min_capacity = 1
+      max_capacity           = 7
+      min_capacity           = 4
+      target_cpu_utilization = 35
+      scale_out_cooldown     = 30
     }
     environment_variables = [
       {
@@ -48,6 +53,10 @@ services = {
       {
         name  = "JPA_DDL_AUTO"
         value = "none"
+      },
+      {
+        name  = "HIKARI_MAX_POOL_SIZE"
+        value = "30"
       }
     ]
     secrets = [

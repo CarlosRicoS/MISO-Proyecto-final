@@ -7,5 +7,6 @@ db_engine_version        = "17.4"
 db_instance_class        = "db.t3.micro"
 db_name                  = "postgres"
 db_username              = "dbadmin"
+db_max_connections       = 200
 
 db_publicly_accessible = true
