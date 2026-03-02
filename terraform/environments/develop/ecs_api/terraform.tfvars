@@ -8,6 +8,7 @@ services = {
   "pms" = {
     ecr_repository_name = "api_pms"
     container_name      = "api_pms"
+    ecs_task_size       = { cpu = 1024, memory = 615 }
     create_database     = false
     desired_count_tasks = 1
     autoscaling = {
@@ -30,9 +31,10 @@ services = {
   "poc-properties" = {
     ecr_repository_name = "api_poc_properties"
     container_name      = "api_poc_properties"
+    ecs_task_size       = { cpu = 1024, memory = 615 }
     create_database     = true
     container_port      = 8080
-    desired_count_tasks = 1
+    desired_count_tasks = 3
     health_check = {
       path = "/api/actuator/health"
     }
