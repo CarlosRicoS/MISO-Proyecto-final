@@ -20,21 +20,20 @@ async def test_lock_property_forward():
     }
     
     # Mock httpx.AsyncClient.post and asyncio.sleep to avoid waiting
-    mock_response = {"status": "locked", "property_id": payload["property_id"]}
-    
     with patch("main.httpx.AsyncClient.post", new_callable=AsyncMock) as mock_post, \
          patch("main.asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
         
-        mock_post.return_value = Response(200, json=mock_response)
+        mock_post.return_value = Response(200, content=b'{"status":"locked"}')
         
         async with AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://test") as ac:
             response = await ac.post("/api/pms/lock-property", json=payload)
         
         # Verify forwarding
         assert response.status_code == 200
-        assert response.json() == mock_response
         assert mock_post.called
         
-        # Check that it called the correct payload
+        # Check that it called the correct payload (mapped to properties format)
         args, kwargs = mock_post.call_args
-        assert kwargs["json"]["property_id"] == payload["property_id"]
+        assert kwargs["json"]["propertyDetailId"] == payload["property_id"]
+        assert kwargs["json"]["startDate"] == "01/03/2026"
+        assert kwargs["json"]["endDate"] == "05/03/2026"

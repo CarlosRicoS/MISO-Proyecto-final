@@ -107,9 +107,10 @@ variable "force_new_deployment" {
 }
 
 variable "placement_constraint_type" {
-  description = "Placement constraint type for ECS tasks"
+  description = "Placement constraint type for ECS tasks (distinctInstance, memberOf, or null/empty to allow multiple tasks per instance)"
   type        = string
   default     = "distinctInstance"
+  nullable    = true
 }
 
 variable "runtime_platform" {

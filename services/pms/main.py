@@ -12,43 +12,58 @@ from pydantic import BaseModel
 app = FastAPI(title="PMS Microservice")
 
 PROPERTIES_SERVICE_URL = os.getenv("PROPERTIES_SERVICE_URL", "http://properties")
-PROPERTIES_ENDPOINT = os.getenv("PROPERTIES_ENDPOINT", "api/properties/lock")
+PROPERTIES_ENDPOINT = os.getenv("PROPERTIES_ENDPOINT", "api/property/lock")
+
+
+def _to_dd_mm_yyyy(d: date) -> str:
+    return d.strftime("%d/%m/%Y")
+
 
 class LockPropertyRequest(BaseModel):
-    property_id: UUID
+    property_id: str  # Property detail ID (e.g. prop-001 or UUID)
     start_date: date
     end_date: date
     user_id: Optional[UUID] = None
 
+
 @app.get("/api/health")
 async def health_check():
     return {"status": "ok", "service": "pms"}
+
 
 @app.post("/api/pms/lock-property")
 async def lock_property(request: LockPropertyRequest):
     # Introduce a random delay between 1 and 5 seconds
     delay = random.uniform(1.0, 5.0)
     await asyncio.sleep(delay)
-    
-    # Proxy the request to the Properties microservice
+
+    # Map PMS payload to Properties service format (propertyDetailId, startDate/endDate in dd/MM/yyyy)
+    properties_payload = {
+        "propertyDetailId": request.property_id,
+        "startDate": _to_dd_mm_yyyy(request.start_date),
+        "endDate": _to_dd_mm_yyyy(request.end_date),
+    }
+
     async with httpx.AsyncClient() as client:
         try:
             response = await client.post(
                 f"{PROPERTIES_SERVICE_URL}/{PROPERTIES_ENDPOINT}",
-                json={
-                    "property_id": str(request.property_id),
-                    "start_date": request.start_date.isoformat(),
-                    "end_date": request.end_date.isoformat(),
-                    "user_id": str(request.user_id) if request.user_id else None
-                }
+                json=properties_payload,
             )
-            
-            # Return the response from the Properties service
-            return response.json()
+
+            if response.status_code == 204:
+                return {"status": "locked", "message": "Property locked successfully"}
+            if response.status_code >= 400:
+                raise HTTPException(
+                    status_code=response.status_code,
+                    detail=response.text or f"Properties service error: {response.status_code}",
+                )
+            return response.json() if response.content else {"status": "ok"}
         except httpx.RequestError as exc:
-            raise HTTPException(status_code=503, detail=f"Error connecting to Properties service: {exc}")
-        except Exception as exc:
-            raise HTTPException(status_code=500, detail=f"Internal error: {exc}")
+            raise HTTPException(
+                status_code=503,
+                detail=f"Error connecting to Properties service: {exc}",
+            )
 
 if __name__ == "__main__":
     import uvicorn

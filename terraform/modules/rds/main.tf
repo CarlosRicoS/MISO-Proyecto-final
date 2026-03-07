@@ -32,6 +32,21 @@ resource "aws_security_group" "this" {
   }
 }
 
+resource "aws_db_parameter_group" "this" {
+  name   = "${var.project_name}-rds-pg"
+  family = "postgres${split(".", var.db_engine_version)[0]}"
+
+  parameter {
+    name         = "max_connections"
+    value        = tostring(var.db_max_connections)
+    apply_method = "pending-reboot"
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
 resource "aws_db_instance" "this" {
   allocated_storage      = var.db_allocated_storage_gib
   engine                 = "postgres"
@@ -44,6 +59,7 @@ resource "aws_db_instance" "this" {
   db_subnet_group_name   = aws_db_subnet_group.this.name
   vpc_security_group_ids = [aws_security_group.this.id]
   publicly_accessible    = var.db_publicly_accessible
+  parameter_group_name   = aws_db_parameter_group.this.name
 
   tags = {
     Name = "${var.project_name}-rds"
