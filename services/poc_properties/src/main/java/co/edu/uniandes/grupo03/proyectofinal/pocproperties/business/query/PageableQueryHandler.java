@@ -10,23 +10,29 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-public abstract class QueryHandler<Q extends Query, R extends QueryResponse> {
+public abstract class PageableQueryHandler<Q extends Query, R extends QueryResponse> {
 
     private final Validator validator;
 
-    public QueryHandler(Validator validator) {
+    public PageableQueryHandler(Validator validator) {
         this.validator = validator;
     }
 
     public R execute(Q query) {
 
+        var pageable = Pageable.unpaged();
+        return execute(query, pageable);
+    }
+
+    public R execute(Q query, Pageable page) {
+
         validateQuery(query);
-        var response = executeQuery(query);
+        var response = executeQuery(query, page);
         validateResponse(response);
         return response;
     }
 
-    protected abstract R executeQuery(Q query);
+    protected abstract R executeQuery(Q query, Pageable page);
 
     private void validateQuery(Q data) {
 
