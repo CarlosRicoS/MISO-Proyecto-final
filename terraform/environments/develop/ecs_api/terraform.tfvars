@@ -34,14 +34,14 @@ services = {
     ecs_task_size             = { cpu = 1024, memory = 615 }
     create_database           = true
     container_port            = 8080
-    desired_count_tasks       = 2
+    desired_count_tasks       = 1
     placement_constraint_type = ""
     health_check = {
       path = "/api/actuator/health"
     }
     autoscaling = {
       max_capacity           = 6
-      min_capacity           = 2
+      min_capacity           = 1
       target_cpu_utilization = 35
       scale_out_cooldown     = 30
     }

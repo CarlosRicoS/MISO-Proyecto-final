@@ -170,3 +170,29 @@ resource "aws_ssm_parameter" "service_url" {
   type  = "String"
   value = "http://${aws_lb.service.dns_name}"
 }
+
+resource "terraform_data" "ecs_service_stable" {
+  triggers_replace = [
+    aws_ecs_service.service.id,
+    aws_ecs_task_definition.service.arn,
+  ]
+
+  provisioner "local-exec" {
+    command = <<-EOT
+      echo "==> Waiting for ECS service to stabilize: ${aws_ecs_service.service.name}"
+      aws ecs wait services-stable \
+        --cluster ${data.aws_ecs_cluster.ecs_cluster.cluster_name} \
+        --services ${aws_ecs_service.service.name} \
+        --region ${var.aws_region}
+      echo "==> Service stable. Current task status:"
+      aws ecs describe-services \
+        --cluster ${data.aws_ecs_cluster.ecs_cluster.cluster_name} \
+        --services ${aws_ecs_service.service.name} \
+        --region ${var.aws_region} \
+        --query 'services[0].{Status:status,Desired:desiredCount,Running:runningCount,Pending:pendingCount}' \
+        --output table
+    EOT
+  }
+
+  depends_on = [aws_ecs_service.service]
+}
