@@ -9,7 +9,7 @@ namespace PricingEngine.Controllers
 	[ApiController]
 	public class PropertyPriceController(IDatabaseOperations dbOps) : ControllerBase
 	{
-		[HttpGet("/propertyprice")]
+		[HttpGet()]
 		public async Task<IResult> GetPropertyPrice([FromQuery] PropertyPriceRequest request)
 		{
 			var validator = new GetPropertyPriceValidator();
