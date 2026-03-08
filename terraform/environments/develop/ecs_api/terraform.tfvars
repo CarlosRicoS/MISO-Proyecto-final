@@ -92,6 +92,9 @@ services = {
       target_cpu_utilization = 35
       scale_out_cooldown     = 30
     }
+    health_check = {
+      path = "/api/health"
+    }
     secrets = [
       {
         name      = "DB_USERNAME"
@@ -119,6 +122,9 @@ services = {
     container_port            = 8080
     desired_count_tasks       = 1
     placement_constraint_type = ""
+    health_check = {
+      path = "/api/health"
+    }
     autoscaling = {
       max_capacity           = 6
       min_capacity           = 1
