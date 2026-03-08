@@ -91,7 +91,7 @@ namespace PricingEngine.Database
 				total = total * (1 - Math.Min(discountPercentage, 100) / 100m);
 			}
 
-			return new PropertyPriceResponse { PropertyId = r.PropertyId, Price = Math.Round(total, 2) };
+			return new PropertyPriceResponse { Id = r.PropertyId, Price = Math.Round(total, 2) };
 		}
 	}
 }
