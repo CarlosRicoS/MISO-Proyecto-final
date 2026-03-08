@@ -1,18 +1,39 @@
 locals {
   any_service_needs_db = anytrue([for s in var.services : s.create_database])
   services_with_db     = { for k, v in var.services : k => v if v.create_database }
-  secret_param_paths   = toset(flatten([
+
+  # SSM paths that are created within this stack (service-level DB credentials)
+  # Computed purely from var.services so it's available at plan time
+  internal_ssm_param_paths = toset(flatten([
+    for svc_name, config in var.services : config.create_database ? [
+      "/${var.project_name}/${svc_name}/db_host",
+      "/${var.project_name}/${svc_name}/db_name",
+      "/${var.project_name}/${svc_name}/db_username",
+      "/${var.project_name}/${svc_name}/db_password",
+    ] : []
+  ]))
+
+  # Only data-source the external params (those NOT created in this stack)
+  external_secret_param_paths = toset(flatten([
     for config in values(var.services) : [
       for s in lookup(config, "secrets", []) : s.valueFrom
-      if startswith(s.valueFrom, "/")
+      if startswith(s.valueFrom, "/") && !contains(local.internal_ssm_param_paths, s.valueFrom)
     ]
   ]))
+
+  # Map from internal SSM path → resource ARN (resolved at apply time, after resources exist)
+  internal_ssm_param_arns = merge(
+    { for k, v in aws_ssm_parameter.service_db_host     : "/${var.project_name}/${k}/db_host"     => v.arn },
+    { for k, v in aws_ssm_parameter.service_db_name     : "/${var.project_name}/${k}/db_name"     => v.arn },
+    { for k, v in aws_ssm_parameter.service_db_username : "/${var.project_name}/${k}/db_username" => v.arn },
+    { for k, v in aws_ssm_parameter.service_db_password : "/${var.project_name}/${k}/db_password" => v.arn },
+  )
 }
 
 # --- SSM parameter lookup for secrets (resolve paths to ARNs) ---
 
 data "aws_ssm_parameter" "secret_ref" {
-  for_each = local.secret_param_paths
+  for_each = local.external_secret_param_paths
   name     = each.value
 }
 
@@ -143,8 +164,12 @@ module "ecs_service" {
   alb_idle_timeout          = each.value.alb_idle_timeout
   environment_variables     = lookup(each.value, "environment_variables", [])
   secrets = [for s in lookup(each.value, "secrets", []) : {
-    name      = s.name
-    valueFrom = startswith(s.valueFrom, "arn:") ? s.valueFrom : data.aws_ssm_parameter.secret_ref[s.valueFrom].arn
+    name = s.name
+    valueFrom = (
+      startswith(s.valueFrom, "arn:") ? s.valueFrom :
+      contains(keys(local.internal_ssm_param_arns), s.valueFrom) ? local.internal_ssm_param_arns[s.valueFrom] :
+      data.aws_ssm_parameter.secret_ref[s.valueFrom].arn
+    )
   }]
 }
 
