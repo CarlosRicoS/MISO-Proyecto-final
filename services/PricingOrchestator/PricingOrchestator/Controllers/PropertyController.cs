@@ -7,10 +7,11 @@ namespace PricingOrchestator.Controllers
 {
 	[Route("api/[controller]")]
 	[ApiController]
-	public class PropertyController(IOptions<AppSettings> options, IHttpClientFactory httpClientFactory) : ControllerBase
+	public class PropertyController(IHttpClientFactory httpClientFactory) : ControllerBase
 	{
-		private readonly AppSettings _appSettings = options.Value;
 		private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
+		private readonly string propertiesServiceUrl = Environment.GetEnvironmentVariable("PROPERTIES_ENGINE_URL") ?? throw new NullReferenceException("PROPERTIES_ENGINE_URL value is required");
+		private readonly string pricingServiceUrl = Environment.GetEnvironmentVariable("PRICING_SERVICE_URL") ?? throw new NullReferenceException("PRICING_SERVICE_URL value is required");
 
 		[HttpGet("/property")]
 		public async Task<IResult> GetProperty([FromQuery] PropertyPriceRequest request)
@@ -20,8 +21,8 @@ namespace PricingOrchestator.Controllers
 			if (!result.IsValid)
 				return Results.BadRequest(result);
 
-			string propertiesEngineUrl = $"{_appSettings.PropertiesEngineUrl}/api/property/{request.PropertyId}";
-			string pricingEngineUrl = $"{_appSettings.PricingEngineUrl}/?guests={request.Guests}&dateInit={request.DateInit}&dateFinish={request.DateFinish}&discountCode={request.DiscountCode ?? string.Empty}&propertyId={request.PropertyId}";
+			string propertiesEngineUrl = $"{propertiesServiceUrl}/api/property/{request.PropertyId}";
+			string pricingEngineUrl = $"{pricingServiceUrl}/?guests={request.Guests}&dateInit={request.DateInit}&dateFinish={request.DateFinish}&discountCode={request.DiscountCode ?? string.Empty}&propertyId={request.PropertyId}";
 
 			var propertyClient = _httpClientFactory.CreateClient();
 			var pricingClient = _httpClientFactory.CreateClient();

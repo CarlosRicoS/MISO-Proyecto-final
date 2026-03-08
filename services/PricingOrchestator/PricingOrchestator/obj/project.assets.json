@@ -134,11 +134,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Repo Maestria\\Cuarto Semestre\\Proyecto Final\\proyecto-final-experimento2\\PricingOrchestator\\PricingOrchestator\\PricingOrchestator.csproj",
+      "projectUniqueName": "C:\\Repo Maestria\\Cuarto Semestre\\Proyecto Final\\MISO-Proyecto-final\\services\\PricingOrchestator\\PricingOrchestator\\PricingOrchestator.csproj",
       "projectName": "PricingOrchestator",
-      "projectPath": "C:\\Repo Maestria\\Cuarto Semestre\\Proyecto Final\\proyecto-final-experimento2\\PricingOrchestator\\PricingOrchestator\\PricingOrchestator.csproj",
+      "projectPath": "C:\\Repo Maestria\\Cuarto Semestre\\Proyecto Final\\MISO-Proyecto-final\\services\\PricingOrchestator\\PricingOrchestator\\PricingOrchestator.csproj",
       "packagesPath": "C:\\Users\\Andres\\.nuget\\packages\\",
-      "outputPath": "C:\\Repo Maestria\\Cuarto Semestre\\Proyecto Final\\proyecto-final-experimento2\\PricingOrchestator\\PricingOrchestator\\obj\\",
+      "outputPath": "C:\\Repo Maestria\\Cuarto Semestre\\Proyecto Final\\MISO-Proyecto-final\\services\\PricingOrchestator\\PricingOrchestator\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

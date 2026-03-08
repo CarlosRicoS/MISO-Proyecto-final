@@ -10,8 +10,6 @@ namespace PricingOrchestator
 
 			builder.Services.AddControllers();
 
-			builder.Services.Configure<AppSettings>(builder.Configuration.GetSection("AppSettings"));
-
 			var app = builder.Build();
 
 			// Configure the HTTP request pipeline.

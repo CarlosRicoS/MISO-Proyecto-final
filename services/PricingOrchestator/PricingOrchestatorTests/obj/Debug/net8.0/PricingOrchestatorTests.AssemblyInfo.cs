@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("PricingOrchestatorTests")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b1e9e00a766e64f86ff50e8be3b587a043624378")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+95c933a61455b8777673b40653d9817cb09631d5")]
 [assembly: System.Reflection.AssemblyProductAttribute("PricingOrchestatorTests")]
 [assembly: System.Reflection.AssemblyTitleAttribute("PricingOrchestatorTests")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

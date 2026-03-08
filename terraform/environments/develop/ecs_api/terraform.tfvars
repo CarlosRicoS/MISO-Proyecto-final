@@ -78,4 +78,62 @@ services = {
       }
     ]
   }
+  "pricing-engine" = {
+    ecr_repository_name       = "api_pricing_engine"
+    container_name            = "api_pricing_engine"
+    ecs_task_size             = { cpu = 1024, memory = 615 }
+    create_database           = true
+    container_port            = 8080
+    desired_count_tasks       = 1
+    placement_constraint_type = ""
+    autoscaling = {
+      max_capacity           = 6
+      min_capacity           = 1
+      target_cpu_utilization = 35
+      scale_out_cooldown     = 30
+    }
+    secrets = [
+      {
+        name      = "DB_USERNAME"
+        valueFrom = "/final-project-miso/pricing-engine/db_username"
+      },
+      {
+        name      = "DB_PASSWORD"
+        valueFrom = "/final-project-miso/pricing-engine/db_password"
+      },
+      {
+        name      = "DB_HOST"
+        valueFrom = "/final-project-miso/pricing-engine/db_host"
+      },
+      {
+        name      = "DB_NAME"
+        valueFrom = "/final-project-miso/pricing-engine/db_name"
+      }
+    ]
+  }
+  "pricing-orchestator" = {
+    ecr_repository_name       = "api_pricing_orchestator"
+    container_name            = "api_pricing_orchestator"
+    ecs_task_size             = { cpu = 1024, memory = 615 }
+    create_database           = true
+    container_port            = 8080
+    desired_count_tasks       = 1
+    placement_constraint_type = ""
+    autoscaling = {
+      max_capacity           = 6
+      min_capacity           = 1
+      target_cpu_utilization = 35
+      scale_out_cooldown     = 30
+    }
+    secrets = [
+      {
+        name      = "PROPERTIES_SERVICE_URL"
+        valueFrom = "/final-project-miso/poc-properties/service_url"
+      },
+      {
+        name      = "PRICING_SERVICE_URL"
+        valueFrom = "/final-project-miso/pricing-engine/service_url"
+      }
+    ]
+  }
 }

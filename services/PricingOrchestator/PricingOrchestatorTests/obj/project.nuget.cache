@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "PTLYLLfzGDQ=",
+  "dgSpecHash": "rZnfpxeLOt8=",
   "success": true,
-  "projectFilePath": "C:\\Repo Maestria\\Cuarto Semestre\\Proyecto Final\\proyecto-final-experimento2\\PricingOrchestator\\PricingOrchestatorTests\\PricingOrchestatorTests.csproj",
+  "projectFilePath": "C:\\Repo Maestria\\Cuarto Semestre\\Proyecto Final\\MISO-Proyecto-final\\services\\PricingOrchestator\\PricingOrchestatorTests\\PricingOrchestatorTests.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Andres\\.nuget\\packages\\castle.core\\5.1.1\\castle.core.5.1.1.nupkg.sha512",
     "C:\\Users\\Andres\\.nuget\\packages\\coverlet.collector\\8.0.0\\coverlet.collector.8.0.0.nupkg.sha512",
