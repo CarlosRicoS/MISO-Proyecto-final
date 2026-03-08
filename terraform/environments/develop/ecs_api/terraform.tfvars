@@ -10,10 +10,10 @@ services = {
     container_name      = "api_pms"
     ecs_task_size       = { cpu = 1024, memory = 615 }
     create_database     = false
-    desired_count_tasks = 1
+    desired_count_tasks = 0
     autoscaling = {
       max_capacity = 1
-      min_capacity = 1
+      min_capacity = 0
     }
     environment_variables = [
       {
@@ -34,13 +34,13 @@ services = {
     ecs_task_size             = { cpu = 1024, memory = 615 }
     create_database           = true
     container_port            = 8080
-    desired_count_tasks       = 1
+    desired_count_tasks       = 3
     placement_constraint_type = ""
     health_check = {
       path = "/api/actuator/health"
     }
     autoscaling = {
-      max_capacity           = 6
+      max_capacity           = 3
       min_capacity           = 1
       target_cpu_utilization = 35
       scale_out_cooldown     = 30
@@ -84,10 +84,10 @@ services = {
     ecs_task_size             = { cpu = 1024, memory = 615 }
     create_database           = true
     container_port            = 8080
-    desired_count_tasks       = 1
+    desired_count_tasks       = 3
     placement_constraint_type = ""
     autoscaling = {
-      max_capacity           = 6
+      max_capacity           = 3
       min_capacity           = 1
       target_cpu_utilization = 35
       scale_out_cooldown     = 30
@@ -126,14 +126,14 @@ services = {
       path = "/api/health"
     }
     autoscaling = {
-      max_capacity           = 6
+      max_capacity           = 2
       min_capacity           = 1
       target_cpu_utilization = 35
       scale_out_cooldown     = 30
     }
     secrets = [
       {
-        name      = "PROPERTIES_SERVICE_URL"
+        name      = "PROPERTIES_ENGINE_URL"
         valueFrom = "/final-project-miso/poc-properties/service_url"
       },
       {
