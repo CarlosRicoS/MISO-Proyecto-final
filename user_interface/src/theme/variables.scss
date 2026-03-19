@@ -1,0 +1,148 @@
+// For information on how to create your own theme, please refer to:
+// https://ionicframework.com/docs/theming/
+
+:root {
+	/* Typography */
+	--th-font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+	--th-font-weight-regular: 400;
+	--th-font-weight-medium: 500;
+	--th-font-weight-semibold: 600;
+	--th-font-weight-bold: 700;
+
+	--th-text-display-size: 36px;
+	--th-text-display-line-height: 44px;
+	--th-text-h1-size: 30px;
+	--th-text-h1-line-height: 38px;
+	--th-text-h2-size: 24px;
+	--th-text-h2-line-height: 32px;
+	--th-text-h3-size: 20px;
+	--th-text-h3-line-height: 28px;
+	--th-text-h4-size: 18px;
+	--th-text-h4-line-height: 26px;
+	--th-text-body-lg-size: 16px;
+	--th-text-body-lg-line-height: 24px;
+	--th-text-body-md-size: 14px;
+	--th-text-body-md-line-height: 20px;
+	--th-text-body-size: 14px;
+	--th-text-body-line-height: 20px;
+	--th-text-body-sm-size: 13px;
+	--th-text-body-sm-line-height: 18px;
+	--th-text-caption-size: 12px;
+	--th-text-caption-line-height: 16px;
+	--th-text-overline-size: 11px;
+	--th-text-overline-line-height: 14px;
+
+	/* Spacing (Base-4) */
+	--th-space-0: 0px;
+	--th-space-1: 4px;
+	--th-space-2: 8px;
+	--th-space-3: 12px;
+	--th-space-4: 16px;
+	--th-space-5: 20px;
+	--th-space-6: 24px;
+	--th-space-7: 32px;
+	--th-space-8: 40px;
+	--th-space-9: 48px;
+	--th-space-10: 64px;
+	--th-space-11: 80px;
+	--th-space-12: 96px;
+
+	/* Radius */
+	--th-radius-sm: 4px;
+	--th-radius-md: 8px;
+	--th-radius-lg: 12px;
+	--th-radius-xl: 16px;
+	--th-radius-2xl: 24px;
+	--th-radius-full: 9999px;
+
+	/* Breakpoints */
+	--th-breakpoint-mobile-s: 320px;
+	--th-breakpoint-mobile-l: 375px;
+	--th-breakpoint-tablet: 768px;
+	--th-breakpoint-desktop: 1024px;
+	--th-breakpoint-wide: 1280px;
+
+	/* Shadows */
+	--th-shadow-0: none;
+	--th-shadow-1: 0 1px 3px rgba(0, 0, 0, 0.1);
+	--th-shadow-2: 0 4px 12px rgba(0, 0, 0, 0.15);
+	--th-shadow-3: 0 8px 24px rgba(0, 0, 0, 0.2);
+
+	/* Brand - Primary Blue */
+	--th-primary-50: #eef2ff;
+	--th-primary-100: #dceafe;
+	--th-primary-200: #b9cdfd;
+	--th-primary-300: #8ba8fc;
+	--th-primary-400: #5b82fa;
+	--th-primary-500: #3b63f7;
+	--th-primary-600: #2d4fd6;
+	--th-primary-700: #2240b5;
+	--th-primary-800: #1a3394;
+	--th-primary-900: #142873;
+
+	/* Neutrals */
+	--th-white: #ffffff;
+	--th-neutral-50: #f8f9fa;
+	--th-neutral-100: #f1f3f5;
+	--th-neutral-200: #e9ecef;
+	--th-neutral-300: #dee2e6;
+	--th-neutral-400: #ced4da;
+	--th-neutral-500: #adb5bd;
+	--th-neutral-600: #6c757d;
+	--th-neutral-700: #495057;
+	--th-neutral-900: #212529;
+
+	/* Semantic Colors */
+	--th-success-50: #ecfdf5;
+	--th-success-500: #10b981;
+	--th-success-700: #047857;
+
+	--th-warning-50: #fffbeb;
+	--th-warning-500: #f59e0b;
+	--th-warning-700: #b45309;
+
+	--th-error-50: #fef2f2;
+	--th-error-500: #ef4444;
+	--th-error-700: #b91c1c;
+
+	--th-info-50: #eff6ff;
+	--th-info-500: #3b82f6;
+	--th-info-700: #1d4ed8;
+
+	/* Ionic Theme Tokens */
+	--ion-font-family: var(--th-font-family);
+	--ion-color-primary: var(--th-primary-500);
+	--ion-color-primary-rgb: 59, 99, 247;
+	--ion-color-primary-contrast: #ffffff;
+	--ion-color-primary-contrast-rgb: 255, 255, 255;
+	--ion-color-primary-shade: var(--th-primary-600);
+	--ion-color-primary-tint: var(--th-primary-400);
+
+	--ion-color-success: var(--th-success-500);
+	--ion-color-success-rgb: 16, 185, 129;
+	--ion-color-success-contrast: #ffffff;
+	--ion-color-success-contrast-rgb: 255, 255, 255;
+	--ion-color-success-shade: var(--th-success-700);
+	--ion-color-success-tint: var(--th-success-50);
+
+	--ion-color-warning: var(--th-warning-500);
+	--ion-color-warning-rgb: 245, 158, 11;
+	--ion-color-warning-contrast: #ffffff;
+	--ion-color-warning-contrast-rgb: 255, 255, 255;
+	--ion-color-warning-shade: var(--th-warning-700);
+	--ion-color-warning-tint: var(--th-warning-50);
+
+	--ion-color-danger: var(--th-error-500);
+	--ion-color-danger-rgb: 239, 68, 68;
+	--ion-color-danger-contrast: #ffffff;
+	--ion-color-danger-contrast-rgb: 255, 255, 255;
+	--ion-color-danger-shade: var(--th-error-700);
+	--ion-color-danger-tint: var(--th-error-50);
+
+	--ion-color-tertiary: var(--th-info-500);
+	--ion-color-tertiary-rgb: 59, 130, 246;
+	--ion-color-tertiary-contrast: #ffffff;
+	--ion-color-tertiary-contrast-rgb: 255, 255, 255;
+	--ion-color-tertiary-shade: #3473d8;
+	--ion-color-tertiary-tint: #4f8af7;
+}
