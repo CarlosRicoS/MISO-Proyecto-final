@@ -10,9 +10,26 @@ on:
           - develop
 
 jobs:
+  destroy_web_app_stack:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Terraform Destroy web_app
+        uses: ./.github/actions/terraform_destroy
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          terraform_environment: ${{ inputs.environment }}
+          terraform_stack: web_app
+
   destroy_api_gateway_stack:
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
+    needs: [destroy_web_app_stack]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
