@@ -8,9 +8,9 @@ services = {
   "pms" = {
     ecr_repository_name = "api_pms"
     container_name      = "api_pms"
-    ecs_task_size       = { cpu = 1024, memory = 615 }
+    ecs_task_size       = { cpu = 512, memory = 921 }
     create_database     = false
-    desired_count_tasks = 0
+    desired_count_tasks = 1
     autoscaling = {
       max_capacity = 1
       min_capacity = 0
@@ -31,10 +31,10 @@ services = {
   "poc-properties" = {
     ecr_repository_name       = "api_poc_properties"
     container_name            = "api_poc_properties"
-    ecs_task_size             = { cpu = 1024, memory = 615 }
+    ecs_task_size             = { cpu = 512, memory = 921 }
     create_database           = true
     container_port            = 8080
-    desired_count_tasks       = 3
+    desired_count_tasks       = 1
     placement_constraint_type = ""
     health_check = {
       path = "/api/actuator/health"
@@ -81,10 +81,10 @@ services = {
   "pricing-engine" = {
     ecr_repository_name       = "api_pricing_engine"
     container_name            = "api_pricing_engine"
-    ecs_task_size             = { cpu = 1024, memory = 615 }
+    ecs_task_size             = { cpu = 512, memory = 921 }
     create_database           = true
     container_port            = 8080
-    desired_count_tasks       = 3
+    desired_count_tasks       = 1
     placement_constraint_type = ""
     autoscaling = {
       max_capacity           = 3
@@ -117,7 +117,7 @@ services = {
   "pricing-orchestator" = {
     ecr_repository_name       = "api_pricing_orchestator"
     container_name            = "api_pricing_orchestator"
-    ecs_task_size             = { cpu = 1024, memory = 615 }
+    ecs_task_size             = { cpu = 512, memory = 921 }
     create_database           = true
     container_port            = 8080
     desired_count_tasks       = 1
