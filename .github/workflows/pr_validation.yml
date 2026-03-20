@@ -63,6 +63,7 @@ jobs:
           - ecs_api
           - api_gateway
           - monitoring
+          - web_app
     name: Plan ${{ matrix.stack }}
     steps:
       - name: Checkout repository
