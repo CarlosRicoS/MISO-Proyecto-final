@@ -18,6 +18,12 @@ data "aws_ssm_parameter" "alb_listener_arn" {
   name     = "/${var.project_name}/${each.key}/alb_listener_arn"
 }
 
+resource "aws_ssm_parameter" "api_gateway_url" {
+  name  = "/${var.project_name}/api-gateway/url"
+  type  = "String"
+  value = module.api_gateway.api_endpoint
+}
+
 module "api_gateway" {
   source     = "../../modules/api_gateway"
   api_name   = "${var.project_name}-api"
