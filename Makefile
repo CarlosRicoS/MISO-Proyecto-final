@@ -76,13 +76,16 @@ ecr-login:
 docker-build:
 	docker build -t $(ECR_REPO):$(IMAGE_TAG) $(SERVICE_DIR)
 
-## Tag and push Docker image to ECR
-docker-push:
+## Tag Docker image
+docker-tag:
 	docker tag $(ECR_REPO):$(IMAGE_TAG) $(ECR_URL):$(IMAGE_TAG)
+
+## Push Docker image to ECR
+docker-push:
 	docker push $(ECR_URL):$(IMAGE_TAG)
 
 ## Build, tag, and push in one step
-docker-deploy: ecr-login docker-build docker-push
+docker-deploy: ecr-login docker-build docker-tag docker-push
 
 # ---- Test Targets ----
 

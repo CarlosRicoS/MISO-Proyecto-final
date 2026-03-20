@@ -1,3 +1,5 @@
+data "aws_caller_identity" "current" {}
+
 locals {
   any_service_needs_db = anytrue([for s in var.services : s.create_database])
   services_with_db     = { for k, v in var.services : k => v if v.create_database }
@@ -13,11 +15,16 @@ locals {
     ] : []
   ]))
 
+  # service_url SSM paths created by module "ecs_service" within this stack
+  internal_service_url_paths = toset([
+    for svc_name, _ in var.services : "/${var.project_name}/${svc_name}/service_url"
+  ])
+
   # Only data-source the external params (those NOT created in this stack)
   external_secret_param_paths = toset(flatten([
     for config in values(var.services) : [
       for s in lookup(config, "secrets", []) : s.valueFrom
-      if startswith(s.valueFrom, "/") && !contains(local.internal_ssm_param_paths, s.valueFrom)
+      if startswith(s.valueFrom, "/") && !contains(local.internal_ssm_param_paths, s.valueFrom) && !contains(local.internal_service_url_paths, s.valueFrom)
     ]
   ]))
 
@@ -27,6 +34,11 @@ locals {
     { for k, v in aws_ssm_parameter.service_db_name     : "/${var.project_name}/${k}/db_name"     => v.arn },
     { for k, v in aws_ssm_parameter.service_db_username : "/${var.project_name}/${k}/db_username" => v.arn },
     { for k, v in aws_ssm_parameter.service_db_password : "/${var.project_name}/${k}/db_password" => v.arn },
+    # service_url ARNs synthesized from deterministic ARN format (no data source needed)
+    { for svc_name, _ in var.services :
+      "/${var.project_name}/${svc_name}/service_url" =>
+      "arn:aws:ssm:${var.aws_region}:${data.aws_caller_identity.current.account_id}:parameter/${var.project_name}/${svc_name}/service_url"
+    },
   )
 }
 
