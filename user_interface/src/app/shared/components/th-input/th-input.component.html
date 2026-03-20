@@ -1,0 +1,12 @@
+<div class="th-input" [ngClass]="stateClass">
+  <label class="th-input__label" *ngIf="label">{{ label }}</label>
+  <ion-item class="th-input__item" lines="none">
+    <ion-input
+      [placeholder]="placeholder"
+      [value]="value"
+      [disabled]="isDisabled"
+    ></ion-input>
+    <span class="th-input__badge" *ngIf="badge">{{ badge }}</span>
+  </ion-item>
+  <p class="th-input__helper" *ngIf="helper">{{ helper }}</p>
+</div>
