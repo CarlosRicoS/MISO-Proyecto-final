@@ -10,9 +10,6 @@ jobs:
     strategy:
       matrix:
         include:
-          - name: pms
-            language: python
-            context-path: services/pms
           - name: auth
             language: python
             context-path: services/auth
@@ -34,9 +31,6 @@ jobs:
     strategy:
       matrix:
         include:
-          - name: pms
-            ecr-repo: api_pms
-            context-path: services/pms
           - name: auth
             ecr-repo: api_auth
             context-path: services/auth
