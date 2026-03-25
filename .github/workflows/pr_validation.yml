@@ -13,6 +13,9 @@ jobs:
           - name: pms
             language: python
             context-path: services/pms
+          - name: auth
+            language: python
+            context-path: services/auth
     name: Test ${{ matrix.name }}
     steps:
       - name: Checkout repository
@@ -34,6 +37,9 @@ jobs:
           - name: pms
             ecr-repo: api_pms
             context-path: services/pms
+          - name: auth
+            ecr-repo: api_auth
+            context-path: services/auth
     name: Build ${{ matrix.name }}
     steps:
       - name: Checkout repository
@@ -60,6 +66,7 @@ jobs:
           - ecs_cluster
           - container_registry
           - database
+          - cognito
           - ecs_api
           - api_gateway
           - monitoring
