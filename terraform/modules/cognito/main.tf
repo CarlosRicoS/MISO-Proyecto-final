@@ -53,11 +53,6 @@ resource "aws_cognito_user_pool" "this" {
   tags = var.tags
 }
 
-resource "aws_cognito_user_pool_domain" "this" {
-  domain       = var.cognito_domain
-  user_pool_id = aws_cognito_user_pool.this.id
-}
-
 resource "aws_cognito_user_pool_client" "spa" {
   name         = "${var.project_name}-spa-client"
   user_pool_id = aws_cognito_user_pool.this.id
@@ -69,14 +64,6 @@ resource "aws_cognito_user_pool_client" "spa" {
     "ALLOW_REFRESH_TOKEN_AUTH",
     "ALLOW_USER_PASSWORD_AUTH"
   ]
-
-  supported_identity_providers = ["COGNITO"]
-  callback_urls                = var.callback_urls
-  logout_urls                  = var.logout_urls
-
-  allowed_oauth_flows                  = ["code"]
-  allowed_oauth_scopes                 = ["openid", "email", "profile"]
-  allowed_oauth_flows_user_pool_client = true
 }
 
 resource "aws_cognito_user_group" "this" {

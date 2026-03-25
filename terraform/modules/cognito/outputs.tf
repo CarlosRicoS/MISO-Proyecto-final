@@ -23,7 +23,3 @@ output "issuer_url" {
   value       = "https://cognito-idp.${data.aws_region.current.id}.amazonaws.com/${aws_cognito_user_pool.this.id}"
 }
 
-output "hosted_ui_domain" {
-  description = "The full domain for the Cognito hosted UI"
-  value       = "${var.cognito_domain}.auth.${data.aws_region.current.id}.amazoncognito.com"
-}

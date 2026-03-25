@@ -13,7 +13,3 @@ output "issuer_url" {
   value       = module.cognito.issuer_url
 }
 
-output "hosted_ui_domain" {
-  description = "The full domain for the Cognito hosted UI"
-  value       = module.cognito.hosted_ui_domain
-}

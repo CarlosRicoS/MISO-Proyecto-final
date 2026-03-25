@@ -1,10 +1,7 @@
 module "cognito" {
   source = "../../modules/cognito"
 
-  project_name   = var.project_name
-  cognito_domain = var.cognito_domain
-  callback_urls  = var.callback_urls
-  logout_urls    = var.logout_urls
+  project_name = var.project_name
 }
 
 # Store Cognito outputs in SSM for cross-stack consumption
