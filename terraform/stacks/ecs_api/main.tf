@@ -145,6 +145,7 @@ module "ecsTaskExecutionRole" {
     "arn:aws:iam::aws:policy/AmazonSQSFullAccess",
     "arn:aws:iam::aws:policy/AmazonAPIGatewayInvokeFullAccess",
     "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy",
+    "arn:aws:iam::aws:policy/AmazonCognitoPowerUser",
   ]
 }
 
@@ -183,5 +184,64 @@ module "ecs_service" {
       data.aws_ssm_parameter.secret_ref[s.valueFrom].arn
     )
   }]
+}
+
+# --- VPC Endpoint for Cognito IDP (tasks have no public IP) ---
+
+data "aws_vpc" "vpc" {
+  cidr_block = var.vpc_cidr
+}
+
+data "aws_subnets" "public" {
+  filter {
+    name   = "vpc-id"
+    values = [data.aws_vpc.vpc.id]
+  }
+  tags = {
+    is_public = "true"
+  }
+}
+
+# Filter subnets to only AZs supported by the cognito-idp endpoint service
+data "aws_vpc_endpoint_service" "cognito_idp" {
+  service = "cognito-idp"
+}
+
+data "aws_subnet" "public" {
+  for_each = toset(data.aws_subnets.public.ids)
+  id       = each.value
+}
+
+locals {
+  cognito_vpce_subnet_ids = [
+    for id, s in data.aws_subnet.public : id
+    if contains(data.aws_vpc_endpoint_service.cognito_idp.availability_zones, s.availability_zone)
+  ]
+}
+
+resource "aws_security_group" "cognito_vpce" {
+  name        = "${var.project_name}-cognito-vpce-sg"
+  description = "Allow HTTPS inbound for Cognito VPC endpoint"
+  vpc_id      = data.aws_vpc.vpc.id
+
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = [var.vpc_cidr]
+  }
+
+  tags = { Name = "${var.project_name}-cognito-vpce-sg" }
+}
+
+resource "aws_vpc_endpoint" "cognito_idp" {
+  vpc_id              = data.aws_vpc.vpc.id
+  service_name        = "com.amazonaws.${var.aws_region}.cognito-idp"
+  vpc_endpoint_type   = "Interface"
+  private_dns_enabled = true
+  subnet_ids          = local.cognito_vpce_subnet_ids
+  security_group_ids  = [aws_security_group.cognito_vpce.id]
+
+  tags = { Name = "${var.project_name}-cognito-idp-vpce" }
 }
 

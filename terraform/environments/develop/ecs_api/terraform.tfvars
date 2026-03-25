@@ -8,7 +8,7 @@ services = {
   "auth" = {
     ecr_repository_name = "api_auth"
     container_name      = "api_auth"
-    ecs_task_size       = { cpu = 512, memory = 921 }
+    ecs_task_size       = { cpu = 256, memory = 512 }
     create_database     = false
     desired_count_tasks = 1
     autoscaling = {
