@@ -111,6 +111,23 @@ jobs:
           terraform_environment: ${{ inputs.environment }}
           terraform_stack: ecs_cluster
 
+  destroy_cognito_stack:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    needs: [ destroy_ecs_api_stack, destroy_api_gateway_stack ]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Terraform Destroy cognito
+        uses: ./.github/actions/terraform_destroy
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          terraform_environment: ${{ inputs.environment }}
+          terraform_stack: cognito
+
   destroy_container_registry_stack:
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
