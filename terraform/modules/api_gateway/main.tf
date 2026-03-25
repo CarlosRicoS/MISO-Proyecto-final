@@ -47,6 +47,23 @@ resource "aws_apigatewayv2_vpc_link" "this" {
   tags = var.tags
 }
 
+# --- JWT Authorizer (Cognito) ---
+
+resource "aws_apigatewayv2_authorizer" "cognito" {
+  count            = var.issuer_url != "" ? 1 : 0
+  api_id           = aws_apigatewayv2_api.this.id
+  authorizer_type  = "JWT"
+  name             = "${var.api_name}-cognito-jwt"
+  identity_sources = ["$request.header.Authorization"]
+
+  jwt_configuration {
+    audience = [var.cognito_client_id]
+    issuer   = var.issuer_url
+  }
+}
+
+# --- Per-service integrations ---
+
 resource "aws_apigatewayv2_integration" "service" {
   for_each = var.services
 
@@ -57,26 +74,38 @@ resource "aws_apigatewayv2_integration" "service" {
   connection_type    = "VPC_LINK"
   connection_id      = aws_apigatewayv2_vpc_link.this.id
 
-  request_parameters = {
-    "overwrite:path" = "/$request.path.proxy"
-  }
+  request_parameters = merge(
+    { "overwrite:path" = "/$request.path.proxy" },
+    each.value.authorization_type == "COGNITO" ? {
+      "append:header.X-User-Id"    = "$context.authorizer.claims.sub"
+      "append:header.X-User-Email" = "$context.authorizer.claims.email"
+    } : {}
+  )
 }
+
+# --- Routes: proxy path + root path per service ---
 
 resource "aws_apigatewayv2_route" "service" {
   for_each = var.services
 
-  api_id    = aws_apigatewayv2_api.this.id
-  route_key = "ANY /${each.value.route_prefix}/{proxy+}"
-  target    = "integrations/${aws_apigatewayv2_integration.service[each.key].id}"
+  api_id             = aws_apigatewayv2_api.this.id
+  route_key          = "ANY /${each.value.route_prefix}/{proxy+}"
+  target             = "integrations/${aws_apigatewayv2_integration.service[each.key].id}"
+  authorization_type = each.value.authorization_type == "COGNITO" && var.issuer_url != "" ? "JWT" : "NONE"
+  authorizer_id      = each.value.authorization_type == "COGNITO" && var.issuer_url != "" ? aws_apigatewayv2_authorizer.cognito[0].id : null
 }
 
 resource "aws_apigatewayv2_route" "service_root" {
   for_each = var.services
 
-  api_id    = aws_apigatewayv2_api.this.id
-  route_key = "ANY /${each.value.route_prefix}"
-  target    = "integrations/${aws_apigatewayv2_integration.service[each.key].id}"
+  api_id             = aws_apigatewayv2_api.this.id
+  route_key          = "ANY /${each.value.route_prefix}"
+  target             = "integrations/${aws_apigatewayv2_integration.service[each.key].id}"
+  authorization_type = each.value.authorization_type == "COGNITO" && var.issuer_url != "" ? "JWT" : "NONE"
+  authorizer_id      = each.value.authorization_type == "COGNITO" && var.issuer_url != "" ? aws_apigatewayv2_authorizer.cognito[0].id : null
 }
+
+# --- Logging ---
 
 resource "aws_cloudwatch_log_group" "api" {
   name              = "custom/apigateway/${var.api_name}"
