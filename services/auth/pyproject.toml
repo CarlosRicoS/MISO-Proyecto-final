@@ -1,0 +1,19 @@
+[project]
+name = "auth"
+version = "0.1.0"
+description = "Auth microservice - user registration via AWS Cognito"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.133.1",
+    "uvicorn>=0.41.0",
+    "boto3>=1.35.0",
+    "pydantic[email]>=2.0.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+    "moto[cognitoidp]>=5.0.0",
+    "httpx>=0.27.0",
+]
