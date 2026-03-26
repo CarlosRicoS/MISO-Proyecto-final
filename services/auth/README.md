@@ -112,11 +112,88 @@ curl -X POST https://{api-gateway-url}/auth/api/auth/register \
 
 ---
 
+### Login
+
+```
+POST /api/auth/login
+```
+
+Authenticates a user and returns JWT tokens. Users can log in immediately after registration (no email verification required).
+
+**Request Body**
+
+| Field    | Type   | Required | Description              |
+|----------|--------|----------|--------------------------|
+| email    | string | Yes      | Registered email address |
+| password | string | Yes      | User's password          |
+
+#### Example
+
+**Request**
+```bash
+curl -X POST https://{api-gateway-url}/auth/api/auth/login \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "email": "juan@example.com",
+    "password": "MyPass123"
+  }'
+```
+
+**Response** `200 OK`
+```json
+{
+  "id_token": "eyJhbGciOi...",
+  "access_token": "eyJhbGciOi...",
+  "refresh_token": "eyJjdHkiOi...",
+  "expires_in": 3600,
+  "token_type": "Bearer"
+}
+```
+
+---
+
+### Get Current User (Token Verification)
+
+```
+GET /api/auth/me
+```
+
+Validates the access token and returns the authenticated user's information, including their role.
+
+**Headers**
+
+| Header         | Value                        | Required |
+|----------------|------------------------------|----------|
+| Authorization  | Bearer {access_token}        | Yes      |
+
+#### Example
+
+**Request**
+```bash
+curl https://{api-gateway-url}/auth/api/auth/me \
+  -H 'Authorization: Bearer eyJhbGciOi...'
+```
+
+**Response** `200 OK`
+```json
+{
+  "user_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "email": "juan@example.com",
+  "email_verified": true,
+  "role": "travelers"
+}
+```
+
+---
+
 ### Error Responses
 
 | Status | Condition                         | Example Response                                                 |
 |--------|-----------------------------------|------------------------------------------------------------------|
 | 400    | Invalid password                  | `{"detail": "Password did not conform with policy: ..."}` |
+| 401    | Invalid login credentials         | `{"detail": "Invalid credentials"}`                              |
+| 401    | Missing or invalid token          | `{"detail": "Missing or invalid token"}`                         |
+| 401    | Expired or invalid token          | `{"detail": "Token expired or invalid"}`                         |
 | 409    | Email already registered          | `{"detail": "Email already in use"}`                             |
 | 422    | Invalid role or missing fields    | `{"detail": [{"msg": "Input should be 'travelers' or 'hotel-admins'", ...}]}` |
 | 500    | User created but group assignment failed | `{"detail": "User created but failed to assign group: ..."}` |
@@ -125,12 +202,10 @@ curl -X POST https://{api-gateway-url}/auth/api/auth/register \
 
 ## Authentication Flow
 
-After registration, the frontend should use AWS Cognito's `InitiateAuth` API to obtain JWT tokens:
-
-1. **Register** the user via `POST /api/auth/register` (this service)
-2. **Confirm** the user's email (Cognito sends a verification code)
-3. **Sign in** using Cognito's `USER_PASSWORD_AUTH` flow to get `IdToken`, `AccessToken`, and `RefreshToken`
-4. **Send the IdToken** as `Authorization: Bearer <IdToken>` on all subsequent API requests
+1. **Register** the user via `POST /api/auth/register` (users are auto-confirmed, no email verification needed)
+2. **Sign in** via `POST /api/auth/login` to get `id_token`, `access_token`, and `refresh_token`
+3. **Send the id_token** as `Authorization: Bearer <id_token>` on all subsequent API requests to protected services
+4. **Verify the token** via `GET /api/auth/me` to get user info and role (uses the `access_token`)
 
 Protected endpoints (all services except `/auth/*`) require a valid JWT. The API Gateway validates the token and injects these headers to backend services:
 

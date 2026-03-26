@@ -24,9 +24,11 @@ load-tests/           JMeter test plans and runner scripts
 
 ### Auth (`services/auth/`)
 - **Stack:** Python/FastAPI + boto3
-- **Purpose:** User registration via AWS Cognito. Public endpoint (no JWT required).
+- **Purpose:** User authentication and registration via AWS Cognito. Public endpoints (no JWT required).
 - **Endpoints:**
-  - `POST /api/auth/register` — Register a new user
+  - `POST /api/auth/register` — Register a new user (auto-confirmed, no email verification)
+  - `POST /api/auth/login` — Authenticate with email/password, returns JWT tokens
+  - `GET /api/auth/me` — Validate access token, returns user info and role
   - `GET /api/health` — Health check
 - **Details:** See [`services/auth/README.md`](services/auth/README.md) for request/response examples, password policy, and roles.
 
@@ -52,7 +54,7 @@ The platform uses **AWS Cognito** for user authentication.
 ### Architecture
 
 1. **Cognito User Pool** — Managed by Terraform (`terraform/stacks/cognito/`). Creates the User Pool, App Client (public, no secret), and two user groups.
-2. **Auth Microservice** — `POST /api/auth/register` creates users in Cognito and assigns them to a group.
+2. **Auth Microservice** — Handles registration (`POST /api/auth/register`), login (`POST /api/auth/login`), and token verification (`GET /api/auth/me`). Users are auto-confirmed at registration (no email verification step).
 3. **API Gateway JWT Authorizer** — HTTP API (apigatewayv2) validates JWT tokens and injects user identity headers to backend services.
 
 ### User Roles (Cognito Groups)
@@ -64,10 +66,10 @@ The platform uses **AWS Cognito** for user authentication.
 
 ### Authentication Flow
 
-1. **Register** — `POST /api/auth/register` with `{ full_name, email, password, role }`
-2. **Confirm email** — Cognito sends a verification code to the user's email
-3. **Sign in** — Use Cognito's `InitiateAuth` API with `USER_PASSWORD_AUTH` flow to obtain `IdToken`, `AccessToken`, and `RefreshToken`
-4. **Authorize requests** — Send `Authorization: Bearer <IdToken>` on all subsequent API calls
+1. **Register** — `POST /api/auth/register` with `{ full_name, email, password, role }` (user is auto-confirmed)
+2. **Sign in** — `POST /api/auth/login` with `{ email, password }` to obtain `id_token`, `access_token`, and `refresh_token`
+3. **Authorize requests** — Send `Authorization: Bearer <id_token>` on all subsequent API calls
+4. **Verify token** — `GET /api/auth/me` with `Authorization: Bearer <access_token>` to get user info and role
 
 ### JWT Header Injection
 

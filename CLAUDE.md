@@ -119,9 +119,16 @@ The platform uses **AWS Cognito** for user authentication. The `cognito` Terrafo
 - Public services are configured in `terraform/environments/develop/api_gateway/terraform.tfvars` via `public_services`
 
 **Auth Service Endpoints:**
-- `POST /api/auth/register` — Register a new user (public, no token needed)
+- `POST /api/auth/register` — Register a new user (public, no token needed). Users are auto-confirmed (no email verification).
   - Body: `{ full_name, email, password, role }` where role is `travelers` or `hotel-admins`
   - Password policy: min 8 chars, uppercase, lowercase, number required
+- `POST /api/auth/login` — Authenticate with email/password, returns JWT tokens (public, no token needed)
+  - Body: `{ email, password }`
+  - Returns: `{ id_token, access_token, refresh_token, expires_in, token_type }`
+  - All authentication errors return generic 401 "Invalid credentials" (no email existence leakage)
+- `GET /api/auth/me` — Validate access token and return user info including role (public route, token in Authorization header)
+  - Header: `Authorization: Bearer <access_token>`
+  - Returns: `{ user_id, email, email_verified, role }`
 - `GET /api/health` — Health check
 
 **Networking Constraint:**

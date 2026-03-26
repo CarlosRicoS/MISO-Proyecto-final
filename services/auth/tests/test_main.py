@@ -172,3 +172,130 @@ def test_register_invalid_role(cognito_setup):
         },
     )
     assert response.status_code == 422  # Pydantic validation error for invalid enum
+
+
+def test_register_auto_confirms_user(cognito_setup):
+    client, cognito_client, pool_id = cognito_setup
+    client.post(
+        "/api/auth/register",
+        json={
+            "full_name": "Confirmed User",
+            "email": "confirmed@example.com",
+            "password": "Test1234",
+            "role": "travelers",
+        },
+    )
+    user = cognito_client.admin_get_user(
+        UserPoolId=pool_id,
+        Username="confirmed@example.com",
+    )
+    assert user["UserStatus"] == "CONFIRMED"
+
+
+def test_login_success(cognito_setup):
+    client, _, _ = cognito_setup
+    client.post(
+        "/api/auth/register",
+        json={
+            "full_name": "Login User",
+            "email": "login@example.com",
+            "password": "Test1234",
+            "role": "travelers",
+        },
+    )
+    response = client.post(
+        "/api/auth/login",
+        json={
+            "email": "login@example.com",
+            "password": "Test1234",
+        },
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert "id_token" in data
+    assert "access_token" in data
+    assert "refresh_token" in data
+    assert data["token_type"] == "Bearer"
+    assert data["expires_in"] > 0
+
+
+def test_login_wrong_password(cognito_setup):
+    client, _, _ = cognito_setup
+    client.post(
+        "/api/auth/register",
+        json={
+            "full_name": "Wrong Pass",
+            "email": "wrongpass@example.com",
+            "password": "Test1234",
+            "role": "travelers",
+        },
+    )
+    response = client.post(
+        "/api/auth/login",
+        json={
+            "email": "wrongpass@example.com",
+            "password": "WrongPassword1",
+        },
+    )
+    assert response.status_code == 401
+    assert response.json()["detail"] == "Invalid credentials"
+
+
+def test_login_nonexistent_user(cognito_setup):
+    client, _, _ = cognito_setup
+    response = client.post(
+        "/api/auth/login",
+        json={
+            "email": "nobody@example.com",
+            "password": "Test1234",
+        },
+    )
+    assert response.status_code == 401
+    assert response.json()["detail"] == "Invalid credentials"
+
+
+def test_get_current_user_success(cognito_setup):
+    client, _, _ = cognito_setup
+    client.post(
+        "/api/auth/register",
+        json={
+            "full_name": "Me User",
+            "email": "meuser@example.com",
+            "password": "Test1234",
+            "role": "hotel-admins",
+        },
+    )
+    login_response = client.post(
+        "/api/auth/login",
+        json={
+            "email": "meuser@example.com",
+            "password": "Test1234",
+        },
+    )
+    access_token = login_response.json()["access_token"]
+    response = client.get(
+        "/api/auth/me",
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["email"] == "meuser@example.com"
+    assert "user_id" in data
+    assert "email_verified" in data
+    assert data["role"] == "hotel-admins"
+
+
+def test_get_current_user_invalid_token(cognito_setup):
+    client, _, _ = cognito_setup
+    response = client.get(
+        "/api/auth/me",
+        headers={"Authorization": "Bearer invalid-token-here"},
+    )
+    assert response.status_code == 401
+
+
+def test_get_current_user_no_token(cognito_setup):
+    client, _, _ = cognito_setup
+    response = client.get("/api/auth/me")
+    assert response.status_code == 401
+    assert response.json()["detail"] == "Missing or invalid token"
