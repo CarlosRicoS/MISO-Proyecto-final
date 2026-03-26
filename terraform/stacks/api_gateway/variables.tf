@@ -19,3 +19,15 @@ variable "service_names" {
   description = "List of ECS service names to integrate with the API Gateway. Each must have a corresponding ALB listener ARN in SSM."
   type        = list(string)
 }
+
+variable "enable_auth" {
+  description = "Enable Cognito JWT authentication on the API Gateway"
+  type        = bool
+  default     = false
+}
+
+variable "public_services" {
+  description = "Service names with fully public routes (no Cognito auth)"
+  type        = list(string)
+  default     = []
+}

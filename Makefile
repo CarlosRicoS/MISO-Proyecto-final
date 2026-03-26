@@ -93,6 +93,6 @@ docker-deploy: ecr-login docker-build docker-tag docker-push
 
 DIR ?= .
 
-## Run unit tests with uv and pytest
+## Run unit tests with uv and pytest (with coverage enforcement)
 unittest-uv:
-	cd $(DIR) && uv sync --group dev && uv run pytest tests/ -v
+	cd $(DIR) && uv sync --group dev && uv run pytest tests/ -v --cov=main --cov-report=term-missing --cov-fail-under=80
