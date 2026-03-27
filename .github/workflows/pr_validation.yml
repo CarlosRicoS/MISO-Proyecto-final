@@ -1,8 +1,8 @@
 name: PR Validation
 on:
   pull_request:
-    branches: [main]
-    types: [opened, synchronize, reopened]
+    branches: [ main ]
+    types: [ opened, synchronize, reopened ]
 
 jobs:
   test:
@@ -13,6 +13,9 @@ jobs:
           - name: auth
             language: python
             context-path: services/auth
+          - name: booking
+            language: python
+            context-path: services/booking
     name: Test ${{ matrix.name }}
     steps:
       - name: Checkout repository
@@ -27,13 +30,16 @@ jobs:
   build_and_push:
     runs-on: ubuntu-latest
     environment: develop
-    needs: [test]
+    needs: [ test ]
     strategy:
       matrix:
         include:
           - name: auth
             ecr-repo: api_auth
             context-path: services/auth
+          - name: booking
+            ecr-repo: api_booking
+            context-path: services/booking
     name: Build ${{ matrix.name }}
     steps:
       - name: Checkout repository
@@ -52,7 +58,7 @@ jobs:
   terraform_plan:
     runs-on: ubuntu-latest
     environment: develop
-    needs: [test, build_and_push]
+    needs: [ test, build_and_push ]
     strategy:
       fail-fast: false
       matrix:
