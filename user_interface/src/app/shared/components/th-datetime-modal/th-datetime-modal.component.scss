@@ -1,0 +1,361 @@
+:host {
+  display: block;
+}
+
+.th-datetime-modal {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+  z-index: 1000;
+  pointer-events: none;
+
+  &--open {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+  }
+}
+
+// Crystal Effect Backdrop
+.th-datetime-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.1) 0%,
+    rgba(0, 102, 255, 0.1) 25%,
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(0, 102, 255, 0.08) 75%,
+    rgba(255, 255, 255, 0.1) 100%
+  );
+  backdrop-filter: blur(10px) saturate(180%);
+  -webkit-backdrop-filter: blur(10px) saturate(180%);
+  animation: crystalShimmer 6s ease-in-out infinite;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+@keyframes crystalShimmer {
+  0%, 100% {
+    background-position: 0% 0%;
+    opacity: 0.4;
+  }
+  50% {
+    background-position: 100% 100%;
+    opacity: 0.6;
+  }
+}
+
+// Modal Container with Glass Effect
+.th-datetime-modal__container {
+  position: relative;
+  z-index: 1;
+  width: 90%;
+  max-width: 480px;
+  height: auto;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: var(--th-radius-xl);
+  box-shadow: 
+    0 8px 32px rgba(31, 38, 135, 0.15),
+    inset 0 1px 2px rgba(255, 255, 255, 0.8);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  animation: slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(40px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+
+
+// Content Area
+.th-datetime-modal__content {
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  flex: 1;
+}
+
+// Header
+.th-datetime-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.th-datetime-modal__title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+}
+
+.th-datetime-modal__close {
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: #333;
+  }
+
+  ion-icon {
+    font-size: 24px;
+  }
+}
+
+// Footer with Action Buttons
+.th-datetime-modal__footer {
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  justify-content: flex-end;
+}
+
+.th-datetime-modal__button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 100px;
+
+  &--cancel {
+    background: #f0f0f0;
+    color: #333;
+
+    &:hover {
+      background: #e0e0e0;
+    }
+
+    &:active {
+      background: #d0d0d0;
+    }
+  }
+
+  &--confirm {
+    background: #0066ff;
+    color: white;
+
+    &:hover {
+      background: #0052cc;
+    }
+
+    &:active {
+      background: #003d99;
+    }
+  }
+}
+
+
+
+// Responsive Design
+@media (max-width: 640px) {
+  .th-datetime-modal__container {
+    width: 95%;
+    max-width: 95vw;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  .th-datetime-modal__header {
+    padding: 16px;
+  }
+
+  .th-datetime-modal__content {
+    padding: 16px;
+    min-height: 250px;
+  }
+
+  .th-datetime-modal__footer {
+    padding: 16px;
+    flex-direction: column-reverse;
+    gap: 8px;
+
+    th-button {
+      width: 100%;
+    }
+  }
+}
+
+// Ionic Datetime Customization
+::ng-deep {
+  .th-datetime-modal__content {
+    ion-datetime {
+      width: 100%;
+      --background: #ffffff;
+      
+      // Hide full calendar view, show only what we need
+      .calendar-body {
+        background: #ffffff;
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: auto;
+      }
+
+      // Calendar header (month/year navigation)
+      .calendar-header {
+        background: transparent;
+        color: #999999;
+        padding: 12px 0 24px 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 24px;
+        border: none;
+        width: 100%;
+
+        .calendar-month {
+          font-size: 14px;
+          font-weight: 500;
+          color: #999999;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .calendar-prev-next {
+          display: flex;
+          gap: 16px;
+          position: absolute;
+          width: 100%;
+          padding: 0 24px;
+          box-sizing: border-box;
+          justify-content: space-between;
+
+          button {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: transparent;
+            color: #999999;
+            cursor: pointer;
+            font-size: 20px;
+            line-height: 1;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.2s ease;
+
+            &:hover {
+              color: #0066FF;
+            }
+          }
+        }
+      }
+
+      // Day name headers - centered layout
+      .calendar-day-header {
+        display: inline-flex;
+        width: auto;
+        height: auto;
+        color: #999999;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        margin: 0 12px;
+        text-align: center;
+        min-width: 28px;
+        justify-content: center;
+      }
+
+      // Day cells - centered minimal display
+      .calendar-day {
+        width: 42px;
+        height: 42px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        font-size: 16px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: 2px solid transparent;
+        color: black;
+
+        &.datetime-disabled {
+          color: #cccccc;
+          cursor: not-allowed;
+        }
+
+        &.datetime-active,
+        &.datetime-selected {
+          background: #0066FF;
+          color: white;
+          border: 2px solid #0066FF;
+          font-weight: 600;
+        }
+
+        &:not(.datetime-disabled):not(.datetime-active):not(.datetime-selected):hover {
+          color: #0066FF;
+          border-color: #0066FF;
+        }
+
+        &.datetime-today:not(.datetime-active):not(.datetime-selected) {
+          color: #0066FF;
+          font-weight: 600;
+          border: 2px solid #0066FF;
+        }
+      }
+
+      // Hide unwanted elements
+      .datetime-header {
+        display: none !important;
+      }
+
+      .datetime-footer {
+        display: none !important;
+      }
+
+      // Grid layout - center the date picker
+      .calendar-days-container {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 12px;
+        width: 100%;
+      }
+    }
+
+    // Input datetime specific styling
+    ion-input {
+      --padding-start: 0;
+      --padding-end: 0;
+    }
+  }
+}

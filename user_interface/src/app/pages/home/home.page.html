@@ -1,0 +1,87 @@
+<ion-content [fullscreen]="true" class="home-content">
+	<section class="home-hero">
+		<div class="home-hero__inner">
+			<h1 class="home-hero__title">Find Your Perfect Stay</h1>
+			<p
+				class="home-hero__subtitle"
+				appPlatformText
+				[appPlatformTextWeb]="'Discover amazing hotels worldwide with the best prices and instant booking'"
+				[appPlatformTextMobile]="'Discover amazing hotels worldwide'"
+			></p>
+			<div class="home-hero__card">
+				<th-filter
+					class="home-filter"
+					locationLabel="Destination"
+					locationPlaceholder="Where are you going?"
+					[locationValue]="searchCity"
+					(locationClicked)="onLocationClicked()"
+					checkInLabel="Check-in"
+					checkInPlaceholder="mm/dd/yyyy"
+					[checkInValue]="searchStartDate"
+					(checkInClicked)="onCheckInClicked()"
+					checkOutLabel="Check-out"
+					checkOutPlaceholder="mm/dd/yyyy"
+					[checkOutValue]="searchEndDate"
+					(checkOutClicked)="onCheckOutClicked()"
+					guestsLabel="Guests"
+					guestsPlaceholder="1 Guest"
+					[guestsValue]="guestsLabelValue"
+					(guestsClicked)="onGuestsClicked()"
+					actionLabel="Search Hotels"
+					[actionDisabled]="isSearchDisabled"
+					(action)="onSearchHotels()"
+				></th-filter>
+			</div>
+
+			<!-- Check-in Date Picker Modal -->
+			<th-datetime-modal
+				[isOpen]="showCheckInModal"
+				title="Select Check-in Date"
+				[selectedDate]="tempDate"
+				confirmLabel="Confirm"
+				cancelLabel="Cancel"
+				(confirmed)="onCheckInConfirmed($event)"
+				(cancelled)="onCheckInCancelled()"
+			></th-datetime-modal>
+
+			<!-- Check-out Date Picker Modal with min date validation -->
+			<th-datetime-modal
+				[isOpen]="showCheckOutModal"
+				title="Select Check-out Date"
+				[selectedDate]="tempDate"
+				[minDate]="convertDDMMYYYYToISO(searchStartDate)"
+				confirmLabel="Confirm"
+				cancelLabel="Cancel"
+				(confirmed)="onCheckOutConfirmed($event)"
+				(cancelled)="onCheckOutCancelled()"
+			></th-datetime-modal>
+		</div>
+	</section>
+
+	<section class="home-section">
+		<div class="home-section__inner">
+			<h2 class="home-section__title">Recommended Hotels</h2>
+			<p class="home-section__subtitle">Discover our hand-picked selection of exceptional hotels around the world</p>
+
+			<div class="home-grid">
+				<ng-container *ngIf="!isLoading && hotels.length">
+					<th-hotel-card
+						*ngFor="let hotel of hotels"
+						class="home-card"
+						variant="compact"
+						[title]="hotel.name || 'Hotel'"
+						[location]="getHotelLocation(hotel)"
+						[price]="getHotelPrice(hotel)"
+						priceSuffix="/night"
+						ctaLabel="Book Now"
+						[rating]="getHotelRating(hotel)"
+						[imageUrl]="hotel.imageUrl || ''"
+					></th-hotel-card>
+				</ng-container>
+				<p class="home-empty" *ngIf="isLoading">Loading hotels...</p>
+				<p class="home-empty" *ngIf="!isLoading && errorMessage">{{ errorMessage }}</p>
+				<p class="home-empty" *ngIf="!isLoading && !errorMessage && !hotels.length">No hotels available.</p>
+			</div>
+		</div>
+	</section>
+</ion-content>

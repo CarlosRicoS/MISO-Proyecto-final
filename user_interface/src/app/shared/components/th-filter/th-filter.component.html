@@ -1,0 +1,66 @@
+<div class="th-filter">
+  <div class="th-filter__grid">
+    <button class="th-filter__field th-filter__field--location" type="button" (click)="locationClicked.emit()">
+      <ion-icon name="location-outline" class="th-filter__icon"></ion-icon>
+      <span class="th-filter__text">
+        <span class="th-filter__label">{{ locationLabel }}</span>
+        <span
+          class="th-filter__value"
+          [class.th-filter__value--placeholder]="!locationValue"
+        >
+          {{ locationValue || locationPlaceholder }}
+        </span>
+      </span>
+    </button>
+
+    <button class="th-filter__field th-filter__field--check-in" type="button" (click)="checkInClicked.emit()">
+      <ion-icon name="calendar-outline" class="th-filter__icon"></ion-icon>
+      <span class="th-filter__text">
+        <span class="th-filter__label">{{ checkInLabel }}</span>
+        <span
+          class="th-filter__value"
+          [class.th-filter__value--placeholder]="!checkInValue"
+        >
+          {{ checkInValue || checkInPlaceholder }}
+        </span>
+      </span>
+    </button>
+
+    <button class="th-filter__field th-filter__field--check-out" type="button" (click)="checkOutClicked.emit()">
+      <ion-icon name="calendar-outline" class="th-filter__icon"></ion-icon>
+      <span class="th-filter__text">
+        <span class="th-filter__label">{{ checkOutLabel }}</span>
+        <span
+          class="th-filter__value"
+          [class.th-filter__value--placeholder]="!checkOutValue"
+        >
+          {{ checkOutValue || checkOutPlaceholder }}
+        </span>
+      </span>
+    </button>
+
+    <button class="th-filter__field th-filter__field--guests" type="button" (click)="guestsClicked.emit()">
+      <ion-icon name="people-outline" class="th-filter__icon"></ion-icon>
+      <span class="th-filter__text">
+        <span class="th-filter__label">{{ guestsLabel }}</span>
+        <span
+          class="th-filter__value"
+          [class.th-filter__value--placeholder]="!guestsValue"
+        >
+          {{ guestsValue || guestsPlaceholder }}
+        </span>
+      </span>
+      <ion-icon name="chevron-down-outline" class="th-filter__icon th-filter__icon--chevron"></ion-icon>
+    </button>
+
+    <button
+      class="th-filter__action"
+      type="button"
+      [disabled]="actionDisabled"
+      (click)="action.emit()"
+    >
+      <ion-icon name="search-outline"></ion-icon>
+      <span>{{ actionLabel }}</span>
+    </button>
+  </div>
+</div>
