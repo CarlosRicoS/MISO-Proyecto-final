@@ -69,11 +69,11 @@ services = {
     environment_variables = [
       {
         name  = "JPA_SHOW_SQL"
-        value = "false"
+        value = "true"
       },
       {
         name  = "JPA_DDL_AUTO"
-        value = "none"
+        value = "create"
       },
       {
         name  = "HIKARI_MAX_POOL_SIZE"
@@ -138,7 +138,7 @@ services = {
   "pricing-orchestator" = {
     ecr_repository_name       = "api_pricing_orchestator"
     container_name            = "api_pricing_orchestator"
-    ecs_task_size = { cpu = 512, memory = 921 }
+    ecs_task_size             = { cpu = 512, memory = 921 }
     create_database           = true
     container_port            = 8080
     desired_count_tasks       = 1
@@ -163,4 +163,41 @@ services = {
       }
     ]
   }
+  "booking" = {
+    ecr_repository_name       = "api_booking"
+    container_name            = "api_booking"
+    ecs_task_size             = { cpu = 512, memory = 921 }
+    create_database           = true
+    container_port            = 80
+    desired_count_tasks       = 1
+    placement_constraint_type = ""
+    autoscaling = {
+      max_capacity           = 1
+      min_capacity           = 1
+      target_cpu_utilization = 35
+      scale_out_cooldown     = 30
+    }
+    health_check = {
+      path = "/api/health"
+    }
+    secrets = [
+      {
+        name      = "DB_USERNAME"
+        valueFrom = "/final-project-miso/booking/db_username"
+      },
+      {
+        name      = "DB_PASSWORD"
+        valueFrom = "/final-project-miso/booking/db_password"
+      },
+      {
+        name      = "DB_HOST"
+        valueFrom = "/final-project-miso/booking/db_host"
+      },
+      {
+        name      = "DB_NAME"
+        valueFrom = "/final-project-miso/booking/db_name"
+      }
+    ]
+  }
 }
+

@@ -7,10 +7,13 @@
       <sourceFolder url="file://$MODULE_DIR$/services/hello_world" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/services/pms" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/services/pms/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/services/booking" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/services/booking/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/services/auth/.venv" />
       <excludeFolder url="file://$MODULE_DIR$/services/pms/.venv" />
+      <excludeFolder url="file://$MODULE_DIR$/services/booking/.venv" />
     </content>
-    <orderEntry type="jdk" jdkName="uv (auth)" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="uv (booking)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name=".claude" />
   </component>
