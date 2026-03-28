@@ -1,0 +1,36 @@
+<ion-card class="th-filter-summary" role="img" [attr.aria-label]="resolvedAlt">
+  <ion-card-content class="th-filter-summary__content">
+    <div class="th-filter-summary__top-bar">
+      <span class="th-filter-summary__icon-box" aria-hidden="true">
+        <ion-icon name="location" class="th-filter-summary__icon"></ion-icon>
+      </span>
+      <span class="th-filter-summary__top-text">
+        <span class="th-filter-summary__top-title">{{ filterParams?.locationValue || 'Destination' }}</span>
+        <span class="th-filter-summary__top-subtitle">
+          {{ filterParams?.checkInValue || 'Check-in' }} - {{ filterParams?.checkOutValue || 'Check-out' }}
+          | {{ filterParams?.guestsValue || 'Guests' }}
+        </span>
+      </span>
+      <span class="th-filter-summary__icon-box" aria-hidden="true">
+        <ion-icon name="create-outline" class="th-filter-summary__icon th-filter-summary__icon--accent"></ion-icon>
+      </span>
+    </div>
+
+  </ion-card-content>
+</ion-card>
+<div class="th-filter-summary__mobile-actions" aria-label="Quick filters">
+  <button class="th-filter-summary__pill th-filter-summary__pill-active" type="button">
+    <ion-icon name="options-outline" class="th-filter-summary__pill-icon"></ion-icon>
+    <span>Filters</span>
+  </button>
+  <button class="th-filter-summary__pill" type="button">
+    <ion-icon name="swap-vertical-outline" class="th-filter-summary__pill-icon"></ion-icon>
+    <span>Sort</span>
+  </button>
+  <button class="th-filter-summary__pill" type="button">
+    <span>Price</span>
+  </button>
+  <button class="th-filter-summary__pill" type="button">
+    <span>Rating</span>
+  </button>
+</div>

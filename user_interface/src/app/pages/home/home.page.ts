@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { Hotel } from '../../core/models/hotel.model';
 import { HotelsService } from '../../core/services/hotels.service';
@@ -13,16 +14,19 @@ export class HomePage implements OnInit {
   hotels: Hotel[] = [];
   isLoading = false;
   errorMessage = '';
-  searchCity = 'Cartagena';
-  searchStartDate = '01/03/2026';
-  searchEndDate = '02/03/2026';
-  searchCapacity = 2;
+  searchCity = '';
+  searchStartDate = '';
+  searchEndDate = '';
+  searchCapacity = 0;
 
   showCheckInModal = false;
   showCheckOutModal = false;
   tempDate: string | null = null;
 
-  constructor(private hotelsService: HotelsService) {}
+  constructor(
+    private hotelsService: HotelsService,
+    private router: Router,
+  ) {}
 
   ngOnInit(): void {
     void this.loadHotels();
@@ -32,8 +36,12 @@ export class HomePage implements OnInit {
     return `${this.searchCapacity} ${this.searchCapacity === 1 ? 'Guest' : 'Guests'}`;
   }
 
+  get guestsInputValue(): string {
+    return this.searchCapacity < 1 ? '' : String(this.searchCapacity);
+  }
+
   get isSearchDisabled(): boolean {
-    return !this.searchCity || !this.searchStartDate || !this.searchEndDate || this.searchCapacity < 1;
+    return false;
   }
 
   async loadHotels(): Promise<void> {
@@ -41,26 +49,17 @@ export class HomePage implements OnInit {
     this.errorMessage = '';
 
     try {
-      this.hotels = await firstValueFrom(
-        this.hotelsService.getHotels({
-          startDate: this.searchStartDate,
-          endDate: this.searchEndDate,
-          city: this.searchCity,
-          capacity: this.searchCapacity,
-        })
-      );
+      this.hotels = await firstValueFrom(this.hotelsService.getHotels());
     } catch (error) {
       this.errorMessage = 'Unable to load hotels.';
+      this.hotels = [];
     } finally {
       this.isLoading = false;
     }
   }
 
-  onLocationClicked(): void {
-    const nextValue = window.prompt('Enter destination city', this.searchCity);
-    if (nextValue && nextValue.trim()) {
-      this.searchCity = nextValue.trim();
-    }
+  onLocationChanged(value: string): void {
+    this.searchCity = value.trim();
   }
 
   onCheckInClicked(): void {
@@ -124,21 +123,43 @@ export class HomePage implements OnInit {
     return date1.getTime() - date2.getTime();
   }
 
-  onGuestsClicked(): void {
-    const nextValue = window.prompt('Enter number of guests', String(this.searchCapacity));
-    if (!nextValue) {
+  onGuestsChanged(value: string): void {
+    const parsedGuests = Number.parseInt(value, 10);
+    this.searchCapacity = Number.isFinite(parsedGuests) && parsedGuests > 0 ? parsedGuests : 0;
+  }
+
+  async onSearchHotels(): Promise<void> {
+    if (this.isSearchDisabled) {
       return;
     }
 
-    const parsedGuests = Number.parseInt(nextValue, 10);
-    if (Number.isFinite(parsedGuests) && parsedGuests > 0) {
-      this.searchCapacity = parsedGuests;
-    }
-  }
+    const params = {
+      ...(this.searchStartDate ? { startDate: this.searchStartDate } : {}),
+      ...(this.searchEndDate ? { endDate: this.searchEndDate } : {}),
+      ...(this.searchCity ? { city: this.searchCity } : {}),
+      ...(this.searchCapacity > 0 ? { capacity: this.searchCapacity } : {}),
+    };
 
-  onSearchHotels(): void {
-    if (!this.isSearchDisabled) {
-      void this.loadHotels();
+    this.isLoading = true;
+    this.errorMessage = '';
+
+    try {
+      const results = await firstValueFrom(
+        Object.keys(params).length ? this.hotelsService.getHotels(params) : this.hotelsService.getHotels()
+      );
+
+      this.hotels = results;
+
+      await this.router.navigate(['/search-results'], {
+        queryParams: params,
+        state: {
+          hotels: results,
+        },
+      });
+    } catch (error) {
+      this.errorMessage = 'Unable to load hotels.';
+    } finally {
+      this.isLoading = false;
     }
   }
 

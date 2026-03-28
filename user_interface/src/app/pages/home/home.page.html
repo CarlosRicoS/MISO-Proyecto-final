@@ -1,4 +1,4 @@
-<ion-content [fullscreen]="true" class="home-content">
+<ion-content class="home-content">
 	<section class="home-hero">
 		<div class="home-hero__inner">
 			<h1 class="home-hero__title">Find Your Perfect Stay</h1>
@@ -14,7 +14,7 @@
 					locationLabel="Destination"
 					locationPlaceholder="Where are you going?"
 					[locationValue]="searchCity"
-					(locationClicked)="onLocationClicked()"
+					(locationValueChange)="onLocationChanged($event)"
 					checkInLabel="Check-in"
 					checkInPlaceholder="mm/dd/yyyy"
 					[checkInValue]="searchStartDate"
@@ -25,8 +25,8 @@
 					(checkOutClicked)="onCheckOutClicked()"
 					guestsLabel="Guests"
 					guestsPlaceholder="1 Guest"
-					[guestsValue]="guestsLabelValue"
-					(guestsClicked)="onGuestsClicked()"
+					[guestsValue]="guestsInputValue"
+					(guestsValueChange)="onGuestsChanged($event)"
 					actionLabel="Search Hotels"
 					[actionDisabled]="isSearchDisabled"
 					(action)="onSearchHotels()"
@@ -40,7 +40,7 @@
 				[selectedDate]="tempDate"
 				confirmLabel="Confirm"
 				cancelLabel="Cancel"
-				(confirmed)="onCheckInConfirmed($event)"
+				(dateSelected)="onCheckInConfirmed($event)"
 				(cancelled)="onCheckInCancelled()"
 			></th-datetime-modal>
 
@@ -52,7 +52,7 @@
 				[minDate]="convertDDMMYYYYToISO(searchStartDate)"
 				confirmLabel="Confirm"
 				cancelLabel="Cancel"
-				(confirmed)="onCheckOutConfirmed($event)"
+				(dateSelected)="onCheckOutConfirmed($event)"
 				(cancelled)="onCheckOutCancelled()"
 			></th-datetime-modal>
 		</div>
