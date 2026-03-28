@@ -16,6 +16,8 @@
 
 .th-input__item {
   --background: var(--th-white);
+  --color: var(--th-neutral-900);
+  --placeholder-color: var(--th-neutral-500);
   --border-color: var(--th-neutral-300);
   --border-radius: var(--th-radius-lg);
   --border-width: 1px;
@@ -27,6 +29,15 @@
   --inner-padding-end: 0px;
   border: 1px solid var(--th-neutral-300);
   border-radius: var(--th-radius-lg);
+}
+
+.th-input__item ion-input {
+  --color: var(--th-neutral-900);
+  --placeholder-color: var(--th-neutral-500);
+}
+
+.th-input__item ion-input::part(native) {
+  color: var(--th-neutral-900);
 }
 
 .th-input__badge {

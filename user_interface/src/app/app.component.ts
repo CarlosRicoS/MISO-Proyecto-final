@@ -1,5 +1,7 @@
-import { Component } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
+import { Component, inject } from '@angular/core';
 import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
+import { Capacitor } from '@capacitor/core';
 import { filter } from 'rxjs';
 
 @Component({
@@ -10,13 +12,25 @@ import { filter } from 'rxjs';
 })
 export class AppComponent {
   showNavbar = true;
+  private readonly router = inject(Router);
+  private readonly activatedRoute = inject(ActivatedRoute);
+  private readonly document = inject(DOCUMENT);
 
-  constructor(private router: Router, private activatedRoute: ActivatedRoute) {
+  constructor() {
+    this.setPlatformClass();
     this.updateNavbarVisibility();
 
     this.router.events
       .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))
       .subscribe(() => this.updateNavbarVisibility());
+  }
+
+  private setPlatformClass(): void {
+    const isNativePlatform = Capacitor.isNativePlatform();
+    const bodyClassList = this.document.body.classList;
+
+    bodyClassList.remove('app-platform-native', 'app-platform-web');
+    bodyClassList.add(isNativePlatform ? 'app-platform-native' : 'app-platform-web');
   }
 
   private updateNavbarVisibility(): void {

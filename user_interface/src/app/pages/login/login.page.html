@@ -1,3 +1,11 @@
+<ion-alert
+  [isOpen]="isAlertOpen"
+  [header]="alertTitle"
+  [message]="alertMessage"
+  [buttons]="['OK']"
+  (didDismiss)="isAlertOpen = false"
+></ion-alert>
+
 <ion-content [fullscreen]="true" class="login-content">
   <ion-grid class="login-shell">
     <ion-row class="login-row">
@@ -19,15 +27,28 @@
             </header>
 
             <div class="login-card__fields">
-              <th-input label="Email" placeholder="Enter your email"></th-input>
+              <th-input
+                label="Email"
+                placeholder="Enter your email"
+                type="email"
+                [value]="email"
+                [state]="emailState"
+                [helper]="emailHelper"
+                (valueChange)="onEmailChange($event)"
+              ></th-input>
               <th-input
                 label="Password"
                 placeholder="Enter your password"
+                type="password"
+                [value]="password"
+                [state]="passwordState"
+                [helper]="passwordHelper"
+                (valueChange)="onPasswordChange($event)"
               ></th-input>
             </div>
 
             <div class="login-card__cta">
-              <th-button expand="block" size="md">Sign In</th-button>
+              <th-button expand="block" size="md" (click)="onSignIn()">Sign In</th-button>
             </div>
 
             <ion-button fill="clear" size="small" class="login-card__link">

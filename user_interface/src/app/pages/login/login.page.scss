@@ -1,181 +1,185 @@
 :host {
-	display: block;
+  display: block;
 }
 
 .login-content {
-	--background: var(--th-primary-500);
+  --background: var(--th-primary-500);
+}
+
+:host-context(body.app-platform-web) .login-content {
+  --background: var(--th-primary-500);
+}
+
+:host-context(body.app-platform-native) .login-content {
+  --background: var(--th-white);
 }
 
 .login-shell {
-	height: 100%;
-	min-height: 100%;
-	padding: var(--th-space-6);
+  height: 100%;
+  min-height: 100%;
+  padding: var(--th-space-6);
 }
 
 .login-row {
-	height: 100%;
-	min-height: 100%;
-	justify-content: center;
-	align-items: center;
+  height: 100%;
+  min-height: 100%;
+  justify-content: center;
+  align-items: center;
 }
 
 .login-col {
-	display: flex;
-	justify-content: center;
+  display: flex;
+  justify-content: center;
 }
 
 .login-card {
-	width: min(100%, 360px);
-	min-height: 430px;
-	margin: 0;
-	border-radius: var(--th-radius-lg);
-	background: var(--th-neutral-100);
-	box-shadow: var(--th-shadow-3);
+  width: min(100%, 360px);
+  min-height: 430px;
+  margin: 15px 0;
+  border-radius: var(--th-radius-lg);
+  background: var(--th-neutral-100);
+  box-shadow: var(--th-shadow-3);
 }
 
 .login-card__content {
-	padding: var(--th-space-6) var(--th-space-5) var(--th-space-5);
-	display: flex;
-	flex-direction: column;
-	gap: var(--th-space-3);
+  padding: var(--th-space-6) var(--th-space-5) var(--th-space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--th-space-3);
 }
 
 .login-card__header {
-	text-align: center;
-	margin-bottom: var(--th-space-1);
+  text-align: center;
+  margin-bottom: var(--th-space-1);
 }
 
 .login-card__title {
-	margin: 0;
-	font-size: var(--th-text-h1-size);
-	font-weight: var(--th-font-weight-bold);
-	line-height: var(--th-text-h1-line-height);
-	color: var(--th-neutral-900);
+  margin: 0;
+  font-size: var(--th-text-h1-size);
+  font-weight: var(--th-font-weight-bold);
+  line-height: var(--th-text-h1-line-height);
+  color: var(--th-neutral-900);
 }
 
 .login-card__subtitle {
-	margin: var(--th-space-2) 0 0;
-	font-size: var(--th-text-body-lg-size);
-	line-height: var(--th-text-body-lg-line-height);
-	color: var(--th-neutral-600);
+  margin: var(--th-space-2) 0 0;
+  font-size: var(--th-text-body-lg-size);
+  line-height: var(--th-text-body-lg-line-height);
+  color: var(--th-neutral-600);
 }
 
 .login-card__fields {
-	display: grid;
-	gap: var(--th-space-2);
-	margin-top: var(--th-space-1);
+  display: grid;
+  gap: var(--th-space-2);
+  margin-top: var(--th-space-1);
 }
 
 .login-card__cta {
-	margin-top: var(--th-space-1);
+  margin-top: var(--th-space-1);
 }
 
 .login-card__cta th-button {
-	display: block;
-	width: 100%;
+  display: block;
+  width: 100%;
 }
 
 .login-card__link {
-	align-self: center;
-	--padding-start: 0;
-	--padding-end: 0;
-	--padding-top: 0;
-	--padding-bottom: 0;
-	--color: var(--th-primary-500);
-	--min-height: 28px;
-	font-size: var(--th-text-body-md-size);
-	font-weight: var(--th-font-weight-medium);
-	text-transform: none;
-	letter-spacing: 0;
-	margin: 0;
+  align-self: center;
+  --padding-start: 0;
+  --padding-end: 0;
+  --padding-top: 0;
+  --padding-bottom: 0;
+  --color: var(--th-primary-500);
+  --min-height: 28px;
+  font-size: var(--th-text-body-md-size);
+  font-weight: var(--th-font-weight-medium);
+  text-transform: none;
+  letter-spacing: 0;
+  margin: 0;
 }
 
 .login-card__signup {
-	margin: var(--th-space-1) 0 0;
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	gap: var(--th-space-1);
-	font-size: var(--th-text-body-lg-size);
-	line-height: var(--th-text-body-lg-line-height);
-	color: var(--th-neutral-600);
+  margin: var(--th-space-1) 0 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--th-space-1);
+  font-size: var(--th-text-body-lg-size);
+  line-height: var(--th-text-body-lg-line-height);
+  color: var(--th-neutral-600);
 }
 
 .login-card__link-inline {
-	display: inline-flex;
-	position: relative;
-	top: 6px;
-	--padding-start: 0;
-	--padding-end: 0;
-	--padding-top: 0;
-	--padding-bottom: 0;
-	--min-height: 0;
-	--height: auto;
-	--color: var(--th-primary-500);
-	font-size: inherit;
-	font-weight: var(--th-font-weight-semibold);
-	text-transform: none;
-	letter-spacing: 0;
-	line-height: inherit;
-	margin: 0;
-	transform: none;
-	cursor: pointer;
+  display: inline-flex;
+  position: relative;
+  top: 6px;
+  --padding-start: 0;
+  --padding-end: 0;
+  --padding-top: 0;
+  --padding-bottom: 0;
+  --min-height: 0;
+  --height: auto;
+  --color: var(--th-primary-500);
+  font-size: inherit;
+  font-weight: var(--th-font-weight-semibold);
+  text-transform: none;
+  letter-spacing: 0;
+  line-height: inherit;
+  margin: 0;
+  transform: none;
+  cursor: pointer;
 }
 
 .login-card__link-inline::part(native) {
-	padding: 0;
-	min-height: auto;
-	line-height: inherit;
-	font-size: inherit;
-	font-weight: inherit;
-	letter-spacing: inherit;
-	text-transform: inherit;
-	display: inline;
+  padding: 0;
+  min-height: auto;
+  line-height: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  display: inline;
 }
 
 @media (max-width: 768px) {
-	.login-content {
-		--background: var(--th-white);
-	}
+  .login-shell {
+    padding: var(--th-space-2);
+  }
 
-	.login-shell {
-		padding: var(--th-space-2);
-	}
+  .login-row {
+    align-items: flex-start;
+  }
 
-	.login-row {
-		align-items: flex-start;
-	}
+  .login-col {
+    padding: 0;
+  }
 
-	.login-col {
-		padding: 0;
-	}
+  .login-card {
+    width: 100%;
+    min-height: calc(100dvh - (var(--th-space-2) * 2) - 20px);
+  }
 
-	.login-card {
-		width: 100%;
-		min-height: calc(100dvh - (var(--th-space-2) * 2));
-	}
+  .login-card__content {
+    padding: var(--th-space-6) var(--th-space-4) var(--th-space-5);
+  }
 
-	.login-card__content {
-		padding: var(--th-space-6) var(--th-space-4) var(--th-space-5);
-	}
+  .login-card__header {
+    margin-bottom: var(--th-space-6);
+  }
 
-	.login-card__header {
-		margin-bottom: var(--th-space-6);
-	}
+  .login-card__fields {
+    margin-top: var(--th-space-5);
+  }
 
-	.login-card__fields {
-		margin-top: var(--th-space-5);
-	}
+  .login-card__cta {
+    margin-top: var(--th-space-3);
+  }
 
-	.login-card__cta {
-		margin-top: var(--th-space-3);
-	}
+  .login-card__link {
+    margin-top: var(--th-space-3);
+  }
 
-	.login-card__link {
-		margin-top: var(--th-space-3);
-	}
-
-	.login-card__signup {
-		margin-top: var(--th-space-2);
-	}
+  .login-card__signup {
+    margin-top: var(--th-space-2);
+  }
 }
