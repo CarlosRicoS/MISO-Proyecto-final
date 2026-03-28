@@ -11,6 +11,12 @@ const routes: Routes = [
     redirectTo: 'home',
     pathMatch: 'full'
   },
+  {
+    path: 'login',
+    data: { hideNavbar: true },
+    loadComponent: () => import('./pages/login/login.page').then( m => m.LoginPage)
+  },
+
 ];
 
 @NgModule({

@@ -1,9 +1,9 @@
 <ion-app>
-  <ion-header slot="fixed" appPlatformText appPlatformShow="web">
+  <ion-header *ngIf="showNavbar" slot="fixed" appPlatformText appPlatformShow="web">
     <th-navbar mode="full" layout="desktop"></th-navbar>
   </ion-header>
-  <ion-header slot="fixed" appPlatformText appPlatformShow="mobile">
+  <ion-header *ngIf="showNavbar" slot="fixed" appPlatformText appPlatformShow="mobile">
     <th-navbar mode="full" layout="mobile"></th-navbar>
   </ion-header>
-  <ion-router-outlet class="site-content"></ion-router-outlet>
+  <ion-router-outlet class="site-content" [class.site-content--no-navbar]="!showNavbar"></ion-router-outlet>
 </ion-app>
