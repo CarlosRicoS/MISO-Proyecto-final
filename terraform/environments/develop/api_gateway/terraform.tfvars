@@ -11,5 +11,11 @@ service_names = [
   "auth"
 ]
 
-enable_auth     = true
-public_services = ["auth"]
+enable_auth = true
+
+public_services = [
+  "auth",
+  "poc-properties",
+  "pricing-engine",
+  "pricing-orchestator"
+]

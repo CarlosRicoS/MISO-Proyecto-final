@@ -69,11 +69,11 @@ services = {
     environment_variables = [
       {
         name  = "JPA_SHOW_SQL"
-        value = "false"
+        value = "true"
       },
       {
         name  = "JPA_DDL_AUTO"
-        value = "none"
+        value = "create"
       },
       {
         name  = "HIKARI_MAX_POOL_SIZE"
@@ -200,3 +200,4 @@ services = {
     ]
   }
 }
+
