@@ -1,4 +1,6 @@
+import { CommonModule } from '@angular/common';
 import { Component, Input } from '@angular/core';
+import { IonicModule } from '@ionic/angular';
 
 export type ThInputState = 'default' | 'focus' | 'error' | 'disabled';
 
@@ -6,7 +8,8 @@ export type ThInputState = 'default' | 'focus' | 'error' | 'disabled';
   selector: 'th-input',
   templateUrl: './th-input.component.html',
   styleUrls: ['./th-input.component.scss'],
-  standalone: false
+  standalone: true,
+  imports: [CommonModule, IonicModule]
 })
 export class ThInputComponent {
   @Input() label = '';

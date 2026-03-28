@@ -1,66 +1,92 @@
 <div class="th-filter">
   <div class="th-filter__grid">
-    <button class="th-filter__field th-filter__field--location" type="button" (click)="locationClicked.emit()">
-      <ion-icon name="location-outline" class="th-filter__icon"></ion-icon>
-      <span class="th-filter__text">
-        <span class="th-filter__label">{{ locationLabel }}</span>
-        <span
-          class="th-filter__value"
-          [class.th-filter__value--placeholder]="!locationValue"
-        >
-          {{ locationValue || locationPlaceholder }}
-        </span>
-      </span>
-    </button>
+    <div class="th-filter__group th-filter__group--location">
+      <span class="th-filter__label">{{ locationLabel }}</span>
+      <ion-item
+        class="th-filter__field th-filter__field--input"
+        lines="none"
+        detail="false"
+      >
+        <ion-icon name="location-outline" class="th-filter__icon" slot="start"></ion-icon>
+        <ion-input
+          class="th-filter__input"
+          [placeholder]="locationPlaceholder"
+          [value]="locationValue"
+          (ionInput)="locationValueChange.emit($event.detail.value ?? '')"
+        ></ion-input>
+      </ion-item>
+    </div>
 
-    <button class="th-filter__field th-filter__field--check-in" type="button" (click)="checkInClicked.emit()">
-      <ion-icon name="calendar-outline" class="th-filter__icon"></ion-icon>
-      <span class="th-filter__text">
-        <span class="th-filter__label">{{ checkInLabel }}</span>
-        <span
-          class="th-filter__value"
-          [class.th-filter__value--placeholder]="!checkInValue"
-        >
-          {{ checkInValue || checkInPlaceholder }}
-        </span>
-      </span>
-    </button>
+    <div class="th-filter__group th-filter__group--check-in">
+      <span class="th-filter__label">{{ checkInLabel }}</span>
+      <ion-item
+        class="th-filter__field"
+        lines="none"
+        button
+        detail="false"
+        (click)="checkInClicked.emit()"
+      >
+        <ion-icon name="calendar-outline" class="th-filter__icon" slot="start"></ion-icon>
+        <ion-label class="th-filter__text">
+          <span
+            class="th-filter__value"
+            [class.th-filter__value--placeholder]="!checkInValue"
+          >
+            {{ checkInValue || checkInPlaceholder }}
+          </span>
+        </ion-label>
+      </ion-item>
+    </div>
 
-    <button class="th-filter__field th-filter__field--check-out" type="button" (click)="checkOutClicked.emit()">
-      <ion-icon name="calendar-outline" class="th-filter__icon"></ion-icon>
-      <span class="th-filter__text">
-        <span class="th-filter__label">{{ checkOutLabel }}</span>
-        <span
-          class="th-filter__value"
-          [class.th-filter__value--placeholder]="!checkOutValue"
-        >
-          {{ checkOutValue || checkOutPlaceholder }}
-        </span>
-      </span>
-    </button>
+    <div class="th-filter__group th-filter__group--check-out">
+      <span class="th-filter__label">{{ checkOutLabel }}</span>
+      <ion-item
+        class="th-filter__field"
+        lines="none"
+        button
+        detail="false"
+        (click)="checkOutClicked.emit()"
+      >
+        <ion-icon name="calendar-outline" class="th-filter__icon" slot="start"></ion-icon>
+        <ion-label class="th-filter__text">
+          <span
+            class="th-filter__value"
+            [class.th-filter__value--placeholder]="!checkOutValue"
+          >
+            {{ checkOutValue || checkOutPlaceholder }}
+          </span>
+        </ion-label>
+      </ion-item>
+    </div>
 
-    <button class="th-filter__field th-filter__field--guests" type="button" (click)="guestsClicked.emit()">
-      <ion-icon name="people-outline" class="th-filter__icon"></ion-icon>
-      <span class="th-filter__text">
-        <span class="th-filter__label">{{ guestsLabel }}</span>
-        <span
-          class="th-filter__value"
-          [class.th-filter__value--placeholder]="!guestsValue"
-        >
-          {{ guestsValue || guestsPlaceholder }}
-        </span>
-      </span>
-      <ion-icon name="chevron-down-outline" class="th-filter__icon th-filter__icon--chevron"></ion-icon>
-    </button>
+    <div class="th-filter__group th-filter__group--guests">
+      <span class="th-filter__label">{{ guestsLabel }}</span>
+      <ion-item
+        class="th-filter__field th-filter__field--input"
+        lines="none"
+        detail="false"
+      >
+        <ion-icon name="people-outline" class="th-filter__icon" slot="start"></ion-icon>
+        <ion-input
+          class="th-filter__input"
+          type="text"
+          inputmode="numeric"
+          pattern="[0-9]*"
+          [placeholder]="guestsPlaceholder"
+          [value]="guestsValue"
+          (ionInput)="onGuestsInput($event.detail.value)"
+        ></ion-input>
+      </ion-item>
+    </div>
 
-    <button
+    <ion-button
       class="th-filter__action"
-      type="button"
       [disabled]="actionDisabled"
+      expand="block"
       (click)="action.emit()"
     >
-      <ion-icon name="search-outline"></ion-icon>
+      <ion-icon name="search-outline" slot="start"></ion-icon>
       <span>{{ actionLabel }}</span>
-    </button>
+    </ion-button>
   </div>
 </div>

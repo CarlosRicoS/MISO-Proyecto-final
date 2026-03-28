@@ -8,11 +8,12 @@ import { IonicModule, IonicRouteStrategy } from '@ionic/angular';
 import { AppComponent } from './app.component';
 import { AppRoutingModule } from './app-routing.module';
 import { ConfigService } from './core/services/config.service';
-import { SharedModule } from './shared/shared.module';
+import { ThNavbarComponent } from './shared/components/th-navbar/th-navbar.component';
+import { SharedCommonModule } from './shared/common/common.module';
 
 @NgModule({
   declarations: [AppComponent],
-  imports: [BrowserModule, HttpClientModule, IonicModule.forRoot(), AppRoutingModule, SharedModule],
+  imports: [BrowserModule, HttpClientModule, IonicModule.forRoot(), AppRoutingModule, ThNavbarComponent, SharedCommonModule],
   providers: [
     ConfigService,
     {

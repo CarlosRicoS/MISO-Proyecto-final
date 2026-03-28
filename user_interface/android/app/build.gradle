@@ -1,10 +1,10 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace "com.uniandes.travelhub"
-    compileSdk rootProject.ext.compileSdkVersion
+    namespace "com.uniandes.travelhub.app"
+    compileSdkVersion rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.uniandes.travelhub"
+        applicationId "com.uniandes.travelhub.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

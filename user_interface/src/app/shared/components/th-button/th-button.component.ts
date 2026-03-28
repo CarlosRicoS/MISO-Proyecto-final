@@ -1,4 +1,6 @@
+import { CommonModule } from '@angular/common';
 import { Component, Input } from '@angular/core';
+import { IonicModule } from '@ionic/angular';
 
 export type ThButtonVariant =
   | 'primary'
@@ -13,7 +15,8 @@ export type ThButtonSize = 'sm' | 'md' | 'lg';
   selector: 'th-button',
   templateUrl: './th-button.component.html',
   styleUrls: ['./th-button.component.scss'],
-  standalone: false
+  standalone: true,
+  imports: [CommonModule, IonicModule]
 })
 export class ThButtonComponent {
   @Input() variant: ThButtonVariant = 'primary';

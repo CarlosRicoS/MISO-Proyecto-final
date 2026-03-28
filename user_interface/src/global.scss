@@ -37,3 +37,9 @@
 /* @import "@ionic/angular/css/palettes/dark.always.css"; */
 /* @import "@ionic/angular/css/palettes/dark.class.css"; */
 @import "@ionic/angular/css/palettes/dark.system.css";
+
+@media (max-width: 720px) {
+	ion-content {
+		--padding-top: calc(clamp(60px, 6vw, 72px) + 2px + var(--ion-safe-area-top, 0px));
+	}
+}

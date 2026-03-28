@@ -3,22 +3,9 @@
   <div class="th-datetime-modal__backdrop" (click)="onBackdropClick()"></div>
 
   <!-- Modal Container -->
-  <div class="th-datetime-modal__container" role="dialog">
-    <!-- Header -->
-    <div class="th-datetime-modal__header">
-      <h2 class="th-datetime-modal__title">{{ title }}</h2>
-      <button 
-        type="button" 
-        class="th-datetime-modal__close" 
-        (click)="onCancel()"
-        aria-label="Close"
-      >
-        <ion-icon name="close-outline"></ion-icon>
-      </button>
-    </div>
-
+  <ion-card class="th-datetime-modal__container" role="dialog">
     <!-- Datetime Picker -->
-    <div class="th-datetime-modal__content">
+    <ion-card-content class="th-datetime-modal__content">
       <ion-datetime
         #datetimePicker
         [(ngModel)]="selectedDate"
@@ -27,25 +14,8 @@
         [firstDayOfWeek]="0"
         [min]="minDate"
         [max]="maxDate"
+        (ionChange)="onDateChange($event.detail.value)"
       ></ion-datetime>
-    </div>
-
-    <!-- Footer with Action Buttons -->
-    <div class="th-datetime-modal__footer">
-      <button 
-        type="button" 
-        class="th-datetime-modal__button th-datetime-modal__button--cancel" 
-        (click)="onCancel()"
-      >
-        {{ cancelLabel }}
-      </button>
-      <button 
-        type="button" 
-        class="th-datetime-modal__button th-datetime-modal__button--confirm" 
-        (click)="onConfirm()"
-      >
-        {{ confirmLabel }}
-      </button>
-    </div>
-  </div>
+    </ion-card-content>
+  </ion-card>
 </div>
