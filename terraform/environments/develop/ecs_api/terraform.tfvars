@@ -5,6 +5,27 @@ vpc_cidr     = "172.16.0.0/16"
 capacity_provider_name = "capacity-provider"
 
 services = {
+  "auth" = {
+    ecr_repository_name = "api_auth"
+    container_name      = "api_auth"
+    ecs_task_size       = { cpu = 256, memory = 512 }
+    create_database     = false
+    desired_count_tasks = 1
+    autoscaling = {
+      max_capacity = 2
+      min_capacity = 1
+    }
+    secrets = [
+      {
+        name      = "COGNITO_USER_POOL_ID"
+        valueFrom = "/final-project-miso/cognito/user_pool_id"
+      },
+      {
+        name      = "COGNITO_CLIENT_ID"
+        valueFrom = "/final-project-miso/cognito/app_client_id"
+      }
+    ]
+  }
   "pms" = {
     ecr_repository_name = "api_pms"
     container_name      = "api_pms"
@@ -117,7 +138,7 @@ services = {
   "pricing-orchestator" = {
     ecr_repository_name       = "api_pricing_orchestator"
     container_name            = "api_pricing_orchestator"
-    ecs_task_size             = { cpu = 512, memory = 921 }
+    ecs_task_size = { cpu = 512, memory = 921 }
     create_database           = true
     container_port            = 8080
     desired_count_tasks       = 1

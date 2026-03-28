@@ -18,11 +18,24 @@ variable "vpc_cidr" {
   type        = string
 }
 
+variable "issuer_url" {
+  description = "Cognito issuer URL for JWT validation. Empty string disables auth."
+  type        = string
+  default     = ""
+}
+
+variable "cognito_client_id" {
+  description = "Cognito App Client ID for JWT audience validation."
+  type        = string
+  default     = ""
+}
+
 variable "services" {
   description = "Map of services to integrate with the API Gateway. Each entry creates an integration and route."
   type = map(object({
-    listener_arn = string
-    route_prefix = string
+    listener_arn       = string
+    route_prefix       = string
+    authorization_type = optional(string, "COGNITO")
   }))
 }
 
