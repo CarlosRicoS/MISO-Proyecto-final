@@ -4,11 +4,17 @@ import { firstValueFrom } from 'rxjs';
 
 interface AppConfig {
   apiBaseUrl: string;
+  propertyApiPath?: string;
+  propertyApiToken?: string;
 }
 
 @Injectable({ providedIn: 'root' })
 export class ConfigService {
-  private config: AppConfig = { apiBaseUrl: '' };
+  private config: AppConfig = {
+    apiBaseUrl: '',
+    propertyApiPath: '/poc-properties/api/property',
+    propertyApiToken: '',
+  };
 
   constructor(private http: HttpClient) {}
 
@@ -20,5 +26,13 @@ export class ConfigService {
 
   get apiBaseUrl(): string {
     return this.config.apiBaseUrl;
+  }
+
+  get propertyApiPath(): string {
+    return this.config.propertyApiPath || '/poc-properties/api/property';
+  }
+
+  get propertyApiToken(): string {
+    return this.config.propertyApiToken || '';
   }
 }

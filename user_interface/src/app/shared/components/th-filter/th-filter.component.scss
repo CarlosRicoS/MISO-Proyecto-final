@@ -1,0 +1,168 @@
+:host {
+  display: block;
+}
+
+.th-filter {
+  background: var(--th-white);
+  border: 1px solid var(--th-neutral-300);
+  border-radius: var(--th-radius-xl);
+  box-shadow: var(--th-shadow-2);
+  padding: var(--th-space-4);
+}
+
+.th-filter__grid {
+  display: grid;
+  gap: var(--th-space-3);
+  grid-template-columns: 2fr 1.2fr 1.2fr 1.2fr;
+  grid-template-areas:
+    "location checkin checkout guests"
+    "action action action action";
+  align-items: center;
+}
+
+.th-filter__field--location {
+  grid-area: location;
+}
+
+.th-filter__field--check-in {
+  grid-area: checkin;
+}
+
+.th-filter__field--check-out {
+  grid-area: checkout;
+}
+
+.th-filter__field--guests {
+  grid-area: guests;
+}
+
+.th-filter__field {
+  display: flex;
+  align-items: center;
+  gap: var(--th-space-3);
+  background: var(--th-white);
+  border: 1px solid var(--th-neutral-300);
+  border-radius: var(--th-radius-lg);
+  padding: var(--th-space-3) var(--th-space-4);
+  text-align: left;
+  cursor: pointer;
+  min-height: 56px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.th-filter__field:focus-visible {
+  outline: none;
+  border-color: var(--th-primary-500);
+  box-shadow: 0 0 0 2px rgba(59, 99, 247, 0.2);
+}
+
+.th-filter__icon {
+  font-size: 20px;
+  color: var(--th-neutral-500);
+}
+
+.th-filter__icon--chevron {
+  margin-left: auto;
+}
+
+.th-filter__text {
+  display: grid;
+  gap: 2px;
+}
+
+.th-filter__label {
+  font-size: var(--th-text-caption-size);
+  line-height: var(--th-text-caption-line-height);
+  color: var(--th-neutral-500);
+  font-weight: var(--th-font-weight-medium);
+}
+
+.th-filter__value {
+  font-size: var(--th-text-body-md-size);
+  line-height: var(--th-text-body-md-line-height);
+  color: var(--th-neutral-900);
+  font-weight: var(--th-font-weight-semibold);
+}
+
+.th-filter__value--placeholder {
+  color: var(--th-neutral-500);
+  font-weight: var(--th-font-weight-medium);
+}
+
+.th-filter__action {
+  grid-area: action;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--th-space-2);
+  padding: 0 var(--th-space-6);
+  height: 56px;
+  width: 100%;
+  justify-content: center;
+  border-radius: var(--th-radius-lg);
+  border: none;
+  background: var(--th-primary-500);
+  color: var(--th-white);
+  font-size: var(--th-text-body-md-size);
+  font-weight: var(--th-font-weight-semibold);
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.th-filter__action:active {
+  transform: translateY(1px);
+}
+
+.th-filter__action:disabled {
+  background: var(--th-neutral-300);
+  color: var(--th-neutral-500);
+  cursor: not-allowed;
+}
+
+@media (max-width: 900px) {
+  .th-filter__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-areas:
+      "location location"
+      "checkin checkout"
+      "guests guests"
+      "action action";
+  }
+
+  .th-filter__field--location {
+    grid-area: location;
+  }
+
+  .th-filter__field--check-in {
+    grid-area: checkin;
+  }
+
+  .th-filter__field--check-out {
+    grid-area: checkout;
+  }
+
+  .th-filter__field--guests {
+    grid-area: guests;
+  }
+
+  .th-filter__action {
+    grid-area: action;
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 600px) {
+  .th-filter {
+    padding: var(--th-space-3);
+    border-radius: var(--th-radius-lg);
+  }
+
+  .th-filter__field {
+    min-height: 52px;
+    padding: var(--th-space-3);
+  }
+
+  .th-filter__action {
+    height: 52px;
+  }
+}

@@ -58,6 +58,15 @@ Build for production:
 npm run build
 ```
 
+Environment variables for API domain/path/token (web and mobile build):
+
+```bash
+API_BASE_URL=https://75l952sqbk.execute-api.us-east-1.amazonaws.com \
+PROPERTY_API_PATH=/poc-properties/api/property \
+PROPERTY_API_TOKEN=<your_jwt_token> \
+npm run build
+```
+
 ## Mobile (Capacitor)
 
 Add native platforms (run once per platform):
@@ -71,6 +80,15 @@ Sync web assets to native projects after each build:
 
 ```bash
 npx cap sync
+```
+
+For Android with env-configured API values:
+
+```bash
+API_BASE_URL=https://75l952sqbk.execute-api.us-east-1.amazonaws.com \
+PROPERTY_API_PATH=/poc-properties/api/property \
+PROPERTY_API_TOKEN=<your_jwt_token> \
+ionic build && npx cap sync android
 ```
 
 Open the native projects:

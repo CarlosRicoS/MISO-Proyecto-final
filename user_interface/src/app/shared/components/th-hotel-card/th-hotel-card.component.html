@@ -1,0 +1,43 @@
+<article class="th-hotel-card" [ngClass]="'th-hotel-card--' + variant">
+  <div class="th-hotel-card__media" [ngClass]="{ 'th-hotel-card__media--empty': !imageUrl }">
+    <img *ngIf="imageUrl" class="th-hotel-card__image" [src]="imageUrl" [alt]="title" />
+    
+    <!-- Favorite Button -->
+    <button class="th-hotel-card__favorite" *ngIf="showFavorite" aria-label="Favorite">
+      <ion-icon name="heart-outline"></ion-icon>
+    </button>
+    
+    <!-- Rating Badge -->
+    <div class="th-hotel-card__rating">
+      <th-badge variant="rating" icon="star">{{ rating }}</th-badge>
+    </div>
+  </div>
+
+  <div class="th-hotel-card__content">
+    <!-- Title & Location -->
+    <div class="th-hotel-card__header">
+      <h3 class="th-hotel-card__title">{{ title }}</h3>
+      <p class="th-hotel-card__location">
+        <ion-icon name="location-outline"></ion-icon>
+        {{ location }}
+      </p>
+    </div>
+
+    <!-- Tags/Badges -->
+    <div class="th-hotel-card__tags">
+      <ng-content select="[th-card-tags]"></ng-content>
+    </div>
+
+    <!-- Price & CTA Footer -->
+    <div class="th-hotel-card__footer">
+      <div class="th-hotel-card__price">
+        <span class="th-hotel-card__price-label">{{ pricePrefix }}</span>
+        <span class="th-hotel-card__price-value">{{ price }}</span>
+        <span class="th-hotel-card__price-suffix">{{ priceSuffix }}</span>
+      </div>
+      <div class="th-hotel-card__cta">
+        <th-button variant="primary" size="sm">{{ ctaLabel }}</th-button>
+      </div>
+    </div>
+  </div>
+</article>

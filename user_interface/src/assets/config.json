@@ -1,3 +1,5 @@
 {
-  "apiBaseUrl": "http://localhost:8080"
+  "apiBaseUrl": "https://75l952sqbk.execute-api.us-east-1.amazonaws.com",
+  "propertyApiPath": "/poc-properties/api/property",
+  "propertyApiToken": ""
 }
