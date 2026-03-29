@@ -1,11 +1,14 @@
+import { CommonModule } from '@angular/common';
 import { Component, Input, Output, EventEmitter, ViewChild } from '@angular/core';
-import { IonDatetime } from '@ionic/angular';
+import { FormsModule } from '@angular/forms';
+import { IonDatetime, IonicModule } from '@ionic/angular';
 
 @Component({
   selector: 'th-datetime-modal',
   templateUrl: './th-datetime-modal.component.html',
   styleUrls: ['./th-datetime-modal.component.scss'],
-  standalone: false
+  standalone: true,
+  imports: [CommonModule, FormsModule, IonicModule]
 })
 export class ThDatetimeModalComponent {
   @ViewChild('datetimePicker') datetimePicker!: IonDatetime;
@@ -19,6 +22,7 @@ export class ThDatetimeModalComponent {
   @Input() cancelLabel = 'Cancel';
   
   @Output() confirmed = new EventEmitter<Date>();
+  @Output() dateSelected = new EventEmitter<Date>();
   @Output() cancelled = new EventEmitter<void>();
 
   onConfirm(): void {
@@ -31,11 +35,39 @@ export class ThDatetimeModalComponent {
     }
   }
 
+  onDateChange(value: string | string[] | null | undefined): void {
+    const resolved = Array.isArray(value) ? value[0] : value;
+
+    if (!resolved) {
+      return;
+    }
+
+    const date = this.parseIsoDate(resolved);
+
+    if (!date) {
+      return;
+    }
+
+    this.confirmed.emit(date);
+    this.dateSelected.emit(date);
+  }
+
   onCancel(): void {
     this.cancelled.emit();
   }
 
   onBackdropClick(): void {
     this.cancelled.emit();
+  }
+
+  private parseIsoDate(value: string): Date | null {
+    const datePart = value.split('T')[0];
+    const [year, month, day] = datePart.split('-');
+
+    if (!year || !month || !day) {
+      return null;
+    }
+
+    return new Date(Number(year), Number(month) - 1, Number(day));
   }
 }

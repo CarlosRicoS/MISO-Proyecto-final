@@ -1,4 +1,4 @@
-package com.example.travelhub;
+package com.uniandes.travelhub.app;
 
 import com.getcapacitor.BridgeActivity;
 

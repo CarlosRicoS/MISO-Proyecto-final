@@ -1,11 +1,11 @@
-<article class="th-hotel-card" [ngClass]="'th-hotel-card--' + variant">
+<ion-card class="th-hotel-card" [ngClass]="'th-hotel-card--' + variant">
   <div class="th-hotel-card__media" [ngClass]="{ 'th-hotel-card__media--empty': !imageUrl }">
     <img *ngIf="imageUrl" class="th-hotel-card__image" [src]="imageUrl" [alt]="title" />
     
     <!-- Favorite Button -->
-    <button class="th-hotel-card__favorite" *ngIf="showFavorite" aria-label="Favorite">
+    <ion-button class="th-hotel-card__favorite" *ngIf="showFavorite" aria-label="Favorite" fill="solid">
       <ion-icon name="heart-outline"></ion-icon>
-    </button>
+    </ion-button>
     
     <!-- Rating Badge -->
     <div class="th-hotel-card__rating">
@@ -13,7 +13,7 @@
     </div>
   </div>
 
-  <div class="th-hotel-card__content">
+  <ion-card-content class="th-hotel-card__content">
     <!-- Title & Location -->
     <div class="th-hotel-card__header">
       <h3 class="th-hotel-card__title">{{ title }}</h3>
@@ -39,5 +39,5 @@
         <th-button variant="primary" size="sm">{{ ctaLabel }}</th-button>
       </div>
     </div>
-  </div>
-</article>
+  </ion-card-content>
+</ion-card>

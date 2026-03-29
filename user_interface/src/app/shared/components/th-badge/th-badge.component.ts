@@ -1,4 +1,6 @@
+import { CommonModule } from '@angular/common';
 import { Component, Input } from '@angular/core';
+import { IonicModule } from '@ionic/angular';
 
 export type ThBadgeVariant =
   | 'success'
@@ -12,7 +14,8 @@ export type ThBadgeVariant =
   selector: 'th-badge',
   templateUrl: './th-badge.component.html',
   styleUrls: ['./th-badge.component.scss'],
-  standalone: false
+  standalone: true,
+  imports: [CommonModule, IonicModule]
 })
 export class ThBadgeComponent {
   @Input() variant: ThBadgeVariant = 'neutral';

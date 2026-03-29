@@ -1,0 +1,31 @@
+<ion-content class="search-results-content">
+  <section class="search-results-list">
+    <th-filter-summary class="search-results-list__summary" [filterParams]="filterSummaryParams"></th-filter-summary>
+
+    <div class="search-results-list__inner">
+
+      <p class="search-results-list__count" *ngIf="!isLoading && !errorMessage">
+        {{ hotels.length }} {{ hotels.length === 1 ? 'hotel found' : 'hotels found' }}
+      </p>
+
+      <div class="search-results-list__cards" *ngIf="!isLoading && hotels.length">
+        <th-hotel-card
+          *ngFor="let hotel of hotels"
+          class="search-results-card"
+          variant="list"
+          [title]="hotel.name || 'Hotel'"
+          [location]="getHotelLocation(hotel)"
+          [price]="getHotelPrice(hotel)"
+          priceSuffix="/night"
+          ctaLabel="View Details"
+          [rating]="getHotelRating(hotel)"
+          [imageUrl]="hotel.imageUrl || ''"
+        ></th-hotel-card>
+      </div>
+
+      <p class="search-results-empty" *ngIf="isLoading">Loading hotels...</p>
+      <p class="search-results-empty" *ngIf="!isLoading && errorMessage">{{ errorMessage }}</p>
+      <p class="search-results-empty" *ngIf="!isLoading && !errorMessage && !hotels.length">No hotels available for this search.</p>
+    </div>
+  </section>
+</ion-content>

@@ -1,4 +1,6 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Component, EventEmitter, Input, Output  } from '@angular/core';
+import { IonicModule } from '@ionic/angular';
 
 export type ThInputState = 'default' | 'focus' | 'error' | 'disabled';
 export type ThInputType = 'text' | 'password' | 'email' | 'number' | 'tel' | 'url' | 'search';
@@ -7,7 +9,8 @@ export type ThInputType = 'text' | 'password' | 'email' | 'number' | 'tel' | 'ur
   selector: 'th-input',
   templateUrl: './th-input.component.html',
   styleUrls: ['./th-input.component.scss'],
-  standalone: false
+  standalone: true,
+  imports: [CommonModule, IonicModule]
 })
 export class ThInputComponent {
   @Input() label = '';

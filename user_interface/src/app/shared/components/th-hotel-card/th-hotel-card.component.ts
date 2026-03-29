@@ -1,4 +1,8 @@
+import { CommonModule } from '@angular/common';
 import { Component, Input } from '@angular/core';
+import { IonicModule } from '@ionic/angular';
+import { ThBadgeComponent } from '../th-badge/th-badge.component';
+import { ThButtonComponent } from '../th-button/th-button.component';
 
 export type ThHotelCardVariant = 'compact' | 'list' | 'mobile';
 
@@ -6,7 +10,8 @@ export type ThHotelCardVariant = 'compact' | 'list' | 'mobile';
   selector: 'th-hotel-card',
   templateUrl: './th-hotel-card.component.html',
   styleUrls: ['./th-hotel-card.component.scss'],
-  standalone: false
+  standalone: true,
+  imports: [CommonModule, IonicModule, ThBadgeComponent, ThButtonComponent]
 })
 export class ThHotelCardComponent {
   @Input() variant: ThHotelCardVariant = 'mobile';

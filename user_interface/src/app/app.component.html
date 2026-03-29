@@ -6,4 +6,34 @@
     <th-navbar mode="full" layout="mobile"></th-navbar>
   </ion-header>
   <ion-router-outlet class="site-content" [class.site-content--no-navbar]="!showNavbar"></ion-router-outlet>
+  <ion-footer slot="fixed" appPlatformText appPlatformShow="mobile">
+    <ion-toolbar class="mobile-tab-bar">
+      <ion-buttons class="mobile-tab-bar__buttons" slot="start">
+        <ion-button class="mobile-tab-bar__button" fill="clear" routerLink="/home" routerLinkActive="is-active" [routerLinkActiveOptions]="{ exact: true }">
+          <div class="stack-item">
+            <ion-icon name="search"></ion-icon>
+            <span class="mobile-tab-bar__label">Search</span>
+          </div>
+        </ion-button>
+        <ion-button class="mobile-tab-bar__button" fill="clear" aria-label="Favorites">
+          <div class="stack-item">
+            <ion-icon name="heart-outline"></ion-icon>
+            <span class="mobile-tab-bar__label">Favorites</span>
+          </div>
+        </ion-button>
+        <ion-button class="mobile-tab-bar__button" fill="clear" aria-label="Bookings">
+          <div class="stack-item">
+            <ion-icon name="calendar-outline"></ion-icon>
+            <span class="mobile-tab-bar__label">Bookings</span>
+          </div>
+        </ion-button>
+        <ion-button class="mobile-tab-bar__button" fill="clear" aria-label="Profile">
+          <div class="stack-item">
+            <ion-icon name="person-outline"></ion-icon>
+            <span class="mobile-tab-bar__label">Profile</span>
+          </div>
+        </ion-button>
+      </ion-buttons>
+    </ion-toolbar>
+  </ion-footer>
 </ion-app>

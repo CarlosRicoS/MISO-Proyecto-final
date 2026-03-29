@@ -1,50 +1,64 @@
-<header
+<ion-header
   class="th-navbar"
   [class.th-navbar--layout-desktop]="layout === 'desktop'"
   [class.th-navbar--layout-mobile]="layout === 'mobile'"
+  [class.th-navbar--mobile-search]="layout !== 'desktop' && isSearchResults"
 >
-  <div class="th-navbar__inner th-navbar__inner--desktop" *ngIf="layout !== 'mobile'">
-    <div class="th-navbar__brand">
-      <img class="th-navbar__logo" [src]="logoSrc" [alt]="logoAlt" />
+  <ion-toolbar class="th-navbar__toolbar">
+    <div class="th-navbar__inner th-navbar__inner--desktop" *ngIf="layout !== 'mobile'">
+      <div class="th-navbar__brand">
+        <img class="th-navbar__logo" [src]="logoSrc" [alt]="logoAlt" />
+      </div>
+
+      <nav class="th-navbar__links">
+        <ion-button class="th-navbar__link" fill="clear" routerLink="/home">
+          <ion-icon name="search" aria-hidden="true" slot="start"></ion-icon>
+          Search
+        </ion-button>
+        <ion-button class="th-navbar__link" fill="clear">
+          <ion-icon name="calendar-outline" aria-hidden="true" slot="start"></ion-icon>
+          Bookings
+        </ion-button>
+      </nav>
+
+      <div class="th-navbar__actions" *ngIf="mode === 'full'">
+        <ion-chip class="th-navbar__chip" *ngIf="showCurrency">
+          <ion-icon name="globe-outline" aria-hidden="true"></ion-icon>
+          <ion-label>USD</ion-label>
+        </ion-chip>
+        <ion-chip class="th-navbar__chip">
+          <ion-icon name="person-circle-outline" aria-hidden="true"></ion-icon>
+          <ion-label>Account</ion-label>
+        </ion-chip>
+        <ion-button class="th-navbar__icon-btn" fill="clear" aria-label="Notifications">
+          <ion-icon name="notifications-outline"></ion-icon>
+        </ion-button>
+      </div>
+
+      <div class="th-navbar__actions" *ngIf="mode === 'auth'">
+        <ion-button class="th-navbar__text-btn" fill="clear">Sign In</ion-button>
+        <ion-button class="th-navbar__primary-btn">Sign Up</ion-button>
+      </div>
     </div>
 
-    <nav class="th-navbar__links">
-      <a class="th-navbar__link" href="#">
-        <ion-icon name="search" aria-hidden="true"></ion-icon>
-        Search
-      </a>
-      <a class="th-navbar__link" href="#">
-        <ion-icon name="calendar-outline" aria-hidden="true"></ion-icon>
-        Bookings
-      </a>
-    </nav>
-
-    <div class="th-navbar__actions" *ngIf="mode === 'full'">
-      <button class="th-navbar__chip" *ngIf="showCurrency">
-        <ion-icon name="globe-outline" aria-hidden="true"></ion-icon>
-        USD
-      </button>
-      <button class="th-navbar__chip">
-        <ion-icon name="person-circle-outline" aria-hidden="true"></ion-icon>
-        Account
-      </button>
-      <button class="th-navbar__icon-btn" aria-label="Notifications">
-        <ion-icon name="notifications-outline"></ion-icon>
-      </button>
+    <div class="th-navbar__inner th-navbar__inner--mobile" *ngIf="layout !== 'desktop'">
+      <ng-container *ngIf="isSearchResults; else defaultMobile">
+        <ion-button class="th-navbar__mobile-action" fill="clear" aria-label="Back" routerLink="/home">
+          <ion-icon name="arrow-back"></ion-icon>
+        </ion-button>
+        <div class="th-navbar__mobile-title">Search Results</div>
+        <ion-button class="th-navbar__mobile-action" fill="clear" aria-label="Favorite">
+          <ion-icon name="heart"></ion-icon>
+        </ion-button>
+      </ng-container>
+      <ng-template #defaultMobile>
+        <div class="th-navbar__brand">
+          <img class="th-navbar__logo" [src]="logoSrc" [alt]="logoAlt" />
+        </div>
+        <ion-button class="th-navbar__icon-btn" fill="clear" aria-label="Notifications">
+          <ion-icon name="notifications-outline"></ion-icon>
+        </ion-button>
+      </ng-template>
     </div>
-
-    <div class="th-navbar__actions" *ngIf="mode === 'auth'">
-      <button class="th-navbar__text-btn">Sign In</button>
-      <button class="th-navbar__primary-btn">Sign Up</button>
-    </div>
-  </div>
-
-  <div class="th-navbar__inner th-navbar__inner--mobile" *ngIf="layout !== 'desktop'">
-    <div class="th-navbar__brand">
-      <img class="th-navbar__logo" [src]="logoSrc" [alt]="logoAlt" />
-    </div>
-    <button class="th-navbar__icon-btn" aria-label="Notifications">
-      <ion-icon name="notifications-outline"></ion-icon>
-    </button>
-  </div>
-</header>
+  </ion-toolbar>
+</ion-header>
