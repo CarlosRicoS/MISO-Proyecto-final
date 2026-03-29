@@ -6,11 +6,12 @@ capacity_provider_name = "capacity-provider"
 
 services = {
   "auth" = {
-    ecr_repository_name = "api_auth"
-    container_name      = "api_auth"
-    ecs_task_size       = { cpu = 256, memory = 512 }
-    create_database     = false
-    desired_count_tasks = 1
+    ecr_repository_name       = "api_auth"
+    container_name            = "api_auth"
+    ecs_task_size             = { cpu = 256, memory = 512 }
+    create_database           = false
+    desired_count_tasks       = 1
+    placement_constraint_type = ""
     autoscaling = {
       max_capacity = 2
       min_capacity = 1
@@ -27,11 +28,12 @@ services = {
     ]
   }
   "pms" = {
-    ecr_repository_name = "api_pms"
-    container_name      = "api_pms"
-    ecs_task_size       = { cpu = 512, memory = 921 }
-    create_database     = false
-    desired_count_tasks = 1
+    ecr_repository_name       = "api_pms"
+    container_name            = "api_pms"
+    ecs_task_size             = { cpu = 512, memory = 921 }
+    create_database           = false
+    desired_count_tasks       = 1
+    placement_constraint_type = ""
     autoscaling = {
       max_capacity = 1
       min_capacity = 0
@@ -69,11 +71,11 @@ services = {
     environment_variables = [
       {
         name  = "JPA_SHOW_SQL"
-        value = "true"
+        value = "false"
       },
       {
         name  = "JPA_DDL_AUTO"
-        value = "create"
+        value = "none"
       },
       {
         name  = "HIKARI_MAX_POOL_SIZE"

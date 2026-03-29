@@ -32,14 +32,13 @@ public final class SearchPropertySpecification {
                     cb.lessThanOrEqualTo(lockedRoot.get("endDate"), endDate)
             );
 
-            subquery.select(cb.literal(1)) // Select 1
+            subquery.select(cb.literal(1))
                     .where(cb.and(correlation, dateFilters));
 
-            // 4. Main Query: city, capacity AND NOT EXISTS
             return cb.and(
                     cb.equal(root.get("city"), city),
                     cb.equal(root.get("maxCapacity"), maxCapacity),
-                    cb.not(cb.exists(subquery)) // <-- AQUÍ está el NOT EXISTS
+                    cb.not(cb.exists(subquery))
             );
         };
     }

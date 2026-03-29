@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+
+cd user_interface
+npx ng test --code-coverage --watch=false
