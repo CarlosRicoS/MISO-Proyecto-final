@@ -60,6 +60,13 @@ resource "aws_iam_role_policy" "web_app_ecr_ssm" {
   })
 }
 
+# Allows the SSM agent on the EC2 instance to communicate with the SSM service.
+# Required for SSM Run Command (remote redeploy without SSH).
+resource "aws_iam_role_policy_attachment" "web_app_ssm_core" {
+  role       = aws_iam_role.web_app.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+}
+
 resource "aws_iam_instance_profile" "web_app" {
   name = "${var.project_name}-web-app-profile"
   role = aws_iam_role.web_app.name
