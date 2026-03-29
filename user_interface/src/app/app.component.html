@@ -1,12 +1,12 @@
-<ion-app>
-  <ion-header slot="fixed" appPlatformText appPlatformShow="web">
+<ion-app [class.app-has-navbar]="showNavbar" [class.app-no-navbar]="!showNavbar">
+  <ion-header *ngIf="showNavbar && !isMobileLayout" slot="fixed">
     <th-navbar mode="full" layout="desktop"></th-navbar>
   </ion-header>
-  <ion-header slot="fixed" appPlatformText appPlatformShow="mobile">
+  <ion-header *ngIf="showNavbar && isMobileLayout" slot="fixed">
     <th-navbar mode="full" layout="mobile"></th-navbar>
   </ion-header>
-  <ion-router-outlet class="site-content"></ion-router-outlet>
-  <ion-footer slot="fixed" appPlatformText appPlatformShow="mobile">
+  <ion-router-outlet class="site-content" [class.site-content--no-navbar]="!showNavbar"></ion-router-outlet>
+  <ion-footer *ngIf="showNavbar && isMobileLayout" slot="fixed">
     <ion-toolbar class="mobile-tab-bar">
       <ion-buttons class="mobile-tab-bar__buttons" slot="start">
         <ion-button class="mobile-tab-bar__button" fill="clear" routerLink="/home" routerLinkActive="is-active" [routerLinkActiveOptions]="{ exact: true }">

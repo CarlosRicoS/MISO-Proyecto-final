@@ -2,9 +2,13 @@
   <label class="th-input__label" *ngIf="label">{{ label }}</label>
   <ion-item class="th-input__item" lines="none">
     <ion-input
+      [type]="type"
       [placeholder]="placeholder"
       [value]="value"
       [disabled]="isDisabled"
+      (ionInput)="onInput($event)"
+      (ionFocus)="onFocus()"
+      (ionBlur)="onBlur()"
     ></ion-input>
     <span class="th-input__badge" *ngIf="badge">{{ badge }}</span>
   </ion-item>
