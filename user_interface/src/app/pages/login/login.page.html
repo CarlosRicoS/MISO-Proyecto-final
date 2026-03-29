@@ -48,7 +48,16 @@
             </div>
 
             <div class="login-card__cta">
-              <th-button expand="block" size="md" (click)="onSignIn()">Sign In</th-button>
+              <th-button expand="block" size="md" [disabled]="isLoading" (click)="onSignIn()">
+                <span class="login-card__button-content">
+                  <ion-spinner
+                    *ngIf="isLoading"
+                    name="crescent"
+                    class="login-card__spinner"
+                  ></ion-spinner>
+                  <span>Sign In</span>
+                </span>
+              </th-button>
             </div>
 
             <ion-button fill="clear" size="small" class="login-card__link">

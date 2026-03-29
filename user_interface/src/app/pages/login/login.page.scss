@@ -83,6 +83,18 @@
   width: 100%;
 }
 
+.login-card__button-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--th-space-2);
+}
+
+.login-card__spinner {
+  height: 20px;
+  width: 20px;
+}
+
 .login-card__link {
   align-self: center;
   --padding-start: 0;

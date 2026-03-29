@@ -1,34 +1,39 @@
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { Observable } from 'rxjs';
+import { ConfigService } from './config.service';
 
-export interface LoginResponse {
-  success: boolean;
-  message?: string;
-  token?: string;
+export interface LoginRequest {
+  email: string;
+  password: string;
 }
 
-@Injectable({
-  providedIn: 'root'
-})
-export class AuthService {
-  constructor() {}
+export interface LoginResponse {
+  id_token: string;
+  access_token: string;
+  refresh_token: string;
+  expires_in: number;
+  token_type: string;
+}
 
-  login(email: string, password: string): Promise<LoginResponse> {
-    return new Promise((resolve) => {
-      // Simulate API delay
-      setTimeout(() => {
-        // Mock validation: reject invalid credentials
-        if (email === 'test@example.com' && password === 'password123') {
-          resolve({
-            success: true,
-            token: 'mock-jwt-token'
-          });
-        } else {
-          resolve({
-            success: false,
-            message: 'Invalid email or password. Try test@example.com / password123'
-          });
-        }
-      }, 500);
+@Injectable({ providedIn: 'root' })
+export class AuthService {
+  constructor(private http: HttpClient, private config: ConfigService) {}
+
+  login(email: string, password: string): Observable<LoginResponse> {
+    const baseUrl = this.config.apiBaseUrl?.replace(/\/$/, '');
+    const authPath = 'auth/api/auth/login';
+    const url = baseUrl ? `${baseUrl}/${authPath}` : `/${authPath}`;
+
+    const body: LoginRequest = {
+      email,
+      password,
+    };
+
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json',
     });
+
+    return this.http.post<LoginResponse>(url, body, { headers });
   }
 }

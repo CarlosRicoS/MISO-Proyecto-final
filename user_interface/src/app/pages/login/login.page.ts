@@ -1,4 +1,7 @@
 import { Component, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
+import { Router } from '@angular/router';
 import {
   IonAlert,
   IonButton,
@@ -8,7 +11,9 @@ import {
   IonContent,
   IonGrid,
   IonRow,
+  IonSpinner,
 } from '@ionic/angular/standalone';
+import { firstValueFrom } from 'rxjs';
 import { ThButtonComponent } from '../../shared/components/th-button/th-button.component';
 import { ThInputComponent, ThInputState } from '../../shared/components/th-input/th-input.component';
 import { AuthService } from '../../core/services/auth.service';
@@ -19,6 +24,7 @@ import { AuthService } from '../../core/services/auth.service';
   styleUrls: ['./login.page.scss'],
   standalone: true,
   imports: [
+    CommonModule,
     IonCardContent,
     IonContent,
     IonGrid,
@@ -27,12 +33,14 @@ import { AuthService } from '../../core/services/auth.service';
     IonCard,
     IonButton,
     IonAlert,
+    IonSpinner,
     ThInputComponent,
     ThButtonComponent,
   ],
 })
 export class LoginPage {
   private readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
 
   email = '';
   password = '';
@@ -90,7 +98,7 @@ export class LoginPage {
     this.password = value;
   }
 
-  onSignIn(): void {
+  async onSignIn(): Promise<void> {
     this.hasSubmitted = true;
 
     if (this.emailState === 'error' || this.passwordState === 'error') {
@@ -98,19 +106,31 @@ export class LoginPage {
     }
 
     this.isLoading = true;
-    this.authService.login(this.email.trim(), this.password).then((response) => {
-      this.isLoading = false;
+    try {
+      // Simulate 5 second delay before making the request
+      await new Promise(resolve => setTimeout(resolve, 5000));
 
-      if (response.success) {
-        // Navigate to home or dashboard
-        console.log('Login successful:', response.token);
+      const response = await firstValueFrom(this.authService.login(this.email.trim(), this.password));
+
+      // Persist tokens for subsequent authenticated requests.
+      localStorage.setItem('id_token', response.id_token);
+      localStorage.setItem('access_token', response.access_token);
+      localStorage.setItem('refresh_token', response.refresh_token);
+      localStorage.setItem('expires_in', String(response.expires_in));
+      localStorage.setItem('token_type', response.token_type);
+
+      // Navigate to home.
+      this.router.navigate(['/home']);
+    } catch (error) {
+      const httpError = error as HttpErrorResponse;
+      if (httpError.status === 401) {
+        this.showErrorAlert('Invalid email or password.');
       } else {
-        this.showErrorAlert(response.message || 'Login failed. Please try again.');
+        this.showErrorAlert('An error occurred. Please try again.');
       }
-    }).catch((error) => {
+    } finally {
       this.isLoading = false;
-      this.showErrorAlert('An error occurred. Please try again.');
-    });
+    }
   }
 
   private showErrorAlert(message: string): void {

@@ -66,8 +66,9 @@
 }
 
 .th-button--disabled {
-  --background: var(--th-neutral-200);
-  --color: var(--th-neutral-500);
-  --border-color: var(--th-neutral-200);
+  --background: var(--th-primary-500);
+  --color: var(--th-white);
+  --border-color: var(--th-primary-500);
   --border-width: 1px;
+  opacity: 0.7;
 }
