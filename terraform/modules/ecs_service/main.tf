@@ -9,7 +9,14 @@ resource "aws_ecs_service" "service" {
     security_groups = [data.aws_security_group.ecs_sg.id]
   }
 
-  force_new_deployment = var.force_new_deployment
+  force_new_deployment               = var.force_new_deployment
+  deployment_minimum_healthy_percent = var.deployment_minimum_healthy_percent
+  deployment_maximum_percent         = var.deployment_maximum_percent
+
+  deployment_circuit_breaker {
+    enable   = true
+    rollback = true
+  }
 
   dynamic "placement_constraints" {
     for_each = var.placement_constraint_type != null && var.placement_constraint_type != "" ? [1] : []
