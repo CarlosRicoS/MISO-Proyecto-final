@@ -74,7 +74,7 @@ class SearchPropertyByIdQueryHandlerTest {
                 "Luxury Hotel",
                 4,
                 "Test property description",
-                "https://example.com/photo.jpg",
+                List.of("https://example.com/photo.jpg"),
                 LocalTime.of(14, 0),
                 LocalTime.of(11, 0),
                 "admin-group-1",
@@ -144,7 +144,7 @@ class SearchPropertyByIdQueryHandlerTest {
                 "Basic Hotel",
                 2,
                 "Simple property",
-                "https://example.com/basic.jpg",
+                List.of("https://example.com/basic.jpg"),
                 LocalTime.of(15, 0),
                 LocalTime.of(10, 0),
                 "admin-group-2",
@@ -181,7 +181,7 @@ class SearchPropertyByIdQueryHandlerTest {
                 "Complete Hotel",
                 8,
                 "Full description here",
-                "https://example.com/complete.jpg",
+                List.of("https://example.com/complete.jpg"),
                 LocalTime.of(16, 30),
                 LocalTime.of(12, 0),
                 "admin-group-3",
@@ -201,7 +201,7 @@ class SearchPropertyByIdQueryHandlerTest {
         assertThat(response.getName()).isEqualTo("Complete Hotel");
         assertThat(response.getMaxCapacity()).isEqualTo(8);
         assertThat(response.getDescription()).isEqualTo("Full description here");
-        assertThat(response.getUrlBucketPhotos()).isEqualTo("https://example.com/complete.jpg");
+        assertThat(response.getPhotos()).contains("https://example.com/complete.jpg");
         assertThat(response.getCheckInTime()).isEqualTo(LocalTime.of(16, 30));
         assertThat(response.getCheckOutTime()).isEqualTo(LocalTime.of(12, 0));
         assertThat(response.getAdminGroupId()).isEqualTo("admin-group-3");
@@ -216,7 +216,7 @@ class SearchPropertyByIdQueryHandlerTest {
         entity.setName(name);
         entity.setMaxCapacity(4);
         entity.setDescription("Test property description");
-        entity.setUrlBucketPhotos("https://example.com/photo.jpg");
+        entity.setPhotos(List.of("https://example.com/photo.jpg"));
         entity.setCheckInTime(LocalTime.of(14, 0));
         entity.setCheckOutTime(LocalTime.of(11, 0));
         entity.setAdminGroupId("admin-group-1");
