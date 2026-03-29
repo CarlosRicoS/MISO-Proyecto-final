@@ -134,10 +134,34 @@ Add the service to `test` and `build_and_push` matrices in both `.github/workflo
 
 | Workflow | Trigger | Purpose |
 |---|---|---|
-| `pr_validation.yml` | PR to `main` | Runs tests, builds Docker images (tagged with commit SHA + `latest`), and `terraform plan` on all stacks |
+| `pr_validation.yml` | PR to `main` | Tests all services (Python, Java, Angular), builds Docker images, and runs `terraform plan` on all stacks |
 | `deploy_apps.yml` | Manual (`workflow_dispatch`) | Full end-to-end deploy: test → provision infra → build & push all images → deploy all ECS services |
-| `deploy_stack.yml` | Manual (`workflow_dispatch`) | Deploy a **single stack** — builds images only when needed, then runs `terraform apply` |
+| `deploy_stack.yml` | Manual (`workflow_dispatch`) | Deploy a **single stack** — tests and builds images only when needed, then runs `terraform apply` |
 | `seed_database.yml` | Manual (`workflow_dispatch`) | Run a SQL seed script against a specific service database via SSM-retrieved credentials |
+
+### PR Validation (`pr_validation.yml`)
+
+Every PR to `main` runs the following jobs in parallel before merging is allowed:
+
+```
+test          (auth · booking · poc-properties — parallel)
+test_frontend (travelhub)
+  │
+  ├── build_and_push   (auth · booking · poc_properties — parallel, needs: test)
+  └── build_web_image  (travelhub, needs: test_frontend)
+        │
+        └── terraform_plan  (all stacks in parallel, needs: test + build_and_push + build_web_image)
+```
+
+**Test coverage thresholds enforced on every PR:**
+
+| Service | Framework | Coverage requirement |
+|---|---|---|
+| `auth`, `booking` | Python / pytest | 80% (configured in `pyproject.toml`) |
+| `poc_properties` | Java / JaCoCo | 80% line coverage |
+| `travelhub` | Angular / Karma + Jasmine | 85% statements, branches, functions, lines |
+
+Docker images are pushed with two tags: `<commit-sha>` (immutable, for traceability) and `latest` (so `terraform plan` for `ecs_api` and `web_app` can resolve the ECR image digest).
 
 ### Full Deploy Pipeline (`deploy_apps.yml`)
 
@@ -162,12 +186,17 @@ Use this when iterating on a single service or infra change without running the 
 1. Go to **Actions** → **Deploy Single Stack** → **Run workflow**
 2. Select the target **stack** and **environment**
 
-The workflow automatically handles image builds based on the selected stack:
+The workflow automatically handles tests, image builds, and redeployment based on the selected stack:
 
 ```
-stack = ecs_api   →  build all backend images (parallel)  →  terraform apply ecs_api
-stack = web_app   →  build travelhub image  →  redeploy container on EC2 via SSM  →  terraform apply web_app
-stack = anything else  →  terraform apply <stack>  (no image build needed)
+stack = ecs_api
+  build_backend_images (parallel) → terraform apply ecs_api
+
+stack = web_app
+  test_web_app → build_web_image → redeploy container on EC2 (SSM) → terraform apply web_app
+
+stack = anything else
+  terraform apply <stack>  (no tests or image build)
 ```
 
 **Image build behavior by language:**
