@@ -107,9 +107,6 @@ export class LoginPage {
 
     this.isLoading = true;
     try {
-      // Simulate 5 second delay before making the request
-      await new Promise(resolve => setTimeout(resolve, 5000));
-
       const response = await firstValueFrom(this.authService.login(this.email.trim(), this.password));
 
       // Persist tokens for subsequent authenticated requests.
