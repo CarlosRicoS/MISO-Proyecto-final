@@ -106,6 +106,18 @@ variable "force_new_deployment" {
   default     = true
 }
 
+variable "deployment_minimum_healthy_percent" {
+  description = "Minimum percentage of tasks that must stay healthy during a deployment. Set to 0 on clusters with no spare capacity (desired_count=1) so ECS stops the old task before starting the new one."
+  type        = number
+  default     = 0
+}
+
+variable "deployment_maximum_percent" {
+  description = "Maximum percentage of tasks allowed to run during a deployment (relative to desired_count). Set to 100 when minimum is 0 so ECS does stop-then-start instead of start-then-stop."
+  type        = number
+  default     = 100
+}
+
 variable "placement_constraint_type" {
   description = "Placement constraint type for ECS tasks (distinctInstance, memberOf, or null/empty to allow multiple tasks per instance)"
   type        = string
