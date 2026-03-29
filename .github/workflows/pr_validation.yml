@@ -109,13 +109,11 @@ jobs:
       fail-fast: false
       matrix:
         stack:
-          - ecs_cluster
           - container_registry
           - database
           - cognito
           - ecs_api
           - api_gateway
-          - monitoring
           - web_app
     name: Plan ${{ matrix.stack }}
     steps:
