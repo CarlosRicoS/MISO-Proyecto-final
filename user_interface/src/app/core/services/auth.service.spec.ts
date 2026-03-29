@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
-import { AuthService, LoginResponse } from './auth.service';
+import { AuthService, LoginResponse, RegisterResponse } from './auth.service';
 import { ConfigService } from './config.service';
 
 describe('AuthService', () => {
@@ -259,6 +259,81 @@ describe('AuthService', () => {
 
       const req = httpMock.expectOne('/auth/api/auth/login');
       req.flush(mockResponse);
+    });
+  });
+
+  describe('register', () => {
+    it('should make a POST request to the register endpoint', () => {
+      const fullName = 'Juan Perez';
+      const email = 'juan@example.com';
+      const password = 'MyPass123';
+      const mockResponse: RegisterResponse = {
+        message: 'User registered successfully',
+        email,
+        role: 'travelers',
+      };
+
+      service.register(fullName, email, password).subscribe((response) => {
+        expect(response).toEqual(mockResponse);
+      });
+
+      const req = httpMock.expectOne('/auth/api/auth/register');
+      expect(req.request.method).toBe('POST');
+      expect(req.request.body).toEqual({
+        full_name: fullName,
+        email,
+        password,
+        role: 'travelers',
+      });
+      expect(req.request.headers.get('Content-Type')).toBe('application/json');
+
+      req.flush(mockResponse);
+    });
+
+    it('should use custom API base URL for register when available', () => {
+      spyOnProperty(configService, 'apiBaseUrl', 'get').and.returnValue('https://api.example.com/');
+
+      service.register('Juan Perez', 'juan@example.com', 'MyPass123').subscribe();
+
+      const req = httpMock.expectOne('https://api.example.com/auth/api/auth/register');
+      expect(req.request.method).toBe('POST');
+      req.flush({
+        message: 'User registered successfully',
+        email: 'juan@example.com',
+        role: 'travelers',
+      });
+    });
+
+    it('should emit error on 409 conflict response', (done) => {
+      service.register('Juan Perez', 'juan@example.com', 'MyPass123').subscribe(
+        () => {
+          fail('should have failed with 409 error');
+        },
+        (error) => {
+          expect(error.status).toBe(409);
+          expect(error.error.detail).toBe('Email already in use');
+          done();
+        }
+      );
+
+      const req = httpMock.expectOne('/auth/api/auth/register');
+      req.flush({ detail: 'Email already in use' }, { status: 409, statusText: 'Conflict' });
+    });
+
+    it('should emit error on 400 bad request response', (done) => {
+      service.register('Juan Perez', 'juan@example.com', 'weak').subscribe(
+        () => {
+          fail('should have failed with 400 error');
+        },
+        (error) => {
+          expect(error.status).toBe(400);
+          expect(error.error.detail).toBe('Password does not meet criteria');
+          done();
+        }
+      );
+
+      const req = httpMock.expectOne('/auth/api/auth/register');
+      req.flush({ detail: 'Password does not meet criteria' }, { status: 400, statusText: 'Bad Request' });
     });
   });
 });

@@ -145,6 +145,18 @@
 	width: 100%;
 }
 
+.register-form__button-content {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--th-space-2);
+}
+
+.register-form__spinner {
+	height: 20px;
+	width: 20px;
+}
+
 .register-layout__divider {
 	position: relative;
 	display: flex;

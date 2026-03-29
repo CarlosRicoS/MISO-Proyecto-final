@@ -1,13 +1,17 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { IonicModule } from '@ionic/angular';
+import { firstValueFrom } from 'rxjs';
 import { ThButtonComponent } from '../../shared/components/th-button/th-button.component';
 import {
   ThInputComponent,
   ThInputState,
   ThInputType,
 } from '../../shared/components/th-input/th-input.component';
+import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-register',
@@ -23,6 +27,9 @@ import {
   ],
 })
 export class RegisterPage {
+  private readonly authService: AuthService;
+  private readonly router: Router;
+
   fullName = '';
   email = '';
   password = '';
@@ -31,6 +38,16 @@ export class RegisterPage {
   hasSubmitted = false;
   isPasswordVisible = false;
   isConfirmPasswordVisible = false;
+  isLoading = false;
+  isAlertOpen = false;
+  alertTitle = '';
+  alertMessage = '';
+  shouldNavigateToLogin = false;
+
+  constructor(authService: AuthService, router: Router) {
+    this.authService = authService;
+    this.router = router;
+  }
 
   get fullNameState(): ThInputState {
     if (!this.fullName.trim()) {
@@ -164,7 +181,7 @@ export class RegisterPage {
     this.acceptedTerms = value;
   }
 
-  onCreateAccount(): void {
+  async onCreateAccount(): Promise<void> {
     this.hasSubmitted = true;
 
     if (
@@ -177,7 +194,47 @@ export class RegisterPage {
       return;
     }
 
-    // Register service integration will be added later.
+    this.isLoading = true;
+    try {
+      const response = await firstValueFrom(
+        this.authService.register(this.fullName.trim(), this.email.trim(), this.password)
+      );
+      this.showAlert('Account Created', response.message);
+      this.shouldNavigateToLogin = true;
+    } catch (error) {
+      const httpError = error as HttpErrorResponse;
+      const detail = this.resolveBackendDetailMessage(httpError);
+
+      if (httpError.status === 409) {
+        this.showAlert('Registration Failed', detail || 'Email is already in use.');
+      } else if (httpError.status === 400) {
+        this.showAlert('Registration Failed', detail || 'Password does not meet criteria.');
+      } else {
+        this.showAlert('Registration Failed', detail || 'An error occurred. Please try again.');
+      }
+      this.shouldNavigateToLogin = false;
+    } finally {
+      this.isLoading = false;
+    }
+  }
+
+  async onAlertDismiss(): Promise<void> {
+    this.isAlertOpen = false;
+    if (this.shouldNavigateToLogin) {
+      this.shouldNavigateToLogin = false;
+      await this.router.navigate(['/login']);
+    }
+  }
+
+  private resolveBackendDetailMessage(error: HttpErrorResponse): string {
+    const detail = error?.error?.detail;
+    return typeof detail === 'string' ? detail : '';
+  }
+
+  private showAlert(title: string, message: string): void {
+    this.alertTitle = title;
+    this.alertMessage = message;
+    this.isAlertOpen = true;
   }
 
   private isValidEmail(value: string): boolean {

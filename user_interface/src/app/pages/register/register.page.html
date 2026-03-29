@@ -1,3 +1,11 @@
+<ion-alert
+  [isOpen]="isAlertOpen"
+  [header]="alertTitle"
+  [message]="alertMessage"
+  [buttons]="['OK']"
+  (didDismiss)="onAlertDismiss()"
+></ion-alert>
+
 <ion-content [fullscreen]="true" class="register-content">
   <ion-grid class="register-shell">
     <ion-row class="register-row">
@@ -96,8 +104,15 @@
                 <p class="register-form__terms-helper" *ngIf="termsHelper">{{ termsHelper }}</p>
 
                 <div class="register-form__cta">
-                  <th-button expand="block" size="md" (click)="onCreateAccount()">
-                    Create Account
+                  <th-button expand="block" size="md" [disabled]="isLoading" (click)="onCreateAccount()">
+                    <span class="register-form__button-content">
+                      <ion-spinner
+                        *ngIf="isLoading"
+                        name="crescent"
+                        class="register-form__spinner"
+                      ></ion-spinner>
+                      <span>Create Account</span>
+                    </span>
                   </th-button>
                 </div>
               </section>

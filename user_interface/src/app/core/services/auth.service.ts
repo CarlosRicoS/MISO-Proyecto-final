@@ -16,6 +16,19 @@ export interface LoginResponse {
   token_type: string;
 }
 
+export interface RegisterRequest {
+  full_name: string;
+  email: string;
+  password: string;
+  role: string;
+}
+
+export interface RegisterResponse {
+  message: string;
+  email: string;
+  role: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   constructor(private http: HttpClient, private config: ConfigService) {}
@@ -35,5 +48,24 @@ export class AuthService {
     });
 
     return this.http.post<LoginResponse>(url, body, { headers });
+  }
+
+  register(fullName: string, email: string, password: string): Observable<RegisterResponse> {
+    const baseUrl = this.config.apiBaseUrl?.replace(/\/$/, '');
+    const authPath = 'auth/api/auth/register';
+    const url = baseUrl ? `${baseUrl}/${authPath}` : `/${authPath}`;
+
+    const body: RegisterRequest = {
+      full_name: fullName,
+      email,
+      password,
+      role: 'travelers',
+    };
+
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json',
+    });
+
+    return this.http.post<RegisterResponse>(url, body, { headers });
   }
 }
