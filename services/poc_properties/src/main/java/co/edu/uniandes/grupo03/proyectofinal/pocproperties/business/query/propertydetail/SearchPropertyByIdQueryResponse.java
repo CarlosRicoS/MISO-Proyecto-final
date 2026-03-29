@@ -4,6 +4,7 @@ import co.edu.uniandes.grupo03.proyectofinal.pocproperties.business.query.QueryR
 import lombok.Value;
 
 import java.time.LocalTime;
+import java.util.List;
 
 @Value
 public class SearchPropertyByIdQueryResponse implements QueryResponse {
@@ -23,4 +24,28 @@ public class SearchPropertyByIdQueryResponse implements QueryResponse {
     LocalTime checkOutTime;
 
     String adminGroupId;
+
+    List<ReviewDto> reviews;
+
+    List<AmenityDto> amenities;
+
+    @Value
+    public static class ReviewDto {
+
+        String id;
+
+        String description;
+
+        Integer rating;
+
+        String name;
+    }
+
+    @Value
+    public static class AmenityDto {
+
+        String id;
+
+        String description;
+    }
 }

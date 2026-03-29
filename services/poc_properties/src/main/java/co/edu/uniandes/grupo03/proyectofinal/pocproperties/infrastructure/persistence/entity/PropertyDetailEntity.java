@@ -32,4 +32,15 @@ public class PropertyDetailEntity {
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "propertyDetail")
     private List<LockedPropertyEntity> lockedDays;
+
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "propertyDetail")
+    private List<ReviewEntity> reviews;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "property_detail_amenities",
+            joinColumns = @JoinColumn(name = "property_detail_id"),
+            inverseJoinColumns = @JoinColumn(name = "amenity_id")
+    )
+    private List<AmenityEntity> amenities;
 }

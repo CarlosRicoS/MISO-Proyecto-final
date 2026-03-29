@@ -5,10 +5,7 @@ import co.edu.uniandes.grupo03.proyectofinal.pocproperties.business.command.Empt
 import co.edu.uniandes.grupo03.proyectofinal.pocproperties.business.command.propertydetail.LockPropertyCommand;
 import co.edu.uniandes.grupo03.proyectofinal.pocproperties.business.query.PageableQueryHandler;
 import co.edu.uniandes.grupo03.proyectofinal.pocproperties.business.query.QueryHandler;
-import co.edu.uniandes.grupo03.proyectofinal.pocproperties.business.query.propertydetail.SearchPropertiesQuery;
-import co.edu.uniandes.grupo03.proyectofinal.pocproperties.business.query.propertydetail.SearchPropertiesQueryResponse;
-import co.edu.uniandes.grupo03.proyectofinal.pocproperties.business.query.propertydetail.SearchPropertyByIdQuery;
-import co.edu.uniandes.grupo03.proyectofinal.pocproperties.business.query.propertydetail.SearchPropertyByIdQueryResponse;
+import co.edu.uniandes.grupo03.proyectofinal.pocproperties.business.query.propertydetail.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -26,11 +23,13 @@ public class PropertyController {
 
     private final QueryHandler<SearchPropertyByIdQuery, SearchPropertyByIdQueryResponse> searchPropertyByIdQueryHandler;
 
+    private final QueryHandler<SearchFirstPropertiesQuery, SearchPropertiesQueryResponse> searchFirstPropertiesQueryHandler;
+
     private final CommandHandler<LockPropertyCommand, EmptyCommandResponse> lockPropertyCommandHandler;
 
     @GetMapping
     public ResponseEntity<List<SearchPropertiesQueryResponse.PropertyResult>> searchProperties(SearchPropertiesQuery query, Pageable pageable) {
-        var result = searchPropertiesQueryHandler.execute(query, pageable);
+        var result = query.isFirstPropertiesQuery() ? searchFirstPropertiesQueryHandler.execute(new SearchFirstPropertiesQuery()) : searchPropertiesQueryHandler.execute(query, pageable);
         return ResponseEntity.ok(result.getResult());
     }
 

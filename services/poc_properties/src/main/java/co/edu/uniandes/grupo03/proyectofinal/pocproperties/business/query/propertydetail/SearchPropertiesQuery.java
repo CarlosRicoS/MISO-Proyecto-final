@@ -40,4 +40,8 @@ public class SearchPropertiesQuery implements Query {
 
         return Collections.emptyList();
     }
+
+    public boolean isFirstPropertiesQuery() {
+        return startDate == null && endDate == null && city == null && capacity == null;
+    }
 }

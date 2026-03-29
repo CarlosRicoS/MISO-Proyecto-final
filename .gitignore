@@ -261,3 +261,5 @@ load-tests/results/
 
 # Personal folder
 .pers
+
+.idea/
