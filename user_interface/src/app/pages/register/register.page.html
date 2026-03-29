@@ -1,0 +1,134 @@
+<ion-content [fullscreen]="true" class="register-content">
+  <ion-grid class="register-shell">
+    <ion-row class="register-row">
+      <ion-col size="12" size-xl="10" class="register-col">
+        <ion-card class="register-card" aria-label="Register card">
+          <ion-card-content class="register-card__content">
+            <div class="register-mobile-bar">
+              <ion-button
+                fill="clear"
+                class="register-mobile-bar__back"
+                routerLink="/login"
+                aria-label="Back"
+              >
+                <ion-icon name="arrow-back-outline"></ion-icon>
+              </ion-button>
+              <h1 class="register-mobile-bar__title">Create Account</h1>
+            </div>
+
+            <div class="register-layout">
+              <section class="register-form" aria-label="Create account form">
+                <header class="register-form__header">
+                  <span class="register-form__logo" aria-hidden="true">
+                    <ion-icon name="airplane-outline"></ion-icon>
+                  </span>
+                  <h2 class="register-form__title">Welcome to TravelHub</h2>
+                  <p class="register-form__subtitle">
+                    Create your account to start booking amazing hotels worldwide
+                  </p>
+                </header>
+
+                <div class="register-form__fields">
+                  <th-input
+                    label="Full Name"
+                    placeholder="Enter your full name"
+                    type="text"
+                    startIcon="person-outline"
+                    [value]="fullName"
+                    [state]="fullNameState"
+                    [helper]="fullNameHelper"
+                    (valueChange)="onFullNameChange($event)"
+                  ></th-input>
+
+                  <th-input
+                    label="Email Address"
+                    placeholder="Enter your email"
+                    type="email"
+                    startIcon="mail-outline"
+                    [value]="email"
+                    [state]="emailState"
+                    [helper]="emailHelper"
+                    (valueChange)="onEmailChange($event)"
+                  ></th-input>
+
+                  <th-input
+                    label="Password"
+                    placeholder="Create a password"
+                    [type]="passwordInputType"
+                    startIcon="lock-closed-outline"
+                    [endIcon]="passwordTrailIcon"
+                    [endIconAriaLabel]="isPasswordVisible ? 'Hide password' : 'Show password'"
+                    [value]="password"
+                    [state]="passwordState"
+                    [helper]="passwordHelper"
+                    (valueChange)="onPasswordChange($event)"
+                    (endIconClick)="onTogglePasswordVisibility()"
+                  ></th-input>
+
+                  <th-input
+                    label="Confirm Password"
+                    placeholder="Confirm your password"
+                    [type]="confirmPasswordInputType"
+                    startIcon="lock-closed-outline"
+                    [endIcon]="confirmPasswordTrailIcon"
+                    [endIconAriaLabel]="isConfirmPasswordVisible ? 'Hide password' : 'Show password'"
+                    [value]="confirmPassword"
+                    [state]="confirmPasswordState"
+                    [helper]="confirmPasswordHelper"
+                    (valueChange)="onConfirmPasswordChange($event)"
+                    (endIconClick)="onToggleConfirmPasswordVisibility()"
+                  ></th-input>
+                </div>
+
+                <div class="register-form__terms">
+                  <ion-checkbox
+                    [checked]="acceptedTerms"
+                    (ionChange)="onAcceptedTermsChange($event.detail.checked)"
+                    aria-label="Accept terms"
+                  ></ion-checkbox>
+                  <p>
+                    I agree to the
+                    <a href="javascript:void(0)">Terms of Service</a>
+                    and
+                    <a href="javascript:void(0)">Privacy Policy</a>
+                  </p>
+                </div>
+                <p class="register-form__terms-helper" *ngIf="termsHelper">{{ termsHelper }}</p>
+
+                <div class="register-form__cta">
+                  <th-button expand="block" size="md" (click)="onCreateAccount()">
+                    Create Account
+                  </th-button>
+                </div>
+              </section>
+
+              <div class="register-layout__divider" aria-hidden="true">
+                <span>Or continue with</span>
+              </div>
+
+              <aside class="register-social" aria-label="Social sign up options">
+                <div class="register-social__buttons">
+                  <ion-button fill="outline" class="register-social__button">
+                    <ion-icon name="logo-google" slot="start"></ion-icon>
+                    Google
+                  </ion-button>
+                  <ion-button fill="outline" class="register-social__button">
+                    <ion-icon name="logo-facebook" slot="start"></ion-icon>
+                    Facebook
+                  </ion-button>
+                </div>
+
+                <p class="register-social__signin">
+                  Already have an account?
+                  <ion-button fill="clear" routerLink="/login" class="register-social__signin-link">
+                    Sign In
+                  </ion-button>
+                </p>
+              </aside>
+            </div>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+</ion-content>

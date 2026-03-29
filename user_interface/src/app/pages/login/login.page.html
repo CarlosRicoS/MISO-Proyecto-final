@@ -31,6 +31,7 @@
                 label="Email"
                 placeholder="Enter your email"
                 type="email"
+                startIcon="mail-outline"
                 [value]="email"
                 [state]="emailState"
                 [helper]="emailHelper"
@@ -39,11 +40,15 @@
               <th-input
                 label="Password"
                 placeholder="Enter your password"
-                type="password"
+                [type]="passwordInputType"
+                startIcon="lock-closed-outline"
+                [endIcon]="passwordTrailIcon"
+                [endIconAriaLabel]="isPasswordVisible ? 'Hide password' : 'Show password'"
                 [value]="password"
                 [state]="passwordState"
                 [helper]="passwordHelper"
                 (valueChange)="onPasswordChange($event)"
+                (endIconClick)="onTogglePasswordVisibility()"
               ></th-input>
             </div>
 
@@ -66,7 +71,7 @@
 
             <p class="login-card__signup">
               Don't have an account?
-              <ion-button fill="clear" class="login-card__link-inline">
+              <ion-button fill="clear" class="login-card__link-inline" (click)="onGoToRegister()">
                 Sign Up
               </ion-button>
             </p>

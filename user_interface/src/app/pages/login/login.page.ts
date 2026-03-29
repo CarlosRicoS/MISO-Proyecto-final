@@ -15,7 +15,11 @@ import {
 } from '@ionic/angular/standalone';
 import { firstValueFrom } from 'rxjs';
 import { ThButtonComponent } from '../../shared/components/th-button/th-button.component';
-import { ThInputComponent, ThInputState } from '../../shared/components/th-input/th-input.component';
+import {
+  ThInputComponent,
+  ThInputType,
+  ThInputState,
+} from '../../shared/components/th-input/th-input.component';
 import { AuthService } from '../../core/services/auth.service';
 
 @Component({
@@ -49,6 +53,7 @@ export class LoginPage {
   alertTitle = '';
   alertMessage = '';
   isLoading = false;
+  isPasswordVisible = false;
 
   get emailState(): ThInputState {
     if (!this.email.trim()) {
@@ -68,6 +73,14 @@ export class LoginPage {
     }
 
     return 'default';
+  }
+
+  get passwordInputType(): ThInputType {
+    return this.isPasswordVisible ? 'text' : 'password';
+  }
+
+  get passwordTrailIcon(): string {
+    return this.isPasswordVisible ? 'eye-off-outline' : 'eye-outline';
   }
 
   get emailHelper(): string {
@@ -98,6 +111,14 @@ export class LoginPage {
     this.password = value;
   }
 
+  onTogglePasswordVisibility(): void {
+    this.isPasswordVisible = !this.isPasswordVisible;
+  }
+
+  onGoToRegister(): void {
+    this.router.navigate(['/register']);
+  }
+
   async onSignIn(): Promise<void> {
     this.hasSubmitted = true;
 
@@ -107,7 +128,9 @@ export class LoginPage {
 
     this.isLoading = true;
     try {
-      const response = await firstValueFrom(this.authService.login(this.email.trim(), this.password));
+      const response = await firstValueFrom(
+        this.authService.login(this.email.trim(), this.password),
+      );
 
       // Persist tokens for subsequent authenticated requests.
       localStorage.setItem('id_token', response.id_token);
