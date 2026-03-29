@@ -9,14 +9,15 @@ import {
   IonGrid,
   IonRow,
 } from '@ionic/angular/standalone';
-import { ThInputState } from 'src/app/shared/components/th-input/th-input.component';
-import { SharedModule } from '../../shared/shared.module';
+import { ThButtonComponent } from '../../shared/components/th-button/th-button.component';
+import { ThInputComponent, ThInputState } from '../../shared/components/th-input/th-input.component';
 import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-login',
   templateUrl: './login.page.html',
   styleUrls: ['./login.page.scss'],
+  standalone: true,
   imports: [
     IonCardContent,
     IonContent,
@@ -26,7 +27,8 @@ import { AuthService } from '../../core/services/auth.service';
     IonCard,
     IonButton,
     IonAlert,
-    SharedModule,
+    ThInputComponent,
+    ThButtonComponent,
   ],
 })
 export class LoginPage {
