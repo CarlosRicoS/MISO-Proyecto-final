@@ -132,10 +132,14 @@ Add the service to `test` and `build_and_push` matrices in both `.github/workflo
 
 ### CI/CD Pipelines
 
-- **PR Validation** (`pr_validation.yml`) — Runs on every PR to `main`: tests, Docker build, and `terraform plan` on all stacks.
-- **Deploy Applications** (`deploy_apps.yml`) — Manual trigger via GitHub Actions: full deploy pipeline.
+| Workflow | Trigger | Purpose |
+|---|---|---|
+| `pr_validation.yml` | PR to `main` | Runs tests, builds Docker images (tagged with commit SHA + `latest`), and `terraform plan` on all stacks |
+| `deploy_apps.yml` | Manual (`workflow_dispatch`) | Full end-to-end deploy: test → provision infra → build & push all images → deploy all ECS services |
+| `deploy_stack.yml` | Manual (`workflow_dispatch`) | Deploy a **single stack** — builds images only when needed, then runs `terraform apply` |
+| `seed_database.yml` | Manual (`workflow_dispatch`) | Run a SQL seed script against a specific service database via SSM-retrieved credentials |
 
-### Deployment Pipeline Order
+### Full Deploy Pipeline (`deploy_apps.yml`)
 
 ```
 test
@@ -147,11 +151,46 @@ test
 ```
 
 Key dependencies:
-- **`ecs_api`** depends on `cognito` (auth service needs Cognito SSM params), `database`, `ecs_cluster`, and `build_and_push`
+- **`ecs_api`** depends on `cognito`, `database`, `ecs_cluster`, and `build_and_push`
 - **`api_gateway`** depends on `ecs_api` and `cognito` (JWT authorizer needs issuer URL + client ID)
-- **`cognito`** deploys in parallel with `ecs_cluster` and `container_registry` (no added pipeline time)
+- **`cognito`** deploys in parallel with `ecs_cluster` and `container_registry`
 
-### Triggering a Deploy
+### Single Stack Deploy (`deploy_stack.yml`)
+
+Use this when iterating on a single service or infra change without running the full pipeline.
+
+1. Go to **Actions** → **Deploy Single Stack** → **Run workflow**
+2. Select the target **stack** and **environment**
+
+The workflow automatically handles image builds based on the selected stack:
+
+```
+stack = ecs_api   →  build all backend images (parallel)  →  terraform apply ecs_api
+stack = web_app   →  build travelhub image  →  redeploy container on EC2 via SSM  →  terraform apply web_app
+stack = anything else  →  terraform apply <stack>  (no image build needed)
+```
+
+**Image build behavior by language:**
+
+| Language | Pre-build step | Services |
+|---|---|---|
+| Python | none | `auth`, `pms`, `booking` |
+| Java | `./mvnw clean install -DskipTests` | `poc_properties` |
+| .NET | none (multi-stage Dockerfile) | `pricing_engine`, `pricing_orchestator` |
+
+> **Note:** Selecting `deploy_stack.yml` skips dependency checks. Ensure prerequisite stacks are already deployed before running a targeted deploy (e.g., run `cognito` and `database` before `ecs_api`).
+
+### Web App Redeployment (frontend-only changes)
+
+When only the frontend (`user_interface/`) changes, run **Deploy Single Stack** with `stack = web_app`. The workflow:
+
+1. Builds and pushes a new `web_travelhub:latest` image to ECR
+2. Connects to the EC2 instance via **AWS SSM Run Command** (no SSH required)
+3. Pulls the new image and restarts the `travelhub` container with the current API Gateway URL
+
+No manual SSH needed.
+
+### Triggering a Full Deploy
 1. Go to **Actions** tab in GitHub
 2. Select **Deploy Applications** workflow
 3. Click **Run workflow** and select the target environment (e.g., `develop`)
