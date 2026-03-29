@@ -86,13 +86,29 @@ jobs:
           image-tag: latest
           context-path: ${{ matrix.context-path }}
 
-  # Builds and pushes the web app (SPA) image.
+  # Runs Angular/Jasmine/Karma tests with coverage enforcement (85%) before building.
   # Runs only when deploying web_app.
+  test_web_app:
+    name: Test travelhub
+    if: ${{ inputs.stack == 'web_app' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run Angular tests
+        uses: ./.github/actions/test-angular
+        with:
+          context-path: user_interface
+
+  # Builds and pushes the web app (SPA) image.
+  # Runs only when deploying web_app and after tests pass.
   build_web_image:
     name: Build and Push travelhub
     if: ${{ inputs.stack == 'web_app' }}
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
+    needs: [test_web_app]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -220,7 +236,7 @@ jobs:
     name: Deploy ${{ inputs.stack }} → ${{ inputs.environment }}
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
-    needs: [build_backend_images, build_web_image, redeploy_web_container]
+    needs: [build_backend_images, test_web_app, build_web_image, redeploy_web_container]
     if: ${{ always() && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') }}
     steps:
       - name: Checkout repository
