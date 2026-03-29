@@ -7,6 +7,7 @@ on:
         description: 'Terraform stack to deploy'
         required: true
         type: choice
+        default: ecs_api
         options:
           - ecs_cluster
           - container_registry
@@ -16,7 +17,6 @@ on:
           - api_gateway
           - monitoring
           - web_app
-        default: ecs_api
       environment:
         description: 'Target environment'
         required: true
@@ -26,10 +26,95 @@ on:
           - develop
 
 jobs:
+  # Builds and pushes all backend service images.
+  # Runs only when deploying ecs_api (the stack that creates ECS task definitions for backend services).
+  build_backend_images:
+    name: Build and Push ${{ matrix.name }}
+    if: ${{ inputs.stack == 'ecs_api' }}
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    strategy:
+      matrix:
+        include:
+          - name: auth
+            language: python
+            ecr-repo: api_auth
+            context-path: services/auth
+          - name: pms
+            language: python
+            ecr-repo: api_pms
+            context-path: services/pms
+          - name: booking
+            language: python
+            ecr-repo: api_booking
+            context-path: services/booking
+          - name: poc_properties
+            language: java
+            ecr-repo: api_poc_properties
+            context-path: services/poc_properties
+          - name: pricing_engine
+            language: dotnet
+            ecr-repo: api_pricing_engine
+            context-path: services/PricingEngine
+          - name: pricing_orchestator
+            language: dotnet
+            ecr-repo: api_pricing_orchestator
+            context-path: services/PricingOrchestator
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 25 (Java services)
+        if: matrix.language == 'java'
+        uses: actions/setup-java@v4
+        with:
+          java-version: '25'
+          distribution: 'temurin'
+
+      - name: Build JAR with Maven (Java services)
+        if: matrix.language == 'java'
+        run: |
+          cd ${{ matrix.context-path }}
+          ./mvnw clean install -DskipTests
+
+      - name: Build and Push Docker Image to ECR
+        uses: ./.github/actions/build_image
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          ecr-repo: ${{ matrix.ecr-repo }}
+          image-tag: latest
+          context-path: ${{ matrix.context-path }}
+
+  # Builds and pushes the web app (SPA) image.
+  # Runs only when deploying web_app.
+  build_web_image:
+    name: Build and Push travelhub
+    if: ${{ inputs.stack == 'web_app' }}
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build and Push Docker Image to ECR
+        uses: ./.github/actions/build_image
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          ecr-repo: web_travelhub
+          image-tag: latest
+          context-path: user_interface
+
+  # Runs terraform apply for the selected stack.
+  # Waits for image builds when needed; proceeds immediately for infra-only stacks.
+  # Uses !contains(...failure/cancelled) so skipped build jobs don't block this job.
   deploy_stack:
     name: Deploy ${{ inputs.stack }} → ${{ inputs.environment }}
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
+    needs: [build_backend_images, build_web_image]
+    if: ${{ !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
