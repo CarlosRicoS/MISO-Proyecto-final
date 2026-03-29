@@ -6,7 +6,11 @@ on:
       sql_file:
         description: 'Path to the SQL file to run (relative to repo root)'
         required: true
-        default: 'load-tests/scripts/seed_pricing_engine_data.sql'
+        default: 'db/seeds/pricing-engine/001_seed_pricing_data.sql'
+      service_name:
+        description: 'Target service name (used to look up DB name from SSM, e.g. pricing-engine, poc-properties)'
+        required: true
+        default: 'pricing-engine'
       environment:
         description: 'Target Environment'
         required: true
@@ -39,48 +43,45 @@ jobs:
       - name: Retrieve Database Credentials
         id: db-creds
         run: |
-          # Define project name based on environment (currently hardcoded for develop/default)
-          # In a multi-env setup, this could be dynamic
           PROJECT_NAME="final-project-miso"
-          
-          echo "Retrieving SSM parameters for project: $PROJECT_NAME..."
-          
-          # Retrieve parameters from SSM
-          # Note: We use --with-decryption for all secure strings
+          SERVICE_NAME="${{ inputs.service_name }}"
+
+          echo "Retrieving SSM parameters for project: $PROJECT_NAME, service: $SERVICE_NAME..."
+
           DB_HOST=$(aws ssm get-parameter --name "/$PROJECT_NAME/rds/host" --query "Parameter.Value" --output text)
           DB_PORT=$(aws ssm get-parameter --name "/$PROJECT_NAME/rds/port" --query "Parameter.Value" --output text)
           DB_USER=$(aws ssm get-parameter --name "/$PROJECT_NAME/rds/username" --with-decryption --query "Parameter.Value" --output text)
           DB_PASSWORD=$(aws ssm get-parameter --name "/$PROJECT_NAME/rds/password" --with-decryption --query "Parameter.Value" --output text)
-          
-          # Mask sensitive data in logs to prevent accidental exposure
+          DB_NAME=$(aws ssm get-parameter --name "/$PROJECT_NAME/$SERVICE_NAME/db_name" --query "Parameter.Value" --output text)
+
+          # Mask sensitive data in logs
           echo "::add-mask::$DB_HOST"
           echo "::add-mask::$DB_USER"
           echo "::add-mask::$DB_PASSWORD"
-          
-          # Set outputs as environment variables for the next step
+
           echo "DB_HOST=$DB_HOST" >> $GITHUB_ENV
           echo "DB_PORT=$DB_PORT" >> $GITHUB_ENV
           echo "DB_USER=$DB_USER" >> $GITHUB_ENV
           echo "DB_PASSWORD=$DB_PASSWORD" >> $GITHUB_ENV
+          echo "DB_NAME=$DB_NAME" >> $GITHUB_ENV
 
       - name: Execute SQL Script
         env:
           PGPASSWORD: ${{ env.DB_PASSWORD }}
         run: |
           SQL_FILE="${{ inputs.sql_file }}"
-          echo "Running SQL script: $SQL_FILE"
-          
+          echo "Running SQL script: $SQL_FILE against database: ${{ env.DB_NAME }}"
+
           if [ ! -f "$SQL_FILE" ]; then
             echo "Error: SQL file '$SQL_FILE' not found!"
             exit 1
           fi
-          
-          # execute psql
-          # -h: host
-          # -p: port
-          # -U: username
-          # -d: database name (defaulting to 'postgres' as per tfvars)
-          # -f: file to run
-          psql -h "${{ env.DB_HOST }}" -p "${{ env.DB_PORT }}" -U "${{ env.DB_USER }}" -d postgres -f "$SQL_FILE"
-          
+
+          psql \
+            -h "${{ env.DB_HOST }}" \
+            -p "${{ env.DB_PORT }}" \
+            -U "${{ env.DB_USER }}" \
+            -d "${{ env.DB_NAME }}" \
+            -f "$SQL_FILE"
+
           echo "SQL script executed successfully."
