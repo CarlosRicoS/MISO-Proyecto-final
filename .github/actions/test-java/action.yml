@@ -1,0 +1,28 @@
+name: Test Java Base Action
+description: Test a Java application using Maven and enforce JaCoCo coverage (80% line coverage minimum)
+inputs:
+  jdk-version:
+    description: 'Version of JDK to set up'
+    required: false
+    default: '25'
+  java-distribution:
+    description: 'Distribution of JDK to set up'
+    required: false
+    default: 'temurin'
+  context-path:
+    description: 'Path to the Maven project (containing pom.xml)'
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - name: Set up JDK
+      uses: actions/setup-java@v4
+      with:
+        java-version: ${{ inputs.jdk-version }}
+        distribution: ${{ inputs.java-distribution }}
+
+    - name: Run tests and check coverage
+      shell: bash
+      run: |
+        cd ${{ inputs.context-path }}
+        ./mvnw clean test
