@@ -14,6 +14,8 @@ terraform/
   modules/            Reusable modules: vpc, ecs, ecs_service, ecr, rds, api_gateway, cognito, iam, monitoring
   stacks/             Composable stacks: ecs_cluster, container_registry, database, cognito, ecs_api, api_gateway, monitoring, web_app
   environments/       Per-stack tfvars and backend config (develop/)
+db/
+  seeds/              SQL seed scripts organized by service name (run via seed_database.yml)
 load-tests/           JMeter test plans and runner scripts
 .github/workflows/    CI/CD pipelines
 ```
@@ -178,6 +180,48 @@ When `create_database = true` is set for a service, Terraform automatically:
    - `/{project_name}/{service_name}/db_password`
 
 These are injected as environment variables into the ECS task via the `secrets` configuration.
+
+---
+
+## Database Seeding
+
+Seed scripts are stored under `db/seeds/`, organized by service name (matching the ECS service names used in SSM and Terraform):
+
+```
+db/
+└── seeds/
+    ├── pricing-engine/
+    │   └── 001_seed_pricing_data.sql
+    ├── poc-properties/
+    │   └── 001_seed_properties_data.sql
+    └── <service-name>/
+        └── 001_<description>.sql
+```
+
+The numeric prefix (`001_`, `002_`, …) defines execution order if a service needs multiple scripts run in sequence.
+
+### Running a Seed Script via GitHub Actions
+
+Use the **Seed Database** workflow (`seed_database.yml`), triggered manually:
+
+1. Go to **Actions** → **Seed Database** → **Run workflow**
+2. Fill in the inputs:
+
+| Input          | Description                                              | Example                                        |
+|----------------|----------------------------------------------------------|------------------------------------------------|
+| `sql_file`     | Path to the SQL file (relative to repo root)             | `db/seeds/pricing-engine/001_seed_pricing_data.sql` |
+| `service_name` | ECS service name — used to look up the DB name from SSM  | `pricing-engine`                               |
+| `environment`  | Target environment                                       | `develop`                                      |
+
+The workflow fetches the database name automatically from SSM at `/{project}/{service_name}/db_name`, so you never need to hardcode it.
+
+### Adding a Seed Script for a New Service
+
+1. Create a folder: `db/seeds/<service-name>/`
+2. Add your SQL file: `db/seeds/<service-name>/001_<description>.sql`
+3. Trigger the workflow with `service_name = <service-name>` and `sql_file` pointing to your file.
+
+> The `<service-name>` must match the key used in `terraform/environments/develop/ecs_api/terraform.tfvars` and the SSM path `/{project}/{service_name}/db_name`.
 
 ---
 
