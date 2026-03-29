@@ -14,6 +14,46 @@ public final class SearchPropertySpecification {
     private SearchPropertySpecification() {
     }
 
+    public static Specification<PropertyDetailEntity> findPropertiesByStartDate(LocalDate startDate) {
+
+        return (root, query, cb) -> {
+
+            Subquery<Integer> subquery = query.subquery(Integer.class);
+            Root<LockedPropertyEntity> lockedRoot = subquery.from(LockedPropertyEntity.class);
+
+            Predicate correlation = cb.equal(lockedRoot.get("propertyDetail"), root);
+
+            Predicate dateFilters = cb.and(
+                    cb.greaterThanOrEqualTo(lockedRoot.get("startDate"), startDate),
+                    cb.lessThanOrEqualTo(lockedRoot.get("endDate"), startDate.plusDays(1))
+            );
+
+            subquery.select(cb.literal(1))
+                    .where(cb.and(correlation, dateFilters));
+
+            return cb.and(cb.not(cb.exists(subquery)));
+        };
+    }
+
+    public static Specification<PropertyDetailEntity> findPropertiesByCity(String city) {
+
+        return (root, query, cb) -> cb.and(
+                cb.equal(root.get("city"), city)
+        );
+    }
+
+    public static Specification<PropertyDetailEntity> findPropertiesByCapacity(int capacity) {
+
+        return (root, query, cb) -> cb.and(
+                cb.equal(root.get("maxCapacity"), capacity)
+        );
+    }
+
+    public static Specification<PropertyDetailEntity> findAll() {
+
+        return Specification.unrestricted();
+    }
+
     public static Specification<PropertyDetailEntity> findAvailableProperties(
             String city,
             Integer maxCapacity,

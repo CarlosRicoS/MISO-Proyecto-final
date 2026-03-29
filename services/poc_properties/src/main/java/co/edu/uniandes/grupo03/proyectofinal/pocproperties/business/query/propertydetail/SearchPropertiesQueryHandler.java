@@ -25,8 +25,12 @@ public class SearchPropertiesQueryHandler extends PageableQueryHandler<SearchPro
     @Override
     protected SearchPropertiesQueryResponse executeQuery(SearchPropertiesQuery query, Pageable page) {
 
-        var specification = SearchPropertySpecification.findAvailableProperties(query.getCity(), query.getCapacity(),
+        var specification = query.isOnlyCityFilterQuery() ? SearchPropertySpecification.findPropertiesByCity(query.getCity())
+                : query.isOnlyCapacityFilterQuery() ? SearchPropertySpecification.findPropertiesByCapacity(query.getCapacity())
+                : query.isOnlyStartDateFilterQuery() ? SearchPropertySpecification.findPropertiesByStartDate(query.getStartDate())
+                 : query.isNoFiltersQuery() ? SearchPropertySpecification.findAll() : SearchPropertySpecification.findAvailableProperties(query.getCity(), query.getCapacity(),
                 query.getStartDate(), query.getEndDate());
+
         return new SearchPropertiesQueryResponse(propertyDetailRepository.findAll(specification, page).getContent().stream().map(propertyDetailMapper::toPropertyResult).toList());
     }
 }

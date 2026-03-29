@@ -39,9 +39,6 @@ class PropertyControllerTest {
     private QueryHandler<SearchPropertyByIdQuery, SearchPropertyByIdQueryResponse> searchPropertyByIdQueryHandler;
 
     @Mock
-    private QueryHandler<SearchFirstPropertiesQuery, SearchPropertiesQueryResponse> searchFirstPropertiesQueryHandler;
-
-    @Mock
     private CommandHandler<LockPropertyCommand, EmptyCommandResponse> lockPropertyCommandHandler;
 
     private PropertyController controller;
@@ -51,34 +48,8 @@ class PropertyControllerTest {
         controller = new PropertyController(
                 searchPropertiesQueryHandler,
                 searchPropertyByIdQueryHandler,
-                searchFirstPropertiesQueryHandler,
                 lockPropertyCommandHandler
         );
-    }
-
-    @Test
-    void searchProperties_shouldRouteToFirstPropertiesHandlerWhenQueryIsEmpty() {
-        // Given
-        SearchPropertiesQuery query = new SearchPropertiesQuery(null, null, null, null);
-        Pageable pageable = PageRequest.of(0, 10);
-
-        SearchPropertiesQueryResponse.PropertyResult result1 = createPropertyResult("1", "Hotel A");
-        SearchPropertiesQueryResponse.PropertyResult result2 = createPropertyResult("2", "Hotel B");
-        SearchPropertiesQueryResponse response = new SearchPropertiesQueryResponse(List.of(result1, result2));
-
-        when(searchFirstPropertiesQueryHandler.execute(any(SearchFirstPropertiesQuery.class))).thenReturn(response);
-
-        // When
-        ResponseEntity<List<SearchPropertiesQueryResponse.PropertyResult>> responseEntity = 
-                controller.searchProperties(query, pageable);
-
-        // Then
-        assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(responseEntity.getBody()).hasSize(2);
-        assertThat(responseEntity.getBody()).containsExactly(result1, result2);
-
-        verify(searchFirstPropertiesQueryHandler).execute(any(SearchFirstPropertiesQuery.class));
-        verify(searchPropertiesQueryHandler, never()).execute(any(), any());
     }
 
     @Test
@@ -104,28 +75,6 @@ class PropertyControllerTest {
         assertThat(responseEntity.getBody()).containsExactly(result1);
 
         verify(searchPropertiesQueryHandler).execute(eq(query), eq(pageable));
-        verify(searchFirstPropertiesQueryHandler, never()).execute(any());
-    }
-
-    @Test
-    void searchProperties_shouldReturnEmptyListWhenNoResults() {
-        // Given
-        SearchPropertiesQuery query = new SearchPropertiesQuery(null, null, null, null);
-        Pageable pageable = PageRequest.of(0, 10);
-
-        SearchPropertiesQueryResponse response = new SearchPropertiesQueryResponse(Collections.emptyList());
-
-        when(searchFirstPropertiesQueryHandler.execute(any(SearchFirstPropertiesQuery.class))).thenReturn(response);
-
-        // When
-        ResponseEntity<List<SearchPropertiesQueryResponse.PropertyResult>> responseEntity = 
-                controller.searchProperties(query, pageable);
-
-        // Then
-        assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(responseEntity.getBody()).isEmpty();
-
-        verify(searchFirstPropertiesQueryHandler).execute(any(SearchFirstPropertiesQuery.class));
     }
 
     @Test
@@ -294,25 +243,6 @@ class PropertyControllerTest {
         verify(searchPropertyByIdQueryHandler).execute(argThat(query -> 
                 query.getId().equals(propertyId)
         ));
-    }
-
-    @Test
-    void searchProperties_shouldDetectFirstPropertiesQueryCorrectly() {
-        // Given - all parameters null means first properties query
-        SearchPropertiesQuery query = new SearchPropertiesQuery(null, null, null, null);
-        Pageable pageable = PageRequest.of(0, 10);
-
-        SearchPropertiesQueryResponse response = new SearchPropertiesQueryResponse(Collections.emptyList());
-
-        when(searchFirstPropertiesQueryHandler.execute(any(SearchFirstPropertiesQuery.class))).thenReturn(response);
-
-        // When
-        controller.searchProperties(query, pageable);
-
-        // Then
-        assertThat(query.isFirstPropertiesQuery()).isTrue();
-        verify(searchFirstPropertiesQueryHandler).execute(any(SearchFirstPropertiesQuery.class));
-        verify(searchPropertiesQueryHandler, never()).execute(any(), any());
     }
 
     private SearchPropertiesQueryResponse.PropertyResult createPropertyResult(String id, String name) {
