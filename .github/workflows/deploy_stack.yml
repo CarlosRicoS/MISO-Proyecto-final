@@ -1,0 +1,44 @@
+name: Deploy Single Stack
+
+on:
+  workflow_dispatch:
+    inputs:
+      stack:
+        description: 'Terraform stack to deploy'
+        required: true
+        type: choice
+        options:
+          - ecs_cluster
+          - container_registry
+          - database
+          - cognito
+          - ecs_api
+          - api_gateway
+          - monitoring
+          - web_app
+        default: ecs_api
+      environment:
+        description: 'Target environment'
+        required: true
+        default: 'develop'
+        type: choice
+        options:
+          - develop
+
+jobs:
+  deploy_stack:
+    name: Deploy ${{ inputs.stack }} → ${{ inputs.environment }}
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Deploy ${{ inputs.stack }} stack
+        uses: ./.github/actions/terraform_apply
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          terraform_environment: ${{ inputs.environment }}
+          terraform_stack: ${{ inputs.stack }}
