@@ -106,6 +106,113 @@ jobs:
           image-tag: latest
           context-path: user_interface
 
+  # After a new web_travelhub image is pushed, connect to the EC2 instance via SSM Run Command
+  # and pull + restart the container — no SSH required.
+  # Runs only when deploying web_app and after the image build succeeds.
+  redeploy_web_container:
+    name: Redeploy travelhub container on EC2
+    if: ${{ inputs.stack == 'web_app' }}
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    needs: [build_web_image]
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: us-east-1
+
+      - name: Find EC2 instance ID by tag
+        id: find-instance
+        run: |
+          INSTANCE_ID=$(aws ec2 describe-instances \
+            --filters \
+              "Name=tag:Name,Values=final-project-miso-web-app" \
+              "Name=instance-state-name,Values=running" \
+            --query "Reservations[0].Instances[0].InstanceId" \
+            --output text)
+
+          if [ -z "$INSTANCE_ID" ] || [ "$INSTANCE_ID" = "None" ]; then
+            echo "Error: no running EC2 instance found with tag Name=final-project-miso-web-app"
+            exit 1
+          fi
+
+          echo "Found instance: $INSTANCE_ID"
+          echo "instance_id=$INSTANCE_ID" >> $GITHUB_OUTPUT
+
+      - name: Send redeploy command via SSM
+        id: ssm-command
+        run: |
+          COMMAND_ID=$(aws ssm send-command \
+            --instance-ids "${{ steps.find-instance.outputs.instance_id }}" \
+            --document-name "AWS-RunShellScript" \
+            --comment "Redeploy travelhub container" \
+            --parameters 'commands=[
+              "set -e",
+              "REGION=us-east-1",
+              "ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)",
+              "ECR_URL=$ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com",
+              "IMAGE=$ECR_URL/web_travelhub:latest",
+              "echo Authenticating with ECR...",
+              "aws ecr get-login-password --region $REGION | docker login --username AWS --password-stdin $ECR_URL",
+              "echo Pulling latest image: $IMAGE",
+              "docker pull $IMAGE",
+              "echo Fetching API Gateway URL from SSM...",
+              "API_BASE_URL=$(aws ssm get-parameter --name /final-project-miso/api-gateway/url --region $REGION --query Parameter.Value --output text)",
+              "echo Restarting container...",
+              "docker stop travelhub || true",
+              "docker rm travelhub || true",
+              "docker run -d --name travelhub --restart always -p 80:80 -e API_BASE_URL=$API_BASE_URL $IMAGE",
+              "echo Container redeployed successfully."
+            ]' \
+            --query "Command.CommandId" \
+            --output text)
+
+          echo "SSM command ID: $COMMAND_ID"
+          echo "command_id=$COMMAND_ID" >> $GITHUB_OUTPUT
+
+      - name: Wait for SSM command to complete
+        run: |
+          INSTANCE_ID="${{ steps.find-instance.outputs.instance_id }}"
+          COMMAND_ID="${{ steps.ssm-command.outputs.command_id }}"
+
+          echo "Waiting for command $COMMAND_ID on $INSTANCE_ID..."
+          aws ssm wait command-executed \
+            --command-id "$COMMAND_ID" \
+            --instance-id "$INSTANCE_ID"
+
+          STATUS=$(aws ssm get-command-invocation \
+            --command-id "$COMMAND_ID" \
+            --instance-id "$INSTANCE_ID" \
+            --query "Status" \
+            --output text)
+
+          OUTPUT=$(aws ssm get-command-invocation \
+            --command-id "$COMMAND_ID" \
+            --instance-id "$INSTANCE_ID" \
+            --query "StandardOutputContent" \
+            --output text)
+
+          echo "--- SSM command output ---"
+          echo "$OUTPUT"
+          echo "--------------------------"
+
+          if [ "$STATUS" != "Success" ]; then
+            ERROR=$(aws ssm get-command-invocation \
+              --command-id "$COMMAND_ID" \
+              --instance-id "$INSTANCE_ID" \
+              --query "StandardErrorContent" \
+              --output text)
+            echo "--- SSM command error ---"
+            echo "$ERROR"
+            echo "Command failed with status: $STATUS"
+            exit 1
+          fi
+
+          echo "Container redeployed successfully."
+
   # Runs terraform apply for the selected stack.
   # Waits for image builds when needed; proceeds immediately for infra-only stacks.
   # Uses !contains(...failure/cancelled) so skipped build jobs don't block this job.
@@ -113,7 +220,7 @@ jobs:
     name: Deploy ${{ inputs.stack }} → ${{ inputs.environment }}
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
-    needs: [build_backend_images, build_web_image]
+    needs: [build_backend_images, build_web_image, redeploy_web_container]
     if: ${{ !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') }}
     steps:
       - name: Checkout repository

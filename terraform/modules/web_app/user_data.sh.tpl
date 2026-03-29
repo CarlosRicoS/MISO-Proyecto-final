@@ -13,6 +13,12 @@ apt install -y \
     awscli
 echo "Package update complete."
 
+echo "Installing SSM agent..."
+snap install amazon-ssm-agent --classic
+systemctl enable snap.amazon-ssm-agent.amazon-ssm-agent.service
+systemctl start snap.amazon-ssm-agent.amazon-ssm-agent.service
+echo "SSM agent installation complete."
+
 echo "Installing Docker..."
 mkdir -p /etc/apt/keyrings
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | \
