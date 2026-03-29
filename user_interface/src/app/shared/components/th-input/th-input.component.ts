@@ -17,11 +17,15 @@ export class ThInputComponent {
   @Input() placeholder = '';
   @Input() value = '';
   @Input() type: ThInputType = 'text';
+  @Input() startIcon = '';
+  @Input() endIcon = '';
+  @Input() endIconAriaLabel = 'Input action';
   @Input() helper = '';
   @Input() badge = '';
   @Input() state: ThInputState = 'default';
   @Input() disabled = false;
   @Output() valueChange = new EventEmitter<string>();
+  @Output() endIconClick = new EventEmitter<void>();
   isFocused = false;
 
   get stateClass(): string {
@@ -55,5 +59,13 @@ export class ThInputComponent {
   onInput(event: Event): void {
     const customEvent = event as CustomEvent<{ value: string | null }>;
     this.valueChange.emit(customEvent.detail.value ?? '');
+  }
+
+  onEndIconClick(event: Event): void {
+    event.stopPropagation();
+    if (this.isDisabled) {
+      return;
+    }
+    this.endIconClick.emit();
   }
 }
