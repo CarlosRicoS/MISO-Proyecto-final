@@ -22,7 +22,7 @@ public class PropertyDetailEntity {
 
     private String description;
 
-    private String urlBucketPhotos;
+    private List<String> photos;
 
     private LocalTime checkInTime;
 

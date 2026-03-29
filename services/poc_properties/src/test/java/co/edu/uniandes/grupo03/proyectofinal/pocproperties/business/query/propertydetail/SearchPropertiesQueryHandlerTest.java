@@ -250,7 +250,7 @@ class SearchPropertiesQueryHandlerTest {
         entity.setName(name);
         entity.setMaxCapacity(4);
         entity.setDescription("Test property description");
-        entity.setUrlBucketPhotos("https://example.com/photo.jpg");
+        entity.setPhotos(List.of("https://example.com/photo.jpg"));
         entity.setCheckInTime(LocalTime.of(14, 0));
         entity.setCheckOutTime(LocalTime.of(11, 0));
         entity.setAdminGroupId("admin-group-1");
@@ -263,7 +263,7 @@ class SearchPropertiesQueryHandlerTest {
                 name,
                 4,
                 "Test property description",
-                "https://example.com/photo.jpg",
+                List.of("https://example.com/photo.jpg"),
                 LocalTime.of(14, 0),
                 LocalTime.of(11, 0),
                 "admin-group-1"

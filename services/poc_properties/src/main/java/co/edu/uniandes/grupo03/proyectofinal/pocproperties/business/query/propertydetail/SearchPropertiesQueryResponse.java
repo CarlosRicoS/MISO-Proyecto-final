@@ -22,7 +22,7 @@ public class SearchPropertiesQueryResponse implements QueryResponse {
 
         String description;
 
-        String urlBucketPhotos;
+        List<String> photos;
 
         LocalTime checkInTime;
 

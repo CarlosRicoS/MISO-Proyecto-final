@@ -17,7 +17,7 @@ public class SearchPropertyByIdQueryResponse implements QueryResponse {
 
     String description;
 
-    String urlBucketPhotos;
+    List<String> photos;
 
     LocalTime checkInTime;
 
