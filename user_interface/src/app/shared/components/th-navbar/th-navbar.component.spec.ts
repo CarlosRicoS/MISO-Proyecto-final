@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ThNavbarComponent } from './th-navbar.component';
 
 class RouterMock {
@@ -10,7 +10,10 @@ describe('ThNavbarComponent', () => {
   it('detects search results route', () => {
     TestBed.configureTestingModule({
       imports: [ThNavbarComponent],
-      providers: [{ provide: Router, useClass: RouterMock }],
+      providers: [
+        { provide: Router, useClass: RouterMock },
+        { provide: ActivatedRoute, useValue: {} },
+      ],
     });
 
     const fixture = TestBed.createComponent(ThNavbarComponent);
@@ -22,7 +25,10 @@ describe('ThNavbarComponent', () => {
   it('returns false for non-results routes', () => {
     TestBed.configureTestingModule({
       imports: [ThNavbarComponent],
-      providers: [{ provide: Router, useValue: { url: '/home' } }],
+      providers: [
+        { provide: Router, useValue: { url: '/home' } },
+        { provide: ActivatedRoute, useValue: {} },
+      ],
     });
 
     const fixture = TestBed.createComponent(ThNavbarComponent);

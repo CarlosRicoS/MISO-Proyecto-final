@@ -36,7 +36,9 @@
         <span class="th-hotel-card__price-suffix">{{ priceSuffix }}</span>
       </div>
       <div class="th-hotel-card__cta">
-        <th-button variant="primary" size="sm">{{ ctaLabel }}</th-button>
+        <th-button variant="primary" size="sm" [routerLink]="'/propertydetail'">
+          {{ ctaLabel }}
+        </th-button>
       </div>
     </div>
   </ion-card-content>

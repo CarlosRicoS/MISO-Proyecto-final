@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, Input } from '@angular/core';
 import { IonicModule } from '@ionic/angular';
+import { RouterModule } from '@angular/router';
 
 export type ThButtonVariant =
   | 'primary'
@@ -16,13 +17,14 @@ export type ThButtonSize = 'sm' | 'md' | 'lg';
   templateUrl: './th-button.component.html',
   styleUrls: ['./th-button.component.scss'],
   standalone: true,
-  imports: [CommonModule, IonicModule]
+  imports: [CommonModule, IonicModule, RouterModule]
 })
 export class ThButtonComponent {
   @Input() variant: ThButtonVariant = 'primary';
   @Input() size: ThButtonSize = 'md';
   @Input() expand: 'block' | 'full' | undefined;
   @Input() disabled = false;
+  @Input() routerLink: string | any[] | null = null;
 
   get buttonClasses(): string[] {
     return [

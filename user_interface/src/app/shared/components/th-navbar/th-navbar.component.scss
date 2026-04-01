@@ -33,6 +33,18 @@
   --background: #2d67ea;
 }
 
+.th-navbar--mobile-detail {
+  background: #f3f4f6;
+  border: none;
+  box-shadow: none;
+  --border-color: transparent;
+  --border-width: 0;
+}
+
+.th-navbar--mobile-detail .th-navbar__toolbar {
+  --background: #f3f4f6;
+}
+
 .th-navbar__inner {
   display: flex;
   align-items: center;
@@ -165,6 +177,24 @@
   font-size: 16px;
   font-weight: 600;
   color: #ffffff;
+}
+
+.th-navbar__mobile-actions-right {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.th-navbar__mobile-action--detail {
+  width: 42px;
+  height: 42px;
+  color: #1f2937;
+  --color: #1f2937;
+  --background: #ffffff;
+  --border-radius: 999px;
+  --box-shadow: 0 2px 6px rgba(15, 23, 42, 0.15);
+  --padding-start: 0;
+  --padding-end: 0;
 }
 
 .th-navbar__text-btn {

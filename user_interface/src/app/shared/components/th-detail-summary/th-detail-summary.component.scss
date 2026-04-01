@@ -1,0 +1,138 @@
+:host {
+  display: block;
+}
+
+.th-detail-summary {
+  background: #ffffff;
+  border-top: 1px solid #eceef2;
+  border-bottom: 1px solid #eceef2;
+  padding: 14px clamp(16px, 2.8vw, 28px);
+}
+
+.th-detail-summary__top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.th-detail-summary__title {
+  margin: 0;
+  color: #131a2f;
+  font-size: clamp(30px, 3.4vw, 56px);
+  line-height: 1.06;
+  letter-spacing: -0.02em;
+  font-weight: 700;
+}
+
+.th-detail-summary__location {
+  margin: 12px 0 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #596273;
+  font-size: clamp(20px, 2vw, 40px);
+  line-height: 1.3;
+
+  ion-icon {
+    color: #1a7cf1;
+    font-size: 24px;
+    flex: 0 0 auto;
+  }
+}
+
+.th-detail-summary__actions {
+  display: inline-flex;
+  gap: 8px;
+
+  ion-button {
+    --border-color: #d8dce4;
+    --color: #2f3648;
+    --border-radius: 8px;
+    margin: 0;
+    font-weight: 500;
+  }
+}
+
+.th-detail-summary__rating-row {
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.th-detail-summary__score-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 8px;
+  background: #1a7cf1;
+  color: #ffffff;
+  padding: 4px 10px;
+  font-size: 13px;
+  font-weight: 700;
+
+  ion-icon {
+    font-size: 13px;
+  }
+}
+
+.th-detail-summary__score-label {
+  color: #263041;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.th-detail-summary__reviews {
+  color: #6a7283;
+  font-size: 14px;
+}
+
+.th-detail-summary__stars {
+  display: inline-flex;
+  gap: 2px;
+  color: #f4b000;
+
+  ion-icon {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 720px) {
+  .th-detail-summary {
+    border-top: 0;
+    border-bottom: 1px solid #eceef2;
+    padding: 22px 18px;
+  }
+
+  .th-detail-summary__actions {
+    display: none;
+  }
+
+  .th-detail-summary__rating-row {
+    margin-top: 24px;
+    gap: 14px;
+  }
+
+  .th-detail-summary__score-pill {
+    border-radius: 16px;
+    padding: 14px 18px;
+    font-size: 40px;
+    line-height: 1;
+
+    ion-icon {
+      font-size: 28px;
+    }
+  }
+
+  .th-detail-summary__score-label,
+  .th-detail-summary__reviews {
+    font-size: 44px;
+    line-height: 1.1;
+  }
+
+  .th-detail-summary__stars {
+    display: none;
+  }
+}

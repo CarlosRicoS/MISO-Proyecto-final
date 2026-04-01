@@ -11,6 +11,10 @@ ion-app {
 		margin-top: 0;
 		padding-bottom: calc(72px + var(--ion-safe-area-bottom, 0px));
 	}
+
+	.site-content.site-content--detail-mobile {
+		padding-bottom: calc(110px + var(--ion-safe-area-bottom, 0px));
+	}
 }
 
 .mobile-tab-bar {

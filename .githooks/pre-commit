@@ -1,4 +1,51 @@
 #!/usr/bin/env sh
 
-cd user_interface
-npx ng test --code-coverage --watch=false
+set -eu
+
+# ANSI colors for clearer hook results in terminal output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+
+log_info() {
+	printf "%b\n" "${BLUE}[pre-commit] INFO:${NC} $1"
+}
+
+log_step() {
+	printf "%b\n" "${YELLOW}[pre-commit] STEP:${NC} $1"
+}
+
+log_ok() {
+	printf "%b\n" "${GREEN}[pre-commit] OK:${NC} $1"
+}
+
+log_fail() {
+	printf "%b\n" "${RED}[pre-commit] ERROR:${NC} $1"
+}
+
+log_info "Iniciando validaciones de pre-commit para user_interface."
+
+if ! cd user_interface; then
+	log_fail "No se pudo acceder al directorio user_interface. Commit cancelado."
+	exit 1
+fi
+
+log_step "Ejecutando pruebas unitarias (ng test)."
+if ! npx ng test --code-coverage --watch=false; then
+	log_fail "Fallaron las pruebas unitarias. No se creó el commit."
+	exit 1
+fi
+
+log_ok "Pruebas unitarias completadas correctamente."
+
+log_step "Ejecutando pruebas E2E web (levanta servidor automáticamente)."
+if ! npm run e2e:web:with-app; then
+	log_fail "Fallaron las pruebas E2E web. No se creó el commit."
+	exit 1
+fi
+
+log_ok "Pruebas E2E web completadas correctamente."
+log_ok "Todas las validaciones de pre-commit pasaron. El commit puede continuar."
+exit 0

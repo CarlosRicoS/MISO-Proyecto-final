@@ -11,6 +11,10 @@ const routes: Routes = [
     loadChildren: () => import('./pages/search-results/search-results.module').then( m => m.SearchResultsPageModule)
   },
   {
+    path: 'propertydetail',
+    loadChildren: () => import('./pages/propertydetail/propertydetail.module').then(m => m.PropertydetailPageModule)
+  },
+  {
     path: '',
     redirectTo: 'home',
     pathMatch: 'full'

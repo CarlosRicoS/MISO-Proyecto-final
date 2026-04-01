@@ -1,0 +1,86 @@
+<ion-content class="propertydetail-content">
+  <section class="propertydetail-main">
+    <div class="propertydetail-main__inner">
+      <div class="propertydetail-main__left">
+        <section class="propertydetail-hero">
+          <div class="propertydetail-hero__inner">
+            <th-details-mosaic
+              [hotelName]="property.title"
+              [images]="property.images"
+              [totalPhotos]="property.totalPhotos"
+              [viewAllLabel]="'View all ' + property.totalPhotos + ' photos'"
+            ></th-details-mosaic>
+          </div>
+        </section>
+
+        <section class="propertydetail-summary">
+          <div class="propertydetail-summary__inner">
+            <th-detail-summary
+              [title]="property.title"
+              [location]="property.location"
+              [score]="property.score"
+              [scoreLabel]="property.scoreLabel"
+              [reviewsText]="property.reviewsText"
+              [stars]="property.stars"
+            ></th-detail-summary>
+          </div>
+        </section>
+
+        <section class="propertydetail-body">
+          <div class="propertydetail-body__inner">
+            <div class="propertydetail-body__details">
+              <th-amenities-summary
+                [amenities]="amenities"
+                [totalAmenities]="32"
+                viewAllLabel="View All Amenities"
+              ></th-amenities-summary>
+
+              <th-property-description-summary
+                title="About This Hotel"
+                [paragraphs]="descriptionParagraphs"
+                readMoreLabel="Read More"
+                readLessLabel="Read Less"
+              ></th-property-description-summary>
+
+              <th-property-review-summary
+                title="Guest Reviews"
+                desktopActionLabel="Write a review"
+                mobileActionLabel="See All"
+                loadMoreLabel="Load more reviews"
+                [categoryScores]="reviewCategoryScores"
+                [reviews]="guestReviews"
+              ></th-property-review-summary>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <aside class="propertydetail-main__right">
+        <th-payment-summary
+          title="$299"
+          subtitle="per night"
+          promoText="Save 15% with our winter special"
+          checkInLabel="Check-in"
+          checkInValue="2024-12-20"
+          checkOutLabel="Check-out"
+          checkOutValue="2024-12-23"
+          guestsLabel="Guests"
+          guestsValue="1 Adult"
+          roomTypeLabel="Room Type"
+          roomTypeValue="Standard Room"
+          [items]="summaryItems"
+          [badges]="summaryBadges"
+          totalLabel="Total"
+          totalAmount="$1,009"
+          actionLabel="Book Now"
+          footnote="You won't be charged yet"
+          trustLeftLabel="Secure booking"
+          trustRightLabel="Free cancellation"
+          [mobileSticky]="true"
+          compactSuffix="/night"
+          compactNote="Taxes and fees included"
+        ></th-payment-summary>
+      </aside>
+    </div>
+  </section>
+</ion-content>

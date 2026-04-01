@@ -1,9 +1,15 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { IonicModule } from '@ionic/angular';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { HotelsService } from '../../core/services/hotels.service';
 import { HomePage } from './home.page';
+import { ThDatetimeModalComponent } from '../../shared/components/th-datetime-modal/th-datetime-modal.component';
+import { ThFilterComponent } from '../../shared/components/th-filter/th-filter.component';
+import { ThHotelCardComponent } from '../../shared/components/th-hotel-card/th-hotel-card.component';
+import { SharedCommonModule } from '../../shared/common/common.module';
+import { FormsModule } from '@angular/forms';
+import { CommonModule } from '@angular/common';
 
 class HotelsServiceMock {
   getHotels = jasmine.createSpy('getHotels').and.returnValue(of([]));
@@ -20,10 +26,22 @@ describe('HomePage', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       declarations: [HomePage],
-      imports: [IonicModule.forRoot()],
+      imports: [
+        CommonModule,
+        FormsModule,
+        IonicModule.forRoot(),
+        SharedCommonModule,
+        ThDatetimeModalComponent,
+        ThFilterComponent,
+        ThHotelCardComponent,
+      ],
       providers: [
         { provide: HotelsService, useClass: HotelsServiceMock },
         { provide: Router, useClass: RouterMock },
+        {
+          provide: ActivatedRoute,
+          useValue: {},
+        },
       ],
     }).compileComponents();
 

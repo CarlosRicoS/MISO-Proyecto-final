@@ -1,0 +1,107 @@
+<ion-card class="th-payment-summary" [class.th-payment-summary--mobile-sticky]="mobileSticky">
+  <ion-card-content class="th-payment-summary__content th-payment-summary__content--full">
+    <div class="th-payment-summary__price-header">
+      <h3 class="th-payment-summary__title">{{ title }}</h3>
+      <p class="th-payment-summary__subtitle">{{ subtitle }}</p>
+    </div>
+
+    <div class="th-payment-summary__promo" *ngIf="promoText">
+      <ion-icon [name]="promoIcon" aria-hidden="true"></ion-icon>
+      <span>{{ promoText }}</span>
+    </div>
+
+    <div class="th-payment-summary__field-list">
+      <div class="th-payment-summary__field">
+        <label class="th-payment-summary__field-label">{{ checkInLabel }}</label>
+        <div class="th-payment-summary__field-value">
+          <span>{{ checkInValue }}</span>
+          <ion-icon [name]="checkInIcon" aria-hidden="true"></ion-icon>
+        </div>
+      </div>
+
+      <div class="th-payment-summary__field">
+        <label class="th-payment-summary__field-label">{{ checkOutLabel }}</label>
+        <div class="th-payment-summary__field-value">
+          <span>{{ checkOutValue }}</span>
+          <ion-icon [name]="checkOutIcon" aria-hidden="true"></ion-icon>
+        </div>
+      </div>
+
+      <div class="th-payment-summary__field">
+        <label class="th-payment-summary__field-label">{{ guestsLabel }}</label>
+        <div class="th-payment-summary__field-value">
+          <span>{{ guestsValue }}</span>
+          <ion-icon [name]="guestsIcon" aria-hidden="true"></ion-icon>
+        </div>
+      </div>
+
+      <div class="th-payment-summary__field">
+        <label class="th-payment-summary__field-label">{{ roomTypeLabel }}</label>
+        <div class="th-payment-summary__field-value">
+          <span>{{ roomTypeValue }}</span>
+          <ion-icon [name]="roomTypeIcon" aria-hidden="true"></ion-icon>
+        </div>
+      </div>
+    </div>
+
+    <div class="th-payment-summary__rows">
+      <div class="th-payment-summary__row" *ngFor="let item of items">
+        <div class="th-payment-summary__row-label">
+          <span class="th-payment-summary__row-title">{{ item.label }}</span>
+          <span class="th-payment-summary__row-subtitle" *ngIf="item.description">
+            {{ item.description }}
+          </span>
+        </div>
+        <span
+          class="th-payment-summary__row-value"
+          [class.th-payment-summary__row-value--muted]="item.muted"
+        >
+          {{ item.amount }}
+        </span>
+      </div>
+    </div>
+
+    <div class="th-payment-summary__divider" aria-hidden="true"></div>
+
+    <div class="th-payment-summary__total">
+      <span class="th-payment-summary__total-label">{{ totalLabel }}</span>
+      <span class="th-payment-summary__total-value">{{ totalAmount }}</span>
+    </div>
+
+    <div class="th-payment-summary__action">
+      <th-button variant="primary" size="lg" expand="block">{{ actionLabel }}</th-button>
+    </div>
+
+    <p class="th-payment-summary__footnote" *ngIf="footnote">
+      {{ footnote }}
+    </p>
+
+    <div class="th-payment-summary__trust-row">
+      <span class="th-payment-summary__trust-item">
+        <ion-icon [name]="trustLeftIcon" aria-hidden="true"></ion-icon>
+        {{ trustLeftLabel }}
+      </span>
+      <span class="th-payment-summary__trust-item">
+        <ion-icon [name]="trustRightIcon" aria-hidden="true"></ion-icon>
+        {{ trustRightLabel }}
+      </span>
+    </div>
+  </ion-card-content>
+
+  <ion-card-content
+    class="th-payment-summary__content th-payment-summary__content--compact"
+    *ngIf="mobileSticky"
+  >
+    <div class="th-payment-summary__compact-price">
+      <div class="th-payment-summary__compact-main">
+        <span class="th-payment-summary__compact-amount">{{ totalAmount }}</span>
+        <span class="th-payment-summary__compact-suffix">{{ compactSuffix }}</span>
+      </div>
+      <p class="th-payment-summary__compact-note">{{ compactNote }}</p>
+    </div>
+
+    <div class="th-payment-summary__compact-action">
+      <th-button variant="primary" size="md">{{ actionLabel }}</th-button>
+    </div>
+  </ion-card-content>
+</ion-card>

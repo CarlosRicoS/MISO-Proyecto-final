@@ -26,4 +26,8 @@ export class ThNavbarComponent {
   get isSearchResults(): boolean {
     return this.router.url.startsWith('/search-results');
   }
+
+  get isPropertyDetail(): boolean {
+    return this.router.url.startsWith('/propertydetail');
+  }
 }

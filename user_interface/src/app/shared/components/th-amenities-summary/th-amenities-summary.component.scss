@@ -1,0 +1,133 @@
+:host {
+  display: block;
+}
+
+.th-amenities-summary {
+  background: var(--th-white);
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 22px 24px;
+}
+
+.th-amenities-summary__title {
+  margin: 0;
+  color: #1f2937;
+  font-size: 36px;
+  line-height: 1.15;
+  font-weight: 700;
+}
+
+.th-amenities-summary__desktop-list {
+  margin-top: 20px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  row-gap: 16px;
+  column-gap: 16px;
+}
+
+.th-amenities-summary__desktop-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: #374151;
+  font-size: 14px;
+
+  ion-icon {
+    color: #1a7cf1;
+    font-size: 20px;
+  }
+}
+
+.th-amenities-summary__desktop-link {
+  margin-top: 18px;
+  --color: #0a67e8;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #0a67e8;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.th-amenities-summary__mobile-grid,
+.th-amenities-summary__mobile-cta {
+  display: none;
+}
+
+@media (max-width: 720px) {
+  .th-amenities-summary {
+    border-radius: 0;
+    border-left: 0;
+    border-right: 0;
+    padding: 18px 16px 20px;
+  }
+
+  .th-amenities-summary__title {
+    font-size: 36px;
+  }
+
+  .th-amenities-summary__desktop-list,
+  .th-amenities-summary__desktop-link {
+    display: none;
+  }
+
+  .th-amenities-summary__mobile-grid {
+    margin-top: 18px;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px 10px;
+  }
+
+  .th-amenities-summary__mobile-item {
+    --background: transparent;
+    --box-shadow: none;
+    --padding-start: 0;
+    --padding-end: 0;
+    --padding-top: 0;
+    --padding-bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    color: #374151;
+    font-size: 14px;
+
+    &::part(native) {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+  }
+
+  .th-amenities-summary__mobile-icon-wrap {
+    width: 46px;
+    height: 46px;
+    border-radius: 999px;
+    background: #e5e7eb;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    ion-icon {
+      color: #0a67e8;
+      font-size: 24px;
+    }
+  }
+
+  .th-amenities-summary__mobile-label {
+    text-align: center;
+  }
+
+  .th-amenities-summary__mobile-cta {
+    display: block;
+    margin-top: 18px;
+    --border-radius: 12px;
+    --border-color: #0a67e8;
+    --color: #0a67e8;
+    text-transform: none;
+    font-weight: 600;
+    height: 44px;
+  }
+}

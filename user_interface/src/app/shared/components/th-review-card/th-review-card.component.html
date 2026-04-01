@@ -1,0 +1,23 @@
+<article class="th-review-card" aria-label="Guest review">
+  <div class="th-review-card__header">
+    <div class="th-review-card__identity">
+      <img class="th-review-card__avatar" [src]="avatarUrl" [alt]="name + ' avatar'" />
+      <div class="th-review-card__meta">
+        <h4 class="th-review-card__name">{{ name }}</h4>
+        <p class="th-review-card__sub th-review-card__sub--desktop">{{ locationAndDate }}</p>
+        <p class="th-review-card__sub th-review-card__sub--mobile">{{ relativeDate }}</p>
+      </div>
+    </div>
+
+    <span class="th-review-card__score-pill">
+      <ion-icon class="th-review-card__score-pill-icon" name="star" aria-hidden="true"></ion-icon>
+      {{ score }}
+    </span>
+  </div>
+
+  <div class="th-review-card__stars">
+    <ion-icon *ngFor="let _ of starsArray" name="star" aria-hidden="true"></ion-icon>
+  </div>
+
+  <p class="th-review-card__text">{{ text }}</p>
+</article>
