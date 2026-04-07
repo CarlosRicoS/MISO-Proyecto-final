@@ -1,43 +1,81 @@
 package co.edu.uniandes.grupo03.proyectofinal.pocproperties.business.query.propertydetail;
 
 import co.edu.uniandes.grupo03.proyectofinal.pocproperties.business.query.Query;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.Value;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.util.ObjectUtils;
 
 import java.time.LocalDate;
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 
 
 @Value
 public class SearchPropertiesQuery implements Query {
 
-    @NotNull(message = "The start date cannot be null.")
     @DateTimeFormat(pattern = "dd/MM/yyyy")
     LocalDate startDate;
 
-    @NotNull(message = "The end date cannot be null.")
     @DateTimeFormat(pattern = "dd/MM/yyyy")
     LocalDate endDate;
 
-    @NotBlank(message = "The city is required.")
     String city;
 
-    @NotNull(message = "The capacity is required.")
     @Positive(message = "The capacity must be a positive value.")
     Integer capacity;
 
     @Override
     public List<String> executePostValidations() {
 
-        if (startDate != null && endDate != null && (startDate.isEqual(endDate) || startDate.isAfter(endDate))) {
+        if (isNoFiltersQuery() || isOnlyStartDateFilterQuery() || isOnlyCityFilterQuery() || isOnlyCapacityFilterQuery()) {
 
-            return List.of("The start date cannot be greater or equals to end date.");
+            return List.of();
         }
 
-        return Collections.emptyList();
+        List<String> errors = new ArrayList<>();
+
+        if (ObjectUtils.isEmpty(startDate)) {
+
+            errors.add("The start date is required.");
+        }
+
+        if (ObjectUtils.isEmpty(endDate)) {
+
+            errors.add("The end date is required.");
+        }
+
+        if (ObjectUtils.isEmpty(city)) {
+
+            errors.add("The city is required.");
+        }
+
+        if (ObjectUtils.isEmpty(capacity)) {
+
+            errors.add("The capacity is required.");
+        }
+
+        if (!ObjectUtils.isEmpty(startDate) && !ObjectUtils.isEmpty(endDate) && startDate.isAfter(endDate)) {
+
+            errors.add("The start date cannot be greater than end date.");
+        }
+
+        return errors;
+    }
+
+    public boolean isOnlyCapacityFilterQuery() {
+        return startDate == null && endDate == null && city == null && capacity != null;
+    }
+
+    public boolean isOnlyCityFilterQuery() {
+        return startDate == null && endDate == null && city != null && capacity == null;
+    }
+
+    public boolean isOnlyStartDateFilterQuery() {
+        return startDate != null && endDate == null && city == null && capacity == null;
+    }
+
+    public boolean isNoFiltersQuery() {
+        return startDate == null && endDate == null && city == null && capacity == null;
     }
 }

@@ -39,7 +39,11 @@
 @import "@ionic/angular/css/palettes/dark.system.css";
 
 @media (max-width: 720px) {
-	ion-content {
+	ion-app.app-has-navbar ion-content {
 		--padding-top: calc(clamp(60px, 6vw, 72px) + 2px + var(--ion-safe-area-top, 0px));
+	}
+
+	ion-app.app-no-navbar ion-content {
+		--padding-top: 0;
 	}
 }

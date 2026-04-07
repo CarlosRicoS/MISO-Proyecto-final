@@ -6,6 +6,10 @@ ion-app {
 	margin-top: calc(clamp(60px, 6vw, 72px) + 2px);
 }
 
+.site-content--no-navbar {
+	margin-top: 0;
+}
+
 @media (max-width: 720px) {
 	.site-content {
 		margin-top: 0;

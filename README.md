@@ -14,6 +14,8 @@ terraform/
   modules/            Reusable modules: vpc, ecs, ecs_service, ecr, rds, api_gateway, cognito, iam, monitoring
   stacks/             Composable stacks: ecs_cluster, container_registry, database, cognito, ecs_api, api_gateway, monitoring, web_app
   environments/       Per-stack tfvars and backend config (develop/)
+db/
+  seeds/              SQL seed scripts organized by service name (run via seed_database.yml)
 load-tests/           JMeter test plans and runner scripts
 .github/workflows/    CI/CD pipelines
 ```
@@ -130,10 +132,38 @@ Add the service to `test` and `build_and_push` matrices in both `.github/workflo
 
 ### CI/CD Pipelines
 
-- **PR Validation** (`pr_validation.yml`) — Runs on every PR to `main`: tests, Docker build, and `terraform plan` on all stacks.
-- **Deploy Applications** (`deploy_apps.yml`) — Manual trigger via GitHub Actions: full deploy pipeline.
+| Workflow | Trigger | Purpose |
+|---|---|---|
+| `pr_validation.yml` | PR to `main` | Tests all services (Python, Java, Angular), builds Docker images, and runs `terraform plan` on all stacks |
+| `deploy_apps.yml` | Manual (`workflow_dispatch`) | Full end-to-end deploy: test → provision infra → build & push all images → deploy all ECS services |
+| `deploy_stack.yml` | Manual (`workflow_dispatch`) | Deploy a **single stack** — tests and builds images only when needed, then runs `terraform apply` |
+| `seed_database.yml` | Manual (`workflow_dispatch`) | Run a SQL seed script against a specific service database via SSM-retrieved credentials |
 
-### Deployment Pipeline Order
+### PR Validation (`pr_validation.yml`)
+
+Every PR to `main` runs the following jobs in parallel before merging is allowed:
+
+```
+test          (auth · booking · poc-properties — parallel)
+test_frontend (travelhub)
+  │
+  ├── build_and_push   (auth · booking · poc_properties — parallel, needs: test)
+  └── build_web_image  (travelhub, needs: test_frontend)
+        │
+        └── terraform_plan  (all stacks in parallel, needs: test + build_and_push + build_web_image)
+```
+
+**Test coverage thresholds enforced on every PR:**
+
+| Service | Framework | Coverage requirement |
+|---|---|---|
+| `auth`, `booking` | Python / pytest | 80% (configured in `pyproject.toml`) |
+| `poc_properties` | Java / JaCoCo | 80% line coverage |
+| `travelhub` | Angular / Karma + Jasmine | 85% statements, branches, functions, lines |
+
+Docker images are pushed with two tags: `<commit-sha>` (immutable, for traceability) and `latest` (so `terraform plan` for `ecs_api` and `web_app` can resolve the ECR image digest).
+
+### Full Deploy Pipeline (`deploy_apps.yml`)
 
 ```
 test
@@ -145,11 +175,51 @@ test
 ```
 
 Key dependencies:
-- **`ecs_api`** depends on `cognito` (auth service needs Cognito SSM params), `database`, `ecs_cluster`, and `build_and_push`
+- **`ecs_api`** depends on `cognito`, `database`, `ecs_cluster`, and `build_and_push`
 - **`api_gateway`** depends on `ecs_api` and `cognito` (JWT authorizer needs issuer URL + client ID)
-- **`cognito`** deploys in parallel with `ecs_cluster` and `container_registry` (no added pipeline time)
+- **`cognito`** deploys in parallel with `ecs_cluster` and `container_registry`
 
-### Triggering a Deploy
+### Single Stack Deploy (`deploy_stack.yml`)
+
+Use this when iterating on a single service or infra change without running the full pipeline.
+
+1. Go to **Actions** → **Deploy Single Stack** → **Run workflow**
+2. Select the target **stack** and **environment**
+
+The workflow automatically handles tests, image builds, and redeployment based on the selected stack:
+
+```
+stack = ecs_api
+  build_backend_images (parallel) → terraform apply ecs_api
+
+stack = web_app
+  test_web_app → build_web_image → redeploy container on EC2 (SSM) → terraform apply web_app
+
+stack = anything else
+  terraform apply <stack>  (no tests or image build)
+```
+
+**Image build behavior by language:**
+
+| Language | Pre-build step | Services |
+|---|---|---|
+| Python | none | `auth`, `pms`, `booking` |
+| Java | `./mvnw clean install -DskipTests` | `poc_properties` |
+| .NET | none (multi-stage Dockerfile) | `pricing_engine`, `pricing_orchestator` |
+
+> **Note:** Selecting `deploy_stack.yml` skips dependency checks. Ensure prerequisite stacks are already deployed before running a targeted deploy (e.g., run `cognito` and `database` before `ecs_api`).
+
+### Web App Redeployment (frontend-only changes)
+
+When only the frontend (`user_interface/`) changes, run **Deploy Single Stack** with `stack = web_app`. The workflow:
+
+1. Builds and pushes a new `web_travelhub:latest` image to ECR
+2. Connects to the EC2 instance via **AWS SSM Run Command** (no SSH required)
+3. Pulls the new image and restarts the `travelhub` container with the current API Gateway URL
+
+No manual SSH needed.
+
+### Triggering a Full Deploy
 1. Go to **Actions** tab in GitHub
 2. Select **Deploy Applications** workflow
 3. Click **Run workflow** and select the target environment (e.g., `develop`)
@@ -178,6 +248,48 @@ When `create_database = true` is set for a service, Terraform automatically:
    - `/{project_name}/{service_name}/db_password`
 
 These are injected as environment variables into the ECS task via the `secrets` configuration.
+
+---
+
+## Database Seeding
+
+Seed scripts are stored under `db/seeds/`, organized by service name (matching the ECS service names used in SSM and Terraform):
+
+```
+db/
+└── seeds/
+    ├── pricing-engine/
+    │   └── 001_seed_pricing_data.sql
+    ├── poc-properties/
+    │   └── 001_seed_properties_data.sql
+    └── <service-name>/
+        └── 001_<description>.sql
+```
+
+The numeric prefix (`001_`, `002_`, …) defines execution order if a service needs multiple scripts run in sequence.
+
+### Running a Seed Script via GitHub Actions
+
+Use the **Seed Database** workflow (`seed_database.yml`), triggered manually:
+
+1. Go to **Actions** → **Seed Database** → **Run workflow**
+2. Fill in the inputs:
+
+| Input          | Description                                              | Example                                        |
+|----------------|----------------------------------------------------------|------------------------------------------------|
+| `sql_file`     | Path to the SQL file (relative to repo root)             | `db/seeds/pricing-engine/001_seed_pricing_data.sql` |
+| `service_name` | ECS service name — used to look up the DB name from SSM  | `pricing-engine`                               |
+| `environment`  | Target environment                                       | `develop`                                      |
+
+The workflow fetches the database name automatically from SSM at `/{project}/{service_name}/db_name`, so you never need to hardcode it.
+
+### Adding a Seed Script for a New Service
+
+1. Create a folder: `db/seeds/<service-name>/`
+2. Add your SQL file: `db/seeds/<service-name>/001_<description>.sql`
+3. Trigger the workflow with `service_name = <service-name>` and `sql_file` pointing to your file.
+
+> The `<service-name>` must match the key used in `terraform/environments/develop/ecs_api/terraform.tfvars` and the SSM path `/{project}/{service_name}/db_name`.
 
 ---
 

@@ -37,9 +37,6 @@ outputs:
 runs:
   using: "composite"
   steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-
     - name: Configure AWS credentials
       id: aws-credentials
       uses: aws-actions/configure-aws-credentials@v4
@@ -63,7 +60,10 @@ runs:
       run: |
         cd $CONTEXT_PATH
         IMAGE_URI=$REGISTRY/$REPOSITORY:$IMAGE_TAG
-        echo "Building and pushing image: $IMAGE_URI"
-        docker build -t $IMAGE_URI .
+        LATEST_URI=$REGISTRY/$REPOSITORY:latest
+        echo "Building image: $IMAGE_URI"
+        docker build -t $IMAGE_URI -t $LATEST_URI .
         docker push $IMAGE_URI
+        # Always push latest so terraform plan can resolve the ECR image digest
+        docker push $LATEST_URI
         echo "image-uri=$IMAGE_URI" >> $GITHUB_OUTPUT

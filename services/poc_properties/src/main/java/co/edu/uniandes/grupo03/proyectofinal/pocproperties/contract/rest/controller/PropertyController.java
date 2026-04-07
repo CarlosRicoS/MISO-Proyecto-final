@@ -11,6 +11,7 @@ import co.edu.uniandes.grupo03.proyectofinal.pocproperties.business.query.proper
 import co.edu.uniandes.grupo03.proyectofinal.pocproperties.business.query.propertydetail.SearchPropertyByIdQueryResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -29,7 +30,8 @@ public class PropertyController {
     private final CommandHandler<LockPropertyCommand, EmptyCommandResponse> lockPropertyCommandHandler;
 
     @GetMapping
-    public ResponseEntity<List<SearchPropertiesQueryResponse.PropertyResult>> searchProperties(SearchPropertiesQuery query, Pageable pageable) {
+    public ResponseEntity<List<SearchPropertiesQueryResponse.PropertyResult>> searchProperties(SearchPropertiesQuery query,
+                                                                                               @PageableDefault(page = 0, size = 10) Pageable pageable) {
         var result = searchPropertiesQueryHandler.execute(query, pageable);
         return ResponseEntity.ok(result.getResult());
     }

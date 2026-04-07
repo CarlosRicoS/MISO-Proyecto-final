@@ -4,9 +4,17 @@ from enum import Enum
 import boto3
 from botocore.exceptions import ClientError
 from fastapi import FastAPI, Header, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, EmailStr
 
 app = FastAPI(title="Auth Microservice")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
 COGNITO_USER_POOL_ID = os.getenv("COGNITO_USER_POOL_ID", "")
