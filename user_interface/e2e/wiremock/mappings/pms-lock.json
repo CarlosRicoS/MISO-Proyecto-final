@@ -1,0 +1,16 @@
+{
+  "request": {
+    "method": "POST",
+    "urlPathPattern": "^/(pms/)?api/pms/lock-property$"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json",
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization"
+    },
+    "bodyFileName": "pms-lock-response.json"
+  }
+}

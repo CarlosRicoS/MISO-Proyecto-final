@@ -76,6 +76,7 @@
 						ctaLabel="Book Now"
 						[rating]="getHotelRating(hotel)"
 						[imageUrl]="hotel.imageUrl || ''"
+						[ctaRouterLink]="['/propertydetail', hotel.id]"
 					></th-hotel-card>
 				</ng-container>
 				<p class="home-empty" *ngIf="isLoading">Loading hotels...</p>

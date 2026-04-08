@@ -54,6 +54,8 @@ import {
   pricetag,
   chevronDown,
   chevronUp,
+  bookOutline,
+  helpOutline,
 } from 'ionicons/icons';
 
 // Register all icons used in the application for testing
@@ -104,7 +106,22 @@ addIcons({
   'pricetag': pricetag,
   'chevron-down': chevronDown,
   'chevron-up': chevronUp,
+  'book-outline': bookOutline,
+  'spa-outline': flowerOutline,
+  'icon': helpOutline,
 });
+
+const originalWarn = console.warn.bind(console);
+console.warn = (...args: unknown[]) => {
+  const message = String(args[0] ?? '');
+  if (message.includes('[Ionicons Warning]')) {
+    return;
+  }
+  if (message.includes('[ion-datetime] - Unable to parse date string: null')) {
+    return;
+  }
+  originalWarn(...args);
+};
 
 // First, initialize the Angular testing environment.
 getTestBed().initTestEnvironment(

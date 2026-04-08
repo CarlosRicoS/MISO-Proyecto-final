@@ -1,0 +1,7 @@
+{
+  "id_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.mock.id",
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.mock.access",
+  "refresh_token": "mock-refresh-token",
+  "expires_in": 3600,
+  "token_type": "Bearer"
+}

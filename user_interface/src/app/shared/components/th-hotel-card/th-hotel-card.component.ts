@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input } from '@angular/core';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { IonicModule } from '@ionic/angular';
 import { ThBadgeComponent } from '../th-badge/th-badge.component';
 import { ThButtonComponent } from '../th-button/th-button.component';
@@ -21,7 +21,9 @@ export class ThHotelCardComponent {
   @Input() pricePrefix = 'From';
   @Input() priceSuffix = '/night';
   @Input() ctaLabel = 'View Details';
+  @Input() ctaRouterLink: string | any[] | null = '/propertydetail';
   @Input() rating = '4.8';
   @Input() imageUrl = '';
   @Input() showFavorite = true;
+  @Output() ctaClick = new EventEmitter<void>();
 }

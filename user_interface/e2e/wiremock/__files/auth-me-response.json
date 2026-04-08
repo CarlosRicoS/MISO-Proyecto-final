@@ -1,0 +1,6 @@
+{
+  "user_id": "user-123",
+  "email": "traveler@example.com",
+  "email_verified": true,
+  "role": "travelers"
+}
