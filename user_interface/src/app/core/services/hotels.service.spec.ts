@@ -4,14 +4,27 @@ import { HotelsService } from './hotels.service';
 import { ConfigService } from './config.service';
 
 class ConfigServiceStub {
-  apiBaseUrl = 'https://api.example.com';
-  propertyApiPath = '/poc-properties/api/property';
-  propertyApiToken = 'token';
+  private _apiBaseUrl = 'https://api.example.com';
+  private _propertyApiPath = '/poc-properties/api/property';
+  private _propertyApiToken = 'token';
+
+  get apiBaseUrl(): string {
+    return this._apiBaseUrl;
+  }
+
+  get propertyApiPath(): string {
+    return this._propertyApiPath;
+  }
+
+  get propertyApiToken(): string {
+    return this._propertyApiToken;
+  }
 }
 
 describe('HotelsService', () => {
   let service: HotelsService;
   let httpMock: HttpTestingController;
+  let configService: ConfigService;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -24,6 +37,7 @@ describe('HotelsService', () => {
 
     service = TestBed.inject(HotelsService);
     httpMock = TestBed.inject(HttpTestingController);
+    configService = TestBed.inject(ConfigService);
   });
 
   afterEach(() => {
@@ -98,5 +112,106 @@ describe('HotelsService', () => {
         urlBucketPhotos: 'https://img.example.com/1.jpg',
       }
     ]);
+  });
+
+  it('handles API without trailing slash', () => {
+    spyOnProperty(configService, 'apiBaseUrl', 'get').and.returnValue('https://api.example.com');
+    spyOnProperty(configService, 'propertyApiPath', 'get').and.returnValue('poc-properties/api/property');
+
+    service.getHotels().subscribe();
+
+    const req = httpMock.expectOne('https://api.example.com/poc-properties/api/property');
+    req.flush([]);
+  });
+
+  it('handles empty baseUrl and uses default path', () => {
+    spyOnProperty(configService, 'apiBaseUrl', 'get').and.returnValue('');
+    spyOnProperty(configService, 'propertyApiPath', 'get').and.returnValue('poc-properties/api/property');
+
+    service.getHotels().subscribe();
+
+    const req = httpMock.expectOne('/poc-properties/api/property');
+    req.flush([]);
+  });
+
+  it('handles property with all fields populated', () => {
+    service.getHotels().subscribe((hotels) => {
+      expect(hotels[0].pricePerNight).toBe(150);
+      expect(hotels[0].rating).toBe(4.5);
+    });
+
+    const req = httpMock.expectOne(() => true);
+    req.flush([{
+      id: '1',
+      name: 'Full Hotel',
+      city: 'Paris',
+      country: 'France',
+      price: 150,
+      rating: 4.5,
+      imageUrl: 'https://example.com/photo.jpg',
+    }]);
+  });
+
+  it('prioritizes pricePerNight over price', () => {
+    service.getHotels().subscribe((hotels) => {
+      expect(hotels[0].pricePerNight).toBe(200);
+    });
+
+    const req = httpMock.expectOne(() => true);
+    req.flush([{
+      id: '1',
+      price: 150,
+      pricePerNight: 200,
+    }]);
+  });
+
+  it('uses pricePerNight when price is undefined', () => {
+    service.getHotels().subscribe((hotels) => {
+      expect(hotels[0].pricePerNight).toBe(120);
+    });
+
+    const req = httpMock.expectOne(() => true);
+    req.flush([{
+      id: '1',
+      pricePerNight: 120,
+    }]);
+  });
+
+  it('filters out NaN ratings', () => {
+    service.getHotels().subscribe((hotels) => {
+      expect(hotels[0].rating).toBe(0);
+    });
+
+    const req = httpMock.expectOne(() => true);
+    req.flush([{
+      id: '1',
+      rating: NaN,
+    }]);
+  });
+
+  it('does not include authorization header when token is empty', () => {
+    spyOnProperty(configService, 'propertyApiToken', 'get').and.returnValue('');
+
+    service.getHotels().subscribe();
+
+    const req = httpMock.expectOne(() => true);
+    expect(req.request.headers.has('Authorization')).toBe(false);
+    req.flush([]);
+  });
+
+  it('handles capacity parameter zero', () => {
+    service.getHotels({ capacity: 0 }).subscribe();
+
+    const req = httpMock.expectOne(() => true);
+    expect(req.request.params.has('capacity')).toBe(false);
+    req.flush([]);
+  });
+
+  it('handles capacity parameter negative', () => {
+    service.getHotels({ capacity: -5 }).subscribe();
+
+    const req = httpMock.expectOne(() => true);
+    expect(req.request.params.has('capacity')).toBe(false);
+    req.flush([]);
   });
 });

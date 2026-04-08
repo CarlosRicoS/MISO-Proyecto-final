@@ -1,0 +1,120 @@
+:host {
+  display: block;
+}
+
+.th-property-review-summary {
+  background: var(--th-white);
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 18px;
+}
+
+.th-property-review-summary__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.th-property-review-summary__title {
+  margin: 0;
+  color: #1f2937;
+  font-size: 36px;
+  line-height: 1.15;
+  font-weight: 700;
+}
+
+.th-property-review-summary__action {
+  --color: #0a67e8;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.th-property-review-summary__action--mobile {
+  display: none;
+}
+
+.th-property-review-summary__scores {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.th-property-review-summary__score-item {
+  background: #eceff3;
+  border-radius: 8px;
+  min-height: 68px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.th-property-review-summary__score-value {
+  color: #1f2937;
+  font-size: 34px;
+  font-weight: 700;
+}
+
+.th-property-review-summary__score-label {
+  color: #4b5563;
+  font-size: 12px;
+}
+
+.th-property-review-summary__reviews {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.th-property-review-summary__reviews--mobile {
+  display: none;
+}
+
+.th-property-review-summary__review-divider {
+  padding-bottom: 18px;
+  border-bottom: 1px solid #d8dde6;
+}
+
+.th-property-review-summary__load-more {
+  margin-top: 14px;
+  --border-color: #c6ccd6;
+  --color: #374151;
+}
+
+@media (max-width: 720px) {
+  .th-property-review-summary {
+    border-radius: 0;
+    border-left: 0;
+    border-right: 0;
+    padding: 14px 16px 18px;
+  }
+
+  .th-property-review-summary__title {
+    font-size: 34px;
+  }
+
+  .th-property-review-summary__action--desktop,
+  .th-property-review-summary__scores,
+  .th-property-review-summary__reviews--desktop,
+  .th-property-review-summary__load-more {
+    display: none;
+  }
+
+  .th-property-review-summary__action--mobile,
+  .th-property-review-summary__reviews--mobile {
+    display: flex;
+  }
+
+  .th-property-review-summary__action--mobile {
+    align-items: center;
+  }
+
+  .th-property-review-summary__reviews--mobile {
+    margin-top: 12px;
+    gap: 12px;
+  }
+}

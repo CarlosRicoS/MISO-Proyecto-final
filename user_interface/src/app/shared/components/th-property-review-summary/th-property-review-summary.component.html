@@ -1,0 +1,49 @@
+<section class="th-property-review-summary" aria-label="Property review summary">
+  <div class="th-property-review-summary__header">
+    <h3 class="th-property-review-summary__title">{{ title }}</h3>
+    <th-button variant="text" size="sm" class="th-property-review-summary__action th-property-review-summary__action--desktop">
+      {{ desktopActionLabel }}
+    </th-button>
+    <th-button variant="text" size="sm" class="th-property-review-summary__action th-property-review-summary__action--mobile">
+      {{ mobileActionLabel }}
+    </th-button>
+  </div>
+
+  <div class="th-property-review-summary__scores">
+    <div class="th-property-review-summary__score-item" *ngFor="let item of categoryScores">
+      <span class="th-property-review-summary__score-value">{{ item.value }}</span>
+      <span class="th-property-review-summary__score-label">{{ item.label }}</span>
+    </div>
+  </div>
+
+  <div class="th-property-review-summary__reviews th-property-review-summary__reviews--desktop">
+    <th-review-card
+      *ngFor="let review of reviews; let i = index"
+      [name]="review.name"
+      [locationAndDate]="review.locationAndDate"
+      [relativeDate]="review.relativeDate"
+      [text]="review.text"
+      [avatarUrl]="review.avatarUrl"
+      [score]="review.score"
+      [stars]="review.stars"
+      [class.th-property-review-summary__review-divider]="i < reviews.length - 1"
+    ></th-review-card>
+  </div>
+
+  <div class="th-property-review-summary__reviews th-property-review-summary__reviews--mobile">
+    <th-review-card
+      *ngFor="let review of mobileReviews"
+      [name]="review.name"
+      [locationAndDate]="review.locationAndDate"
+      [relativeDate]="review.relativeDate"
+      [text]="review.text"
+      [avatarUrl]="review.avatarUrl"
+      [score]="review.score"
+      [stars]="review.stars"
+    ></th-review-card>
+  </div>
+
+  <th-button class="th-property-review-summary__load-more" variant="secondary" size="md" expand="block">
+    {{ loadMoreLabel }}
+  </th-button>
+</section>

@@ -1,0 +1,75 @@
+<section class="details-mosaic" aria-label="Hotel image gallery">
+  <div class="details-mosaic__desktop" *ngIf="images.length">
+    <button
+      class="details-mosaic__tile details-mosaic__tile--main"
+      type="button"
+      (click)="selectImage(0)"
+      [attr.aria-label]="'Open photo 1 of ' + effectiveTotalPhotos"
+    >
+      <img [src]="images[0].src" [alt]="images[0].alt || hotelName + ' photo 1'" />
+    </button>
+
+    <button
+      class="details-mosaic__tile details-mosaic__tile--secondary"
+      type="button"
+      *ngIf="images[1]"
+      (click)="selectImage(1)"
+      [attr.aria-label]="'Open photo 2 of ' + effectiveTotalPhotos"
+    >
+      <img [src]="images[1].src" [alt]="images[1].alt || hotelName + ' photo 2'" />
+    </button>
+
+    <button
+      class="details-mosaic__tile details-mosaic__tile--tertiary"
+      type="button"
+      *ngIf="images[2]"
+      (click)="selectImage(2)"
+      [attr.aria-label]="'Open photo 3 of ' + effectiveTotalPhotos"
+    >
+      <img [src]="images[2].src" [alt]="images[2].alt || hotelName + ' photo 3'" />
+    </button>
+
+    <button
+      class="details-mosaic__tile details-mosaic__tile--quaternary"
+      type="button"
+      *ngIf="images[3]"
+      (click)="selectImage(3)"
+      [attr.aria-label]="'Open photo 4 of ' + effectiveTotalPhotos"
+    >
+      <img [src]="images[3].src" [alt]="images[3].alt || hotelName + ' photo 4'" />
+    </button>
+
+    <button class="details-mosaic__view-all" type="button" (click)="triggerViewAll()">
+      <ion-icon name="images-outline" aria-hidden="true"></ion-icon>
+      <span>{{ viewAllLabel }}</span>
+    </button>
+  </div>
+
+  <div class="details-mosaic__mobile" *ngIf="selectedImage as activeImage">
+    <div class="details-mosaic__mobile-hero">
+      <img [src]="activeImage.src" [alt]="activeImage.alt || hotelName + ' selected photo'" />
+      <span class="details-mosaic__counter">
+        <ion-icon name="images-outline" aria-hidden="true"></ion-icon>
+        {{ currentPhotoText }}
+      </span>
+    </div>
+
+    <div class="details-mosaic__thumb-list" role="list">
+      <button
+        *ngFor="let image of images; let i = index"
+        type="button"
+        class="details-mosaic__thumb"
+        [class.details-mosaic__thumb--active]="i === selectedIndex"
+        (click)="selectImage(i)"
+        [attr.aria-label]="'Select thumbnail ' + (i + 1)"
+      >
+        <img [src]="image.src" [alt]="image.alt || hotelName + ' thumbnail ' + (i + 1)" />
+      </button>
+    </div>
+  </div>
+
+  <div class="details-mosaic__empty" *ngIf="!images.length">
+    <ion-icon name="images-outline" aria-hidden="true"></ion-icon>
+    <p>No photos available</p>
+  </div>
+</section>

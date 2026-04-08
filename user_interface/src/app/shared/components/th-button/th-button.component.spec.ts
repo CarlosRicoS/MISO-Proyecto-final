@@ -1,10 +1,17 @@
 import { TestBed } from '@angular/core/testing';
+import { ActivatedRoute } from '@angular/router';
 import { ThButtonComponent } from './th-button.component';
 
 describe('ThButtonComponent', () => {
   it('builds button classes from inputs', () => {
     TestBed.configureTestingModule({
       imports: [ThButtonComponent],
+      providers: [
+        {
+          provide: ActivatedRoute,
+          useValue: {},
+        },
+      ],
     });
 
     const fixture = TestBed.createComponent(ThButtonComponent);
@@ -22,6 +29,12 @@ describe('ThButtonComponent', () => {
   it('omits disabled class when enabled', () => {
     TestBed.configureTestingModule({
       imports: [ThButtonComponent],
+      providers: [
+        {
+          provide: ActivatedRoute,
+          useValue: {},
+        },
+      ],
     });
 
     const fixture = TestBed.createComponent(ThButtonComponent);

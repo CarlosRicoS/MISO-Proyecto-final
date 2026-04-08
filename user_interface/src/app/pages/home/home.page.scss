@@ -39,8 +39,8 @@
   color: rgba(255, 255, 255, 0.9);
 }
 
-ion-content{
-  --ion-background-color: #F9FAFB;
+ion-content {
+  --ion-background-color: var(--th-page-background);
 }
 
 .home-hero__card {

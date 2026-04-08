@@ -35,6 +35,7 @@
   "exclude": [
     "node_modules",
     "**/*.spec.ts",
-    "capacitor.config.ts"
+    "capacitor.config.ts",
+    "playwright.config.ts"
   ]
 }

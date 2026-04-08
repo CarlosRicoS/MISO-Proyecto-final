@@ -1,0 +1,34 @@
+<section class="th-detail-summary" aria-label="Property summary">
+  <div class="th-detail-summary__top-row">
+    <div class="th-detail-summary__title-wrap">
+      <h1 class="th-detail-summary__title">{{ title }}</h1>
+      <p class="th-detail-summary__location">
+        <ion-icon name="location" aria-hidden="true"></ion-icon>
+        <span>{{ location }}</span>
+      </p>
+    </div>
+
+    <div class="th-detail-summary__actions" *ngIf="showActions">
+      <ion-button size="small" fill="outline" color="medium">
+        <ion-icon slot="start" name="heart-outline" aria-hidden="true"></ion-icon>
+        Save
+      </ion-button>
+      <ion-button size="small" fill="outline" color="medium">
+        <ion-icon slot="start" name="share-social-outline" aria-hidden="true"></ion-icon>
+        Share
+      </ion-button>
+    </div>
+  </div>
+
+  <div class="th-detail-summary__rating-row">
+    <span class="th-detail-summary__score-pill">
+      <ion-icon name="star" aria-hidden="true"></ion-icon>
+      {{ score }}
+    </span>
+    <span class="th-detail-summary__score-label">{{ scoreLabel }}</span>
+    <span class="th-detail-summary__reviews">{{ reviewsText }}</span>
+    <span class="th-detail-summary__stars" aria-label="{{ stars }} star rating">
+      <ion-icon *ngFor="let icon of starIcons" [name]="icon" aria-hidden="true"></ion-icon>
+    </span>
+  </div>
+</section>

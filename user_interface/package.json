@@ -10,6 +10,13 @@
     "build": "npm run config:env && ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
+    "android:sync": "npm run build && npx cap sync android",
+    "e2e": "npm run e2e:web",
+    "e2e:web": "npx playwright test e2e/web",
+    "e2e:web:ui": "npx playwright test e2e/web --ui",
+    "e2e:web:with-app": "npx start-server-and-test \"npm run start -- --host 0.0.0.0 --port 8100\" http://localhost:8100 \"npm run e2e:web\"",
+    "e2e:android": "npm run android:sync && cd android && ./gradlew connectedDebugAndroidTest",
+    "e2e:android:espresso": "npm run android:sync && cd android && ./gradlew connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.uniandes.travelhub.app.TravelHubEspressoTest",
     "lint": "ng lint",
     "prepare": "cd .. && git config core.hooksPath .githooks && chmod +x .githooks/pre-commit"
   },
@@ -61,6 +68,8 @@
     "karma-coverage": "~2.2.0",
     "karma-jasmine": "~5.1.0",
     "karma-jasmine-html-reporter": "~2.1.0",
+    "@playwright/test": "^1.54.2",
+    "start-server-and-test": "^2.0.10",
     "typescript": "~5.9.0"
   }
 }

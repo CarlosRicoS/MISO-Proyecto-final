@@ -1,0 +1,241 @@
+:host {
+  display: block;
+}
+
+.th-payment-summary {
+  border-radius: 12px;
+  border: 1px solid #d8dde6;
+  background: var(--th-white);
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+  margin: 0;
+}
+
+.th-payment-summary__content {
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.th-payment-summary__price-header {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.th-payment-summary__title {
+  margin: 0;
+  font-size: 42px;
+  line-height: 1;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.th-payment-summary__subtitle {
+  margin: 0;
+  font-size: 16px;
+  color: #4b5563;
+}
+
+.th-payment-summary__promo {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #4b5563;
+  font-size: 14px;
+
+  ion-icon {
+    color: #0a67e8;
+    font-size: 14px;
+  }
+}
+
+.th-payment-summary__field-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.th-payment-summary__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.th-payment-summary__field-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.th-payment-summary__field-value {
+  border: 1px solid #cfd6df;
+  border-radius: 9px;
+  min-height: 40px;
+  padding: 0 11px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #1f2937;
+  font-size: 14px;
+
+  ion-icon {
+    color: #8d96a4;
+    font-size: 16px;
+  }
+}
+
+.th-payment-summary__rows {
+  margin-top: 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.th-payment-summary__row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.th-payment-summary__row-label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.th-payment-summary__row-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.th-payment-summary__row-subtitle {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.th-payment-summary__row-value {
+  font-size: 16px;
+  font-weight: 700;
+  color: #374151;
+}
+
+.th-payment-summary__row-value--muted {
+  font-weight: var(--th-font-weight-medium);
+  color: var(--th-neutral-600);
+}
+
+.th-payment-summary__divider {
+  width: 100%;
+  height: 1px;
+  background: #d8dde6;
+}
+
+.th-payment-summary__total {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.th-payment-summary__total-label {
+  font-size: 34px;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.th-payment-summary__total-value {
+  font-size: 42px;
+  line-height: 1;
+  font-weight: 800;
+  color: #1f2937;
+}
+
+.th-payment-summary__action {
+  margin-top: 2px;
+}
+
+.th-payment-summary__footnote {
+  margin: 0;
+  text-align: center;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.th-payment-summary__trust-row {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
+
+.th-payment-summary__trust-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #4b5563;
+  font-size: 14px;
+
+  ion-icon {
+    color: #16a34a;
+    font-size: 15px;
+  }
+}
+
+.th-payment-summary__content--compact {
+  display: none;
+}
+
+.th-payment-summary__compact-main {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.th-payment-summary__compact-amount {
+  font-size: 38px;
+  line-height: 1;
+  font-weight: var(--th-font-weight-bold);
+  color: var(--th-neutral-900);
+}
+
+.th-payment-summary__compact-suffix {
+  font-size: 14px;
+  color: var(--th-neutral-600);
+}
+
+.th-payment-summary__compact-note {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--th-neutral-600);
+}
+
+@media (max-width: 720px) {
+  .th-payment-summary--mobile-sticky {
+    position: fixed;
+    left: 12px;
+    right: 12px;
+    bottom: calc(8px + var(--ion-safe-area-bottom, 0px));
+    z-index: 50;
+    border-radius: 10px;
+    margin: 0;
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.16);
+  }
+
+  .th-payment-summary--mobile-sticky .th-payment-summary__content--full {
+    display: none;
+  }
+
+  .th-payment-summary--mobile-sticky .th-payment-summary__content--compact {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 12px;
+  }
+
+  .th-payment-summary__compact-action th-button {
+    display: block;
+  }
+}

@@ -1,0 +1,28 @@
+<section class="th-amenities-summary" aria-label="Amenities summary">
+  <h3 class="th-amenities-summary__title">{{ title }}</h3>
+
+  <div class="th-amenities-summary__desktop-list">
+    <div class="th-amenities-summary__desktop-item" *ngFor="let amenity of amenities">
+      <ion-icon [name]="amenity.icon" aria-hidden="true"></ion-icon>
+      <span>{{ amenity.label }}</span>
+    </div>
+  </div>
+
+  <ion-button class="th-amenities-summary__desktop-link" fill="clear">
+    {{ desktopViewAllText }}
+    <ion-icon name="chevron-forward" aria-hidden="true"></ion-icon>
+  </ion-button>
+
+  <div class="th-amenities-summary__mobile-grid">
+    <ion-button class="th-amenities-summary__mobile-item" fill="clear" *ngFor="let amenity of mobileAmenities">
+      <span class="th-amenities-summary__mobile-icon-wrap">
+        <ion-icon [name]="amenity.icon" aria-hidden="true"></ion-icon>
+      </span>
+      <span class="th-amenities-summary__mobile-label">{{ amenity.label }}</span>
+    </ion-button>
+  </div>
+
+  <ion-button class="th-amenities-summary__mobile-cta" expand="block" fill="outline" color="primary">
+    {{ viewAllLabel }}
+  </ion-button>
+</section>

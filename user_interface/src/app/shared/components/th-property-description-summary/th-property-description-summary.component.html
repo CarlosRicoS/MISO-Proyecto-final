@@ -1,0 +1,27 @@
+<section
+  class="th-property-description-summary"
+  [class.th-property-description-summary--expanded]="isExpanded"
+  aria-label="Property description"
+>
+  <h3 class="th-property-description-summary__title">{{ title }}</h3>
+
+  <div class="th-property-description-summary__content">
+    <p
+      *ngFor="let paragraph of paragraphs; let i = index"
+      class="th-property-description-summary__paragraph"
+      [class.th-property-description-summary__paragraph--mobile-extra]="i >= mobilePreviewParagraphCount"
+    >
+      {{ paragraph }}
+    </p>
+  </div>
+
+  <ion-button
+    fill="clear"
+    class="th-property-description-summary__toggle"
+    *ngIf="hasMoreParagraphs"
+    (click)="toggleExpanded()"
+  >
+    {{ isExpanded ? readLessLabel : readMoreLabel }}
+    <ion-icon [name]="isExpanded ? 'chevron-up' : 'chevron-down'" aria-hidden="true"></ion-icon>
+  </ion-button>
+</section>
