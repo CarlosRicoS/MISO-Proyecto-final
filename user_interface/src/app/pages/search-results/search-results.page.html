@@ -20,6 +20,8 @@
           ctaLabel="View Details"
           [rating]="getHotelRating(hotel)"
           [imageUrl]="hotel.imageUrl || ''"
+          [ctaRouterLink]="null"
+          (ctaClick)="viewDetails(hotel)"
         ></th-hotel-card>
       </div>
 

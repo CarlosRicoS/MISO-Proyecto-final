@@ -34,19 +34,53 @@ const mockedHotels: HotelApiRecord[] = [
   },
 ];
 
-async function mockPropertySearchApi(page: Page): Promise<void> {
+const mockedPropertyDetail = {
+  id: 'hotel-1',
+  name: 'Andes Palace Hotel',
+  maxCapacity: 4,
+  description: 'Modern stay in the heart of Bogota.',
+  photos: ['https://example.com/hotel-1.jpg'],
+  checkInTime: '15:00:00',
+  checkOutTime: '11:00:00',
+  adminGroupId: 'hotel-admins',
+  amenities: [{ id: 'amen-1', description: 'Free WiFi' }],
+  reviews: [{ id: 'rev-1', description: 'Great stay!', rating: 5, name: 'Ana' }],
+};
+
+async function mockPropertyApis(page: Page): Promise<void> {
   await page.route('**/api/property**', async (route) => {
+    const requestUrl = new URL(route.request().url());
+    const path = requestUrl.pathname;
+
+    if (path.endsWith('/api/property')) {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(mockedHotels),
+      });
+      return;
+    }
+
+    if (path.includes('/api/property/')) {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(mockedPropertyDetail),
+      });
+      return;
+    }
+
     await route.fulfill({
-      status: 200,
+      status: 404,
       contentType: 'application/json',
-      body: JSON.stringify(mockedHotels),
+      body: JSON.stringify({ message: 'Not found' }),
     });
   });
 }
 
 test.describe('TravelHub core journeys', () => {
   test.beforeEach(async ({ page }) => {
-    await mockPropertySearchApi(page);
+    await mockPropertyApis(page);
   });
 
   test('home page shows hero and recommended hotels', async ({ page }) => {
@@ -71,11 +105,14 @@ test.describe('TravelHub core journeys', () => {
     await expect(page.getByText('2 hotels found')).toBeVisible();
   });
 
-  test('property detail page renders key booking information', async ({ page }) => {
-    await page.goto('/propertydetail');
+  test('view details loads property detail data', async ({ page }) => {
+    await page.goto('/search-results?city=Bogota');
 
-    await expect(page).toHaveURL(/\/propertydetail/);
-    await expect(page.getByRole('heading', { level: 1, name: 'Grand Luxury Resort & Spa' })).toBeVisible();
+    await page.getByRole('button', { name: 'View Details' }).first().click();
+
+    await expect(page).toHaveURL(/\/propertydetail\/hotel-1/);
+    await expect(page.getByRole('heading', { level: 1, name: 'Andes Palace Hotel' })).toBeVisible();
+    await expect(page.getByText('Free WiFi').first()).toBeVisible();
     await expect(page.getByText('Book Now').first()).toBeVisible();
   });
 });

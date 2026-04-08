@@ -1,0 +1,11 @@
+{
+  "id": "7b2f2f2f-8a9b-4f25-ae6d-1d2a1f0c1c33",
+  "name": "Hotel Aurora",
+  "maxCapacity": 4,
+  "description": "Modern hotel near the historic center.",
+  "urlBucketPhotos": "https://picsum.photos/seed/aurora-hero/1200/800",
+  "checkInTime": "15:00:00",
+  "checkOutTime": "11:00:00",
+  "adminGroupId": "hotel-admins",
+  "price": 420000.00
+}

@@ -2,7 +2,7 @@ package com.uniandes.travelhub.app;
 
 import static androidx.test.espresso.web.assertion.WebViewAssertions.webMatches;
 import static androidx.test.espresso.web.model.Atoms.getCurrentUrl;
-import static androidx.test.espresso.web.model.Atoms.getText;
+import static androidx.test.espresso.web.webdriver.DriverAtoms.getText;
 import static androidx.test.espresso.web.sugar.Web.onWebView;
 import static androidx.test.espresso.web.webdriver.DriverAtoms.clearElement;
 import static androidx.test.espresso.web.webdriver.DriverAtoms.findElement;
@@ -63,19 +63,24 @@ public class TravelHubEspressoTest {
     public void propertyDetailPageRendersBookingInformation() {
         onWebView().forceJavascriptEnabled();
 
+        onWebView().withElement(findElement(XPATH, "//ion-button[.//span[contains(text(),'Search Hotels')]]"))
+            .perform(webClick());
+
+        waitForUrlContains("search-results");
+
         onWebView()
-                .withElement(findElement(XPATH, "//a[@href='/propertydetail']"))
-                .perform(webClick());
+            .withElement(findElement(XPATH, "//ion-button[.//span[contains(text(),'View Details')]]"))
+            .perform(webClick());
 
         waitForUrlContains("propertydetail");
 
         onWebView()
-                .withElement(findElement(XPATH, "//*[contains(text(),'Grand Luxury Resort & Spa')]"))
-                .check(webMatches(getText(), Matchers.containsString("Grand Luxury Resort & Spa")));
+            .withElement(findElement(XPATH, "//h1"))
+            .check(webMatches(getText(), Matchers.not(Matchers.isEmptyOrNullString())));
 
         onWebView()
-                .withElement(findElement(XPATH, "//*[contains(text(),'Book Now')]"))
-                .check(webMatches(getText(), Matchers.containsString("Book Now")));
+            .withElement(findElement(XPATH, "//*[contains(text(),'Book Now')]"))
+            .check(webMatches(getText(), Matchers.containsString("Book Now")));
     }
 
     private void waitForUrlContains(String expectedFragment) {

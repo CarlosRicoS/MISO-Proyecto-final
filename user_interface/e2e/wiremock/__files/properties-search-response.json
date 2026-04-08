@@ -1,0 +1,22 @@
+[
+  {
+    "id": "prop-1001",
+    "name": "Hotel Aurora",
+    "city": "Bogota",
+    "country": "Colombia",
+    "pricePerNight": 420000,
+    "currency": "COP",
+    "rating": 4.6,
+    "imageUrl": "https://picsum.photos/seed/aurora/640/420"
+  },
+  {
+    "id": "prop-1002",
+    "name": "Casa Mar",
+    "city": "Cartagena",
+    "country": "Colombia",
+    "pricePerNight": 520000,
+    "currency": "COP",
+    "rating": 4.2,
+    "imageUrl": "https://picsum.photos/seed/casamar/640/420"
+  }
+]

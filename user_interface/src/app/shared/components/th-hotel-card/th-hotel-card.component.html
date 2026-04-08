@@ -36,7 +36,12 @@
         <span class="th-hotel-card__price-suffix">{{ priceSuffix }}</span>
       </div>
       <div class="th-hotel-card__cta">
-        <th-button variant="primary" size="sm" [routerLink]="'/propertydetail'">
+        <th-button
+          variant="primary"
+          size="sm"
+          [routerLink]="ctaRouterLink"
+          (click)="ctaClick.emit()"
+        >
           {{ ctaLabel }}
         </th-button>
       </div>

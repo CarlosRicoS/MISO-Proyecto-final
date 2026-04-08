@@ -3,6 +3,7 @@ import { IonicModule } from '@ionic/angular';
 import { ActivatedRoute, convertToParamMap, Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { HotelsService } from '../../core/services/hotels.service';
+import { PropertyDetailService } from '../../core/services/property-detail.service';
 import { ThFilterSummaryComponent } from '../../shared/components/th-filter-summary/th-filter-summary.component';
 import { SearchResultsPage } from './search-results.page';
 
@@ -12,6 +13,7 @@ class HotelsServiceMock {
 
 class RouterMock {
   private navigationState: unknown = null;
+  navigate = jasmine.createSpy('navigate').and.resolveTo(true);
 
   setNavigationState(state: unknown): void {
     this.navigationState = state;
@@ -26,6 +28,10 @@ class RouterMock {
   }
 }
 
+class PropertyDetailServiceMock {
+  getPropertyDetail = jasmine.createSpy('getPropertyDetail').and.returnValue(of({ id: '1' }));
+}
+
 describe('SearchResultsPage', () => {
   let component: SearchResultsPage;
   let fixture: ComponentFixture<SearchResultsPage>;
@@ -38,6 +44,7 @@ describe('SearchResultsPage', () => {
       imports: [IonicModule.forRoot(), ThFilterSummaryComponent],
       providers: [
         { provide: HotelsService, useClass: HotelsServiceMock },
+        { provide: PropertyDetailService, useClass: PropertyDetailServiceMock },
         { provide: Router, useClass: RouterMock },
         {
           provide: ActivatedRoute,
@@ -127,5 +134,14 @@ describe('SearchResultsPage', () => {
     await component.loadHotelsFromApi();
 
     expect(component.errorMessage).toBe('Unable to load hotels.');
+  });
+
+  it('loads property detail and navigates on view details click', async () => {
+    const propertyDetailService = TestBed.inject(PropertyDetailService) as unknown as PropertyDetailServiceMock;
+
+    await component.viewDetails({ id: 'prop-1' } as any);
+
+    expect(propertyDetailService.getPropertyDetail).toHaveBeenCalledWith('prop-1');
+    expect(router.navigate).toHaveBeenCalledWith(['/propertydetail', 'prop-1'], jasmine.any(Object));
   });
 });

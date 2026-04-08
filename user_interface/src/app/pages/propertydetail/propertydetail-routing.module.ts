@@ -7,6 +7,10 @@ const routes: Routes = [
     path: '',
     component: PropertydetailPage,
   },
+  {
+    path: ':id',
+    component: PropertydetailPage,
+  },
 ];
 
 @NgModule({

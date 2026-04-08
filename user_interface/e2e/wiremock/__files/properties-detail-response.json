@@ -1,0 +1,31 @@
+{
+  "id": "prop-1001",
+  "name": "Hotel Aurora",
+  "maxCapacity": 4,
+  "description": "Modern hotel near the historic center.",
+  "photos": [
+    "https://picsum.photos/seed/aurora-1/1200/800",
+    "https://picsum.photos/seed/aurora-2/1200/800"
+  ],
+  "checkInTime": "15:00:00",
+  "checkOutTime": "11:00:00",
+  "adminGroupId": "hotel-admins",
+  "reviews": [
+    {
+      "id": "rev-01",
+      "description": "Great stay and friendly staff.",
+      "rating": 5,
+      "name": "Laura"
+    }
+  ],
+  "amenities": [
+    {
+      "id": "amen-01",
+      "description": "Free WiFi"
+    },
+    {
+      "id": "amen-02",
+      "description": "Breakfast included"
+    }
+  ]
+}

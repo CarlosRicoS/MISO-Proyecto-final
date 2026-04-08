@@ -1,5 +1,5 @@
 <ion-content class="propertydetail-content">
-  <section class="propertydetail-main">
+  <section class="propertydetail-main" *ngIf="!isLoading && !errorMessage">
     <div class="propertydetail-main__inner">
       <div class="propertydetail-main__left">
         <section class="propertydetail-hero">
@@ -31,7 +31,7 @@
             <div class="propertydetail-body__details">
               <th-amenities-summary
                 [amenities]="amenities"
-                [totalAmenities]="32"
+                [totalAmenities]="amenities.length"
                 viewAllLabel="View All Amenities"
               ></th-amenities-summary>
 
@@ -57,21 +57,21 @@
 
       <aside class="propertydetail-main__right">
         <th-payment-summary
-          title="$299"
+          [title]="paymentSummary.title"
           subtitle="per night"
-          promoText="Save 15% with our winter special"
+          [promoText]="paymentSummary.promoText"
           checkInLabel="Check-in"
-          checkInValue="2024-12-20"
+          [checkInValue]="paymentSummary.checkInValue"
           checkOutLabel="Check-out"
-          checkOutValue="2024-12-23"
+          [checkOutValue]="paymentSummary.checkOutValue"
           guestsLabel="Guests"
-          guestsValue="1 Adult"
+          [guestsValue]="paymentSummary.guestsValue"
           roomTypeLabel="Room Type"
-          roomTypeValue="Standard Room"
+          [roomTypeValue]="paymentSummary.roomTypeValue"
           [items]="summaryItems"
           [badges]="summaryBadges"
           totalLabel="Total"
-          totalAmount="$1,009"
+          [totalAmount]="paymentSummary.totalAmount"
           actionLabel="Book Now"
           footnote="You won't be charged yet"
           trustLeftLabel="Secure booking"
@@ -83,4 +83,6 @@
       </aside>
     </div>
   </section>
+  <p class="propertydetail-empty" *ngIf="isLoading">Loading property details...</p>
+  <p class="propertydetail-empty" *ngIf="!isLoading && errorMessage">{{ errorMessage }}</p>
 </ion-content>

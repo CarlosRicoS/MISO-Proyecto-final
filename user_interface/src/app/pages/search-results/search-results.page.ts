@@ -3,6 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { Hotel } from '../../core/models/hotel.model';
 import { HotelsService } from '../../core/services/hotels.service';
+import { PropertyDetailService } from '../../core/services/property-detail.service';
 import { FilterSummaryParams } from '../../shared/components/th-filter-summary/th-filter-summary.component';
 
 @Component({
@@ -34,6 +35,7 @@ export class SearchResultsPage implements OnInit {
 
   constructor(
     private hotelsService: HotelsService,
+    private propertyDetailService: PropertyDetailService,
     private route: ActivatedRoute,
     private router: Router,
   ) {}
@@ -87,6 +89,38 @@ export class SearchResultsPage implements OnInit {
 
   getHotelRating(hotel: Hotel): string {
     return Number.isFinite(hotel.rating) ? hotel.rating.toFixed(1) : 'N/A';
+  }
+
+  async viewDetails(hotel: Hotel): Promise<void> {
+    if (!hotel?.id) {
+      this.errorMessage = 'Unable to load property details.';
+      return;
+    }
+
+    this.isLoading = true;
+    this.errorMessage = '';
+
+    try {
+      const propertyDetail = await firstValueFrom(
+        this.propertyDetailService.getPropertyDetail(hotel.id)
+      );
+
+      await this.router.navigate(['/propertydetail', hotel.id], {
+        state: {
+          hotel,
+          propertyDetail,
+          search: {
+            startDate: this.searchStartDate,
+            endDate: this.searchEndDate,
+            capacity: this.searchCapacity,
+          },
+        },
+      });
+    } catch (error) {
+      this.errorMessage = 'Unable to load property details.';
+    } finally {
+      this.isLoading = false;
+    }
   }
 
   private readSearchParamsFromQuery(): void {
