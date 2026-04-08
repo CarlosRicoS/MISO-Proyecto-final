@@ -105,6 +105,10 @@ describe('AuthService', () => {
         expect(response.expires_in).toBe(7200);
         expect(response.token_type).toBe('Bearer');
         done();
+      },
+      (error) => {
+        fail('Request should not have failed: ' + JSON.stringify(error));
+        done();
       });
 
       const req = httpMock.expectOne('/auth/api/auth/login');
@@ -234,6 +238,10 @@ describe('AuthService', () => {
 
       service.login(email, password).subscribe((response) => {
         expect(response.expires_in).toBe(86400);
+        done();
+      },
+      (error) => {
+        fail('Request should not have failed: ' + JSON.stringify(error));
         done();
       });
 

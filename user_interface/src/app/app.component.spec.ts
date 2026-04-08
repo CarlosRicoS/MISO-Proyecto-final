@@ -6,16 +6,17 @@ import { of } from 'rxjs';
 import { AppComponent } from './app.component';
 
 describe('AppComponent', () => {
+  let component: AppComponent;
+  let fixture: any;
+  let routerMock: any;
 
   beforeEach(async () => {
     const activatedRouteMock = {
-      root: {
-        snapshot: { data: {} },
-        firstChild: null,
-      },
+      snapshot: { data: {} },
+      firstChild: null,
     } as unknown as ActivatedRoute;
 
-    const routerMock = {
+    routerMock = {
       events: of(),
       url: '/',
     } as Partial<Router>;
@@ -30,10 +31,39 @@ describe('AppComponent', () => {
     }).compileComponents();
   });
 
+  beforeEach(() => {
+    fixture = TestBed.createComponent(AppComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  });
+
   it('should create the app', () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.componentInstance;
-    expect(app).toBeTruthy();
+    expect(component).toBeTruthy();
+  });
+
+  it('should return true for isPropertyDetailRoute when on property detail page', () => {
+    routerMock.url = '/propertydetail';
+    expect(component.isPropertyDetailRoute).toBe(true);
+  });
+
+  it('should return true for isPropertyDetailRoute when URL starts with /propertydetail', () => {
+    routerMock.url = '/propertydetail/123';
+    expect(component.isPropertyDetailRoute).toBe(true);
+  });
+
+  it('should return false for isPropertyDetailRoute when not on property detail page', () => {
+    routerMock.url = '/home';
+    expect(component.isPropertyDetailRoute).toBe(false);
+  });
+
+  it('should return false for isPropertyDetailRoute when on search results page', () => {
+    routerMock.url = '/search-results';
+    expect(component.isPropertyDetailRoute).toBe(false);
+  });
+
+  it('should return false for isPropertyDetailRoute when on login page', () => {
+    routerMock.url = '/login';
+    expect(component.isPropertyDetailRoute).toBe(false);
   });
 
 });

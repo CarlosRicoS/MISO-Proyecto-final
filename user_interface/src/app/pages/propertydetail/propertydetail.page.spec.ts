@@ -52,4 +52,60 @@ describe('PropertydetailPage', () => {
     expect(component.summaryItems.length).toBeGreaterThan(0);
     expect(component.summaryBadges.length).toBeGreaterThan(0);
   });
+
+  describe('Component Initialization', () => {
+    it('should have property title', () => {
+      expect(component.property?.title).toBeDefined();
+    });
+
+    it('should have property location', () => {
+      expect(component.property?.location).toBeDefined();
+    });
+
+    it('should have property price', () => {
+      expect(component.property?.price).toBeDefined();
+    });
+
+    it('should have property rating', () => {
+      expect(component.property?.rating).toBeDefined();
+    });
+
+    it('should have property images array', () => {
+      expect(Array.isArray(component.property?.images)).toBe(true);
+    });
+  });
+
+  describe('Property Data', () => {
+    it('should have Grand Luxury Resort as title', () => {
+      expect(component.property?.title).toBe('Grand Luxury Resort & Spa');
+    });
+
+    it('should have multiple images', () => {
+      expect(component.property?.images?.length).toBeGreaterThan(0);
+    });
+
+    it('should have ratings', () => {
+      expect(component.property?.rating).toBeDefined();
+    });
+  });
+
+  describe('Summary Items and Badges', () => {
+    it('should have summary items', () => {
+      expect(component.summaryItems).toBeDefined();
+      expect(Array.isArray(component.summaryItems)).toBe(true);
+    });
+
+    it('should have summary badges', () => {
+      expect(component.summaryBadges).toBeDefined();
+      expect(Array.isArray(component.summaryBadges)).toBe(true);
+    });
+
+    it('should have correct number of summary items', () => {
+      expect(component.summaryItems.length).toBeGreaterThan(0);
+    });
+
+    it('should have correct number of summary badges', () => {
+      expect(component.summaryBadges.length).toBeGreaterThan(0);
+    });
+  });
 });

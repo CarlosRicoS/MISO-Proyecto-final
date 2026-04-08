@@ -48,7 +48,7 @@ export class HotelsService {
       queryParams = queryParams.set('city', params.city);
     }
 
-    if (Number.isFinite(params.capacity)) {
+    if (Number.isFinite(params.capacity) && Number(params.capacity) > 0) {
       queryParams = queryParams.set('capacity', String(params.capacity));
     }
 
