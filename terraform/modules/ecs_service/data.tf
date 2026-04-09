@@ -2,23 +2,8 @@ data "aws_ecs_cluster" "ecs_cluster" {
   cluster_name = "${var.project_name}-ecs-cluster"
 }
 
-data "aws_security_group" "ecs_sg" {
-  name = data.aws_ecs_cluster.ecs_cluster.cluster_name
-}
-
 data "aws_vpc" "vpc" {
   cidr_block = var.vpc_cidr
-}
-
-data "aws_subnets" "public" {
-  filter {
-    name   = "vpc-id"
-    values = [data.aws_vpc.vpc.id]
-  }
-
-  tags = {
-    is_public = "true"
-  }
 }
 
 data "aws_subnets" "private" {
