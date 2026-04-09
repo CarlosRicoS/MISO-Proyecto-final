@@ -21,6 +21,15 @@ jobs:
           - name: auth
             language: python
             context-path: services/auth
+          - name: booking
+            language: python
+            context-path: services/booking
+          - name: booking-orchestrator
+            language: python
+            context-path: services/booking_orchestrator
+          - name: notifications
+            language: python
+            context-path: services/notifications
     name: Test ${{ matrix.name }}
     steps:
       - name: Checkout repository
@@ -104,6 +113,14 @@ jobs:
             language: python
             ecr-repo: api_booking
             context-path: services/booking
+          - name: booking_orchestrator
+            language: python
+            ecr-repo: api_booking_orchestrator
+            context-path: services/booking_orchestrator
+          - name: notifications
+            language: python
+            ecr-repo: api_notifications
+            context-path: services/notifications
           - name: poc_properties
             language: java
             ecr-repo: api_poc_properties
@@ -181,10 +198,27 @@ jobs:
           terraform_environment: ${{ inputs.environment }}
           terraform_stack: database
 
+  deploy_messaging_stack:
+    environment: ${{ inputs.environment }}
+    runs-on: ubuntu-latest
+    needs: [test]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Deploy messaging stack
+        uses: ./.github/actions/terraform_apply
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          terraform_environment: ${{ inputs.environment }}
+          terraform_stack: messaging
+
   deploy_ecs_api_stack:
     environment: ${{ inputs.environment }}
     runs-on: ubuntu-latest
-    needs: [build_and_push, deploy_database_stack, deploy_ecs_cluster_stack, deploy_cognito_stack]
+    needs: [build_and_push, deploy_database_stack, deploy_ecs_cluster_stack, deploy_cognito_stack, deploy_messaging_stack]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
