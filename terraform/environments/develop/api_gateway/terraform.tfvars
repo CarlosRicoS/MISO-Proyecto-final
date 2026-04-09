@@ -18,5 +18,5 @@ public_services = [
   "auth",
   "poc-properties",
   "pricing-engine",
-  "pricing-orchestator"M
+  "pricing-orchestator"
 ]
