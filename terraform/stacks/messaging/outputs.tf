@@ -1,0 +1,19 @@
+output "notifications_queue_url" {
+  description = "URL of the notifications SQS queue."
+  value       = module.notifications_queue.queue_url
+}
+
+output "notifications_queue_arn" {
+  description = "ARN of the notifications SQS queue."
+  value       = module.notifications_queue.queue_arn
+}
+
+output "notifications_dlq_arn" {
+  description = "ARN of the notifications dead-letter queue."
+  value       = module.notifications_queue.dlq_arn
+}
+
+output "notifications_ssm_param_paths" {
+  description = "SSM parameter paths for the notifications queue."
+  value       = module.notifications_queue.ssm_param_paths
+}

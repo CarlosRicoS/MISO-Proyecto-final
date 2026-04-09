@@ -10,11 +10,18 @@ This is a multi-microservice platform deployed on AWS ECS (EC2-backed) behind an
 - `services/pms/` — Python/FastAPI. Acts as a proxy/delay layer that forwards property lock requests to poc-properties. Simulates real-world PMS latency.
 - `services/poc_properties/` — Java 25 / Spring Boot 4. The core properties microservice with CQRS pattern (Commands/Queries), JPA/PostgreSQL, Prometheus metrics, and Logstash JSON logging.
 - `services/PricingEngine/` — .NET 8 / ASP.NET Core. Pricing service backed by PostgreSQL via Entity Framework Core (Npgsql).
+- `services/PricingOrchestator/` — .NET 8 / ASP.NET Core. Orchestrates pricing operations across the platform.
+- `services/booking/` — Python/FastAPI with hexagonal (ports & adapters) architecture. Manages booking lifecycle (PENDING → APPROVED → CONFIRMED → COMPLETED/CANCELED). PostgreSQL-backed with async SQLAlchemy.
+- `services/booking_orchestrator/` — Python/FastAPI hexagonal. Synchronous saga coordinator for the "create reservation" flow: creates a booking in `booking`, locks the property in `poc_properties`, and publishes a `BOOKING_CREATED` event onto the notifications SQS queue. Requires JWT (forwards `X-User-Id`). No database.
+- `services/notifications/` — Python/FastAPI hexagonal. Background SQS consumer for `notifications_queue` that sends transactional emails via the AWS SES SMTP relay. Not called by the frontend, no auth, no database.
 - `services/auth/` — Python/FastAPI + boto3. Authentication microservice for user registration via AWS Cognito. Public endpoint (no JWT required).
 
+**Frontend:**
+- `user_interface/` — Angular 20 + Ionic 8 + Capacitor. Cross-platform SPA for web and Android (via Capacitor). Implements hotel discovery, search with filtering, and property details flows. TypeScript 5.9, lazy-loaded routing. E2E testing via Playwright (web) and Espresso (Android).
+
 **Infrastructure (Terraform):**
-- `terraform/modules/` — Reusable modules: `vpc`, `ecs`, `ecs_service`, `ecr`, `rds`, `api_gateway`, `cognito`, `iam`, `monitoring`.
-- `terraform/stacks/` — Composable top-level stacks: `ecs_cluster`, `container_registry`, `database`, `cognito`, `ecs_api`, `api_gateway`, `monitoring`.
+- `terraform/modules/` — Reusable modules: `vpc`, `ecs`, `ecs_service`, `ecr`, `rds`, `api_gateway`, `cognito`, `iam`, `monitoring`, `sqs`.
+- `terraform/stacks/` — Composable top-level stacks: `ecs_cluster`, `container_registry`, `database`, `cognito`, `messaging`, `ecs_api`, `api_gateway`, `monitoring`, `web_app`.
 - `terraform/environments/develop/` — Per-stack `terraform.tfvars` and `backend.tfvars` for the develop environment.
 
 **Load Tests:** `load-tests/` — JMeter test plan (`PropertySearchLoadTest.jmx`) with shell scripts.
@@ -35,6 +42,27 @@ Or via Makefile from repo root:
 ```bash
 make unittest-uv DIR=services/pms
 ```
+
+### Booking Service — uses `uv`
+
+```bash
+cd services/booking
+uv sync --group dev          # Install dependencies including dev
+uv run pytest tests/ -v      # Run all tests
+uv run uvicorn main:app --reload --port 8000  # Run locally (requires PostgreSQL)
+```
+
+Or via Makefile from repo root:
+```bash
+make unittest-uv DIR=services/booking
+```
+
+**Booking Service API:**
+- `POST /api/booking/` — Create a new booking (JWT required, `X-User-Id` injected by API Gateway)
+- `GET /api/booking/` — List all bookings for authenticated user
+- `GET /api/booking/{booking_id}` — Retrieve a single booking
+- `POST /api/booking/{booking_id}/cancel` — Cancel an existing booking
+- Status state machine: `PENDING` → `APPROVED` → `CONFIRMED` → `COMPLETED` (or `CANCELED` from any pre-terminal state)
 
 ### Auth Service — uses `uv`
 
@@ -63,6 +91,40 @@ dotnet run --project PricingEngine/  # Run locally
 dotnet build                         # Build
 ```
 
+### .NET Service (PricingOrchestator) — uses dotnet CLI
+
+```bash
+cd services/PricingOrchestator
+dotnet test PricingOrchestatorTests/  # Run tests
+dotnet run --project PricingOrchestator/  # Run locally
+dotnet build                            # Build
+```
+
+### Frontend (user_interface) — uses Node.js + npm
+
+```bash
+cd user_interface
+npm install                    # Install dependencies
+npm run build                  # Build for production
+npm start                      # Run dev server (http://localhost:4200)
+npm run e2e:web               # Run Playwright E2E tests (web)
+npm run e2e:android           # Build Android app + run Espresso tests (requires Android SDK)
+npm run lint                  # Run ESLint
+```
+
+**Frontend Stack:**
+- Angular 20 with lazy-loaded routing
+- Ionic 8 for mobile-first UI components
+- Capacitor 8 for native Android builds
+- TypeScript 5.9
+- Playwright for web E2E testing
+- Espresso for Android E2E testing
+
+**Key Pages:**
+- `/home` — Property discovery and featured listings
+- `/search-results` — Search with filtering (city, guests, check-in/check-out dates)
+- `/propertydetail` — Full property details, booking initiation
+
 ### Terraform — via Makefile
 
 ```bash
@@ -72,7 +134,7 @@ make tf-apply STACK=ecs_cluster ENV=develop
 make tf-all STACK=ecs_cluster ENV=develop   # init + validate + plan + apply
 ```
 
-Available stacks: `ecs_cluster`, `container_registry`, `database`, `cognito`, `ecs_api`, `api_gateway`, `monitoring`, `web_app`.
+Available stacks: `ecs_cluster`, `container_registry`, `database`, `cognito`, `messaging`, `ecs_api`, `api_gateway`, `monitoring`, `web_app`.
 
 ### Docker / ECR
 
@@ -83,19 +145,43 @@ make docker-deploy SERVICE=pms      # Login + build + push
 make ecr-login                      # Authenticate Docker with ECR
 ```
 
-## Adding a New Service
+## Adding a New Backend Service
 
 1. Create `services/<name>/` with app code and a `Dockerfile` exposing port 80 (or specify `container_port` in tfvars).
 2. Add ECR repo in `terraform/environments/develop/container_registry/terraform.tfvars`.
 3. Add service entry in `terraform/environments/develop/ecs_api/terraform.tfvars` (set `create_database = true` if needed — this auto-creates a PostgreSQL DB and SSM parameters at `/{project_name}/{service_name}/db_*`).
 4. Add to `service_names` in `terraform/environments/develop/api_gateway/terraform.tfvars`.
-5. Add to the `matrix` in `.github/workflows/deploy_apps.yml` for both `test` and `build_and_push` jobs.
+5. Add to the `matrix` in `.github/workflows/deploy_apps.yml`:
+   - If Python: add to both `test` (with `language: python`) and `build_and_push` (with `language: python`) jobs
+   - If Java/dotnet: add only to `build_and_push` with appropriate `language`
+
+## Deploying the Frontend
+
+The `user_interface` (Angular/Ionic) is deployed via the `web_app` Terraform stack:
+
+1. **Docker build:** Frontend is containerized with Node.js and Nginx
+2. **ECR push:** Published as `web_travelhub` to ECR (part of `build_and_push` matrix in `deploy_apps.yml`)
+3. **Terraform stack:** `terraform/stacks/web_app/` deploys to standalone EC2 instance with Docker + Nginx reverse proxy (as documented in `project_web_app_deployment.md` memory)
+4. **DNS:** Accessible via API Gateway custom domain or direct EC2 IP (configurable in tfvars)
 
 ## CI/CD
 
+### Workflows
+
 - **PR Validation** (`pr_validation.yml`): Runs tests, builds Docker image, and runs `terraform plan` on all stacks for any PR targeting `main`.
-- **Deploy Applications** (`deploy_apps.yml`): Manual workflow (workflow_dispatch) — runs tests, provisions infra, builds and pushes Docker images, deploys ECS services, updates API Gateway.
-- Deployment requires `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, and (for PRs) `AWS_SESSION_TOKEN` as GitHub secrets.
+- **Deploy Applications** (`deploy_apps.yml`): Manual workflow (workflow_dispatch) — runs tests for Python services, provisions infra stacks (ecs_cluster, container_registry, cognito, database), builds and pushes all service Docker images to ECR, deploys ECS services, and updates API Gateway.
+  - Test matrix: `pms`, `auth`, `booking`, `booking-orchestrator`, `notifications` (Python services)
+  - Build & Push matrix: `hello_world`, `pms`, `auth`, `booking`, `booking_orchestrator`, `notifications` (Python), `poc_properties` (Java), `pricing_engine`, `pricing_orchestator` (.NET), `travelhub` (Node.js/Angular frontend)
+- **Deploy Stack** (`deploy_stack.yml`): Manual workflow for deploying individual Terraform stacks.
+- **Seed Database** (`seed_database.yml`): Populates initial test data into RDS.
+- **Setup S3 TFstate Bucket** (`setup_s3_tfstate_bucket.yml`): One-time infrastructure setup for Terraform remote state.
+- **Destroy Infrastructure** (`destroy_infra.yml`): Tears down all AWS resources (for cleanup/cost control).
+
+### Deployment Requirements
+
+- GitHub secrets: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`
+- For PRs: `AWS_SESSION_TOKEN` (temporary credentials)
+- Target environment selectable in workflow UI (currently: `develop`)
 
 ## Authentication & Authorization (AWS Cognito)
 
@@ -144,10 +230,15 @@ The platform uses **AWS Cognito** for user authentication. The `cognito` Terrafo
 
 ## Service Communication
 
+- `booking-orchestrator` is the synchronous entry point for the "create reservation" user story. It forwards the gateway-injected `X-User-Id` header when calling `booking`, converts ISO dates to `dd/MM/yyyy` when calling `poc_properties /api/property/lock`, and publishes a versioned `BOOKING_CREATED` JSON event onto `notifications_queue` (best-effort). Compensation: creates booking first, then locks; on lock failure it cancels the booking and returns 409 `property_unavailable`.
+- `notifications` subscribes to `notifications_queue` via a lifespan-managed async SQS long-polling task and sends emails via `smtplib` against the AWS SES SMTP relay. Unknown schema versions or handler failures are *not* acked — SQS redrives them to `notifications_dlq` automatically.
 - `pms` gets the `poc-properties` service URL from SSM: `/final-project-miso/poc-properties/service_url` (injected as `PROPERTIES_SERVICE_URL` env var).
 - `poc-properties` reads DB credentials from SSM: `/final-project-miso/poc-properties/db_{host,name,username,password}`.
+- `booking` reads DB credentials from SSM: `/final-project-miso/booking/db_{host,name,username,password}`.
 - `auth` gets Cognito config from SSM: `/final-project-miso/cognito/{user_pool_id,app_client_id}` (injected as `COGNITO_USER_POOL_ID`, `COGNITO_CLIENT_ID` env vars).
+- `user_interface` (frontend) gets API Gateway URL from `/assets/config.json` loaded at runtime.
 - Services communicate internally within the VPC; the API Gateway (`172.16.0.0/16`) fronts external traffic.
+- All backend services receive `X-User-Id` and `X-User-Email` headers from API Gateway JWT authorizer (except public routes).
 
 ## poc_properties Architecture
 
@@ -157,3 +248,14 @@ Uses a CQRS pattern with explicit `Command`/`Query` interfaces and handlers. Key
 - `business/mapper/` — MapStruct mappers
 - `business/exception/` — domain exceptions
 - `infrastructure/persistence/` — JPA entities and repositories
+
+## Booking Service Architecture
+
+Follows **hexagonal (ports & adapters)** architecture with strict layer boundaries enforced by tests:
+- `domain/` — Core business rules (booking aggregate, status state machine, value objects). No external dependencies.
+- `application/` — Use cases (commands/queries: CreateBooking, CancelBooking, GetBooking). Depends only on domain.
+- `infrastructure/` — Persistence adapters (SQLAlchemy async ORM, in-memory repository for testing).
+- `controllers.py` — FastAPI HTTP adapter.
+- **State Machine:** Bookings transition through strict states; invalid transitions raise domain exceptions.
+- **Database:** PostgreSQL via async SQLAlchemy (connection pooling configurable via `DB_POOL_SIZE`, `DB_MAX_OVERFLOW`, etc.).
+- **Testing:** Unit tests use in-memory repository; integration tests hit real PostgreSQL.

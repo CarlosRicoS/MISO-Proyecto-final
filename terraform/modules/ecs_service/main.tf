@@ -5,7 +5,7 @@ resource "aws_ecs_service" "service" {
   desired_count   = var.desired_count_tasks
 
   network_configuration {
-    subnets         = data.aws_subnets.public.ids
+    subnets         = data.aws_subnets.private.ids
     security_groups = [data.aws_security_group.ecs_sg.id]
   }
 

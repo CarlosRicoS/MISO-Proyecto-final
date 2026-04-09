@@ -8,6 +8,7 @@ service_names = [
   "pricing-engine",
   "pricing-orchestator",
   "booking",
+  "booking-orchestrator",
   "auth"
 ]
 

@@ -13,7 +13,7 @@ services = {
     desired_count_tasks       = 1
     placement_constraint_type = ""
     autoscaling = {
-      max_capacity = 2
+      max_capacity = 1
       min_capacity = 1
     }
     secrets = [
@@ -32,7 +32,7 @@ services = {
     container_name            = "api_pms"
     ecs_task_size             = { cpu = 512, memory = 921 }
     create_database           = false
-    desired_count_tasks       = 1
+    desired_count_tasks       = 0
     placement_constraint_type = ""
     autoscaling = {
       max_capacity = 1
@@ -63,7 +63,7 @@ services = {
       path = "/api/actuator/health"
     }
     autoscaling = {
-      max_capacity           = 3
+      max_capacity           = 1
       min_capacity           = 1
       target_cpu_utilization = 35
       scale_out_cooldown     = 30
@@ -71,11 +71,11 @@ services = {
     environment_variables = [
       {
         name  = "JPA_SHOW_SQL"
-        value = "false"
+        value = "true"
       },
       {
         name  = "JPA_DDL_AUTO"
-        value = "none"
+        value = "update"
       },
       {
         name  = "HIKARI_MAX_POOL_SIZE"
@@ -110,7 +110,7 @@ services = {
     desired_count_tasks       = 1
     placement_constraint_type = ""
     autoscaling = {
-      max_capacity           = 3
+      max_capacity           = 1
       min_capacity           = 1
       target_cpu_utilization = 35
       scale_out_cooldown     = 30
@@ -141,16 +141,16 @@ services = {
     ecr_repository_name       = "api_pricing_orchestator"
     container_name            = "api_pricing_orchestator"
     ecs_task_size             = { cpu = 512, memory = 921 }
-    create_database           = true
+    create_database           = false
     container_port            = 8080
-    desired_count_tasks       = 1
+    desired_count_tasks       = 0
     placement_constraint_type = ""
     health_check = {
       path = "/api/health"
     }
     autoscaling = {
-      max_capacity           = 2
-      min_capacity           = 1
+      max_capacity           = 1
+      min_capacity           = 0
       target_cpu_utilization = 35
       scale_out_cooldown     = 30
     }
@@ -198,6 +198,82 @@ services = {
       {
         name      = "DB_NAME"
         valueFrom = "/final-project-miso/booking/db_name"
+      }
+    ]
+  }
+  "booking-orchestrator" = {
+    ecr_repository_name       = "api_booking_orchestrator"
+    container_name            = "api_booking_orchestrator"
+    ecs_task_size             = { cpu = 256, memory = 512 }
+    create_database           = false
+    container_port            = 80
+    desired_count_tasks       = 1
+    placement_constraint_type = ""
+    autoscaling = {
+      max_capacity           = 1
+      min_capacity           = 1
+      target_cpu_utilization = 60
+      scale_out_cooldown     = 30
+    }
+    health_check = {
+      path = "/api/health"
+    }
+    secrets = [
+      {
+        name      = "BOOKING_SERVICE_URL"
+        valueFrom = "/final-project-miso/booking/service_url"
+      },
+      {
+        name      = "PROPERTIES_SERVICE_URL"
+        valueFrom = "/final-project-miso/poc-properties/service_url"
+      },
+      {
+        name      = "NOTIFICATIONS_QUEUE_URL"
+        valueFrom = "/final-project-miso/notifications/queue_url"
+      }
+    ]
+  }
+  "notifications" = {
+    ecr_repository_name       = "api_notifications"
+    container_name            = "api_notifications"
+    ecs_task_size             = { cpu = 256, memory = 512 }
+    create_database           = false
+    container_port            = 80
+    desired_count_tasks       = 1
+    placement_constraint_type = ""
+    autoscaling = {
+      max_capacity           = 1
+      min_capacity           = 1
+      target_cpu_utilization = 60
+      scale_out_cooldown     = 30
+    }
+    health_check = {
+      path = "/api/health"
+    }
+    secrets = [
+      {
+        name      = "NOTIFICATIONS_QUEUE_URL"
+        valueFrom = "/final-project-miso/notifications/queue_url"
+      },
+      {
+        name      = "SMTP_HOST"
+        valueFrom = "/final-project-miso/notifications/smtp_host"
+      },
+      {
+        name      = "SMTP_PORT"
+        valueFrom = "/final-project-miso/notifications/smtp_port"
+      },
+      {
+        name      = "SMTP_USERNAME"
+        valueFrom = "/final-project-miso/notifications/smtp_username"
+      },
+      {
+        name      = "SMTP_PASSWORD"
+        valueFrom = "/final-project-miso/notifications/smtp_password"
+      },
+      {
+        name      = "SMTP_FROM"
+        valueFrom = "/final-project-miso/notifications/smtp_from"
       }
     ]
   }
