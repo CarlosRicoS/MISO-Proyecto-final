@@ -1,0 +1,11 @@
+services:
+  api-notifications:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    image: api-notifications
+    ports:
+      - "80:80"
+    volumes:
+      - .:/src/app
+    restart: always
