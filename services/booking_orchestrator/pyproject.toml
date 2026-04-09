@@ -1,0 +1,44 @@
+[project]
+name = "booking_orchestrator"
+version = "0.1.0"
+description = "Booking orchestrator — saga coordinator for the reservation creation flow"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.30.0",
+    "httpx>=0.27.0",
+    "boto3>=1.35.0",
+    "pydantic>=2.0.0",
+    "pydantic-settings>=2.0.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.24.0",
+    "ruff>=0.6.0",
+    "pytest-cov>=6.0.0",
+    "moto[sqs]>=5.0.0",
+    "respx>=0.21.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+filterwarnings = ["ignore::DeprecationWarning"]
+addopts = "--cov=booking_orchestrator --cov-report=term-missing --cov-fail-under=80"
+
+[tool.ruff]
+target-version = "py313"
+line-length = 99
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "UP", "B", "SIM"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/booking_orchestrator"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

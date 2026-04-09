@@ -1,0 +1,11 @@
+services:
+  api-booking-orchestrator:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    image: api-booking-orchestrator
+    ports:
+      - "80:80"
+    volumes:
+      - .:/src/app
+    restart: always
