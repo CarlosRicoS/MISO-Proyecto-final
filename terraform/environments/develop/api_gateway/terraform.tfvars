@@ -8,6 +8,7 @@ service_names = [
   "pricing-engine",
   "pricing-orchestator",
   "booking",
+  "booking-orchestrator",
   "auth"
 ]
 
@@ -17,5 +18,5 @@ public_services = [
   "auth",
   "poc-properties",
   "pricing-engine",
-  "pricing-orchestator"
+  "pricing-orchestator"M
 ]

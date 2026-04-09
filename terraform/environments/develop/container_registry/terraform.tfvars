@@ -9,5 +9,7 @@ repository_names = [
   "api_pricing_orchestator",
   "api_auth",
   "api_booking",
+  "api_booking_orchestrator",
+  "api_notifications",
   "web_travelhub"
 ]
