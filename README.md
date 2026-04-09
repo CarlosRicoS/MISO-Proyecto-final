@@ -6,18 +6,20 @@ This repository contains the source code and infrastructure-as-code (Terraform) 
 
 ```
 services/
-  auth/               Python/FastAPI — User registration via AWS Cognito
-  pms/                Python/FastAPI — PMS proxy/delay layer for property locks
-  poc_properties/     Java 25/Spring Boot 4 — Core properties service (CQRS, PostgreSQL)
-  PricingEngine/      .NET 8/ASP.NET Core — Pricing service (PostgreSQL)
+  auth/               Python/FastAPI — User registration and auth via Cognito
+  booking/            Python/FastAPI — Reservation management (PostgreSQL)
+  pms/                Python/FastAPI — PMS latency simulator (proxy to Properties)
+  poc_properties/     Java 25/Spring Boot 4 — Core property service (CQRS, PostgreSQL)
+  PricingEngine/      .NET 8/ASP.NET Core — Price calculation (PostgreSQL)
+  PricingOrchestator/ .NET 8/ASP.NET Core — Service orchestrator
+user_interface/       Angular 19/Ionic — Multi-platform travel application
 terraform/
-  modules/            Reusable modules: vpc, ecs, ecs_service, ecr, rds, api_gateway, cognito, iam, monitoring
-  stacks/             Composable stacks: ecs_cluster, container_registry, database, cognito, ecs_api, api_gateway, monitoring, web_app
-  environments/       Per-stack tfvars and backend config (develop/)
-db/
-  seeds/              SQL seed scripts organized by service name (run via seed_database.yml)
-load-tests/           JMeter test plans and runner scripts
-.github/workflows/    CI/CD pipelines
+  modules/            Reusable infrastructure components (VPC, ECS, RDS, Cognito, etc.)
+  stacks/             Composable stacks for cluster, database, api_gateway, etc.
+  environments/       Configuration for develop/ environment
+db/seeds/             SQL seed scripts for database initialization
+load-tests/           JMeter plans and shell runners
+.github/workflows/    CI/CD pipelines for deployment and validation
 ```
 
 ---
@@ -25,27 +27,40 @@ load-tests/           JMeter test plans and runner scripts
 ## Services
 
 ### Auth (`services/auth/`)
-- **Stack:** Python/FastAPI + boto3
-- **Purpose:** User authentication and registration via AWS Cognito. Public endpoints (no JWT required).
-- **Endpoints:**
-  - `POST /api/auth/register` — Register a new user (auto-confirmed, no email verification)
-  - `POST /api/auth/login` — Authenticate with email/password, returns JWT tokens
-  - `GET /api/auth/me` — Validate access token, returns user info and role
-  - `GET /api/health` — Health check
-- **Details:** See [`services/auth/README.md`](services/auth/README.md) for request/response examples, password policy, and roles.
+- **Stack:** Python/FastAPI + AWS Cognito
+- **Purpose:** User authentication, registration, and role management.
+- **Key Endpoints:** `POST /api/auth/register`, `POST /api/auth/login`, `GET /api/auth/me`.
+- **Details:** See [`services/auth/README.md`](services/auth/README.md).
 
-### PMS (`services/pms/`)
-- **Stack:** Python/FastAPI
-- **Purpose:** Acts as a proxy/delay layer that forwards property lock requests to poc-properties. Simulates real-world PMS latency.
-- Gets the poc-properties URL from SSM: `/final-project-miso/poc-properties/service_url`
+### Booking (`services/booking/`)
+- **Stack:** Python/FastAPI + PostgreSQL (SQLAlchemy)
+- **Purpose:** Manages property reservations and user booking history.
+- **Key Endpoints:** `POST /api/booking/`, `GET /api/booking/{id}`, `POST /api/booking/{id}/cancel`.
 
-### Properties (`services/poc_properties/`)
-- **Stack:** Java 25 / Spring Boot 4
-- **Purpose:** Core properties microservice with CQRS pattern, JPA/PostgreSQL, Prometheus metrics, and Logstash JSON logging.
+### Properties PoC (`services/poc_properties/`)
+- **Stack:** Java 25 / Spring Boot 4 + PostgreSQL
+- **Purpose:** Core service for property catalog, availability search, and booking locks.
+- **Key Endpoints:** `GET /api/property`, `GET /api/property/{id}`, `POST /api/property/lock`.
+- **Details:** See [`services/poc_properties/README.md`](services/poc_properties/README.md).
 
 ### Pricing Engine (`services/PricingEngine/`)
+- **Stack:** .NET 8 / ASP.NET Core + PostgreSQL
+- **Purpose:** Calculates dynamic pricing for properties based on guests and dates.
+- **Key Endpoints:** `GET /api/PropertyPrice`.
+
+### Pricing Orchestrator (`services/PricingOrchestator/`)
 - **Stack:** .NET 8 / ASP.NET Core
-- **Purpose:** Pricing service backed by PostgreSQL via Entity Framework Core (Npgsql).
+- **Purpose:** Orchestrates calls between the Properties and Pricing services to provide a unified view.
+- **Key Endpoints:** `GET /api/Property`.
+
+### PMS Proxy (`services/pms/`)
+- **Stack:** Python/FastAPI
+- **Purpose:** Simulates a Property Management System with artificial latency for lock operations.
+
+### TravelHub Frontend (`user_interface/`)
+- **Stack:** Angular 19 + Ionic + Capacitor
+- **Purpose:** Multi-platform web and mobile application for travelers and hotel admins.
+- **Key Features:** Property search, booking management, and responsive design.
 
 ---
 
