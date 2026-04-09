@@ -8,12 +8,27 @@
       <sourceFolder url="file://$MODULE_DIR$/services/pms" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/services/pms/tests" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/services/booking" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/services/booking/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/services/booking_orchestrator/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/services/booking_orchestrator/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/services/notifications" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/services/notifications/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/services/notifications/tests" isTestSource="true" />
       <excludeFolder url="file://$MODULE_DIR$/services/auth/.venv" />
       <excludeFolder url="file://$MODULE_DIR$/services/pms/.venv" />
       <excludeFolder url="file://$MODULE_DIR$/services/booking/.venv" />
+      <excludeFolder url="file://$MODULE_DIR$/services/booking_orchestrator/.venv" />
+      <excludeFolder url="file://$MODULE_DIR$/services/notifications/.venv" />
+      <excludeFolder url="file://$MODULE_DIR$/terraform/stacks/api_gateway/.terraform" />
+      <excludeFolder url="file://$MODULE_DIR$/terraform/stacks/cognito/.terraform" />
+      <excludeFolder url="file://$MODULE_DIR$/terraform/stacks/container_registry/.terraform" />
+      <excludeFolder url="file://$MODULE_DIR$/terraform/stacks/database/.terraform" />
+      <excludeFolder url="file://$MODULE_DIR$/terraform/stacks/ecs_api/.terraform" />
+      <excludeFolder url="file://$MODULE_DIR$/terraform/stacks/ecs_cluster/.terraform" />
+      <excludeFolder url="file://$MODULE_DIR$/terraform/stacks/messaging/.terraform" />
+      <excludeFolder url="file://$MODULE_DIR$/terraform/stacks/monitoring/.terraform" />
+      <excludeFolder url="file://$MODULE_DIR$/terraform/stacks/web_app/.terraform" />
     </content>
-    <orderEntry type="jdk" jdkName="uv (booking)" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="uv (MISO-Proyecto-final) (2)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name=".claude" />
   </component>
