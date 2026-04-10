@@ -1,0 +1,17 @@
+$kind: http-request
+name: Get Property by ID
+url: "{{base_url}}/poc-properties/api/property/{{property_id}}"
+method: GET
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Returns 200', function () {
+        pm.response.to.have.status(200);
+      });
+      pm.test('Response has id and adminGroupId', function () {
+        const json = pm.response.json();
+        pm.expect(json).to.have.property('id');
+        pm.expect(json).to.have.property('adminGroupId');
+      });
+    language: text/javascript
+order: 5000

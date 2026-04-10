@@ -1,0 +1,30 @@
+$kind: http-request
+name: Login
+url: "{{base_url}}/auth/api/auth/login"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "email": "traveler@example.com",
+      "password": "Travelhub123!"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Login returns 200', function () {
+        pm.response.to.have.status(200);
+      });
+      const json = pm.response.json();
+      pm.test('Response has id_token', function () {
+        pm.expect(json).to.have.property('id_token');
+      });
+      if (json.id_token) {
+        pm.collectionVariables.set('id_token', json.id_token);
+        pm.collectionVariables.set('access_token', json.access_token);
+        console.log('Tokens saved to collection variables.');
+      }
+    language: text/javascript
+order: 2000

@@ -1,0 +1,34 @@
+$kind: http-request
+name: "01 - Register"
+url: "{{base_url}}/auth/api/auth/register"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "full_name": "Flow Traveler",
+      "email": "{{flow_email}}",
+      "password": "{{flow_password}}",
+      "role": "travelers"
+    }
+scripts:
+  - type: beforeRequest
+    code: |-
+      const ts = Date.now();
+      const email = `flow.traveler.${ts}@example.com`;
+      pm.collectionVariables.set('flow_email', email);
+      pm.collectionVariables.set('flow_password', 'Travelhub123!');
+      console.log('Generated flow_email:', email);
+    language: text/javascript
+  - type: afterResponse
+    code: |-
+      pm.test('Registration returns 201', function () {
+        pm.response.to.have.status(201);
+      });
+      pm.test('Registered as travelers', function () {
+        pm.expect(pm.response.json().role).to.equal('travelers');
+      });
+    language: text/javascript
+order: 1000

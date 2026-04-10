@@ -1,0 +1,28 @@
+$kind: http-request
+name: Register User
+url: "{{base_url}}/auth/api/auth/register"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "full_name": "Test Traveler",
+      "email": "traveler@example.com",
+      "password": "Travelhub123!",
+      "role": "travelers"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Registration returns 201', function () {
+        pm.response.to.have.status(201);
+      });
+      pm.test('Response has email and role', function () {
+        const json = pm.response.json();
+        pm.expect(json).to.have.property('email');
+        pm.expect(json).to.have.property('role');
+      });
+    language: text/javascript
+order: 1000

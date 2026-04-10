@@ -1,0 +1,25 @@
+$kind: http-request
+name: Get Current User (me)
+url: "{{base_url}}/auth/api/auth/me"
+method: GET
+headers:
+  Authorization: "Bearer {{access_token}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Returns 200', function () {
+        pm.response.to.have.status(200);
+      });
+      const json = pm.response.json();
+      pm.test('Has user_id and role', function () {
+        pm.expect(json).to.have.property('user_id');
+        pm.expect(json).to.have.property('role');
+      });
+      if (json.user_id) {
+        pm.collectionVariables.set('user_id', json.user_id);
+        pm.collectionVariables.set('user_email', json.email);
+        console.log('X-User-Id (simulated):', json.user_id);
+        console.log('X-User-Email (simulated):', json.email);
+      }
+    language: text/javascript
+order: 3000

@@ -1,0 +1,15 @@
+$kind: collection
+name: travelhub-backend
+variables:
+  base_url: ""
+  id_token: ""
+  access_token: ""
+  user_id: ""
+  user_email: ""
+  booking_id: ""
+  property_id: ""
+  flow_email: ""
+  flow_password: ""
+  flow_property_id: ""
+  flow_admin_group_id: ""
+  flow_price: ""
