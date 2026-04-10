@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="SqlDialectMappings">
+    <file url="file://$PROJECT_DIR$/db/seeds/poc-properties/001_seed_properties_data.sql" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/db/seeds/pricing-engine/001_seed_pricing_data.sql" dialect="PostgreSQL" />
     <file url="file://$PROJECT_DIR$/load-tests/scripts/seed_pricing_engine_data.sql" dialect="PostgreSQL" />
     <file url="file://$PROJECT_DIR$/load-tests/scripts/seed_properties_mock_data.sql" dialect="PostgreSQL" />
   </component>

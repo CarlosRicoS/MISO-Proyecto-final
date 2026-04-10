@@ -4,11 +4,6 @@ resource "aws_ecs_service" "service" {
   task_definition = aws_ecs_task_definition.service.arn
   desired_count   = var.desired_count_tasks
 
-  network_configuration {
-    subnets         = data.aws_subnets.private.ids
-    security_groups = [data.aws_security_group.ecs_sg.id]
-  }
-
   force_new_deployment               = var.force_new_deployment
   deployment_minimum_healthy_percent = var.deployment_minimum_healthy_percent
   deployment_maximum_percent         = var.deployment_maximum_percent
@@ -40,7 +35,7 @@ resource "aws_ecs_service" "service" {
 
 resource "aws_ecs_task_definition" "service" {
   family             = "${var.project_name}-${var.service_name}-ecs-task-definition"
-  network_mode       = "awsvpc"
+  network_mode       = "bridge"
   task_role_arn      = var.ecs-task-execution-role
   execution_role_arn = var.ecs-task-execution-role
   cpu                = var.ecs_task_size.cpu
@@ -62,7 +57,7 @@ resource "aws_ecs_task_definition" "service" {
       portMappings = [
         {
           containerPort = var.container_port
-          hostPort      = var.container_port
+          hostPort      = 0
           protocol      = "tcp"
         }
       ]
@@ -93,7 +88,7 @@ resource "aws_lb_target_group" "service" {
   name_prefix = "ws-tg-"
   port        = var.container_port
   protocol    = "HTTP"
-  target_type = "ip"
+  target_type = "instance"
   vpc_id      = data.aws_vpc.vpc.id
 
   deregistration_delay = var.deregistration_delay
