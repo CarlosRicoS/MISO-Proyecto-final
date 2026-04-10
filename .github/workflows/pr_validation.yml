@@ -54,6 +54,18 @@ jobs:
         with:
           context-path: user_interface
 
+  test_e2e:
+    name: E2E travelhub (Playwright)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run Playwright E2E tests
+        uses: ./.github/actions/test-playwright
+        with:
+          context-path: user_interface
+
   build_and_push:
     runs-on: ubuntu-latest
     environment: develop
@@ -112,7 +124,7 @@ jobs:
   build_web_image:
     name: Build travelhub
     runs-on: ubuntu-latest
-    needs: [ test_frontend ]
+    needs: [ test_frontend, test_e2e ]
     environment: develop
     steps:
       - name: Checkout repository

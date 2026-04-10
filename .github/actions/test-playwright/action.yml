@@ -1,0 +1,48 @@
+name: Test Playwright E2E (Web)
+description: Run Playwright web E2E tests against the Angular dev server. All API calls are mocked via page.route — no real backend required.
+inputs:
+  context-path:
+    description: 'Path to the Angular/Ionic project containing package.json and playwright.config.ts'
+    required: true
+  node-version:
+    description: 'Node.js version to use'
+    required: false
+    default: '20'
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node-version }}
+        cache: 'npm'
+        cache-dependency-path: ${{ inputs.context-path }}/package-lock.json
+
+    - name: Install dependencies
+      shell: bash
+      run: |
+        cd ${{ inputs.context-path }}
+        npm ci
+
+    - name: Install Playwright Chromium and OS dependencies
+      shell: bash
+      run: |
+        cd ${{ inputs.context-path }}
+        npx playwright install --with-deps chromium
+
+    - name: Run E2E tests
+      shell: bash
+      env:
+        CI: "true"
+        START_SERVER_AND_TEST_HTTP_TIMEOUT: "120000"
+      run: |
+        cd ${{ inputs.context-path }}
+        npm run e2e:web:with-app
+
+    - name: Upload Playwright report on failure
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: playwright-report-${{ github.run_id }}
+        path: ${{ inputs.context-path }}/playwright-report/
+        retention-days: 7
