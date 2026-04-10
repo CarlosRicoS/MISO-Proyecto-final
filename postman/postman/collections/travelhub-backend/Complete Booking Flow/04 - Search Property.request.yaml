@@ -1,0 +1,26 @@
+$kind: http-request
+name: "04 - Search Property"
+url: "{{base_url}}/poc-properties/api/property?city=Cartagena&capacity=4&startDate=01/06/2026&endDate=05/06/2026"
+method: GET
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Returns 200', function () {
+        pm.response.to.have.status(200);
+      });
+      const results = pm.response.json();
+      pm.test('At least one property found', function () {
+        pm.expect(results.length).to.be.greaterThan(0);
+      });
+      if (results.length > 0) {
+        const prop = results[0];
+        pm.collectionVariables.set('flow_property_id', prop.id);
+        pm.collectionVariables.set('flow_admin_group_id', prop.adminGroupId);
+        console.log('Selected property:', prop.name, '(' + prop.id + ')');
+        console.log('adminGroupId:', prop.adminGroupId);
+        if (prop.adminGroupId === 'admin-1') {
+          console.warn('WARNING: adminGroupId is admin-1 (not a UUID) — step 05 will fail in booking service.');
+        }
+      }
+    language: text/javascript
+order: 4000

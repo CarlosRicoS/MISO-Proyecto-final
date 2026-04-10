@@ -1,0 +1,17 @@
+$kind: http-request
+name: List My Bookings
+url: "{{base_url}}/booking/api/booking/"
+method: GET
+headers:
+  Authorization: "Bearer {{id_token}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Returns 200', function () {
+        pm.response.to.have.status(200);
+      });
+      pm.test('Returns an array', function () {
+        pm.expect(pm.response.json()).to.be.an('array');
+      });
+    language: text/javascript
+order: 2000

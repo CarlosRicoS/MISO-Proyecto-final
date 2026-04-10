@@ -1,0 +1,52 @@
+$kind: http-request
+name: 05 - Create Reservation
+url: "{{base_url}}/booking-orchestrator/api/reservations"
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{id_token}}
+body:
+  type: json
+  content: |-
+    {
+      "property_id": "{{flow_property_id}}",
+      "guests": 2,
+      "period_start": "2026-06-06",
+      "period_end": "2026-06-10",
+      "price": "{{flow_price}}",
+      "admin_group_id": "a1b2c3d4-9999-4000-8000-000000000002"
+    }
+scripts:
+  - type: beforeRequest
+    code: >-
+      const price = (Math.random() * 400 + 100).toFixed(2);
+
+      pm.collectionVariables.set('flow_price', price);
+
+      console.log('Generated price:', price);
+
+      console.log('property_id:',
+      pm.collectionVariables.get('flow_property_id'));
+
+      console.log('admin_group_id:',
+      pm.collectionVariables.get('flow_admin_group_id'));
+
+      console.log('Simulated X-User-Id:',
+      pm.collectionVariables.get('user_id'));
+    language: text/javascript
+  - type: afterResponse
+    code: |-
+      pm.test('Returns 201 Created', function () {
+        pm.response.to.have.status(201);
+      });
+      const json = pm.response.json();
+      pm.test('Booking is PENDING', function () {
+        pm.expect(json.status).to.equal('PENDING');
+      });
+      if (json && json.id) {
+        pm.collectionVariables.set('booking_id', json.id);
+        console.log('Reservation created. booking_id:', json.id);
+        console.log('Full flow completed successfully.');
+      }
+    language: text/javascript
+order: 5000

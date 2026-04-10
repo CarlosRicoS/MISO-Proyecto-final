@@ -1,0 +1,34 @@
+$kind: http-request
+name: Create Booking
+url: "{{base_url}}/booking/api/booking/"
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{id_token}}
+body:
+  type: json
+  content: |-
+    {
+      "property_id": "{{property_id}}",
+      "guests": 2,
+      "period_start": "2026-06-01",
+      "period_end": "2026-06-05",
+      "price": "250.00",
+      "admin_group_id": "a1b2c3d4-9999-4000-8000-000000000002"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Returns 201 Created', function () {
+        pm.response.to.have.status(201);
+      });
+      const json = pm.response.json();
+      pm.test('Booking is PENDING', function () {
+        pm.expect(json.status).to.equal('PENDING');
+      });
+      if (json.id) {
+        pm.collectionVariables.set('booking_id', json.id);
+        console.log('booking_id saved:', json.id);
+      }
+    language: text/javascript
+order: 1000

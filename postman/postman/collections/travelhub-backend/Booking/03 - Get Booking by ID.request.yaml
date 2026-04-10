@@ -1,0 +1,17 @@
+$kind: http-request
+name: Get Booking by ID
+url: "{{base_url}}/booking/api/booking/{{booking_id}}"
+method: GET
+headers:
+  Authorization: "Bearer {{id_token}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Returns 200', function () {
+        pm.response.to.have.status(200);
+      });
+      pm.test('Response has status field', function () {
+        pm.expect(pm.response.json()).to.have.property('status');
+      });
+    language: text/javascript
+order: 3000
