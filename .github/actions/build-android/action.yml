@@ -5,9 +5,9 @@ inputs:
     description: 'Path to the Angular/Ionic project containing package.json and the android/ directory'
     required: true
   node-version:
-    description: 'Node.js version to use'
+    description: 'Node.js version to use (must be >=22 — required by @capacitor/cli@8.3.0)'
     required: false
-    default: '20'
+    default: '22'
   java-version:
     description: 'JDK version to use (must be ≤23 — required by AGP 8.7.2)'
     required: false
