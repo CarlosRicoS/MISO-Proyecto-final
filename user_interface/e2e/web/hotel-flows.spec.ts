@@ -187,6 +187,7 @@ test.describe('TravelHub core journeys', () => {
       scrollContainer?.scrollTo({ top: scrollContainer.scrollHeight, behavior: 'instant' as ScrollBehavior });
     });
 
+    await expect(page.getByRole('heading', { name: 'Infinite Hotel 20', exact: true })).toBeVisible();
     await expect(page.getByText('20 hotels found')).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Infinite Hotel 1', exact: true })).toHaveCount(1);
     await expect(page.getByRole('heading', { name: 'Infinite Hotel 20', exact: true })).toHaveCount(1);
@@ -202,6 +203,7 @@ test.describe('TravelHub core journeys', () => {
       infinite?.dispatchEvent(new CustomEvent('ionInfinite', { bubbles: true, composed: true }));
     });
 
+    await expect(page.getByRole('heading', { name: 'Infinite Hotel 30', exact: true })).toBeVisible();
     await expect(page.getByText('20 hotels found')).toBeVisible();
     await expect(page.getByText('Infinite Hotel 11')).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Infinite Hotel 30', exact: true })).toHaveCount(1);
@@ -255,6 +257,16 @@ test.describe('TravelHub core journeys', () => {
     await expect(page.getByText('10 hotels found')).toBeVisible();
 
     for (let i = 0; i < 4; i += 1) {
+      const expectedPage = i + 1;
+      const responsePromise = page.waitForResponse((response) => {
+        if (!response.url().includes('/api/property')) {
+          return false;
+        }
+
+        const requestUrl = new URL(response.url());
+        return requestUrl.searchParams.get('page') === String(expectedPage);
+      });
+
       await page.evaluate(() => {
         const content = document.querySelector('ion-content');
         const scrollContainer = content?.shadowRoot?.querySelector('.inner-scroll') as HTMLElement | null;
@@ -265,6 +277,12 @@ test.describe('TravelHub core journeys', () => {
         const infinite = document.querySelector('ion-infinite-scroll');
         infinite?.dispatchEvent(new CustomEvent('ionInfinite', { bubbles: true, composed: true }));
       });
+
+      await responsePromise;
+
+      await expect(
+        page.getByRole('heading', { name: `Infinite Hotel ${(expectedPage + 1) * 10}`, exact: true })
+      ).toBeVisible();
     }
 
     await expect(page.getByText('20 hotels found')).toBeVisible();
