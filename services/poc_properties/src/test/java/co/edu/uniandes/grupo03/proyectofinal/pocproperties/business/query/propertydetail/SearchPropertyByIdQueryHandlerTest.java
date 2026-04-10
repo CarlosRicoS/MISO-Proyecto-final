@@ -72,6 +72,7 @@ class SearchPropertyByIdQueryHandlerTest {
         SearchPropertyByIdQueryResponse expectedResponse = new SearchPropertyByIdQueryResponse(
                 propertyId,
                 "Luxury Hotel",
+                "Bogota",
                 4,
                 "Test property description",
                 List.of("https://example.com/photo.jpg"),
@@ -142,6 +143,7 @@ class SearchPropertyByIdQueryHandlerTest {
         SearchPropertyByIdQueryResponse expectedResponse = new SearchPropertyByIdQueryResponse(
                 propertyId,
                 "Basic Hotel",
+                "Bogota",
                 2,
                 "Simple property",
                 List.of("https://example.com/basic.jpg"),
@@ -179,6 +181,7 @@ class SearchPropertyByIdQueryHandlerTest {
         SearchPropertyByIdQueryResponse expectedResponse = new SearchPropertyByIdQueryResponse(
                 propertyId,
                 "Complete Hotel",
+                "Bogota",
                 8,
                 "Full description here",
                 List.of("https://example.com/complete.jpg"),

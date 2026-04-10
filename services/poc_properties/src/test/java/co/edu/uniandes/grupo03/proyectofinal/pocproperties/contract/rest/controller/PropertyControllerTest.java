@@ -92,6 +92,7 @@ class PropertyControllerTest {
         SearchPropertyByIdQueryResponse response = new SearchPropertyByIdQueryResponse(
                 propertyId,
                 "Luxury Hotel",
+                "Bogota",
                 4,
                 "Amazing property",
                 List.of("https://example.com/photo.jpg"),
@@ -224,6 +225,7 @@ class PropertyControllerTest {
         SearchPropertyByIdQueryResponse response = new SearchPropertyByIdQueryResponse(
                 propertyId,
                 "Test Property",
+                "Bogota",
                 2,
                 "Description",
                 List.of("https://example.com/photo.jpg"),
@@ -249,6 +251,7 @@ class PropertyControllerTest {
         return new SearchPropertiesQueryResponse.PropertyResult(
                 id,
                 name,
+                "Bogota",
                 4,
                 "Test property description",
                 List.of("https://example.com/photo.jpg"),

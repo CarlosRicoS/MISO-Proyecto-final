@@ -261,6 +261,7 @@ class SearchPropertiesQueryHandlerTest {
         return new SearchPropertiesQueryResponse.PropertyResult(
                 id,
                 name,
+                "Bogota",
                 4,
                 "Test property description",
                 List.of("https://example.com/photo.jpg"),
