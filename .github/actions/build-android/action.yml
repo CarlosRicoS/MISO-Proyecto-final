@@ -7,11 +7,15 @@ inputs:
   node-version:
     description: 'Node.js version to use'
     required: false
-    default: '22'
+    default: '20'
   java-version:
-    description: 'JDK version to use (must be ≤23 — required by Gradle 8.11.1 and AGP 8.7.2)'
+    description: 'JDK version to use (must be ≤23 — required by AGP 8.7.2)'
     required: false
     default: '21'
+  gradle-version:
+    description: 'Gradle version to install via gradle/actions/setup-gradle (bypasses the wrapper JAR entirely)'
+    required: false
+    default: '8.11.1'
   api-base-url:
     description: 'API Gateway base URL baked into assets/config.json at build time (optional — falls back to the value already in config.json)'
     required: false
@@ -49,19 +53,6 @@ runs:
       with:
         java-version: ${{ inputs.java-version }}
         distribution: temurin
-        cache: gradle
-
-    - name: Restore Gradle wrapper JAR
-      shell: bash
-      run: |
-        JAR="${{ inputs.context-path }}/android/gradle/wrapper/gradle-wrapper.jar"
-        if [ ! -f "$JAR" ]; then
-          GRADLE_VER=$(grep -oP 'gradle-\K[0-9]+\.[0-9]+(\.[0-9]+)?(?=-)' \
-            "${{ inputs.context-path }}/android/gradle/wrapper/gradle-wrapper.properties")
-          echo "gradle-wrapper.jar missing — regenerating for Gradle ${GRADLE_VER}"
-          gradle wrapper --gradle-version="$GRADLE_VER" --distribution-type=all \
-            --project-dir="${{ inputs.context-path }}/android"
-        fi
 
     - name: Build web app and sync into Android project
       shell: bash
@@ -73,11 +64,16 @@ runs:
         cd ${{ inputs.context-path }}
         npm run android:sync
 
+    - name: Set up Gradle ${{ inputs.gradle-version }}
+      uses: gradle/actions/setup-gradle@v4
+      with:
+        gradle-version: ${{ inputs.gradle-version }}
+
     - name: Build debug APK
       shell: bash
       run: |
         cd ${{ inputs.context-path }}/android
-        ./gradlew assembleDebug --no-daemon
+        gradle assembleDebug --no-daemon
 
     - name: Locate APK
       id: locate-apk
