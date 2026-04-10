@@ -13,6 +13,8 @@ public class SearchPropertyByIdQueryResponse implements QueryResponse {
 
     String name;
 
+    String city;
+
     Integer maxCapacity;
 
     String description;
