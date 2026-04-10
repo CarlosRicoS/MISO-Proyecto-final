@@ -5,13 +5,17 @@ inputs:
     description: 'Path to the Angular/Ionic project containing package.json and the android/ directory'
     required: true
   node-version:
-    description: 'Node.js version to use'
+    description: 'Node.js version to use (must be >=22 — required by @capacitor/cli@8.3.0)'
     required: false
-    default: '20'
+    default: '22'
   java-version:
-    description: 'JDK version to use (must be ≤23 — required by Gradle 8.11.1 and AGP 8.7.2)'
+    description: 'JDK version to use (must be ≤23 — required by AGP 8.7.2)'
     required: false
     default: '21'
+  gradle-version:
+    description: 'Gradle version to install via gradle/actions/setup-gradle (bypasses the wrapper JAR entirely)'
+    required: false
+    default: '8.11.1'
   api-base-url:
     description: 'API Gateway base URL baked into assets/config.json at build time (optional — falls back to the value already in config.json)'
     required: false
@@ -49,7 +53,6 @@ runs:
       with:
         java-version: ${{ inputs.java-version }}
         distribution: temurin
-        cache: gradle
 
     - name: Build web app and sync into Android project
       shell: bash
@@ -61,11 +64,16 @@ runs:
         cd ${{ inputs.context-path }}
         npm run android:sync
 
+    - name: Set up Gradle ${{ inputs.gradle-version }}
+      uses: gradle/actions/setup-gradle@v4
+      with:
+        gradle-version: ${{ inputs.gradle-version }}
+
     - name: Build debug APK
       shell: bash
       run: |
         cd ${{ inputs.context-path }}/android
-        ./gradlew assembleDebug --no-daemon
+        gradle assembleDebug --no-daemon
 
     - name: Locate APK
       id: locate-apk
