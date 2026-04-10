@@ -145,7 +145,7 @@ describe('PropertydetailPage', () => {
     await localComponent.ngOnInit();
 
     expect(localComponent.property.title).toBe('Property');
-    expect(localComponent.property.location).toBe('');
+    expect(localComponent.property.location).toBe('Location unavailable');
     expect(localComponent.property.price).toBe('$0');
     expect(localComponent.property.rating).toBe('N/A');
     expect(localComponent.property.reviewsText).toBe('No reviews yet');

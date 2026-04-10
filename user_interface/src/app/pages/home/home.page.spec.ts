@@ -147,7 +147,7 @@ describe('HomePage', () => {
       pricePerNight: 0,
       currency: '$',
       rating: 0,
-      imageUrl: '',
+      photos: [],
     })).toBe('Location unavailable');
 
     expect(component.getHotelPrice({
@@ -158,7 +158,7 @@ describe('HomePage', () => {
       pricePerNight: 0,
       currency: '€',
       rating: 0,
-      imageUrl: '',
+      photos: [],
     })).toBe('€0');
 
     expect(component.getHotelRating({
@@ -169,7 +169,7 @@ describe('HomePage', () => {
       pricePerNight: 0,
       currency: '€',
       rating: Number.NaN,
-      imageUrl: '',
+      photos: [],
     })).toBe('N/A');
   });
 

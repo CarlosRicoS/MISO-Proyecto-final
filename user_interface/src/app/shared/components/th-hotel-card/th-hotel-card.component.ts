@@ -23,7 +23,30 @@ export class ThHotelCardComponent {
   @Input() ctaLabel = 'View Details';
   @Input() ctaRouterLink: string | any[] | null = '/propertydetail';
   @Input() rating = '4.8';
-  @Input() imageUrl = '';
+  private _imageUrl = '';
+
+  @Input()
+  set imageUrl(value: string | string[] | null | undefined) {
+    this._imageUrl = this.resolveImageUrl(value);
+  }
+
+  get imageUrl(): string {
+    return this._imageUrl;
+  }
+
   @Input() showFavorite = true;
   @Output() ctaClick = new EventEmitter<void>();
+
+  private resolveImageUrl(value: string | string[] | null | undefined): string {
+    if (Array.isArray(value)) {
+      const firstValid = value.find((url) => typeof url === 'string' && url.trim().length > 0);
+      return firstValid?.trim() || '';
+    }
+
+    if (typeof value === 'string') {
+      return value.trim();
+    }
+
+    return '';
+  }
 }

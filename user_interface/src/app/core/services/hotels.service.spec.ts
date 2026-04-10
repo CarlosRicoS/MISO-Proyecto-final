@@ -98,7 +98,7 @@ describe('HotelsService', () => {
       expect(hotels[0].pricePerNight).toBe(140);
       expect(hotels[0].currency).toBe('$');
       expect(hotels[0].rating).toBe(0);
-      expect(hotels[0].imageUrl).toBe('https://img.example.com/1.jpg');
+      expect(hotels[0].photos[0]).toBe('https://img.example.com/1.jpg');
     });
 
     const req = httpMock.expectOne((request) => request.url === 'https://api.example.com/poc-properties/api/property');
@@ -111,6 +111,26 @@ describe('HotelsService', () => {
         rating: NaN,
         urlBucketPhotos: 'https://img.example.com/1.jpg',
       }
+    ]);
+  });
+
+  it('uses photos array from API when present', () => {
+    service.getHotels().subscribe((hotels) => {
+      expect(hotels[0].photos).toEqual([
+        'https://img.example.com/1.jpg',
+        'https://img.example.com/2.jpg',
+      ]);
+    });
+
+    const req = httpMock.expectOne(() => true);
+    req.flush([
+      {
+        id: '9',
+        photos: [
+          'https://img.example.com/1.jpg',
+          'https://img.example.com/2.jpg',
+        ],
+      },
     ]);
   });
 
@@ -212,6 +232,15 @@ describe('HotelsService', () => {
 
     const req = httpMock.expectOne(() => true);
     expect(req.request.params.has('capacity')).toBe(false);
+    req.flush([]);
+  });
+
+  it('includes pagination params when provided', () => {
+    service.getHotels({ page: 2, size: 10 }).subscribe();
+
+    const req = httpMock.expectOne(() => true);
+    expect(req.request.params.get('page')).toBe('2');
+    expect(req.request.params.get('size')).toBe('10');
     req.flush([]);
   });
 });

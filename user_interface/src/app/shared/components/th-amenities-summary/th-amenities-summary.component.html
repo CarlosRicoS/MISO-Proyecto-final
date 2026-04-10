@@ -14,12 +14,12 @@
   </ion-button>
 
   <div class="th-amenities-summary__mobile-grid">
-    <ion-button class="th-amenities-summary__mobile-item" fill="clear" *ngFor="let amenity of mobileAmenities">
+    <div class="th-amenities-summary__mobile-item" *ngFor="let amenity of mobileAmenities">
       <span class="th-amenities-summary__mobile-icon-wrap">
         <ion-icon [name]="amenity.icon" aria-hidden="true"></ion-icon>
       </span>
       <span class="th-amenities-summary__mobile-label">{{ amenity.label }}</span>
-    </ion-button>
+    </div>
   </div>
 
   <ion-button class="th-amenities-summary__mobile-cta" expand="block" fill="outline" color="primary">

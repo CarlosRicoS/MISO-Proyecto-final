@@ -1,45 +1,16 @@
 <section class="details-mosaic" aria-label="Hotel image gallery">
   <div class="details-mosaic__desktop" *ngIf="images.length">
     <button
-      class="details-mosaic__tile details-mosaic__tile--main"
+      *ngFor="let image of desktopImages; let i = index"
+      class="details-mosaic__tile"
       type="button"
-      (click)="selectImage(0)"
-      [attr.aria-label]="'Open photo 1 of ' + effectiveTotalPhotos"
+      (click)="selectImage(i)"
+      [attr.aria-label]="'Open photo ' + (i + 1) + ' of ' + effectiveTotalPhotos"
     >
-      <img [src]="images[0].src" [alt]="images[0].alt || hotelName + ' photo 1'" />
+      <img [src]="image.src" [alt]="image.alt || hotelName + ' photo ' + (i + 1)" />
     </button>
 
-    <button
-      class="details-mosaic__tile details-mosaic__tile--secondary"
-      type="button"
-      *ngIf="images[1]"
-      (click)="selectImage(1)"
-      [attr.aria-label]="'Open photo 2 of ' + effectiveTotalPhotos"
-    >
-      <img [src]="images[1].src" [alt]="images[1].alt || hotelName + ' photo 2'" />
-    </button>
-
-    <button
-      class="details-mosaic__tile details-mosaic__tile--tertiary"
-      type="button"
-      *ngIf="images[2]"
-      (click)="selectImage(2)"
-      [attr.aria-label]="'Open photo 3 of ' + effectiveTotalPhotos"
-    >
-      <img [src]="images[2].src" [alt]="images[2].alt || hotelName + ' photo 3'" />
-    </button>
-
-    <button
-      class="details-mosaic__tile details-mosaic__tile--quaternary"
-      type="button"
-      *ngIf="images[3]"
-      (click)="selectImage(3)"
-      [attr.aria-label]="'Open photo 4 of ' + effectiveTotalPhotos"
-    >
-      <img [src]="images[3].src" [alt]="images[3].alt || hotelName + ' photo 4'" />
-    </button>
-
-    <button class="details-mosaic__view-all" type="button" (click)="triggerViewAll()">
+    <button class="details-mosaic__view-all" type="button" *ngIf="shouldShowDesktopViewAll" (click)="triggerViewAll()">
       <ion-icon name="images-outline" aria-hidden="true"></ion-icon>
       <span>{{ viewAllLabel }}</span>
     </button>

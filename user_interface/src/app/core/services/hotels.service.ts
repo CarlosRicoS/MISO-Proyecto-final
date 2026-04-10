@@ -14,8 +14,9 @@ interface PropertyApiResponse {
   pricePerNight?: number;
   currency?: string;
   rating?: number;
+  photos?: string[];
   imageUrl?: string;
-  urlBucketPhotos?: string;
+  urlBucketPhotos?: string | string[];
 }
 
 interface PropertySearchParams {
@@ -23,6 +24,8 @@ interface PropertySearchParams {
   endDate?: string;
   city?: string;
   capacity?: number;
+  page?: number;
+  size?: number;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -52,6 +55,14 @@ export class HotelsService {
       queryParams = queryParams.set('capacity', String(params.capacity));
     }
 
+    if (Number.isFinite(params.page) && Number(params.page) >= 0) {
+      queryParams = queryParams.set('page', String(params.page));
+    }
+
+    if (Number.isFinite(params.size) && Number(params.size) > 0) {
+      queryParams = queryParams.set('size', String(params.size));
+    }
+
     const headersConfig: Record<string, string> = {
       'Content-Type': 'application/json',
     };
@@ -68,6 +79,8 @@ export class HotelsService {
   }
 
   private mapPropertyToHotel(property: PropertyApiResponse, fallbackCity?: string): Hotel {
+    const normalizedPhotos = this.normalizePhotos(property);
+
     return {
       id: property.id,
       name: property.name || 'Hotel',
@@ -76,7 +89,26 @@ export class HotelsService {
       pricePerNight: property.pricePerNight ?? property.price ?? 0,
       currency: property.currency || '$',
       rating: Number.isFinite(property.rating) ? Number(property.rating) : 0,
-      imageUrl: property.imageUrl || property.urlBucketPhotos || '',
+      photos: normalizedPhotos,
     };
+  }
+
+  private normalizePhotos(property: PropertyApiResponse): string[] {
+    if (Array.isArray(property.photos) && property.photos.length) {
+      return property.photos.filter((photo): photo is string => Boolean(photo && photo.trim()));
+    }
+
+    if (property.urlBucketPhotos) {
+      const bucketPhotos = Array.isArray(property.urlBucketPhotos)
+        ? property.urlBucketPhotos
+        : [property.urlBucketPhotos];
+      return bucketPhotos.filter((photo): photo is string => Boolean(photo && photo.trim()));
+    }
+
+    if (property.imageUrl && property.imageUrl.trim()) {
+      return [property.imageUrl];
+    }
+
+    return [''];
   }
 }

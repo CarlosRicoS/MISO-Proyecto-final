@@ -6,6 +6,7 @@ import static androidx.test.espresso.web.webdriver.DriverAtoms.getText;
 import static androidx.test.espresso.web.sugar.Web.onWebView;
 import static androidx.test.espresso.web.webdriver.DriverAtoms.clearElement;
 import static androidx.test.espresso.web.webdriver.DriverAtoms.findElement;
+import static androidx.test.espresso.web.webdriver.DriverAtoms.script;
 import static androidx.test.espresso.web.webdriver.DriverAtoms.webClick;
 import static androidx.test.espresso.web.webdriver.DriverAtoms.webKeys;
 import static androidx.test.espresso.web.webdriver.Locator.XPATH;
@@ -44,27 +45,21 @@ public class TravelHubEspressoTest {
     public void searchFlowNavigatesToResults() {
         onWebView().forceJavascriptEnabled();
 
-        onWebView().withElement(findElement(XPATH, "//input[@placeholder='Where are you going?']"))
-                .perform(clearElement())
-                .perform(webKeys("Bogota"));
-
-        onWebView().withElement(findElement(XPATH, "//input[@placeholder='1 Guest']"))
-                .perform(clearElement())
-                .perform(webKeys("2"));
-
-        onWebView().withElement(findElement(XPATH, "//ion-button[.//span[contains(text(),'Search Hotels')]]"))
-                .perform(webClick());
+        performSearch("Bogota", "2");
 
         waitForUrlContains("search-results");
         onWebView().check(webMatches(getCurrentUrl(), Matchers.containsString("search-results")));
+
+        onWebView()
+            .withElement(findElement(XPATH, "//*[contains(text(),'Page')]"))
+            .check(webMatches(getText(), Matchers.containsString("Page")));
     }
 
     @Test
     public void propertyDetailPageRendersBookingInformation() {
         onWebView().forceJavascriptEnabled();
 
-        onWebView().withElement(findElement(XPATH, "//ion-button[.//span[contains(text(),'Search Hotels')]]"))
-            .perform(webClick());
+        performSearch("Bogota", "2");
 
         waitForUrlContains("search-results");
 
@@ -81,6 +76,88 @@ public class TravelHubEspressoTest {
         onWebView()
             .withElement(findElement(XPATH, "//*[contains(text(),'Book Now')]"))
             .check(webMatches(getText(), Matchers.containsString("Book Now")));
+    }
+
+    @Test
+    public void searchResultsDirectRouteShowsPageIndicator() {
+        onWebView().forceJavascriptEnabled();
+
+        onWebView().perform(script("window.location.href='/search-results?city=Bogota';"));
+
+        waitForUrlContains("search-results");
+
+        onWebView()
+            .withElement(findElement(XPATH, "//*[contains(text(),'Page')]"))
+            .check(webMatches(getText(), Matchers.containsString("Page")));
+    }
+
+    @Test
+    public void searchResultsDisplaysViewDetailsCta() {
+        onWebView().forceJavascriptEnabled();
+
+        performSearch("Bogota", "2");
+
+        waitForUrlContains("search-results");
+
+        onWebView()
+            .withElement(findElement(XPATH, "//*[contains(text(),'View Details')]"))
+            .check(webMatches(getText(), Matchers.containsString("View Details")));
+    }
+
+    @Test
+    public void searchFlowIncludesCityAndCapacityInUrl() {
+        onWebView().forceJavascriptEnabled();
+
+        performSearch("Bogota", "2");
+
+        waitForUrlContains("search-results");
+        onWebView().check(webMatches(getCurrentUrl(), Matchers.containsString("city=Bogota")));
+        onWebView().check(webMatches(getCurrentUrl(), Matchers.containsString("capacity=2")));
+    }
+
+    @Test
+    public void propertyDetailFlowCanNavigateBackToSearchResults() {
+        onWebView().forceJavascriptEnabled();
+
+        performSearch("Bogota", "2");
+        waitForUrlContains("search-results");
+
+        onWebView()
+            .withElement(findElement(XPATH, "//ion-button[.//span[contains(text(),'View Details')]]"))
+            .perform(webClick());
+
+        waitForUrlContains("propertydetail");
+
+        onWebView().perform(script("window.history.back();"));
+        waitForUrlContains("search-results");
+
+        onWebView().check(webMatches(getCurrentUrl(), Matchers.containsString("search-results")));
+    }
+
+    @Test
+    public void searchResultsShowHotelsFoundSummary() {
+        onWebView().forceJavascriptEnabled();
+
+        performSearch("Bogota", "2");
+
+        waitForUrlContains("search-results");
+
+        onWebView()
+            .withElement(findElement(XPATH, "//*[contains(text(),'hotels found') or contains(text(),'hotel found')]"))
+            .check(webMatches(getText(), Matchers.containsString("found")));
+    }
+
+    private void performSearch(String city, String guests) {
+        onWebView().withElement(findElement(XPATH, "//input[@placeholder='Where are you going?']"))
+            .perform(clearElement())
+            .perform(webKeys(city));
+
+        onWebView().withElement(findElement(XPATH, "//input[@placeholder='1 Guest']"))
+            .perform(clearElement())
+            .perform(webKeys(guests));
+
+        onWebView().withElement(findElement(XPATH, "//ion-button[.//span[contains(text(),'Search Hotels')]]"))
+            .perform(webClick());
     }
 
     private void waitForUrlContains(String expectedFragment) {

@@ -10,8 +10,8 @@ describe('ThDetailSummaryComponent', () => {
     const fixture = TestBed.createComponent(ThDetailSummaryComponent);
     const component = fixture.componentInstance;
 
-    expect(component.title).toBe('Hotel name');
-    expect(component.score).toBe('9.2');
+    expect(component.title).toBe('');
+    expect(component.score).toBe('');
     expect(component.stars).toBe(5);
     expect(component.starIcons.length).toBe(5);
   });

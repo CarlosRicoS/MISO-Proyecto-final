@@ -75,7 +75,7 @@
 						priceSuffix="/night"
 						ctaLabel="Book Now"
 						[rating]="getHotelRating(hotel)"
-						[imageUrl]="hotel.imageUrl || ''"
+						[imageUrl]="hotel.photos[0] || ''"
 						[ctaRouterLink]="['/propertydetail', hotel.id]"
 					></th-hotel-card>
 				</ng-container>

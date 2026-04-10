@@ -14,18 +14,46 @@
 }
 
 .th-filter-summary__content {
-  padding: 8px 16px 14px;
+  padding: 10px 12px;
 }
 
 .th-filter-summary__top-bar {
   display: flex;
   align-items: center;
   gap: 14px;
-  background: rgba(243, 244, 246, 0.71);
-  border: 1px solid #e5e7eb;
+  background: rgba(243, 244, 246, 0.62);
+  border: 1px solid rgba(229, 231, 235, 0.75);
   border-radius: 8px;
-  padding: 12px 14px;
+  padding: 8px 12px;
   margin: 0;
+}
+
+.th-filter-summary__desktop-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.th-filter-summary__desktop-pill {
+  border: 1px solid #dbe3f3;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #374151;
+  min-height: 22px;
+  padding: 3px 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.th-filter-summary__desktop-pill-icon {
+  font-size: 11px;
+  color: #374151;
 }
 
 .th-filter-summary__icon-box {
@@ -129,6 +157,10 @@
 
   .th-filter-summary__content {
     padding: 12px 14px 16px;
+  }
+
+  .th-filter-summary__desktop-actions {
+    display: none;
   }
 
   .th-filter-summary__top-bar {

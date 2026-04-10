@@ -10,11 +10,11 @@ import { IonicModule } from '@ionic/angular';
   imports: [CommonModule, IonicModule],
 })
 export class ThDetailSummaryComponent {
-  @Input() title = 'Hotel name';
-  @Input() location = 'City, Country';
-  @Input() score = '9.2';
-  @Input() scoreLabel = 'Exceptional';
-  @Input() reviewsText = '1,847 reviews';
+  @Input() title = '';
+  @Input() location = '';
+  @Input() score = '';
+  @Input() scoreLabel = '';
+  @Input() reviewsText = '';
   @Input() stars = 5;
   @Input() showActions = true;
 
