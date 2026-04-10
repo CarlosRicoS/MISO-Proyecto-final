@@ -1,0 +1,33 @@
+name: Build Android APK
+
+on:
+  workflow_dispatch:
+    inputs:
+      api_base_url:
+        description: 'API Gateway base URL to embed in the app (leave blank to use the default already in config.json)'
+        required: false
+        default: ''
+      property_api_path:
+        description: 'Property API path (leave blank for default: /poc-properties/api/property)'
+        required: false
+        default: ''
+      property_api_token:
+        description: 'Property API token (leave blank for default: empty)'
+        required: false
+        default: ''
+
+jobs:
+  build_apk:
+    name: Build travelhub debug APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build Android APK
+        uses: ./.github/actions/build-android
+        with:
+          context-path: user_interface
+          api-base-url: ${{ inputs.api_base_url }}
+          property-api-path: ${{ inputs.property_api_path }}
+          property-api-token: ${{ inputs.property_api_token }}
