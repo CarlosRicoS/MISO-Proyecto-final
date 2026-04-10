@@ -1,8 +1,8 @@
 <section class="th-detail-summary" aria-label="Property summary">
   <div class="th-detail-summary__top-row">
     <div class="th-detail-summary__title-wrap">
-      <h1 class="th-detail-summary__title">{{ title }}</h1>
-      <p class="th-detail-summary__location">
+      <h1 class="th-detail-summary__title" *ngIf="title">{{ title }}</h1>
+      <p class="th-detail-summary__location" *ngIf="location">
         <ion-icon name="location" aria-hidden="true"></ion-icon>
         <span>{{ location }}</span>
       </p>
@@ -21,13 +21,13 @@
   </div>
 
   <div class="th-detail-summary__rating-row">
-    <span class="th-detail-summary__score-pill">
+    <span class="th-detail-summary__score-pill" *ngIf="score">
       <ion-icon name="star" aria-hidden="true"></ion-icon>
       {{ score }}
     </span>
-    <span class="th-detail-summary__score-label">{{ scoreLabel }}</span>
-    <span class="th-detail-summary__reviews">{{ reviewsText }}</span>
-    <span class="th-detail-summary__stars" aria-label="{{ stars }} star rating">
+    <span class="th-detail-summary__score-label" *ngIf="scoreLabel">{{ scoreLabel }}</span>
+    <span class="th-detail-summary__reviews" *ngIf="reviewsText">{{ reviewsText }}</span>
+    <span class="th-detail-summary__stars" *ngIf="stars > 0" aria-label="{{ stars }} star rating">
       <ion-icon *ngFor="let icon of starIcons" [name]="icon" aria-hidden="true"></ion-icon>
     </span>
   </div>

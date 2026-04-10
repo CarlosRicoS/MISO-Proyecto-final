@@ -73,51 +73,50 @@
 
   .th-amenities-summary__mobile-grid {
     margin-top: 18px;
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 14px 10px;
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
   }
 
   .th-amenities-summary__mobile-item {
-    --background: transparent;
-    --box-shadow: none;
-    --padding-start: 0;
-    --padding-end: 0;
-    --padding-top: 0;
-    --padding-bottom: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
+    justify-content: flex-start;
+    flex: 0 0 106px;
+    min-width: 106px;
+    gap: 10px;
     color: #374151;
     font-size: 14px;
-
-    &::part(native) {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-    }
   }
 
   .th-amenities-summary__mobile-icon-wrap {
-    width: 46px;
-    height: 46px;
-    border-radius: 999px;
-    background: #e5e7eb;
+    width: 76px;
+    height: 76px;
+    border-radius: 50%;
+    background: #e7f0ff;
     display: inline-flex;
     align-items: center;
     justify-content: center;
 
     ion-icon {
-      color: #0a67e8;
-      font-size: 24px;
+      color: #1a7cf1;
+      font-size: 30px;
     }
   }
 
   .th-amenities-summary__mobile-label {
+    width: 100%;
     text-align: center;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: 500;
   }
 
   .th-amenities-summary__mobile-cta {

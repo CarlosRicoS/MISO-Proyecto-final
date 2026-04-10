@@ -2,7 +2,11 @@
   <ion-header *ngIf="showNavbar && !isMobileLayout" slot="fixed">
     <th-navbar mode="full" layout="desktop"></th-navbar>
   </ion-header>
-  <ion-header *ngIf="showNavbar && isMobileLayout" slot="fixed">
+  <ion-header
+    *ngIf="showNavbar && isMobileLayout"
+    slot="fixed"
+    [class.app-header--mobile-search-results]="isSearchResultsRoute"
+  >
     <th-navbar mode="full" layout="mobile"></th-navbar>
   </ion-header>
   <ion-router-outlet class="site-content" [class.site-content--detail-mobile]="isPropertyDetailRoute"></ion-router-outlet>

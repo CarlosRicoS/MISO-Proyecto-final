@@ -1,7 +1,7 @@
 <ion-card class="th-hotel-card" [ngClass]="'th-hotel-card--' + variant">
   <div class="th-hotel-card__media" [ngClass]="{ 'th-hotel-card__media--empty': !imageUrl }">
     <img *ngIf="imageUrl" class="th-hotel-card__image" [src]="imageUrl" [alt]="title" />
-    
+
     <!-- Favorite Button -->
     <ion-button class="th-hotel-card__favorite" *ngIf="showFavorite" aria-label="Favorite" fill="solid">
       <ion-icon name="heart-outline"></ion-icon>

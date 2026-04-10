@@ -46,6 +46,10 @@ export class AppComponent implements OnInit, OnDestroy {
     return this.router.url.startsWith('/propertydetail');
   }
 
+  get isSearchResultsRoute(): boolean {
+    return this.router.url.startsWith('/search-results');
+  }
+
   private handleResize = (): void => {
     this.updateLayout();
   };

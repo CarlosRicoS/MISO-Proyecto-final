@@ -11,6 +11,15 @@ ion-app {
 }
 
 @media (max-width: 720px) {
+	.app-header--mobile-search-results {
+		box-shadow: none;
+		border-bottom: 0;
+	}
+
+	.app-header--mobile-search-results::after {
+		display: none;
+	}
+
 	.site-content {
 		margin-top: 0;
 		padding-bottom: calc(72px + var(--ion-safe-area-bottom, 0px));

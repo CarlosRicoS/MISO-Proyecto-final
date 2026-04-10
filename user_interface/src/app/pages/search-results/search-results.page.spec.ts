@@ -84,6 +84,8 @@ describe('SearchResultsPage', () => {
       endDate: '02/03/2026',
       city: 'Paris',
       capacity: 2,
+      page: 0,
+      size: 10,
     });
   });
 
@@ -95,7 +97,176 @@ describe('SearchResultsPage', () => {
 
     await component.loadHotelsFromApi();
 
-    expect(hotelsService.getHotels).toHaveBeenCalledWith();
+    expect(hotelsService.getHotels).toHaveBeenCalledWith({
+      page: 0,
+      size: 10,
+    });
+  });
+
+  it('loads next page when infinite scroll is triggered', async () => {
+    component.searchCapacity = 0;
+
+    hotelsService.getHotels.and.returnValues(
+      of(Array.from({ length: 10 }, (_, index) => ({ id: String(index + 1) } as any))),
+      of(Array.from({ length: 10 }, (_, index) => ({ id: `next-${index + 1}` } as any)))
+    );
+
+    await component.loadHotelsFromApi();
+
+    const event = {
+      target: {
+        complete: jasmine.createSpy('complete'),
+        disabled: false,
+      },
+    } as any;
+
+    await component.loadMoreHotels(event);
+
+    expect(hotelsService.getHotels).toHaveBeenCalledWith({
+      page: 1,
+      size: 10,
+    });
+    expect(component.hotels.length).toBe(20);
+    expect(component.hotels[0].id).toBe('1');
+    expect(component.hotels[19].id).toBe('next-10');
+    expect(event.target.complete).toHaveBeenCalled();
+  });
+
+  it('keeps 20 records by dropping first 10 after loading a third page', async () => {
+    component.searchCapacity = 0;
+
+    hotelsService.getHotels.and.returnValues(
+      of(Array.from({ length: 10 }, (_, index) => ({ id: `p0-${index + 1}` } as any))),
+      of(Array.from({ length: 10 }, (_, index) => ({ id: `p1-${index + 1}` } as any))),
+      of(Array.from({ length: 10 }, (_, index) => ({ id: `p2-${index + 1}` } as any)))
+    );
+
+    await component.loadHotelsFromApi();
+
+    const event = {
+      target: {
+        complete: jasmine.createSpy('complete'),
+        disabled: false,
+      },
+    } as any;
+
+    await component.loadMoreHotels(event);
+    await component.loadMoreHotels(event);
+
+    expect(component.hotels.length).toBe(20);
+    expect(component.hotels[0].id).toBe('p1-1');
+    expect(component.hotels[19].id).toBe('p2-10');
+    expect(component.currentPageLabel).toBe('Pages 2-3');
+  });
+
+  it('continues advancing pages after the first increment', async () => {
+    component.searchCapacity = 0;
+
+    hotelsService.getHotels.and.returnValues(
+      of(Array.from({ length: 10 }, (_, index) => ({ id: `p0-${index + 1}` } as any))),
+      of(Array.from({ length: 10 }, (_, index) => ({ id: `p1-${index + 1}` } as any))),
+      of(Array.from({ length: 10 }, (_, index) => ({ id: `p2-${index + 1}` } as any))),
+      of(Array.from({ length: 10 }, (_, index) => ({ id: `p3-${index + 1}` } as any)))
+    );
+
+    await component.loadHotelsFromApi();
+
+    const event = {
+      target: {
+        complete: jasmine.createSpy('complete'),
+        disabled: false,
+      },
+    } as any;
+
+    await component.loadMoreHotels(event);
+    await component.loadMoreHotels(event);
+    await component.loadMoreHotels(event);
+
+    expect(hotelsService.getHotels).toHaveBeenCalledWith({ page: 1, size: 10 });
+    expect(hotelsService.getHotels).toHaveBeenCalledWith({ page: 2, size: 10 });
+    expect(hotelsService.getHotels).toHaveBeenCalledWith({ page: 3, size: 10 });
+    expect(component.currentPageLabel).toBe('Pages 3-4');
+    expect(component.hotels[0].id).toBe('p2-1');
+    expect(component.hotels[19].id).toBe('p3-10');
+  });
+
+  it('preserves all active filters on paginated requests', async () => {
+    component.searchCity = 'Bogota';
+    component.searchStartDate = '01/04/2026';
+    component.searchEndDate = '05/04/2026';
+    component.searchCapacity = 3;
+    (component as any).baseSearchParams = {
+      city: 'Bogota',
+      startDate: '01/04/2026',
+      endDate: '05/04/2026',
+      capacity: 3,
+    };
+
+    hotelsService.getHotels.and.returnValues(
+      of(Array.from({ length: 10 }, (_, index) => ({ id: `p0-${index + 1}` } as any))),
+      of(Array.from({ length: 10 }, (_, index) => ({ id: `p1-${index + 1}` } as any)))
+    );
+
+    await component.loadHotelsFromApi();
+
+    const event = {
+      target: {
+        complete: jasmine.createSpy('complete'),
+        disabled: false,
+      },
+    } as any;
+
+    await component.loadMoreHotels(event);
+
+    expect(hotelsService.getHotels).toHaveBeenCalledWith({
+      city: 'Bogota',
+      startDate: '01/04/2026',
+      endDate: '05/04/2026',
+      capacity: 3,
+      page: 0,
+      size: 10,
+    });
+
+    expect(hotelsService.getHotels).toHaveBeenCalledWith({
+      city: 'Bogota',
+      startDate: '01/04/2026',
+      endDate: '05/04/2026',
+      capacity: 3,
+      page: 1,
+      size: 10,
+    });
+  });
+
+  it('loads previous page when user scrolls back to top', async () => {
+    component.searchCapacity = 0;
+
+    hotelsService.getHotels.and.returnValues(
+      of(Array.from({ length: 10 }, (_, index) => ({ id: `p0-${index + 1}` } as any))),
+      of(Array.from({ length: 10 }, (_, index) => ({ id: `p1-${index + 1}` } as any))),
+      of(Array.from({ length: 10 }, (_, index) => ({ id: `p2-${index + 1}` } as any))),
+      of(Array.from({ length: 10 }, (_, index) => ({ id: `p0b-${index + 1}` } as any)))
+    );
+
+    await component.loadHotelsFromApi();
+
+    const event = {
+      target: {
+        complete: jasmine.createSpy('complete'),
+        disabled: false,
+      },
+    } as any;
+
+    await component.loadMoreHotels(event);
+    await component.loadMoreHotels(event);
+    await component.onContentScroll({ detail: { scrollTop: 0 } } as any);
+
+    expect(hotelsService.getHotels).toHaveBeenCalledWith({
+      page: 0,
+      size: 10,
+    });
+    expect(component.hotels.length).toBe(20);
+    expect(component.hotels[0].id).toBe('p0b-1');
+    expect(component.currentPageLabel).toBe('Pages 1-2');
   });
 
   it('formats hotel location with fallback when missing', () => {

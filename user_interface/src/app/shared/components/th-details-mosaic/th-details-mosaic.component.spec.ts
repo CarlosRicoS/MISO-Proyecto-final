@@ -122,4 +122,44 @@ describe('ThDetailsMosaicComponent', () => {
 
     expect(emitSpy).toHaveBeenCalled();
   });
+
+  it('limits desktop images to four items', () => {
+    TestBed.configureTestingModule({
+      imports: [ThDetailsMosaicComponent],
+    });
+
+    const fixture = TestBed.createComponent(ThDetailsMosaicComponent);
+    const component = fixture.componentInstance;
+
+    component.images = [
+      { src: 'one.jpg' },
+      { src: 'two.jpg' },
+      { src: 'three.jpg' },
+      { src: 'four.jpg' },
+      { src: 'five.jpg' },
+    ];
+
+    expect(component.desktopImages.length).toBe(4);
+    expect(component.desktopImages[3].src).toBe('four.jpg');
+  });
+
+  it('shows desktop view-all only when total photo count exceeds shown images', () => {
+    TestBed.configureTestingModule({
+      imports: [ThDetailsMosaicComponent],
+    });
+
+    const fixture = TestBed.createComponent(ThDetailsMosaicComponent);
+    const component = fixture.componentInstance;
+
+    component.images = [
+      { src: 'one.jpg' },
+      { src: 'two.jpg' },
+    ];
+    component.totalPhotos = 2;
+
+    expect(component.shouldShowDesktopViewAll).toBeFalse();
+
+    component.totalPhotos = 6;
+    expect(component.shouldShowDesktopViewAll).toBeTrue();
+  });
 });

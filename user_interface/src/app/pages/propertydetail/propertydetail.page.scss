@@ -23,7 +23,7 @@
 }
 
 .propertydetail-hero {
-  background: #ffffff;
+  background: transparent;
   padding: clamp(16px, 3vw, 28px) 0 clamp(20px, 4vw, 32px);
 }
 
@@ -87,6 +87,14 @@
   width: 100%;
 }
 
+.propertydetail-main__left ::ng-deep .th-amenities-summary,
+.propertydetail-main__left ::ng-deep .th-property-description-summary,
+.propertydetail-main__left ::ng-deep .th-property-review-summary,
+.propertydetail-main__right ::ng-deep .th-payment-summary:not(.th-payment-summary--mobile-sticky) {
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
 @media (min-width: 721px) {
   .propertydetail-content {
     --overflow: hidden;
@@ -140,6 +148,6 @@
   }
 
   .propertydetail-main__inner {
-    padding: 0;
+    padding: 0 0 calc(164px + var(--ion-safe-area-bottom, 0px));
   }
 }

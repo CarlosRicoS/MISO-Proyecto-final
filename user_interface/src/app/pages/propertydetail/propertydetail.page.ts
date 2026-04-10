@@ -101,19 +101,30 @@ export class PropertydetailPage implements OnInit {
     search?: { startDate?: string; endDate?: string; capacity?: number },
   ): void {
     const locationParts = [hotel?.city, hotel?.country].filter((part) => Boolean(part));
-    const location = locationParts.length ? locationParts.join(', ') : '';
+    const location = locationParts.length ? locationParts.join(', ') : 'Location unavailable';
     const priceValue = Number.isFinite(hotel?.pricePerNight) ? Number(hotel?.pricePerNight) : 0;
     const currency = hotel?.currency || '$';
-    const ratingValue = Number.isFinite(hotel?.rating) ? Number(hotel?.rating) : null;
-    const ratingText = ratingValue !== null ? ratingValue.toFixed(1) : 'N/A';
+    const hotelRating = Number.isFinite(hotel?.rating) ? Number(hotel?.rating) : null;
 
     const photos = Array.isArray(detail.photos) ? detail.photos : [];
     const images: ThDetailsMosaicImage[] = photos.map((photo) => ({ src: photo }));
+    if (!images.length && hotel?.photos?.[0]) {
+      images.push({ src: hotel.photos[0], alt: detail.name || 'Property photo' });
+    }
+
     if (!images.length && hotel?.imageUrl) {
       images.push({ src: hotel.imageUrl, alt: detail.name || 'Property photo' });
     }
 
     const reviews = Array.isArray(detail.reviews) ? detail.reviews : [];
+    const reviewRatings = reviews
+      .map((review) => Number(review.rating))
+      .filter((rating) => Number.isFinite(rating));
+    const averageReviewRating = reviewRatings.length
+      ? reviewRatings.reduce((sum, value) => sum + value, 0) / reviewRatings.length
+      : null;
+    const ratingValue = hotelRating ?? averageReviewRating;
+    const ratingText = ratingValue !== null ? ratingValue.toFixed(1) : 'N/A';
     const reviewCountText = reviews.length ? `${reviews.length} reviews` : 'No reviews yet';
 
     this.property = {
@@ -121,11 +132,11 @@ export class PropertydetailPage implements OnInit {
       location,
       price: `${currency}${priceValue}`,
       rating: ratingText,
-      score: ratingValue !== null ? ratingValue.toFixed(1) : '',
-      scoreLabel: ratingValue !== null ? this.getScoreLabel(ratingValue) : '',
+      score: ratingText,
+      scoreLabel: ratingValue !== null ? this.getScoreLabel(ratingValue) : 'Unrated',
       reviewsText: reviewCountText,
       stars: ratingValue !== null ? Math.round(ratingValue) : 0,
-      imageUrl: hotel?.imageUrl || '',
+      imageUrl: hotel?.photos?.[0] || hotel?.imageUrl || '',
       totalPhotos: photos.length,
       images,
     };

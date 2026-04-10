@@ -15,6 +15,8 @@ export interface ThDetailsMosaicImage {
   imports: [CommonModule, IonicModule],
 })
 export class ThDetailsMosaicComponent {
+  private static readonly DESKTOP_IMAGE_LIMIT = 4;
+
   @Input() hotelName = 'Hotel';
   @Input() images: ThDetailsMosaicImage[] = [];
   @Input() totalPhotos = 0;
@@ -41,6 +43,14 @@ export class ThDetailsMosaicComponent {
     }
 
     return this.images[this.selectedIndex] ?? this.images[0];
+  }
+
+  get desktopImages(): ThDetailsMosaicImage[] {
+    return this.images.slice(0, ThDetailsMosaicComponent.DESKTOP_IMAGE_LIMIT);
+  }
+
+  get shouldShowDesktopViewAll(): boolean {
+    return this.effectiveTotalPhotos > this.desktopImages.length;
   }
 
   selectImage(index: number): void {
