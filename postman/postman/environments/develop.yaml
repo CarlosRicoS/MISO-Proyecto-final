@@ -1,0 +1,7 @@
+name: develop
+values:
+  - key: base_url
+    value: "https://3pwlikf891.execute-api.us-east-1.amazonaws.com"
+    type: default
+    enabled: true
+    description: AWS API Gateway invoke URL for the develop environment

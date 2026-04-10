@@ -1,0 +1,15 @@
+$kind: http-request
+name: Health Check
+url: "{{base_url}}/auth/api/health"
+method: GET
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Health check returns 200', function () {
+        pm.response.to.have.status(200);
+      });
+      pm.test('Service is auth', function () {
+        pm.expect(pm.response.json().service).to.equal('auth');
+      });
+    language: text/javascript
+order: 4000

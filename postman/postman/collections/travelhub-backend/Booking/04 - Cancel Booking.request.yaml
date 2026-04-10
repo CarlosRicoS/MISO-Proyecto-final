@@ -1,0 +1,15 @@
+$kind: http-request
+name: Cancel Booking
+url: "{{base_url}}/booking/api/booking/{{booking_id}}/cancel"
+method: POST
+headers:
+  Authorization: "Bearer {{id_token}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Returns 200 with CANCELED status', function () {
+        pm.response.to.have.status(200);
+        pm.expect(pm.response.json().status).to.equal('CANCELED');
+      });
+    language: text/javascript
+order: 4000

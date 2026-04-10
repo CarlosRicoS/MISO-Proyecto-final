@@ -1,0 +1,22 @@
+$kind: http-request
+name: Lock Property
+url: "{{base_url}}/poc-properties/api/property/lock"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "propertyDetailId": "{{property_id}}",
+      "startDate": "01/06/2026",
+      "endDate": "05/06/2026"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Returns 204 No Content', function () {
+        pm.response.to.have.status(204);
+      });
+    language: text/javascript
+order: 6000

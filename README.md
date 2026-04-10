@@ -308,6 +308,91 @@ The workflow fetches the database name automatically from SSM at `/{project}/{se
 
 ---
 
+## API Testing — Postman Collection
+
+The repository includes a Postman collection stored under `postman/` using Postman's native **local git integration** format. Opening this repository as a Postman workspace gives you the full collection in the **Local View** sidebar without any manual import.
+
+### Setup
+
+1. Open **Postman** → **Settings** → **Integrations** → connect this repository.
+2. The workspace is pre-configured in `postman/.postman/resources.yaml` (workspace ID `e22eca89-1256-4fa6-8353-cdd4ba6d78f7`).
+3. Select the **develop** environment (`postman/postman/environments/develop.yaml`) — it sets `base_url` to the API Gateway invoke URL.
+
+### Collection: `travelhub-backend`
+
+Located at `postman/postman/collections/travelhub-backend/`. Contains four service folders plus a complete end-to-end flow.
+
+**Base URL pattern:** `{{base_url}}/{service-name}/...`
+
+| Folder | Service | Auth | Requests |
+|---|---|---|---|
+| **Auth** | `auth` | None (public) | Register User, Login, Get Current User, Health Check |
+| **Properties** | `poc-properties` | None (public) | Search (no filter / city / capacity / full filter), Get by ID, Lock Property |
+| **Booking** | `booking` | JWT (`id_token`) | Create Booking, List My Bookings, Get Booking by ID, Cancel Booking |
+| **Booking Orchestrator** | `booking-orchestrator` | JWT (`id_token`) | Create Reservation (saga) |
+| **Complete Booking Flow** | multiple | mixed | Steps 01–05 (fully chained) |
+
+### Collection Variables
+
+| Variable | Default | Set by |
+|---|---|---|
+| `base_url` | `https://3pwlikf891.execute-api.us-east-1.amazonaws.com` | Environment / collection root |
+| `id_token` | *(empty)* | Login test script |
+| `access_token` | *(empty)* | Login test script |
+| `user_id` | *(empty)* | Get Current User test script |
+| `user_email` | *(empty)* | Get Current User test script |
+| `property_id` | `a1b2c3d4-1111-4000-8000-000000000001` | Manual or Full Filter search script |
+| `booking_id` | *(empty)* | Create Booking / Create Reservation test script |
+
+### Complete Booking Flow
+
+Run the **Complete Booking Flow** folder as a **Collection Run** (in order) to execute a full end-to-end reservation:
+
+| Step | Request | What it does |
+|---|---|---|
+| 01 | Register | Pre-request script generates a unique timestamped email (`flow.traveler.<ts>@example.com`) to avoid conflicts |
+| 02 | Login | Saves `id_token` + `access_token` as collection variables |
+| 03 | Get Current User | Calls `/auth/me` with the `access_token` to retrieve the Cognito `sub`; saves `user_id` and `user_email` — simulating the `X-User-Id` / `X-User-Email` headers that API Gateway injects automatically on protected routes |
+| 04 | Search Property | Searches Cartagena (capacity 4, 01/06/2026–05/06/2026); saves the first result's `id` and `adminGroupId` |
+| 05 | Create Reservation | Pre-request script randomises the price (100–500); calls the booking-orchestrator saga with the property from step 04 |
+
+> **Note on `admin_group_id`:** The seeded properties use `admin-1` as their `adminGroupId`, which is not a valid UUID. The `booking` service calls `UUID(admin_group_id)` internally and will reject it. The end-to-end flow will succeed through step 04 but fail at step 05 until the seed data is updated to use UUID-format admin group IDs.
+
+### Authentication Flow in the Collection
+
+```
+Register  →  Login (saves id_token, access_token)
+                 │
+                 ├── id_token  → Authorization: Bearer header on Booking / Booking Orchestrator requests
+                 │                API Gateway validates it and injects X-User-Id + X-User-Email
+                 │
+                 └── access_token → GET /auth/me → retrieves user_id + user_email
+                                    (mirrors what API Gateway injects; useful for direct service testing)
+```
+
+### File Structure
+
+```
+postman/
+├── .postman/
+│   └── resources.yaml          # Workspace ID binding
+└── postman/
+    ├── environments/
+    │   └── develop.yaml         # base_url for the develop environment
+    ├── globals/
+    │   └── workspace.globals.yaml
+    └── collections/
+        └── travelhub-backend/
+            ├── collection.yaml               # Collection metadata and variables
+            ├── Auth/                         # 4 requests
+            ├── Properties/                   # 6 requests
+            ├── Booking/                      # 4 requests
+            ├── Booking Orchestrator/         # 1 request
+            └── Complete Booking Flow/        # 5 chained requests
+```
+
+---
+
 ## Service Communication
 
 | Service    | Reads from SSM                                          | Injected As              |

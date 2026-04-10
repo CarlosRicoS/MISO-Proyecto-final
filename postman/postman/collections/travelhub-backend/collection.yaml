@@ -1,0 +1,64 @@
+id: 7e4c2a89-3f12-4b56-9d78-a1b2c3d4e5f6
+name: travelhub-backend
+description: >-
+  TravelHub backend microservices API collection.
+
+  Covers four microservices exposed via AWS API Gateway (HTTP API, apigatewayv2).
+  Route pattern: {base_url}/{service-name}/...
+
+  Services:
+    - auth           — public, no JWT (POST register/login, GET me)
+    - poc-properties — public, no JWT (GET search/detail, POST lock)
+    - booking        — JWT protected (CRUD booking lifecycle)
+    - booking-orchestrator — JWT protected (saga: create reservation end-to-end)
+
+  ⚠️  admin_group_id note: seeded properties use 'admin-1' (not a UUID).
+  The booking service parses it as UUID(admin_group_id) and will reject 'admin-1'.
+  Either reseed with UUID values or patch the booking service before running the
+  end-to-end flow.
+schema: "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+variable:
+  - key: base_url
+    value: "https://3pwlikf891.execute-api.us-east-1.amazonaws.com"
+    type: default
+    description: AWS API Gateway invoke URL (no trailing slash)
+  - key: id_token
+    value: ""
+    type: default
+    description: Cognito IdToken — used as Bearer token for protected routes
+  - key: access_token
+    value: ""
+    type: default
+    description: Cognito AccessToken — used for /auth/me validation
+  - key: user_id
+    value: ""
+    type: default
+    description: Cognito sub (UUID) — injected by API Gateway as X-User-Id
+  - key: user_email
+    value: ""
+    type: default
+    description: User email — injected by API Gateway as X-User-Email
+  - key: property_id
+    value: "a1b2c3d4-1111-4000-8000-000000000001"
+    type: default
+    description: A seeded property UUID (Casa Playa Cartagena, capacity 4)
+  - key: booking_id
+    value: ""
+    type: default
+    description: Populated by Create Booking / Create Reservation responses
+  - key: flow_email
+    value: ""
+    type: default
+    description: Auto-generated email used in Complete Booking Flow
+  - key: flow_password
+    value: "Travelhub123!"
+    type: default
+    description: Password used across the Complete Booking Flow
+  - key: flow_property_id
+    value: ""
+    type: default
+    description: Property ID extracted from search result in the flow
+  - key: flow_admin_group_id
+    value: ""
+    type: default
+    description: adminGroupId extracted from property search result in the flow
