@@ -1,0 +1,82 @@
+name: Build Android APK
+description: Builds a debug Android APK from the Angular/Ionic/Capacitor app. Syncs the web build into the native project then assembles with Gradle.
+inputs:
+  context-path:
+    description: 'Path to the Angular/Ionic project containing package.json and the android/ directory'
+    required: true
+  node-version:
+    description: 'Node.js version to use'
+    required: false
+    default: '20'
+  java-version:
+    description: 'JDK version to use (must be ≤23 — required by Gradle 8.11.1 and AGP 8.7.2)'
+    required: false
+    default: '21'
+  api-base-url:
+    description: 'API Gateway base URL baked into assets/config.json at build time (optional — falls back to the value already in config.json)'
+    required: false
+    default: ''
+  property-api-path:
+    description: 'Property API path baked into assets/config.json (optional)'
+    required: false
+    default: ''
+  property-api-token:
+    description: 'Property API token baked into assets/config.json (optional)'
+    required: false
+    default: ''
+outputs:
+  apk-path:
+    description: 'Relative path to the built APK file'
+    value: ${{ steps.locate-apk.outputs.apk-path }}
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node-version }}
+        cache: 'npm'
+        cache-dependency-path: ${{ inputs.context-path }}/package-lock.json
+
+    - name: Install Node dependencies
+      shell: bash
+      run: |
+        cd ${{ inputs.context-path }}
+        npm ci
+
+    - name: Set up JDK ${{ inputs.java-version }}
+      uses: actions/setup-java@v4
+      with:
+        java-version: ${{ inputs.java-version }}
+        distribution: temurin
+        cache: gradle
+
+    - name: Build web app and sync into Android project
+      shell: bash
+      env:
+        API_BASE_URL: ${{ inputs.api-base-url }}
+        PROPERTY_API_PATH: ${{ inputs.property-api-path }}
+        PROPERTY_API_TOKEN: ${{ inputs.property-api-token }}
+      run: |
+        cd ${{ inputs.context-path }}
+        npm run android:sync
+
+    - name: Build debug APK
+      shell: bash
+      run: |
+        cd ${{ inputs.context-path }}/android
+        ./gradlew assembleDebug --no-daemon
+
+    - name: Locate APK
+      id: locate-apk
+      shell: bash
+      run: |
+        APK_PATH="${{ inputs.context-path }}/android/app/build/outputs/apk/debug/app-debug.apk"
+        echo "apk-path=$APK_PATH" >> $GITHUB_OUTPUT
+
+    - name: Upload APK artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: travelhub-android-debug-${{ github.run_id }}
+        path: ${{ inputs.context-path }}/android/app/build/outputs/apk/debug/app-debug.apk
+        retention-days: 30
