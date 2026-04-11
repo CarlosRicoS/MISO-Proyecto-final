@@ -22,6 +22,12 @@
     "e2e:android:with-wiremock": "npm run android:sync:wiremock && cd android && ./gradlew connectedDebugAndroidTest",
     "e2e:android:espresso": "npm run android:sync && cd android && ./gradlew connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.uniandes.travelhub.app.TravelHubEspressoTest",
     "e2e:android:espresso:with-wiremock": "npm run android:sync:wiremock && cd android && ./gradlew connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.uniandes.travelhub.app.TravelHubEspressoTest",
+    "e2e:android:espresso:script": "bash scripts/run-android-espresso-tests.sh",
+    "e2e:android:espresso:script:wiremock": "bash scripts/run-android-espresso-tests.sh --wiremock",
+    "e2e:android:espresso:script:auto-emulator": "bash scripts/run-android-espresso-tests.sh --start-emulator",
+    "e2e:android:espresso:script:auto-emulator:wiremock": "bash scripts/run-android-espresso-tests.sh --start-emulator --wiremock",
+    "e2e:android:espresso:ci": "bash scripts/run-android-espresso-tests.sh --ci",
+    "e2e:android:espresso:ci:wiremock": "bash scripts/run-android-espresso-tests.sh --ci --wiremock",
     "lint": "ng lint",
     "prepare": "cd .. && git config core.hooksPath .githooks && chmod +x .githooks/pre-commit"
   },

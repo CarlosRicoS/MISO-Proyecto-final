@@ -1,0 +1,166 @@
+name: Test Android Espresso E2E (CI)
+description: Run Android Espresso E2E tests for the Ionic/Capacitor app using a headless emulator.
+inputs:
+  context-path:
+    description: 'Path to the Angular/Ionic project containing package.json and android/'
+    required: true
+  node-version:
+    description: 'Node.js version to use'
+    required: false
+    default: '22'
+  java-version:
+    description: 'JDK version to use'
+    required: false
+    default: '21'
+  avd-name:
+    description: 'AVD name to create/use for CI execution'
+    required: false
+    default: 'ci_api_36'
+  android-api-level:
+    description: 'Android API level for platform and system image'
+    required: false
+    default: '36'
+  android-system-image-target:
+    description: 'System image target (e.g. google_apis, google_apis_playstore)'
+    required: false
+    default: 'google_apis'
+  android-arch:
+    description: 'ABI architecture for the system image'
+    required: false
+    default: 'x86_64'
+runs:
+  using: composite
+  steps:
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node-version }}
+        cache: npm
+        cache-dependency-path: ${{ inputs.context-path }}/package-lock.json
+
+    - name: Install Node dependencies
+      shell: bash
+      run: |
+        cd ${{ inputs.context-path }}
+        npm ci
+
+    - name: Set up JDK ${{ inputs.java-version }}
+      uses: actions/setup-java@v4
+      with:
+        java-version: ${{ inputs.java-version }}
+        distribution: temurin
+        cache: gradle
+
+    - name: Set up Android SDK tools
+      uses: android-actions/setup-android@v3
+
+    - name: Install Android SDK packages
+      shell: bash
+      run: |
+        # In CI shells with pipefail enabled, `yes | sdkmanager --licenses` can
+        # return non-zero due to a benign broken pipe from `yes` after sdkmanager exits.
+        if ! yes | sdkmanager --licenses >/dev/null 2>&1; then
+          echo "Continuing after non-zero license pipe exit (commonly a broken pipe)."
+        fi
+
+        sdkmanager \
+          "platform-tools" \
+          "emulator" \
+          "platforms;android-${{ inputs.android-api-level }}" \
+          "system-images;android-${{ inputs.android-api-level }};${{ inputs.android-system-image-target }};${{ inputs.android-arch }}"
+
+    - name: Verify Android SDK components
+      shell: bash
+      run: |
+        INSTALLED="$(sdkmanager --list_installed)"
+
+        echo "$INSTALLED" | grep -F "platform-tools" >/dev/null || {
+          echo "Missing required SDK component: platform-tools"
+          exit 1
+        }
+
+        echo "$INSTALLED" | grep -F "emulator" >/dev/null || {
+          echo "Missing required SDK component: emulator"
+          exit 1
+        }
+
+        echo "$INSTALLED" | grep -F "platforms;android-${{ inputs.android-api-level }}" >/dev/null || {
+          echo "Missing required SDK component: platforms;android-${{ inputs.android-api-level }}"
+          exit 1
+        }
+
+        echo "$INSTALLED" | grep -F "system-images;android-${{ inputs.android-api-level }};${{ inputs.android-system-image-target }};${{ inputs.android-arch }}" >/dev/null || {
+          echo "Missing required SDK component: system-images;android-${{ inputs.android-api-level }};${{ inputs.android-system-image-target }};${{ inputs.android-arch }}"
+          exit 1
+        }
+
+    - name: Create AVD if missing
+      shell: bash
+      env:
+        ANDROID_AVD_HOME: ${{ runner.temp }}/android-avd
+        ANDROID_SDK_HOME: ${{ runner.temp }}/android-sdk-home
+      run: |
+        EMULATOR_BIN="${ANDROID_SDK_ROOT}/emulator/emulator"
+        if [[ ! -x "$EMULATOR_BIN" ]]; then
+          EMULATOR_BIN="${ANDROID_HOME}/emulator/emulator"
+        fi
+
+        if [[ ! -x "$EMULATOR_BIN" ]]; then
+          echo "Android emulator binary not found in ANDROID_SDK_ROOT or ANDROID_HOME."
+          exit 1
+        fi
+
+        mkdir -p "$ANDROID_AVD_HOME" "$ANDROID_SDK_HOME"
+
+        if ! "$EMULATOR_BIN" -list-avds | grep -Fxq "${{ inputs.avd-name }}"; then
+          echo "no" | avdmanager create avd \
+            --force \
+            --name "${{ inputs.avd-name }}" \
+            --package "system-images;android-${{ inputs.android-api-level }};${{ inputs.android-system-image-target }};${{ inputs.android-arch }}" \
+            --device "pixel_6"
+        fi
+
+        echo "Available AVDs after creation:"
+        "$EMULATOR_BIN" -list-avds
+
+    - name: Run Android Espresso E2E tests
+      shell: bash
+      env:
+        CI: 'true'
+        ANDROID_AVD_HOME: ${{ runner.temp }}/android-avd
+        ANDROID_SDK_HOME: ${{ runner.temp }}/android-sdk-home
+      run: |
+        cd ${{ inputs.context-path }}
+        npm run e2e:android:espresso:ci -- --avd "${{ inputs.avd-name }}" --boot-timeout-sec 420
+
+    - name: Collect Android debug artifacts on failure
+      if: failure()
+      shell: bash
+      run: |
+        ARTIFACT_DIR="${{ inputs.context-path }}/.artifacts/android-espresso"
+        mkdir -p "$ARTIFACT_DIR"
+
+        if [[ -d "${{ inputs.context-path }}/android/app/build/reports/androidTests/connected" ]]; then
+          cp -R "${{ inputs.context-path }}/android/app/build/reports/androidTests/connected" "$ARTIFACT_DIR/"
+        fi
+
+        if [[ -d "${{ inputs.context-path }}/android/app/build/outputs/androidTest-results/connected" ]]; then
+          cp -R "${{ inputs.context-path }}/android/app/build/outputs/androidTest-results/connected" "$ARTIFACT_DIR/"
+        fi
+
+        if [[ -f "/tmp/travelhub-emulator.log" ]]; then
+          cp "/tmp/travelhub-emulator.log" "$ARTIFACT_DIR/"
+        fi
+
+        if [[ -f "/tmp/travelhub-mock-api.log" ]]; then
+          cp "/tmp/travelhub-mock-api.log" "$ARTIFACT_DIR/"
+        fi
+
+    - name: Upload Android test artifacts on failure
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: android-espresso-debug-${{ github.run_id }}
+        path: ${{ inputs.context-path }}/.artifacts/android-espresso/
+        if-no-files-found: ignore
+        retention-days: 7
