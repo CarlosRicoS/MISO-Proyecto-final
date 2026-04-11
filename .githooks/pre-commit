@@ -1,6 +1,6 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 
-set -eu
+set -euo pipefail
 
 # ANSI colors for clearer hook results in terminal output
 RED='\033[0;31m'
@@ -25,7 +25,37 @@ log_fail() {
 	printf "%b\n" "${RED}[pre-commit] ERROR:${NC} $1"
 }
 
+log_warn() {
+	printf "%b\n" "${YELLOW}[pre-commit] WARN:${NC} $1"
+}
+
+show_android_setup_help() {
+	printf "%b\n" "${YELLOW}Comandos sugeridos para preparar Android E2E:${NC}"
+	printf "%b\n" "  sdkmanager \"platform-tools\" \"emulator\" \"platforms;android-36\" \"system-images;android-36;google_apis;x86_64\""
+	printf "%b\n" "  echo \"no\" | avdmanager create avd --name ci_api_36 --package \"system-images;android-36;google_apis;x86_64\" --device \"pixel_6\""
+	printf "%b\n" "  npm run e2e:android:espresso:script:auto-emulator"
+}
+
+has_user_interface_staged_changes() {
+	git diff --cached --name-only --diff-filter=ACMR -- user_interface | grep -q .
+}
+
+has_user_interface_changes_in_head_commit() {
+	git rev-parse --verify HEAD >/dev/null 2>&1 || return 1
+	git diff-tree --no-commit-id --name-only -r HEAD -- user_interface | grep -q .
+}
+
+should_run_ui_tests() {
+	has_user_interface_staged_changes || has_user_interface_changes_in_head_commit
+}
+
+
 log_info "Iniciando validaciones de pre-commit para user_interface."
+
+if ! should_run_ui_tests; then
+	log_info "No hay cambios staged en user_interface. Se omiten las pruebas UI (karma, playwright y espresso)."
+	exit 0
+fi
 
 if ! cd user_interface; then
 	log_fail "No se pudo acceder al directorio user_interface. Commit cancelado."
@@ -47,5 +77,23 @@ if ! npm run e2e:web:with-app; then
 fi
 
 log_ok "Pruebas E2E web completadas correctamente."
+
+log_step "Ejecutando pruebas E2E Android (Espresso)."
+ANDROID_E2E_LOG="$(mktemp)"
+if ! npm run e2e:android:espresso:script:auto-emulator 2>&1 | tee "$ANDROID_E2E_LOG"; then
+
+	if grep -Eq "adb not found|emulator command not found|No AVD found|AVD '.+' was not found|Android emulator binary not found" "$ANDROID_E2E_LOG"; then
+		log_warn "Android E2E falló por dependencias/emulador faltante. Se omite bloqueo de commit."
+		show_android_setup_help
+	else
+		log_fail "Fallaron las pruebas E2E Android. No se creó el commit."
+		rm -f "$ANDROID_E2E_LOG"
+		exit 1
+	fi
+else
+	log_ok "Pruebas E2E Android completadas correctamente."
+fi
+rm -f "$ANDROID_E2E_LOG"
+
 log_ok "Todas las validaciones de pre-commit pasaron. El commit puede continuar."
 exit 0
