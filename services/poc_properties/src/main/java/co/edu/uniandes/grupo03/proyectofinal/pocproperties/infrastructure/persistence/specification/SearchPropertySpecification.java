@@ -2,12 +2,15 @@ package co.edu.uniandes.grupo03.proyectofinal.pocproperties.infrastructure.persi
 
 import co.edu.uniandes.grupo03.proyectofinal.pocproperties.infrastructure.persistence.entity.LockedPropertyEntity;
 import co.edu.uniandes.grupo03.proyectofinal.pocproperties.infrastructure.persistence.entity.PropertyDetailEntity;
+import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Subquery;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.time.LocalDate;
+import java.text.Normalizer;
+import java.util.Locale;
 
 public final class SearchPropertySpecification {
 
@@ -38,7 +41,7 @@ public final class SearchPropertySpecification {
     public static Specification<PropertyDetailEntity> findPropertiesByCity(String city) {
 
         return (root, query, cb) -> cb.and(
-                cb.equal(root.get("city"), city)
+                cb.equal(normalizeCityExpression(root, cb), normalizeCityValue(city))
         );
     }
 
@@ -76,10 +79,21 @@ public final class SearchPropertySpecification {
                     .where(cb.and(correlation, dateFilters));
 
             return cb.and(
-                    cb.equal(root.get("city"), city),
+                    cb.equal(normalizeCityExpression(root, cb), normalizeCityValue(city)),
                     cb.equal(root.get("maxCapacity"), maxCapacity),
                     cb.not(cb.exists(subquery))
             );
         };
+    }
+
+    private static Expression<String> normalizeCityExpression(Root<PropertyDetailEntity> root,
+                                                              jakarta.persistence.criteria.CriteriaBuilder cb) {
+        return cb.lower(root.get("city"));
+    }
+
+    private static String normalizeCityValue(String city) {
+        return Normalizer.normalize(city, Normalizer.Form.NFD)
+                .replaceAll("\\p{M}+", "")
+                .toLowerCase(Locale.ROOT);
     }
 }

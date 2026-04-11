@@ -18,6 +18,8 @@ public class SearchPropertiesQueryResponse implements QueryResponse {
 
         String name;
 
+        String city;
+
         Integer maxCapacity;
 
         String description;
