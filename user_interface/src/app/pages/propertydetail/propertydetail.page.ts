@@ -170,7 +170,7 @@ export class PropertydetailPage implements OnInit {
   ): void {
     const nights = this.getNightsBetween(search?.startDate, search?.endDate);
     const total = nights > 0 ? priceValue * nights : priceValue;
-    const guestsLabel = search?.capacity ? `${search.capacity} ${search.capacity === 1 ? 'Guest' : 'Guests'}` : '';
+    const guestsValue = search?.capacity ? String(search.capacity) : '';
 
     this.paymentSummary = {
       title: `${currency}${priceValue}`,
@@ -178,7 +178,7 @@ export class PropertydetailPage implements OnInit {
       promoText: 'Book with confidence',
       checkInValue: search?.startDate || '',
       checkOutValue: search?.endDate || '',
-      guestsValue: guestsLabel,
+      guestsValue,
       roomTypeValue: 'Standard Room',
       totalAmount: `${currency}${total}`,
     };

@@ -67,4 +67,90 @@ describe('ThPaymentSummaryComponent', () => {
     expect(component.compactSuffix).toBe('/night');
     expect(component.compactNote).toContain('Taxes');
   });
+
+  it('opens the check-in calendar when activated', () => {
+    TestBed.configureTestingModule({
+      imports: [ThPaymentSummaryComponent],
+      providers: [
+        {
+          provide: ActivatedRoute,
+          useValue: {},
+        },
+      ],
+    });
+
+    const fixture = TestBed.createComponent(ThPaymentSummaryComponent);
+    const component = fixture.componentInstance;
+
+    component.checkInValue = '20/12/2024';
+    component.onCheckInActivated();
+
+    expect(component.showCheckInModal).toBeTrue();
+    expect(component.tempDate).toBe('2024-12-20');
+  });
+
+  it('emits updated date values when a date is confirmed', () => {
+    TestBed.configureTestingModule({
+      imports: [ThPaymentSummaryComponent],
+      providers: [
+        {
+          provide: ActivatedRoute,
+          useValue: {},
+        },
+      ],
+    });
+
+    const fixture = TestBed.createComponent(ThPaymentSummaryComponent);
+    const component = fixture.componentInstance;
+    const checkInSpy = spyOn(component.checkInValueChange, 'emit');
+
+    component.onCheckInConfirmed(new Date(2024, 11, 20));
+
+    expect(component.checkInValue).toBe('20/12/2024');
+    expect(checkInSpy).toHaveBeenCalledWith('20/12/2024');
+    expect(component.showCheckInModal).toBeFalse();
+  });
+
+  it('auto-sets checkout to check-in + 1 day when checkout is empty', () => {
+    TestBed.configureTestingModule({
+      imports: [ThPaymentSummaryComponent],
+      providers: [
+        {
+          provide: ActivatedRoute,
+          useValue: {},
+        },
+      ],
+    });
+
+    const fixture = TestBed.createComponent(ThPaymentSummaryComponent);
+    const component = fixture.componentInstance;
+    const checkOutSpy = spyOn(component.checkOutValueChange, 'emit');
+
+    component.checkOutValue = '';
+    component.onCheckInConfirmed(new Date(2024, 11, 20));
+
+    expect(component.checkOutValue).toBe('21/12/2024');
+    expect(checkOutSpy).toHaveBeenCalledWith('21/12/2024');
+  });
+
+  it('sanitizes guests input to digits only', () => {
+    TestBed.configureTestingModule({
+      imports: [ThPaymentSummaryComponent],
+      providers: [
+        {
+          provide: ActivatedRoute,
+          useValue: {},
+        },
+      ],
+    });
+
+    const fixture = TestBed.createComponent(ThPaymentSummaryComponent);
+    const component = fixture.componentInstance;
+    const guestsSpy = spyOn(component.guestsValueChange, 'emit');
+
+    component.onGuestsInput('2 Guests');
+
+    expect(component.guestsValue).toBe('2');
+    expect(guestsSpy).toHaveBeenCalledWith('2');
+  });
 });

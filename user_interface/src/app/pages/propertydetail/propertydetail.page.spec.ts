@@ -129,7 +129,7 @@ describe('PropertydetailPage', () => {
     expect(component.summaryItems.length).toBeGreaterThan(0);
     expect(component.paymentSummary.checkInValue).toBe('2026-05-10');
     expect(component.paymentSummary.checkOutValue).toBe('2026-05-12');
-    expect(component.paymentSummary.guestsValue).toBe('2 Guests');
+    expect(component.paymentSummary.guestsValue).toBe('2');
   });
 
   it('falls back when navigation state is missing', async () => {
@@ -169,7 +169,7 @@ describe('PropertydetailPage', () => {
 
     expect(localComponent.property.title).toBe('Fallback Hotel');
     expect(localComponent.property.images.length).toBe(1);
-    expect(localComponent.paymentSummary.guestsValue).toBe('1 Guest');
+    expect(localComponent.paymentSummary.guestsValue).toBe('1');
     expect(localComponent.summaryItems[0].label).toContain('nights');
   });
 
