@@ -1,15 +1,5 @@
 <ion-card class="th-payment-summary" [class.th-payment-summary--mobile-sticky]="mobileSticky">
-  <ion-card-content class="th-payment-summary__content th-payment-summary__content--full">
-    <div class="th-payment-summary__price-header">
-      <h3 class="th-payment-summary__title">{{ title }}</h3>
-      <p class="th-payment-summary__subtitle">{{ subtitle }}</p>
-    </div>
-
-    <div class="th-payment-summary__promo" *ngIf="promoText">
-      <ion-icon [name]="promoIcon" aria-hidden="true"></ion-icon>
-      <span>{{ promoText }}</span>
-    </div>
-
+  <ng-template #bookingFieldsTemplate>
     <div class="th-payment-summary__field-list">
       <button
         type="button"
@@ -72,7 +62,7 @@
             [value]="guestsValue"
             (ionInput)="onGuestsInput($event.detail.value)"
           ></ion-input>
-           <ion-icon
+          <ion-icon
             name="people-outline"
             class="th-payment-summary__field-icon"
             aria-hidden="true"
@@ -91,6 +81,20 @@
         </div>
       </div>
     </div>
+  </ng-template>
+
+  <ion-card-content class="th-payment-summary__content th-payment-summary__content--full">
+    <div class="th-payment-summary__price-header">
+      <h3 class="th-payment-summary__title">{{ title }}</h3>
+      <p class="th-payment-summary__subtitle">{{ subtitle }}</p>
+    </div>
+
+    <div class="th-payment-summary__promo" *ngIf="promoText">
+      <ion-icon [name]="promoIcon" aria-hidden="true"></ion-icon>
+      <span>{{ promoText }}</span>
+    </div>
+
+    <ng-container [ngTemplateOutlet]="bookingFieldsTemplate"></ng-container>
 
     <div class="th-payment-summary__rows">
       <div class="th-payment-summary__row" *ngFor="let item of items">
@@ -161,6 +165,16 @@
         <span class="th-payment-summary__compact-suffix">{{ compactSuffix }}</span>
       </div>
       <p class="th-payment-summary__compact-note">{{ compactNote }}</p>
+      <button
+        type="button"
+        class="th-payment-summary__compact-edit"
+        [attr.aria-expanded]="isMobileEditorOpen"
+        aria-controls="th-payment-summary-mobile-editor"
+        (click)="toggleMobileEditor()"
+      >
+        <ion-icon [name]="isMobileEditorOpen ? 'chevron-up-outline' : 'create-outline'" aria-hidden="true"></ion-icon>
+        <span>{{ isMobileEditorOpen ? 'Hide details' : 'Edit details' }}</span>
+      </button>
     </div>
 
     <div class="th-payment-summary__compact-action">
@@ -175,6 +189,14 @@
         </span>
       </th-button>
     </div>
+
+    <section
+      id="th-payment-summary-mobile-editor"
+      class="th-payment-summary__compact-editor"
+      *ngIf="isMobileEditorOpen"
+    >
+      <ng-container [ngTemplateOutlet]="bookingFieldsTemplate"></ng-container>
+    </section>
   </ion-card-content>
 </ion-card>
 

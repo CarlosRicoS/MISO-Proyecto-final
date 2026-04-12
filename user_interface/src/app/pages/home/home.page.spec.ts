@@ -187,7 +187,7 @@ describe('HomePage', () => {
     expect(iso).toBe('2026-03-05');
 
     const fallback = component.convertDDMMYYYYToISO('bad');
-    expect(fallback.length).toBe(10);
+    expect(fallback).toBeNull();
 
     expect(component.compareDates('01/03/2026', '02/03/2026')).toBeLessThan(0);
     expect(component.compareDates('bad', '02/03/2026')).toBe(0);
@@ -242,8 +242,7 @@ describe('HomePage', () => {
 
     it('should handle invalid date format gracefully', () => {
       const result = component.convertDDMMYYYYToISO('invalid');
-      expect(result).toBeDefined();
-      expect(result.length).toBe(10);
+      expect(result).toBeNull();
     });
 
     it('should convert Date to DD/MM/YYYY format correctly', () => {
