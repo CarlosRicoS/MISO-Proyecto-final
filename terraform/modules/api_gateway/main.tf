@@ -105,6 +105,34 @@ resource "aws_apigatewayv2_route" "service_root" {
   authorizer_id      = each.value.authorization_type == "COGNITO" && var.issuer_url != "" ? aws_apigatewayv2_authorizer.cognito[0].id : null
 }
 
+# --- OPTIONS preflight routes (no auth) for JWT-protected services ---
+# Browsers never send Authorization in preflight; without these explicit routes
+# the ANY route above intercepts OPTIONS and the JWT authorizer returns 401.
+
+resource "aws_apigatewayv2_route" "service_options" {
+  for_each = {
+    for name, svc in var.services : name => svc
+    if svc.authorization_type == "COGNITO"
+  }
+
+  api_id             = aws_apigatewayv2_api.this.id
+  route_key          = "OPTIONS /${each.value.route_prefix}/{proxy+}"
+  target             = "integrations/${aws_apigatewayv2_integration.service[each.key].id}"
+  authorization_type = "NONE"
+}
+
+resource "aws_apigatewayv2_route" "service_root_options" {
+  for_each = {
+    for name, svc in var.services : name => svc
+    if svc.authorization_type == "COGNITO"
+  }
+
+  api_id             = aws_apigatewayv2_api.this.id
+  route_key          = "OPTIONS /${each.value.route_prefix}"
+  target             = "integrations/${aws_apigatewayv2_integration.service[each.key].id}"
+  authorization_type = "NONE"
+}
+
 # --- Logging ---
 
 resource "aws_cloudwatch_log_group" "api" {
