@@ -1,5 +1,6 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
+import { Capacitor } from '@capacitor/core';
 import { filter, Subscription } from 'rxjs';
 import { AuthSessionService } from './core/services/auth-session.service';
 import { ThNavbarMode } from './shared/components/th-navbar/th-navbar.component';
@@ -16,6 +17,8 @@ export class AppComponent implements OnInit, OnDestroy {
   navbarMode: ThNavbarMode = 'auth';
 
   private readonly mobileBreakpoint = 720;
+  private readonly nativePlatformClass = 'app-platform-native';
+  private readonly webPlatformClass = 'app-platform-web';
   private routerEventsSub?: Subscription;
   private authStateSub?: Subscription;
 
@@ -26,6 +29,7 @@ export class AppComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    this.applyPlatformClasses();
     this.updateNavbarVisibility();
     this.navbarMode = this.authSessionService.isLoggedIn ? 'full' : 'auth';
     this.authStateSub = this.authSessionService.state$.subscribe((state) => {
@@ -50,6 +54,7 @@ export class AppComponent implements OnInit, OnDestroy {
     if (typeof window !== 'undefined') {
       window.removeEventListener('resize', this.handleResize);
     }
+    this.clearPlatformClasses();
   }
 
   get isPropertyDetailRoute(): boolean {
@@ -71,6 +76,26 @@ export class AppComponent implements OnInit, OnDestroy {
   private handleResize = (): void => {
     this.updateLayout();
   };
+
+  private applyPlatformClasses(): void {
+    if (typeof document === 'undefined') {
+      return;
+    }
+
+    const body = document.body;
+    const isNativePlatform = Capacitor.isNativePlatform();
+
+    body.classList.toggle(this.nativePlatformClass, isNativePlatform);
+    body.classList.toggle(this.webPlatformClass, !isNativePlatform);
+  }
+
+  private clearPlatformClasses(): void {
+    if (typeof document === 'undefined') {
+      return;
+    }
+
+    document.body.classList.remove(this.nativePlatformClass, this.webPlatformClass);
+  }
 
   private updateLayout(): void {
     if (typeof window === 'undefined') {

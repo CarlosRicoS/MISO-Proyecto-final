@@ -89,6 +89,28 @@ describe('ThPaymentSummaryComponent', () => {
     expect(component.tempDate).toBe('2024-12-20');
   });
 
+  it('sets check-in minimum date to today', () => {
+    TestBed.configureTestingModule({
+      imports: [ThPaymentSummaryComponent],
+      providers: [
+        {
+          provide: ActivatedRoute,
+          useValue: {},
+        },
+      ],
+    });
+
+    const fixture = TestBed.createComponent(ThPaymentSummaryComponent);
+    const component = fixture.componentInstance;
+
+    const today = new Date();
+    const expectedIso = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(
+      today.getDate(),
+    ).padStart(2, '0')}`;
+
+    expect(component.checkInMinDate).toBe(expectedIso);
+  });
+
   it('emits updated date values when a date is confirmed', () => {
     TestBed.configureTestingModule({
       imports: [ThPaymentSummaryComponent],

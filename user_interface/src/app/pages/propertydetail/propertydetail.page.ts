@@ -62,6 +62,7 @@ export class PropertydetailPage implements OnInit {
   isAlertOpen = false;
   alertTitle = '';
   alertMessage = '';
+  private bookingSuccess = false;
 
   paymentSummary = {
     title: '$0',
@@ -282,18 +283,26 @@ export class PropertydetailPage implements OnInit {
       await firstValueFrom(
         this.bookingService.createReservation(
           reservationPayload,
-          this.authSessionService.accessToken,
+          this.authSessionService.idToken,
         ),
       );
 
+      this.bookingSuccess = true;
       this.showAlert('Reservation Created', 'Your booking request was sent successfully.');
       this.pendingBookingService.clearPendingBooking();
     } catch (error) {
+      this.bookingSuccess = false;
       const httpError = error as HttpErrorResponse;
-      const message =
-        typeof httpError.error?.message === 'string'
-          ? httpError.error.message
-          : 'Unable to create reservation. Please try again.';
+      let message = 'Unable to create reservation. Please try again.';
+
+      if (httpError.status === 409 && httpError.error?.detail === 'property_unavailable') {
+        message = 'This property is no longer available. Please select another property.';
+      } else if (typeof httpError.error?.message === 'string') {
+        message = httpError.error.message;
+      } else if (typeof httpError.error?.detail === 'string') {
+        message = httpError.error.detail;
+      }
+
       this.showAlert('Booking Error', message);
     } finally {
       this.isBooking = false;
@@ -399,6 +408,14 @@ export class PropertydetailPage implements OnInit {
     this.alertTitle = title;
     this.alertMessage = message;
     this.isAlertOpen = true;
+  }
+
+  onAlertDismissed(): void {
+    this.isAlertOpen = false;
+    if (this.bookingSuccess) {
+      this.bookingSuccess = false;
+      this.router.navigate(['/home']);
+    }
   }
 
   private getScoreLabel(score: number): string {

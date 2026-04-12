@@ -116,14 +116,18 @@
       padding: 12px 16px;
     }
 
+    ion-datetime::part(calendar-weekday) {
+      color: #ffffff !important;
+      font-weight: 600;
+    }
+
     ion-datetime::part(month-year-button) {
       color: #ffffff;
       font-weight: 600;
     }
 
-    ion-datetime::part(calendar-weekday) {
-      color: #0f172a;
-      font-weight: 600;
+    ion-datetime::part(calendar-days-of-week) {
+      color: #ffffff;
     }
 
     ion-datetime::part(calendar-day) {

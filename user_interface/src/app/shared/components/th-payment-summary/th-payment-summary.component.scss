@@ -279,6 +279,18 @@
   --box-shadow: 0 6px 14px rgba(45, 79, 214, 0.28);
 }
 
+.th-payment-summary__button-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.th-payment-summary__spinner {
+  height: 20px;
+  width: 20px;
+}
+
 .th-payment-summary__footnote {
   margin: 0;
   text-align: center;

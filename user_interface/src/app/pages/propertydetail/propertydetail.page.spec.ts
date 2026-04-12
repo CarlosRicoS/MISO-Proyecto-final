@@ -84,6 +84,7 @@ describe('PropertydetailPage', () => {
     userId = '';
     userEmail = '';
     accessToken = '';
+    idToken = '';
   }
 
   class PendingBookingServiceMock {
@@ -319,7 +320,7 @@ describe('PropertydetailPage', () => {
     authSession.isLoggedIn = true;
     authSession.userId = 'user-1';
     authSession.userEmail = 'user@example.com';
-    authSession.accessToken = 'token-123';
+    authSession.idToken = 'token-123';
 
     component.paymentSummary = {
       ...component.paymentSummary,

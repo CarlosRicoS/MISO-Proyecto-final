@@ -3,7 +3,7 @@
   [header]="alertTitle"
   [message]="alertMessage"
   [buttons]="['OK']"
-  (didDismiss)="isAlertOpen = false"
+  (didDismiss)="onAlertDismissed()"
 ></ion-alert>
 
 <ion-content class="propertydetail-content">
@@ -88,6 +88,7 @@
           [totalAmount]="paymentSummary.totalAmount"
           actionLabel="Book Now"
           [actionDisabled]="isBooking"
+          [isLoading]="isBooking"
           (actionClick)="onBookNow()"
           footnote="You won't be charged yet"
           trustLeftLabel="Secure booking"

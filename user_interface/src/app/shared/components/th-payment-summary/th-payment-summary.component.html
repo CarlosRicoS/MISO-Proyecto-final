@@ -121,10 +121,17 @@
         variant="primary"
         size="lg"
         expand="block"
-        [disabled]="actionDisabled"
+        [disabled]="actionDisabled || isLoading"
         (click)="onActionClicked()"
       >
-        {{ actionLabel }}
+        <span class="th-payment-summary__button-content">
+          <ion-spinner
+            *ngIf="isLoading"
+            name="crescent"
+            class="th-payment-summary__spinner"
+          ></ion-spinner>
+          <span>{{ actionLabel }}</span>
+        </span>
       </th-button>
     </div>
 
@@ -157,8 +164,15 @@
     </div>
 
     <div class="th-payment-summary__compact-action">
-      <th-button variant="primary" size="md" [disabled]="actionDisabled" (click)="onActionClicked()">
-        {{ actionLabel }}
+      <th-button variant="primary" size="md" [disabled]="actionDisabled || isLoading" (click)="onActionClicked()">
+        <span class="th-payment-summary__button-content">
+          <ion-spinner
+            *ngIf="isLoading"
+            name="crescent"
+            class="th-payment-summary__spinner"
+          ></ion-spinner>
+          <span>{{ actionLabel }}</span>
+        </span>
       </th-button>
     </div>
   </ion-card-content>
@@ -168,6 +182,7 @@
   [isOpen]="showCheckInModal"
   title="Select Check-in Date"
   [selectedDate]="tempDate"
+  [minDate]="checkInMinDate"
   confirmLabel="Confirm"
   cancelLabel="Cancel"
   (dateSelected)="onCheckInConfirmed($event)"

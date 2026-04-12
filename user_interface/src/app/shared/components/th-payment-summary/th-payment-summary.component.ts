@@ -87,10 +87,12 @@ export class ThPaymentSummaryComponent implements OnChanges {
   @Input() checkInError = '';
   @Input() checkOutError = '';
   @Input() guestsError = '';
+  @Input() isLoading = false;
 
   showCheckInModal = false;
   showCheckOutModal = false;
   tempDate: string | null = null;
+  readonly checkInMinDate = this.getTodayIsoDate();
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['guestsValue']) {
@@ -157,6 +159,14 @@ export class ThPaymentSummaryComponent implements OnChanges {
     }
 
     const [day, month, year] = parts;
+    return `${year}-${month}-${day}`;
+  }
+
+  private getTodayIsoDate(): string {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
   }
 
