@@ -5,6 +5,14 @@ import { LoginResponse } from './auth.service';
 describe('AuthSessionService', () => {
   let service: AuthSessionService;
 
+  const createJwt = (payload: Record<string, unknown>): string => {
+    const base64UrlPayload = btoa(JSON.stringify(payload))
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=+$/, '');
+    return `header.${base64UrlPayload}.signature`;
+  };
+
   const mockResponse: LoginResponse = {
     id_token: 'id-token',
     access_token: 'access-token',
@@ -47,5 +55,20 @@ describe('AuthSessionService', () => {
     expect(service.isLoggedIn).toBeFalse();
     expect(service.loginResponse).toBeNull();
     expect(sessionStorage.getItem('th_auth_session')).toBeNull();
+  });
+
+  it('reads user id and email from id token claims', () => {
+    const tokenWithClaims = createJwt({
+      sub: 'user-123',
+      email: 'user@example.com',
+    });
+
+    service.setLoginResponse({
+      ...mockResponse,
+      id_token: tokenWithClaims,
+    });
+
+    expect(service.userId).toBe('user-123');
+    expect(service.userEmail).toBe('user@example.com');
   });
 });

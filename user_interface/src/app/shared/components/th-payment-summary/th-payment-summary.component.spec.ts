@@ -153,4 +153,24 @@ describe('ThPaymentSummaryComponent', () => {
     expect(component.guestsValue).toBe('2');
     expect(guestsSpy).toHaveBeenCalledWith('2');
   });
+
+  it('emits action click when booking button is triggered', () => {
+    TestBed.configureTestingModule({
+      imports: [ThPaymentSummaryComponent],
+      providers: [
+        {
+          provide: ActivatedRoute,
+          useValue: {},
+        },
+      ],
+    });
+
+    const fixture = TestBed.createComponent(ThPaymentSummaryComponent);
+    const component = fixture.componentInstance;
+    const actionSpy = spyOn(component.actionClick, 'emit');
+
+    component.onActionClicked();
+
+    expect(actionSpy).toHaveBeenCalled();
+  });
 });

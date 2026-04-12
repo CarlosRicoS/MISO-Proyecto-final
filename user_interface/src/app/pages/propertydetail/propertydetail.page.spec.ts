@@ -13,6 +13,9 @@ import { ThPropertyReviewSummaryComponent } from '../../shared/components/th-pro
 import { PropertydetailPage } from './propertydetail.page';
 import { CommonModule } from '@angular/common';
 import { PropertyDetailService } from '../../core/services/property-detail.service';
+import { AuthSessionService } from '../../core/services/auth-session.service';
+import { BookingService } from '../../core/services/booking.service';
+import { PendingBookingService } from '../../core/services/pending-booking.service';
 
 describe('PropertydetailPage', () => {
   let component: PropertydetailPage;
@@ -46,12 +49,14 @@ describe('PropertydetailPage', () => {
 
   class RouterMock {
     events = of();
+    url = '/propertydetail/prop-1';
     navigationState = {
       hotel: mockHotel,
       propertyDetail: mockDetail,
       search: { startDate: '2026-05-10', endDate: '2026-05-12', capacity: 2 },
     };
     returnNavigation = true;
+    navigate = jasmine.createSpy('navigate').and.resolveTo(true);
 
     getCurrentNavigation() {
       if (!this.returnNavigation) {
@@ -68,6 +73,23 @@ describe('PropertydetailPage', () => {
 
   class PropertyDetailServiceMock {
     getPropertyDetail = jasmine.createSpy('getPropertyDetail').and.returnValue(of(mockDetail));
+  }
+
+  class BookingServiceMock {
+    createReservation = jasmine.createSpy('createReservation').and.returnValue(of({ reservation_id: 'r-1' }));
+  }
+
+  class AuthSessionServiceMock {
+    isLoggedIn = false;
+    userId = '';
+    userEmail = '';
+    accessToken = '';
+  }
+
+  class PendingBookingServiceMock {
+    setPendingBooking = jasmine.createSpy('setPendingBooking');
+    consumePendingBookingForProperty = jasmine.createSpy('consumePendingBookingForProperty').and.returnValue(null);
+    clearPendingBooking = jasmine.createSpy('clearPendingBooking');
   }
 
   beforeEach(async () => {
@@ -92,6 +114,9 @@ describe('PropertydetailPage', () => {
         },
         { provide: Router, useClass: RouterMock },
         { provide: PropertyDetailService, useClass: PropertyDetailServiceMock },
+        { provide: BookingService, useClass: BookingServiceMock },
+        { provide: AuthSessionService, useClass: AuthSessionServiceMock },
+        { provide: PendingBookingService, useClass: PendingBookingServiceMock },
       ],
     }).compileComponents();
 
@@ -249,5 +274,70 @@ describe('PropertydetailPage', () => {
     expect(getNightsBetween('invalid', '2026-05-10')).toBe(0);
     expect(getNightsBetween('2026-05-10', 'invalid')).toBe(0);
     expect(getNightsBetween('2026-05-12', '2026-05-10')).toBe(0);
+  });
+
+  it('shows validation errors when booking values are invalid', async () => {
+    component.paymentSummary = {
+      ...component.paymentSummary,
+      checkInValue: '',
+      checkOutValue: '',
+      guestsValue: '0',
+    };
+
+    await component.onBookNow();
+
+    expect(component.bookingErrors.checkIn).toBe('Check-in date is required');
+    expect(component.bookingErrors.checkOut).toBe('Check-out date is required');
+    expect(component.bookingErrors.guests).toBe('Guests must be at least 1');
+  });
+
+  it('redirects to login with returnUrl when booking is valid but user is logged out', async () => {
+    const authSession = TestBed.inject(AuthSessionService) as unknown as AuthSessionServiceMock;
+    const pendingBooking = TestBed.inject(PendingBookingService) as unknown as PendingBookingServiceMock;
+
+    authSession.isLoggedIn = false;
+
+    component.paymentSummary = {
+      ...component.paymentSummary,
+      checkInValue: '2026-05-10',
+      checkOutValue: '2026-05-12',
+      guestsValue: '2',
+    };
+
+    await component.onBookNow();
+
+    expect(pendingBooking.setPendingBooking).toHaveBeenCalled();
+    expect((routerMock.navigate as jasmine.Spy)).toHaveBeenCalledWith(['/login'], {
+      queryParams: { returnUrl: '/propertydetail/prop-1' },
+    });
+  });
+
+  it('creates reservation when booking is valid and user is logged in', async () => {
+    const authSession = TestBed.inject(AuthSessionService) as unknown as AuthSessionServiceMock;
+    const bookingService = TestBed.inject(BookingService) as unknown as BookingServiceMock;
+
+    authSession.isLoggedIn = true;
+    authSession.userId = 'user-1';
+    authSession.userEmail = 'user@example.com';
+    authSession.accessToken = 'token-123';
+
+    component.paymentSummary = {
+      ...component.paymentSummary,
+      checkInValue: '2026-05-10',
+      checkOutValue: '2026-05-12',
+      guestsValue: '2',
+    };
+
+    await component.onBookNow();
+
+    expect(bookingService.createReservation).toHaveBeenCalled();
+    const [payload, token] = bookingService.createReservation.calls.mostRecent().args;
+    expect(payload.property_id).toBe('prop-1');
+    expect(payload.user_id).toBe('user-1');
+    expect(payload.user_email).toBe('user@example.com');
+    expect(payload.guests).toBe(2);
+    expect(payload.period_start).toBe('2026-05-10');
+    expect(payload.period_end).toBe('2026-05-12');
+    expect(token).toBe('token-123');
   });
 });

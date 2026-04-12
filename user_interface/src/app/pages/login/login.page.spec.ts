@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Router } from '@angular/router';
+import { ActivatedRoute, convertToParamMap, Router } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { of, throwError } from 'rxjs';
@@ -14,6 +14,11 @@ describe('LoginPage', () => {
   let authService: jasmine.SpyObj<AuthService>;
   let authSessionService: jasmine.SpyObj<AuthSessionService>;
   let router: Router;
+  const activatedRouteMock = {
+    snapshot: {
+      queryParamMap: convertToParamMap({}),
+    },
+  };
 
   const mockLoginResponse: LoginResponse = {
     id_token: 'mock_id_token',
@@ -42,6 +47,7 @@ describe('LoginPage', () => {
       providers: [
         { provide: AuthService, useValue: authServiceSpy },
         { provide: AuthSessionService, useValue: authSessionServiceSpy },
+        { provide: ActivatedRoute, useValue: activatedRouteMock },
         { provide: NavController, useValue: navControllerSpy },
       ],
     }).compileComponents();
@@ -50,6 +56,8 @@ describe('LoginPage', () => {
     authSessionService = TestBed.inject(AuthSessionService) as jasmine.SpyObj<AuthSessionService>;
     router = TestBed.inject(Router);
     spyOn(router, 'navigate').and.resolveTo(true);
+    spyOn(router, 'navigateByUrl').and.resolveTo(true);
+    activatedRouteMock.snapshot.queryParamMap = convertToParamMap({});
     fixture = TestBed.createComponent(LoginPage);
     component = fixture.componentInstance;
     
@@ -289,6 +297,17 @@ describe('LoginPage', () => {
       expect(router.navigate).toHaveBeenCalledWith(['/home']);
     });
 
+    it('should navigate to returnUrl after successful login when provided', async () => {
+      activatedRouteMock.snapshot.queryParamMap = convertToParamMap({ returnUrl: '/propertydetail/prop-1' });
+      component.email = 'user@example.com';
+      component.password = 'password123';
+
+      await component.onSignIn();
+
+      expect(router.navigateByUrl).toHaveBeenCalledWith('/propertydetail/prop-1');
+      expect(router.navigate).not.toHaveBeenCalledWith(['/home']);
+    });
+
     it('should set isLoading to false after successful login', async () => {
       component.email = 'user@example.com';
       component.password = 'password123';
@@ -367,6 +386,7 @@ describe('LoginPage', () => {
       await component.onSignIn();
 
       expect(router.navigate).not.toHaveBeenCalled();
+      expect(router.navigateByUrl).not.toHaveBeenCalled();
     });
   });
 

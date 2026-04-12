@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { HttpErrorResponse } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { ThAmenityItem } from '../../shared/components/th-amenities-summary/th-amenities-summary.component';
 import { ThDetailsMosaicImage } from '../../shared/components/th-details-mosaic/th-details-mosaic.component';
@@ -8,6 +9,9 @@ import { ThGuestReviewItem, ThReviewCategoryScore } from '../../shared/component
 import { PropertyDetailService } from '../../core/services/property-detail.service';
 import { PropertyDetail } from '../../core/models/property-detail.model';
 import { Hotel } from '../../core/models/hotel.model';
+import { AuthSessionService } from '../../core/services/auth-session.service';
+import { BookingService, ReservationRequest } from '../../core/services/booking.service';
+import { PendingBookingService } from '../../core/services/pending-booking.service';
 
 @Component({
   selector: 'app-propertydetail',
@@ -46,7 +50,18 @@ export class PropertydetailPage implements OnInit {
   guestReviews: ThGuestReviewItem[] = [];
 
   isLoading = false;
+  isBooking = false;
   errorMessage = '';
+
+  bookingErrors = {
+    checkIn: '',
+    checkOut: '',
+    guests: '',
+  };
+
+  isAlertOpen = false;
+  alertTitle = '';
+  alertMessage = '';
 
   paymentSummary = {
     title: '$0',
@@ -59,8 +74,14 @@ export class PropertydetailPage implements OnInit {
     totalAmount: '$0',
   };
 
+  private currentPropertyDetail: PropertyDetail | null = null;
+  private nightlyPrice = 0;
+
   constructor(
     private propertyDetailService: PropertyDetailService,
+    private bookingService: BookingService,
+    private authSessionService: AuthSessionService,
+    private pendingBookingService: PendingBookingService,
     private route: ActivatedRoute,
     private router: Router,
   ) {}
@@ -100,9 +121,12 @@ export class PropertydetailPage implements OnInit {
     hotel?: Hotel,
     search?: { startDate?: string; endDate?: string; capacity?: number },
   ): void {
+    this.currentPropertyDetail = detail;
+
     const locationParts = [hotel?.city, hotel?.country].filter((part) => Boolean(part));
     const location = locationParts.length ? locationParts.join(', ') : 'Location unavailable';
     const priceValue = Number.isFinite(hotel?.pricePerNight) ? Number(hotel?.pricePerNight) : 0;
+    this.nightlyPrice = priceValue;
     const currency = hotel?.currency || '$';
     const hotelRating = Number.isFinite(hotel?.rating) ? Number(hotel?.rating) : null;
 
@@ -161,6 +185,119 @@ export class PropertydetailPage implements OnInit {
     this.reviewCategoryScores = [];
 
     this.updatePaymentSummary(priceValue, currency, search);
+
+    this.restorePendingBooking(detail.id);
+  }
+
+  onCheckInChanged(value: string): void {
+    this.paymentSummary.checkInValue = value;
+    this.bookingErrors.checkIn = '';
+  }
+
+  onCheckOutChanged(value: string): void {
+    this.paymentSummary.checkOutValue = value;
+    this.bookingErrors.checkOut = '';
+  }
+
+  onGuestsChanged(value: string): void {
+    this.paymentSummary.guestsValue = value;
+    this.bookingErrors.guests = '';
+  }
+
+  async onBookNow(): Promise<void> {
+    this.resetBookingErrors();
+
+    const normalizedCheckIn = this.normalizeDateForApi(this.paymentSummary.checkInValue);
+    const normalizedCheckOut = this.normalizeDateForApi(this.paymentSummary.checkOutValue);
+    const guests = Number.parseInt(this.paymentSummary.guestsValue, 10);
+
+    if (!normalizedCheckIn) {
+      this.bookingErrors.checkIn = 'Check-in date is required';
+    }
+
+    if (!normalizedCheckOut) {
+      this.bookingErrors.checkOut = 'Check-out date is required';
+    }
+
+    if (normalizedCheckIn && normalizedCheckOut) {
+      const checkInDate = new Date(normalizedCheckIn);
+      const checkOutDate = new Date(normalizedCheckOut);
+      if (checkOutDate.getTime() <= checkInDate.getTime()) {
+        this.bookingErrors.checkOut = 'Check-out must be after check-in';
+      }
+    }
+
+    if (!Number.isFinite(guests) || guests <= 0) {
+      this.bookingErrors.guests = 'Guests must be at least 1';
+    }
+
+    if (this.hasBookingErrors()) {
+      return;
+    }
+
+    const propertyId = this.currentPropertyDetail?.id || this.route.snapshot.paramMap.get('id') || '';
+    if (!propertyId) {
+      this.showAlert('Booking Error', 'Unable to identify the selected property.');
+      return;
+    }
+
+    if (!this.authSessionService.isLoggedIn) {
+      this.pendingBookingService.setPendingBooking({
+        returnUrl: this.router.url,
+        propertyId,
+        checkInValue: this.paymentSummary.checkInValue,
+        checkOutValue: this.paymentSummary.checkOutValue,
+        guestsValue: this.paymentSummary.guestsValue,
+      });
+
+      await this.router.navigate(['/login'], {
+        queryParams: {
+          returnUrl: this.router.url,
+        },
+      });
+      return;
+    }
+
+    const userId = this.authSessionService.userId;
+    const userEmail = this.authSessionService.userEmail;
+
+    if (!userId || !userEmail) {
+      this.showAlert('Booking Error', 'User information is missing. Please sign in again.');
+      return;
+    }
+
+    const reservationPayload: ReservationRequest = {
+      property_id: propertyId,
+      user_id: userId,
+      user_email: userEmail,
+      guests,
+      period_start: normalizedCheckIn as string,
+      period_end: normalizedCheckOut as string,
+      price: this.nightlyPrice,
+      admin_group_id: this.currentPropertyDetail?.adminGroupId || '',
+    };
+
+    this.isBooking = true;
+    try {
+      await firstValueFrom(
+        this.bookingService.createReservation(
+          reservationPayload,
+          this.authSessionService.accessToken,
+        ),
+      );
+
+      this.showAlert('Reservation Created', 'Your booking request was sent successfully.');
+      this.pendingBookingService.clearPendingBooking();
+    } catch (error) {
+      const httpError = error as HttpErrorResponse;
+      const message =
+        typeof httpError.error?.message === 'string'
+          ? httpError.error.message
+          : 'Unable to create reservation. Please try again.';
+      this.showAlert('Booking Error', message);
+    } finally {
+      this.isBooking = false;
+    }
   }
 
   private updatePaymentSummary(
@@ -207,6 +344,61 @@ export class PropertydetailPage implements OnInit {
     const diffMs = end.getTime() - start.getTime();
     const nights = Math.round(diffMs / (1000 * 60 * 60 * 24));
     return nights > 0 ? nights : 0;
+  }
+
+  private resetBookingErrors(): void {
+    this.bookingErrors = {
+      checkIn: '',
+      checkOut: '',
+      guests: '',
+    };
+  }
+
+  private hasBookingErrors(): boolean {
+    return Boolean(
+      this.bookingErrors.checkIn || this.bookingErrors.checkOut || this.bookingErrors.guests,
+    );
+  }
+
+  private normalizeDateForApi(value: string): string | null {
+    const trimmed = (value || '').trim();
+    if (!trimmed) {
+      return null;
+    }
+
+    const isoPattern = /^\d{4}-\d{2}-\d{2}$/;
+    if (isoPattern.test(trimmed)) {
+      return trimmed;
+    }
+
+    const slashPattern = /^(\d{2})\/(\d{2})\/(\d{4})$/;
+    const slashMatch = slashPattern.exec(trimmed);
+    if (slashMatch) {
+      const [, day, month, year] = slashMatch;
+      return `${year}-${month}-${day}`;
+    }
+
+    return null;
+  }
+
+  private restorePendingBooking(propertyId: string): void {
+    const pendingBooking = this.pendingBookingService.consumePendingBookingForProperty(propertyId);
+    if (!pendingBooking) {
+      return;
+    }
+
+    this.paymentSummary = {
+      ...this.paymentSummary,
+      checkInValue: pendingBooking.checkInValue,
+      checkOutValue: pendingBooking.checkOutValue,
+      guestsValue: pendingBooking.guestsValue,
+    };
+  }
+
+  private showAlert(title: string, message: string): void {
+    this.alertTitle = title;
+    this.alertMessage = message;
+    this.isAlertOpen = true;
   }
 
   private getScoreLabel(score: number): string {

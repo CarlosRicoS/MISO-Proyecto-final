@@ -27,6 +27,7 @@ describe('ConfigService', () => {
       apiBaseUrl: 'https://api.example.com',
       propertyApiPath: '/custom-path',
       propertyApiToken: 'token',
+      bookingApiPath: '/booking/custom',
     });
 
     await loadPromise;
@@ -34,6 +35,7 @@ describe('ConfigService', () => {
     expect(service.apiBaseUrl).toBe('https://api.example.com');
     expect(service.propertyApiPath).toBe('/custom-path');
     expect(service.propertyApiToken).toBe('token');
+    expect(service.bookingApiPath).toBe('/booking/custom');
   });
 
   it('falls back to defaults when optional values are missing', async () => {
@@ -47,5 +49,6 @@ describe('ConfigService', () => {
 
     expect(service.propertyApiPath).toBe('/poc-properties/api/property');
     expect(service.propertyApiToken).toBe('');
+    expect(service.bookingApiPath).toBe('/booking-orchestrator/api/reservations');
   });
 });

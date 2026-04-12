@@ -13,6 +13,10 @@ const nextConfig = {
     'https://3pwlikf891.execute-api.us-east-1.amazonaws.com',
   propertyApiPath: process.env.PROPERTY_API_PATH || currentConfig.propertyApiPath || '/poc-properties/api/property',
   propertyApiToken: process.env.PROPERTY_API_TOKEN || currentConfig.propertyApiToken || '',
+  bookingApiPath:
+    process.env.BOOKING_API_PATH ||
+    currentConfig.bookingApiPath ||
+    '/booking-orchestrator/api/reservations',
 };
 
 writeFileSync(configPath, `${JSON.stringify(nextConfig, null, 2)}\n`, 'utf-8');

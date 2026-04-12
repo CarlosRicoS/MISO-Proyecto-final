@@ -69,6 +69,7 @@ export class ThPaymentSummaryComponent implements OnChanges {
   @Input() totalLabel = 'Total';
   @Input() totalAmount = '$610';
   @Input() actionLabel = 'Confirm and pay';
+  @Input() actionDisabled = false;
   @Input() footnote = "You won't be charged yet";
   @Input() trustLeftLabel = 'Secure booking';
   @Input() trustLeftIcon = 'shield-checkmark';
@@ -81,6 +82,11 @@ export class ThPaymentSummaryComponent implements OnChanges {
   @Output() checkInValueChange = new EventEmitter<string>();
   @Output() checkOutValueChange = new EventEmitter<string>();
   @Output() guestsValueChange = new EventEmitter<string>();
+  @Output() actionClick = new EventEmitter<void>();
+
+  @Input() checkInError = '';
+  @Input() checkOutError = '';
+  @Input() guestsError = '';
 
   showCheckInModal = false;
   showCheckOutModal = false;
@@ -138,6 +144,10 @@ export class ThPaymentSummaryComponent implements OnChanges {
     const sanitized = this.sanitizeGuestsValue(value ?? '');
     this.guestsValue = sanitized;
     this.guestsValueChange.emit(sanitized);
+  }
+
+  onActionClicked(): void {
+    this.actionClick.emit();
   }
 
   convertDDMMYYYYToISO(ddmmyyyy: string): string | null {

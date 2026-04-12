@@ -2,6 +2,7 @@ import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import {
   IonAlert,
   IonButton,
@@ -47,6 +48,7 @@ export class LoginPage {
   private readonly authService = inject(AuthService);
   private readonly authSessionService = inject(AuthSessionService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
   email = '';
   password = '';
@@ -136,8 +138,12 @@ export class LoginPage {
 
       this.authSessionService.setLoginResponse(response);
 
-      // Navigate to home.
-      this.router.navigate(['/home']);
+      const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+      if (returnUrl) {
+        await this.router.navigateByUrl(returnUrl);
+      } else {
+        await this.router.navigate(['/home']);
+      }
     } catch (error) {
       const httpError = error as HttpErrorResponse;
       if (httpError.status === 401) {

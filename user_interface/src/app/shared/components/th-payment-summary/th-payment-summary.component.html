@@ -22,11 +22,17 @@
         aria-haspopup="dialog"
       >
         <span class="th-payment-summary__field-label">{{ checkInLabel }}</span>
-        <div class="th-payment-summary__field-value">
+        <div
+          class="th-payment-summary__field-value"
+          [class.th-payment-summary__field-value--error]="!!checkInError"
+        >
           <span>{{ checkInValue || checkInPlaceholder }}</span>
           <ion-icon [name]="checkInIcon" aria-hidden="true"></ion-icon>
         </div>
       </button>
+      <p class="th-payment-summary__field-helper th-payment-summary__field-helper--error" *ngIf="checkInError">
+        {{ checkInError }}
+      </p>
 
       <button
         type="button"
@@ -39,15 +45,24 @@
         aria-haspopup="dialog"
       >
         <span class="th-payment-summary__field-label">{{ checkOutLabel }}</span>
-        <div class="th-payment-summary__field-value">
+        <div
+          class="th-payment-summary__field-value"
+          [class.th-payment-summary__field-value--error]="!!checkOutError"
+        >
           <span>{{ checkOutValue || checkOutPlaceholder }}</span>
           <ion-icon [name]="checkOutIcon" aria-hidden="true"></ion-icon>
         </div>
       </button>
+      <p class="th-payment-summary__field-helper th-payment-summary__field-helper--error" *ngIf="checkOutError">
+        {{ checkOutError }}
+      </p>
 
       <div class="th-payment-summary__field th-payment-summary__field--input">
         <span class="th-payment-summary__field-label">{{ guestsLabel }}</span>
-        <div class="th-payment-summary__field-value th-payment-summary__field-value--input">
+        <div
+          class="th-payment-summary__field-value th-payment-summary__field-value--input"
+          [class.th-payment-summary__field-value--error]="!!guestsError"
+        >
           <ion-input
             class="th-payment-summary__input"
             type="number"
@@ -64,6 +79,9 @@
           ></ion-icon>
         </div>
       </div>
+      <p class="th-payment-summary__field-helper th-payment-summary__field-helper--error" *ngIf="guestsError">
+        {{ guestsError }}
+      </p>
 
       <div class="th-payment-summary__field">
         <label class="th-payment-summary__field-label">{{ roomTypeLabel }}</label>
@@ -99,7 +117,15 @@
     </div>
 
     <div class="th-payment-summary__action">
-      <th-button variant="primary" size="lg" expand="block">{{ actionLabel }}</th-button>
+      <th-button
+        variant="primary"
+        size="lg"
+        expand="block"
+        [disabled]="actionDisabled"
+        (click)="onActionClicked()"
+      >
+        {{ actionLabel }}
+      </th-button>
     </div>
 
     <p class="th-payment-summary__footnote" *ngIf="footnote">
@@ -131,7 +157,9 @@
     </div>
 
     <div class="th-payment-summary__compact-action">
-      <th-button variant="primary" size="md">{{ actionLabel }}</th-button>
+      <th-button variant="primary" size="md" [disabled]="actionDisabled" (click)="onActionClicked()">
+        {{ actionLabel }}
+      </th-button>
     </div>
   </ion-card-content>
 </ion-card>

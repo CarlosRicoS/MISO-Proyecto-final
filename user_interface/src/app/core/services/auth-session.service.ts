@@ -56,6 +56,14 @@ export class AuthSessionService {
     return this.stateSubject.value.loginResponse?.refresh_token ?? '';
   }
 
+  get userId(): string {
+    return this.getClaimValue('sub', 'user_id', 'cognito:username');
+  }
+
+  get userEmail(): string {
+    return this.getClaimValue('email', 'username');
+  }
+
   private readState(): AuthSessionState {
     if (typeof sessionStorage === 'undefined') {
       return { loggedIn: false, loginResponse: null };
@@ -89,5 +97,47 @@ export class AuthSessionService {
     }
 
     sessionStorage.setItem(this.storageKey, JSON.stringify(state.loginResponse));
+  }
+
+  private getClaimValue(...keys: string[]): string {
+    const loginResponse = this.stateSubject.value.loginResponse;
+    const claims = [
+      this.decodeJwtPayload(loginResponse?.id_token ?? ''),
+      this.decodeJwtPayload(loginResponse?.access_token ?? ''),
+    ];
+
+    for (const claimSet of claims) {
+      if (!claimSet) {
+        continue;
+      }
+
+      for (const key of keys) {
+        const value = claimSet[key];
+        if (typeof value === 'string' && value.trim()) {
+          return value;
+        }
+      }
+    }
+
+    return '';
+  }
+
+  private decodeJwtPayload(token: string): Record<string, unknown> | null {
+    if (!token) {
+      return null;
+    }
+
+    const parts = token.split('.');
+    if (parts.length < 2) {
+      return null;
+    }
+
+    try {
+      const normalizedPayload = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+      const decodedPayload = atob(normalizedPayload);
+      return JSON.parse(decodedPayload) as Record<string, unknown>;
+    } catch {
+      return null;
+    }
   }
 }
