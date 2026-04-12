@@ -73,6 +73,14 @@ export class AppComponent implements OnInit, OnDestroy {
     return this.showNavbar || (this.isMobileLayout && this.showMobileTopBar);
   }
 
+  onProfileTabClick(): void {
+    if (this.authSessionService.isLoggedIn) {
+      return;
+    }
+
+    void this.router.navigate(['/login']);
+  }
+
   private handleResize = (): void => {
     this.updateLayout();
   };
