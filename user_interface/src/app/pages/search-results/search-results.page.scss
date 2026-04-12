@@ -1,6 +1,6 @@
 :host {
   display: block;
-  --search-results-navbar-offset: clamp(60px, 6vw, 72px);
+  --search-results-navbar-offset: calc(clamp(60px, 6vw, 72px) + 2px + var(--ion-safe-area-top, 0px));
 }
 
 .search-results-content {

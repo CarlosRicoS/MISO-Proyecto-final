@@ -22,6 +22,7 @@ export class HomePage implements OnInit {
   showCheckInModal = false;
   showCheckOutModal = false;
   tempDate: string | null = null;
+  readonly checkInMinDate = this.getTodayIsoDate();
 
   constructor(
     private hotelsService: HotelsService,
@@ -100,10 +101,20 @@ export class HomePage implements OnInit {
     this.tempDate = null;
   }
 
-  convertDDMMYYYYToISO(ddmmyyyy: string): string {
+  convertDDMMYYYYToISO(ddmmyyyy: string): string | null {
     const parts = ddmmyyyy.split('/');
-    if (parts.length !== 3) return new Date().toISOString().split('T')[0];
+    if (parts.length !== 3) {
+      return null;
+    }
     const [day, month, year] = parts;
+    return `${year}-${month}-${day}`;
+  }
+
+  private getTodayIsoDate(): string {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
   }
 

@@ -39,7 +39,7 @@ export class ThPaymentSummaryComponent implements OnChanges {
   @Input() checkOutPlaceholder = 'mm/dd/yyyy';
   @Input() guestsLabel = 'Guests';
   @Input() guestsValue = '1';
-  @Input() guestsPlaceholder = '1';
+  @Input() guestsPlaceholder = '1 Guest';
   @Input() guestsIcon = 'chevron-down-outline';
   @Input() roomTypeLabel = 'Room Type';
   @Input() roomTypeValue = 'Standard Room';
@@ -76,6 +76,7 @@ export class ThPaymentSummaryComponent implements OnChanges {
   @Input() trustRightLabel = 'Free cancellation';
   @Input() trustRightIcon = 'refresh-circle';
   @Input() mobileSticky = false;
+  @Input() editorResetTrigger: number | string | null = null;
   @Input() compactSuffix = '/night';
   @Input() compactNote = 'Taxes and fees included';
 
@@ -89,6 +90,8 @@ export class ThPaymentSummaryComponent implements OnChanges {
   @Input() guestsError = '';
   @Input() isLoading = false;
 
+  isMobileEditorOpen = false;
+
   showCheckInModal = false;
   showCheckOutModal = false;
   tempDate: string | null = null;
@@ -98,6 +101,25 @@ export class ThPaymentSummaryComponent implements OnChanges {
     if (changes['guestsValue']) {
       this.guestsValue = this.sanitizeGuestsValue(this.guestsValue);
     }
+
+    if (changes['mobileSticky'] && !this.mobileSticky) {
+      this.isMobileEditorOpen = false;
+    }
+
+    if (changes['editorResetTrigger'] && this.mobileSticky) {
+      this.isMobileEditorOpen = false;
+    }
+
+    if ((changes['checkInError'] || changes['checkOutError'] || changes['guestsError']) && this.mobileSticky) {
+      const hasErrors = Boolean(this.checkInError || this.checkOutError || this.guestsError);
+      if (hasErrors) {
+        this.isMobileEditorOpen = true;
+      }
+    }
+  }
+
+  toggleMobileEditor(): void {
+    this.isMobileEditorOpen = !this.isMobileEditorOpen;
   }
 
   onCheckInActivated(): void {
@@ -149,6 +171,10 @@ export class ThPaymentSummaryComponent implements OnChanges {
   }
 
   onActionClicked(): void {
+    if (this.mobileSticky && (this.checkInError || this.checkOutError || this.guestsError)) {
+      this.isMobileEditorOpen = true;
+    }
+
     this.actionClick.emit();
   }
 

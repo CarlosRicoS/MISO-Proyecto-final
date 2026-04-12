@@ -75,6 +75,8 @@ export class PropertydetailPage implements OnInit {
     totalAmount: '$0',
   };
 
+  paymentSummaryResetVersion = 0;
+
   private currentPropertyDetail: PropertyDetail | null = null;
   private nightlyPrice = 0;
 
@@ -188,6 +190,7 @@ export class PropertydetailPage implements OnInit {
     this.updatePaymentSummary(priceValue, currency, search);
 
     this.restorePendingBooking(detail.id);
+    this.paymentSummaryResetVersion += 1;
   }
 
   onCheckInChanged(value: string): void {
@@ -414,8 +417,19 @@ export class PropertydetailPage implements OnInit {
     this.isAlertOpen = false;
     if (this.bookingSuccess) {
       this.bookingSuccess = false;
+      this.clearLoadedPropertyDetails();
       this.router.navigate(['/home']);
     }
+  }
+
+  private clearLoadedPropertyDetails(): void {
+    this.currentPropertyDetail = null;
+    this.descriptionParagraphs = [];
+    this.amenities = [];
+    this.reviewCategoryScores = [];
+    this.guestReviews = [];
+    this.summaryItems = [];
+    this.nightlyPrice = 0;
   }
 
   private getScoreLabel(score: number): string {
