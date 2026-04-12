@@ -21,6 +21,7 @@ import {
   ThInputState,
 } from '../../shared/components/th-input/th-input.component';
 import { AuthService } from '../../core/services/auth.service';
+import { AuthSessionService } from '../../core/services/auth-session.service';
 
 @Component({
   selector: 'app-login',
@@ -44,6 +45,7 @@ import { AuthService } from '../../core/services/auth.service';
 })
 export class LoginPage {
   private readonly authService = inject(AuthService);
+  private readonly authSessionService = inject(AuthSessionService);
   private readonly router = inject(Router);
 
   email = '';
@@ -132,12 +134,7 @@ export class LoginPage {
         this.authService.login(this.email.trim(), this.password),
       );
 
-      // Persist tokens for subsequent authenticated requests.
-      localStorage.setItem('id_token', response.id_token);
-      localStorage.setItem('access_token', response.access_token);
-      localStorage.setItem('refresh_token', response.refresh_token);
-      localStorage.setItem('expires_in', String(response.expires_in));
-      localStorage.setItem('token_type', response.token_type);
+      this.authSessionService.setLoginResponse(response);
 
       // Navigate to home.
       this.router.navigate(['/home']);

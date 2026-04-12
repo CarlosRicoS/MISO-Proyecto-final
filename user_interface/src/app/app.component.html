@@ -1,13 +1,13 @@
 <ion-app [class.app-has-navbar]="hasTopBar" [class.app-no-navbar]="!hasTopBar">
   <ion-header *ngIf="showNavbar && !isMobileLayout" slot="fixed">
-    <th-navbar mode="auth" layout="desktop"></th-navbar>
+    <th-navbar [mode]="navbarMode" layout="desktop"></th-navbar>
   </ion-header>
   <ion-header
     *ngIf="showMobileTopBar && isMobileLayout"
     slot="fixed"
     [class.app-header--mobile-search-results]="isSearchResultsRoute"
   >
-    <th-navbar mode="auth" layout="mobile"></th-navbar>
+    <th-navbar [mode]="navbarMode" layout="mobile"></th-navbar>
   </ion-header>
   <ion-router-outlet
     class="site-content"

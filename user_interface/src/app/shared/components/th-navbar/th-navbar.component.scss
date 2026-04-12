@@ -216,6 +216,10 @@
   text-transform: none;
 }
 
+.th-navbar__primary-btn::part(native) {
+  color: var(--th-white);
+}
+
 @media (max-width: 900px) {
   .th-navbar--layout-desktop .th-navbar__inner--desktop {
     display: flex;

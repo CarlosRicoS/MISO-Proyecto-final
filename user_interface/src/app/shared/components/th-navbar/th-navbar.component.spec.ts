@@ -22,6 +22,21 @@ describe('ThNavbarComponent', () => {
     expect(component.isSearchResults).toBeTrue();
   });
 
+  it('detects property detail route', () => {
+    TestBed.configureTestingModule({
+      imports: [ThNavbarComponent],
+      providers: [
+        { provide: Router, useValue: { url: '/propertydetail/123' } },
+        { provide: ActivatedRoute, useValue: {} },
+      ],
+    });
+
+    const fixture = TestBed.createComponent(ThNavbarComponent);
+    const component = fixture.componentInstance;
+
+    expect(component.isPropertyDetail).toBeTrue();
+  });
+
   it('returns false for non-results routes', () => {
     TestBed.configureTestingModule({
       imports: [ThNavbarComponent],
