@@ -56,7 +56,7 @@
   border-radius: var(--th-radius-lg);
   text-align: left;
   cursor: pointer;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
 
 .th-filter__field--input {
@@ -72,6 +72,17 @@
   outline: none;
   border-color: var(--th-primary-500);
   box-shadow: 0 0 0 2px rgba(59, 99, 247, 0.2);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .th-filter__field:hover {
+    border-color: var(--th-primary-300);
+    box-shadow: 0 1px 0 rgba(59, 99, 247, 0.12);
+  }
+}
+
+.th-filter__field:active {
+  transform: translateY(1px);
 }
 
 .th-filter__icon {
@@ -105,13 +116,15 @@
   padding: 0;
 }
 
-::ng-deep .th-filter__input::part(native)[type='number']::-webkit-outer-spin-button,
-::ng-deep .th-filter__input::part(native)[type='number']::-webkit-inner-spin-button {
+::ng-deep .th-filter__group--guests .th-filter__input::part(native)::-webkit-outer-spin-button,
+::ng-deep .th-filter__group--guests .th-filter__input::part(native)::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
 
-::ng-deep .th-filter__input::part(native)[type='number'] {
+::ng-deep .th-filter__group--guests .th-filter__input::part(native) {
+  -webkit-appearance: textfield;
+  appearance: textfield;
   -moz-appearance: textfield;
 }
 
@@ -152,7 +165,14 @@
   --text-transform: none;
   text-transform: none;
   cursor: pointer;
-  transition: background 0.2s ease, transform 0.2s ease;
+  transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .th-filter__action:not(:disabled):hover {
+    --background: var(--th-primary-600);
+    box-shadow: 0 8px 16px rgba(59, 99, 247, 0.2);
+  }
 }
 
 .th-filter__action:active {

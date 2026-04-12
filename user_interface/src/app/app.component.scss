@@ -35,7 +35,7 @@ ion-app {
 	--border-color: #e5e7eb;
 	--min-height: 64px;
 	border-top: 1px solid #e5e7eb;
-	padding: 6px 16px calc(6px + var(--ion-safe-area-bottom, 0px));
+	padding: 6px 0px calc(6px + var(--ion-safe-area-bottom, 0px));
 }
 
 .mobile-tab-bar::part(container) {

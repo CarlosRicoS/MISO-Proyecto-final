@@ -47,3 +47,43 @@
 		--padding-top: 0;
 	}
 }
+
+/* Remove Chrome/Safari number spinners for th-filter guests input. */
+ion-input.th-filter__input[type='number'] input[type='number'] {
+	-webkit-appearance: textfield !important;
+	appearance: textfield !important;
+	-moz-appearance: textfield !important;
+}
+
+ion-input.th-filter__input[type='number'] input[type='number']::-webkit-outer-spin-button,
+ion-input.th-filter__input[type='number'] input[type='number']::-webkit-inner-spin-button {
+	-webkit-appearance: none !important;
+	margin: 0;
+}
+
+/* Shadow-part fallback for engines/builds that expose ion-input native part. */
+ion-input.th-filter__input[type='number']::part(native) {
+	-webkit-appearance: textfield;
+	appearance: textfield;
+	-moz-appearance: textfield;
+}
+
+/* Remove Chrome/Safari number spinners for th-payment-summary guests input. */
+ion-input.th-payment-summary__input[type='number'] input[type='number'] {
+	-webkit-appearance: textfield !important;
+	appearance: textfield !important;
+	-moz-appearance: textfield !important;
+}
+
+ion-input.th-payment-summary__input[type='number'] input[type='number']::-webkit-outer-spin-button,
+ion-input.th-payment-summary__input[type='number'] input[type='number']::-webkit-inner-spin-button {
+	-webkit-appearance: none !important;
+	margin: 0;
+}
+
+/* Shadow-part fallback for engines/builds that expose ion-input native part. */
+ion-input.th-payment-summary__input[type='number']::part(native) {
+	-webkit-appearance: textfield;
+	appearance: textfield;
+	-moz-appearance: textfield;
+}

@@ -102,32 +102,34 @@
   border-radius: var(--th-radius-lg);
 }
 
-@media (max-width: 767px) {
-  .search-results-content {
-    --padding-top: var(--search-results-navbar-offset);
-  }
+:host-context(ion-app.app-has-navbar) {
+  @media (max-width: 767px) {
+    .search-results-content {
+      --padding-top: var(--search-results-navbar-offset);
+    }
 
-  .search-results-content::part(scroll) {
-    padding-top: var(--search-results-navbar-offset);
-  }
+    .search-results-content::part(scroll) {
+      padding-top: var(--search-results-navbar-offset);
+    }
 
-  .search-results-hero {
-    padding-top: 18px;
-  }
+    .search-results-hero {
+      padding-top: 18px;
+    }
 
-  .search-results-list__sticky-header {
-    padding-top: 0;
-  }
+    .search-results-list__sticky-header {
+      padding-top: 0;
+    }
 
-  .search-results-list__summary {
-    margin: 0;
-  }
+    .search-results-list__summary {
+      margin: 0;
+    }
 
-  .search-results-list__sticky-header .search-results-list__inner {
-    padding-top: 0;
-  }
+    .search-results-list__sticky-header .search-results-list__inner {
+      padding-top: 0;
+    }
 
-  .search-results-list__count {
-    padding-top: 6px;
+    .search-results-list__count {
+      padding-top: 6px;
+    }
   }
 }

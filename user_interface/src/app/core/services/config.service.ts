@@ -6,6 +6,7 @@ interface AppConfig {
   apiBaseUrl: string;
   propertyApiPath?: string;
   propertyApiToken?: string;
+  bookingApiPath?: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -14,6 +15,7 @@ export class ConfigService {
     apiBaseUrl: '',
     propertyApiPath: '/poc-properties/api/property',
     propertyApiToken: '',
+    bookingApiPath: '/booking-orchestrator/api/reservations',
   };
 
   constructor(private http: HttpClient) {}
@@ -34,5 +36,9 @@ export class ConfigService {
 
   get propertyApiToken(): string {
     return this.config.propertyApiToken || '';
+  }
+
+  get bookingApiPath(): string {
+    return this.config.bookingApiPath || '/booking-orchestrator/api/reservations';
   }
 }

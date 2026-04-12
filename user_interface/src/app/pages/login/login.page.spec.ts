@@ -1,17 +1,24 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Router } from '@angular/router';
+import { ActivatedRoute, convertToParamMap, Router } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { of, throwError } from 'rxjs';
 import { LoginPage } from './login.page';
 import { AuthService, LoginResponse } from '../../core/services/auth.service';
 import { NavController } from '@ionic/angular';
+import { AuthSessionService } from '../../core/services/auth-session.service';
 
 describe('LoginPage', () => {
   let component: LoginPage;
   let fixture: ComponentFixture<LoginPage>;
   let authService: jasmine.SpyObj<AuthService>;
+  let authSessionService: jasmine.SpyObj<AuthSessionService>;
   let router: Router;
+  const activatedRouteMock = {
+    snapshot: {
+      queryParamMap: convertToParamMap({}),
+    },
+  };
 
   const mockLoginResponse: LoginResponse = {
     id_token: 'mock_id_token',
@@ -23,6 +30,7 @@ describe('LoginPage', () => {
 
   beforeEach(async () => {
     const authServiceSpy = jasmine.createSpyObj('AuthService', ['login']);
+    const authSessionServiceSpy = jasmine.createSpyObj('AuthSessionService', ['setLoginResponse']);
     const navControllerSpy = jasmine.createSpyObj('NavController', [
       'navigateForward',
       'navigateBack',
@@ -38,13 +46,18 @@ describe('LoginPage', () => {
       imports: [LoginPage, HttpClientTestingModule, RouterTestingModule],
       providers: [
         { provide: AuthService, useValue: authServiceSpy },
+        { provide: AuthSessionService, useValue: authSessionServiceSpy },
+        { provide: ActivatedRoute, useValue: activatedRouteMock },
         { provide: NavController, useValue: navControllerSpy },
       ],
     }).compileComponents();
 
     authService = TestBed.inject(AuthService) as jasmine.SpyObj<AuthService>;
+    authSessionService = TestBed.inject(AuthSessionService) as jasmine.SpyObj<AuthSessionService>;
     router = TestBed.inject(Router);
     spyOn(router, 'navigate').and.resolveTo(true);
+    spyOn(router, 'navigateByUrl').and.resolveTo(true);
+    activatedRouteMock.snapshot.queryParamMap = convertToParamMap({});
     fixture = TestBed.createComponent(LoginPage);
     component = fixture.componentInstance;
     
@@ -241,7 +254,7 @@ describe('LoginPage', () => {
   describe('Sign In - Successful Login', () => {
     beforeEach(() => {
       authService.login.and.returnValue(of(mockLoginResponse));
-      spyOn(localStorage, 'setItem');
+      authSessionService.setLoginResponse.calls.reset();
     });
 
     it('should call authService.login with trimmed email and password', async () => {
@@ -266,49 +279,13 @@ describe('LoginPage', () => {
       });
     });
 
-    it('should persist id_token to localStorage', async () => {
+    it('should persist the login response in auth session state', async () => {
       component.email = 'user@example.com';
       component.password = 'password123';
 
       await component.onSignIn();
 
-      expect(localStorage.setItem).toHaveBeenCalledWith('id_token', 'mock_id_token');
-    });
-
-    it('should persist access_token to localStorage', async () => {
-      component.email = 'user@example.com';
-      component.password = 'password123';
-
-      await component.onSignIn();
-
-      expect(localStorage.setItem).toHaveBeenCalledWith('access_token', 'mock_access_token');
-    });
-
-    it('should persist refresh_token to localStorage', async () => {
-      component.email = 'user@example.com';
-      component.password = 'password123';
-
-      await component.onSignIn();
-
-      expect(localStorage.setItem).toHaveBeenCalledWith('refresh_token', 'mock_refresh_token');
-    });
-
-    it('should persist expires_in to localStorage as string', async () => {
-      component.email = 'user@example.com';
-      component.password = 'password123';
-
-      await component.onSignIn();
-
-      expect(localStorage.setItem).toHaveBeenCalledWith('expires_in', '3600');
-    });
-
-    it('should persist token_type to localStorage', async () => {
-      component.email = 'user@example.com';
-      component.password = 'password123';
-
-      await component.onSignIn();
-
-      expect(localStorage.setItem).toHaveBeenCalledWith('token_type', 'Bearer');
+      expect(authSessionService.setLoginResponse).toHaveBeenCalledWith(mockLoginResponse);
     });
 
     it('should navigate to home after successful login', async () => {
@@ -318,6 +295,17 @@ describe('LoginPage', () => {
       await component.onSignIn();
 
       expect(router.navigate).toHaveBeenCalledWith(['/home']);
+    });
+
+    it('should navigate to returnUrl after successful login when provided', async () => {
+      activatedRouteMock.snapshot.queryParamMap = convertToParamMap({ returnUrl: '/propertydetail/prop-1' });
+      component.email = 'user@example.com';
+      component.password = 'password123';
+
+      await component.onSignIn();
+
+      expect(router.navigateByUrl).toHaveBeenCalledWith('/propertydetail/prop-1');
+      expect(router.navigate).not.toHaveBeenCalledWith(['/home']);
     });
 
     it('should set isLoading to false after successful login', async () => {
@@ -398,6 +386,7 @@ describe('LoginPage', () => {
       await component.onSignIn();
 
       expect(router.navigate).not.toHaveBeenCalled();
+      expect(router.navigateByUrl).not.toHaveBeenCalled();
     });
   });
 
@@ -525,36 +514,19 @@ describe('LoginPage', () => {
     });
   });
 
-  describe('localStorage Security', () => {
+  describe('Auth Session Persistence', () => {
     beforeEach(() => {
       authService.login.and.returnValue(of(mockLoginResponse));
-      spyOn(localStorage, 'setItem');
+      authSessionService.setLoginResponse.calls.reset();
     });
 
-    it('should persist all five token types', async () => {
+    it('should persist the login response in the shared session service', async () => {
       component.email = 'user@example.com';
       component.password = 'password';
 
       await component.onSignIn();
 
-      expect(localStorage.setItem).toHaveBeenCalledWith('id_token', jasmine.any(String));
-      expect(localStorage.setItem).toHaveBeenCalledWith('access_token', jasmine.any(String));
-      expect(localStorage.setItem).toHaveBeenCalledWith('refresh_token', jasmine.any(String));
-      expect(localStorage.setItem).toHaveBeenCalledWith('expires_in', jasmine.any(String));
-      expect(localStorage.setItem).toHaveBeenCalledWith('token_type', jasmine.any(String));
-    });
-
-    it('should store expires_in as string not number', async () => {
-      component.email = 'user@example.com';
-      component.password = 'password';
-
-      await component.onSignIn();
-
-      const callsWithExpiresIn = (localStorage.setItem as jasmine.Spy).calls.all()
-        .filter(call => call.args[0] === 'expires_in');
-      
-      expect(callsWithExpiresIn.length).toBeGreaterThan(0);
-      expect(typeof callsWithExpiresIn[0].args[1]).toBe('string');
+      expect(authSessionService.setLoginResponse).toHaveBeenCalledWith(mockLoginResponse);
     });
   });
 })

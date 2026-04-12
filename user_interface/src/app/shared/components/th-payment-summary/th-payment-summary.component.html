@@ -11,29 +11,77 @@
     </div>
 
     <div class="th-payment-summary__field-list">
-      <div class="th-payment-summary__field">
-        <label class="th-payment-summary__field-label">{{ checkInLabel }}</label>
-        <div class="th-payment-summary__field-value">
-          <span>{{ checkInValue }}</span>
+      <button
+        type="button"
+        class="th-payment-summary__field th-payment-summary__field--interactive"
+        (click)="onCheckInActivated()"
+        (focus)="onCheckInActivated()"
+        (keydown.enter)="onCheckInActivated()"
+        (keydown.space)="$event.preventDefault(); onCheckInActivated()"
+        [attr.aria-label]="checkInLabel"
+        aria-haspopup="dialog"
+      >
+        <span class="th-payment-summary__field-label">{{ checkInLabel }}</span>
+        <div
+          class="th-payment-summary__field-value"
+          [class.th-payment-summary__field-value--error]="!!checkInError"
+        >
+          <span>{{ checkInValue || checkInPlaceholder }}</span>
           <ion-icon [name]="checkInIcon" aria-hidden="true"></ion-icon>
         </div>
-      </div>
+      </button>
+      <p class="th-payment-summary__field-helper th-payment-summary__field-helper--error" *ngIf="checkInError">
+        {{ checkInError }}
+      </p>
 
-      <div class="th-payment-summary__field">
-        <label class="th-payment-summary__field-label">{{ checkOutLabel }}</label>
-        <div class="th-payment-summary__field-value">
-          <span>{{ checkOutValue }}</span>
+      <button
+        type="button"
+        class="th-payment-summary__field th-payment-summary__field--interactive"
+        (click)="onCheckOutActivated()"
+        (focus)="onCheckOutActivated()"
+        (keydown.enter)="onCheckOutActivated()"
+        (keydown.space)="$event.preventDefault(); onCheckOutActivated()"
+        [attr.aria-label]="checkOutLabel"
+        aria-haspopup="dialog"
+      >
+        <span class="th-payment-summary__field-label">{{ checkOutLabel }}</span>
+        <div
+          class="th-payment-summary__field-value"
+          [class.th-payment-summary__field-value--error]="!!checkOutError"
+        >
+          <span>{{ checkOutValue || checkOutPlaceholder }}</span>
           <ion-icon [name]="checkOutIcon" aria-hidden="true"></ion-icon>
         </div>
-      </div>
+      </button>
+      <p class="th-payment-summary__field-helper th-payment-summary__field-helper--error" *ngIf="checkOutError">
+        {{ checkOutError }}
+      </p>
 
-      <div class="th-payment-summary__field">
-        <label class="th-payment-summary__field-label">{{ guestsLabel }}</label>
-        <div class="th-payment-summary__field-value">
-          <span>{{ guestsValue }}</span>
-          <ion-icon [name]="guestsIcon" aria-hidden="true"></ion-icon>
+      <div class="th-payment-summary__field th-payment-summary__field--input">
+        <span class="th-payment-summary__field-label">{{ guestsLabel }}</span>
+        <div
+          class="th-payment-summary__field-value th-payment-summary__field-value--input"
+          [class.th-payment-summary__field-value--error]="!!guestsError"
+        >
+          <ion-input
+            class="th-payment-summary__input"
+            type="number"
+            inputmode="numeric"
+            pattern="[0-9]*"
+            [placeholder]="guestsPlaceholder"
+            [value]="guestsValue"
+            (ionInput)="onGuestsInput($event.detail.value)"
+          ></ion-input>
+           <ion-icon
+            name="people-outline"
+            class="th-payment-summary__field-icon"
+            aria-hidden="true"
+          ></ion-icon>
         </div>
       </div>
+      <p class="th-payment-summary__field-helper th-payment-summary__field-helper--error" *ngIf="guestsError">
+        {{ guestsError }}
+      </p>
 
       <div class="th-payment-summary__field">
         <label class="th-payment-summary__field-label">{{ roomTypeLabel }}</label>
@@ -69,7 +117,22 @@
     </div>
 
     <div class="th-payment-summary__action">
-      <th-button variant="primary" size="lg" expand="block">{{ actionLabel }}</th-button>
+      <th-button
+        variant="primary"
+        size="lg"
+        expand="block"
+        [disabled]="actionDisabled || isLoading"
+        (click)="onActionClicked()"
+      >
+        <span class="th-payment-summary__button-content">
+          <ion-spinner
+            *ngIf="isLoading"
+            name="crescent"
+            class="th-payment-summary__spinner"
+          ></ion-spinner>
+          <span>{{ actionLabel }}</span>
+        </span>
+      </th-button>
     </div>
 
     <p class="th-payment-summary__footnote" *ngIf="footnote">
@@ -101,7 +164,38 @@
     </div>
 
     <div class="th-payment-summary__compact-action">
-      <th-button variant="primary" size="md">{{ actionLabel }}</th-button>
+      <th-button variant="primary" size="md" [disabled]="actionDisabled || isLoading" (click)="onActionClicked()">
+        <span class="th-payment-summary__button-content">
+          <ion-spinner
+            *ngIf="isLoading"
+            name="crescent"
+            class="th-payment-summary__spinner"
+          ></ion-spinner>
+          <span>{{ actionLabel }}</span>
+        </span>
+      </th-button>
     </div>
   </ion-card-content>
 </ion-card>
+
+<th-datetime-modal
+  [isOpen]="showCheckInModal"
+  title="Select Check-in Date"
+  [selectedDate]="tempDate"
+  [minDate]="checkInMinDate"
+  confirmLabel="Confirm"
+  cancelLabel="Cancel"
+  (dateSelected)="onCheckInConfirmed($event)"
+  (cancelled)="onCheckInCancelled()"
+></th-datetime-modal>
+
+<th-datetime-modal
+  [isOpen]="showCheckOutModal"
+  title="Select Check-out Date"
+  [selectedDate]="tempDate"
+  [minDate]="convertDDMMYYYYToISO(checkInValue)"
+  confirmLabel="Confirm"
+  cancelLabel="Cancel"
+  (dateSelected)="onCheckOutConfirmed($event)"
+  (cancelled)="onCheckOutCancelled()"
+></th-datetime-modal>

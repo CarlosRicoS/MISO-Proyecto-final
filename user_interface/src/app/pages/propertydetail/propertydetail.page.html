@@ -1,3 +1,11 @@
+<ion-alert
+  [isOpen]="isAlertOpen"
+  [header]="alertTitle"
+  [message]="alertMessage"
+  [buttons]="['OK']"
+  (didDismiss)="onAlertDismissed()"
+></ion-alert>
+
 <ion-content class="propertydetail-content">
   <section class="propertydetail-main" *ngIf="!isLoading && !errorMessage">
     <div class="propertydetail-main__inner">
@@ -62,10 +70,16 @@
           [promoText]="paymentSummary.promoText"
           checkInLabel="Check-in"
           [checkInValue]="paymentSummary.checkInValue"
+          [checkInError]="bookingErrors.checkIn"
+          (checkInValueChange)="onCheckInChanged($event)"
           checkOutLabel="Check-out"
           [checkOutValue]="paymentSummary.checkOutValue"
+          [checkOutError]="bookingErrors.checkOut"
+          (checkOutValueChange)="onCheckOutChanged($event)"
           guestsLabel="Guests"
           [guestsValue]="paymentSummary.guestsValue"
+          [guestsError]="bookingErrors.guests"
+          (guestsValueChange)="onGuestsChanged($event)"
           roomTypeLabel="Room Type"
           [roomTypeValue]="paymentSummary.roomTypeValue"
           [items]="summaryItems"
@@ -73,6 +87,9 @@
           totalLabel="Total"
           [totalAmount]="paymentSummary.totalAmount"
           actionLabel="Book Now"
+          [actionDisabled]="isBooking"
+          [isLoading]="isBooking"
+          (actionClick)="onBookNow()"
           footnote="You won't be charged yet"
           trustLeftLabel="Secure booking"
           trustRightLabel="Free cancellation"

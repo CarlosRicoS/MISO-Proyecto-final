@@ -62,6 +62,34 @@
   gap: 6px;
 }
 
+.th-payment-summary__field--interactive {
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+}
+
+.th-payment-summary__field--interactive:focus-visible {
+  outline: 2px solid var(--th-primary-500);
+  outline-offset: 2px;
+  border-radius: 10px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .th-payment-summary__field--interactive:hover .th-payment-summary__field-value {
+    border-color: var(--th-primary-300);
+    box-shadow: 0 1px 0 rgba(59, 99, 247, 0.12);
+  }
+}
+
+.th-payment-summary__field--interactive:active .th-payment-summary__field-value {
+  transform: translateY(1px);
+}
+
 .th-payment-summary__field-label {
   font-size: 14px;
   font-weight: 600;
@@ -83,6 +111,83 @@
     color: #8d96a4;
     font-size: 16px;
   }
+}
+
+.th-payment-summary__field-value--error {
+  border-color: var(--th-error-500);
+  background: var(--th-error-50);
+
+  ion-icon {
+    color: var(--th-error-500);
+  }
+}
+
+.th-payment-summary__field-helper {
+  margin: -2px 0 0;
+  font-size: var(--th-text-body-sm-size);
+  line-height: var(--th-text-body-sm-line-height);
+  color: var(--th-neutral-600);
+}
+
+.th-payment-summary__field-helper--error {
+  color: var(--th-error-500);
+}
+
+.th-payment-summary__field-value--input {
+  justify-content: flex-start;
+  gap: 10px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.th-payment-summary__field-icon {
+  color: var(--th-neutral-700);
+  font-size: 18px;
+  flex: 0 0 auto;
+}
+
+.th-payment-summary__field--input:focus-within .th-payment-summary__field-value--input {
+  border-color: var(--th-primary-500);
+  box-shadow: 0 0 0 2px rgba(59, 99, 247, 0.2);
+}
+
+.th-payment-summary__field--input:focus-within .th-payment-summary__field-label {
+  color: var(--th-primary-500);
+}
+
+.th-payment-summary__input {
+  --padding-start: 0px;
+  --padding-end: 0px;
+  --padding-top: 0px;
+  --padding-bottom: 0px;
+  --highlight-height: 0px;
+  --highlight-color-focused: transparent;
+  --highlight-color-valid: transparent;
+  --highlight-color-invalid: transparent;
+  font-size: 14px;
+  line-height: 1.2;
+  font-weight: 500;
+  color: #1f2937;
+  flex: 1 1 auto;
+}
+
+::ng-deep .th-payment-summary__input::part(native) {
+  padding: 0;
+}
+
+::ng-deep .th-payment-summary__input[type='number']::part(native)::-webkit-outer-spin-button,
+::ng-deep .th-payment-summary__input[type='number']::part(native)::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+::ng-deep .th-payment-summary__input[type='number']::part(native) {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.th-payment-summary__field--interactive .th-payment-summary__field-label,
+.th-payment-summary__field--interactive .th-payment-summary__field-value {
+  pointer-events: none;
 }
 
 .th-payment-summary__rows {
@@ -172,6 +277,18 @@
   --background-activated: var(--th-primary-700);
   --color: var(--th-white);
   --box-shadow: 0 6px 14px rgba(45, 79, 214, 0.28);
+}
+
+.th-payment-summary__button-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.th-payment-summary__spinner {
+  height: 20px;
+  width: 20px;
 }
 
 .th-payment-summary__footnote {

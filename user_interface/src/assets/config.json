@@ -1,5 +1,6 @@
 {
-  "apiBaseUrl": "http://10.0.2.2:8080",
+  "apiBaseUrl": "https://3pwlikf891.execute-api.us-east-1.amazonaws.com",
   "propertyApiPath": "/poc-properties/api/property",
-  "propertyApiToken": ""
+  "propertyApiToken": "",
+  "bookingApiPath": "/booking-orchestrator/api/reservations"
 }

@@ -8,10 +8,12 @@ const routes: Routes = [
   },
   {
     path: 'search-results',
+    data: { hideNavbar: true },
     loadChildren: () => import('./pages/search-results/search-results.module').then( m => m.SearchResultsPageModule)
   },
   {
     path: 'propertydetail',
+    data: { hideNavbar: true },
     loadChildren: () => import('./pages/propertydetail/propertydetail.module').then(m => m.PropertydetailPageModule)
   },
   {

@@ -3,7 +3,7 @@
   --padding-end: 0;
   --padding-top: 0;
   --padding-bottom: 0;
-  margin-top: calc(clamp(60px, 6vw, 72px) + 2px);
+  margin-top: 0;
 }
 
 .propertydetail-main {
@@ -101,7 +101,7 @@
   }
 
   .propertydetail-main {
-    height: calc(100vh - (clamp(60px, 6vw, 72px) + 2px));
+    height: 100vh;
   }
 
   .propertydetail-main__inner {
@@ -143,11 +143,28 @@
 
 @media (max-width: 720px) {
   .propertydetail-content {
-    margin-top: 0;
-    --padding-top: calc(clamp(60px, 6vw, 72px) + 2px + var(--ion-safe-area-top, 0px));
+    --padding-top: 0;
   }
 
   .propertydetail-main__inner {
     padding: 0 0 calc(164px + var(--ion-safe-area-bottom, 0px));
+  }
+}
+
+:host-context(ion-app.app-has-navbar) {
+  .propertydetail-content {
+    margin-top: calc(clamp(60px, 6vw, 72px) + 2px);
+  }
+
+  @media (min-width: 721px) {
+    .propertydetail-main {
+      height: calc(100vh - (clamp(60px, 6vw, 72px) + 2px));
+    }
+  }
+
+  @media (max-width: 720px) {
+    .propertydetail-content {
+      --padding-top: calc(clamp(60px, 6vw, 72px) + 2px + var(--ion-safe-area-top, 0px));
+    }
   }
 }
