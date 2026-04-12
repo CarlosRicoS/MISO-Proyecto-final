@@ -50,6 +50,14 @@ export class AppComponent implements OnInit, OnDestroy {
     return this.router.url.startsWith('/search-results');
   }
 
+  get showMobileTopBar(): boolean {
+    return this.showNavbar || this.isSearchResultsRoute || this.isPropertyDetailRoute;
+  }
+
+  get hasTopBar(): boolean {
+    return this.showNavbar || (this.isMobileLayout && this.showMobileTopBar);
+  }
+
   private handleResize = (): void => {
     this.updateLayout();
   };
@@ -72,7 +80,9 @@ export class AppComponent implements OnInit, OnDestroy {
 
   private updateNavbarVisibility(): void {
     const activeRoute = this.getDeepestChild(this.route);
-    const hideNavbar = Boolean(activeRoute.snapshot.data?.['hideNavbar']);
+    const hideNavbar = activeRoute.pathFromRoot.some((route) =>
+      Boolean(route.snapshot.data?.['hideNavbar'])
+    );
     this.showNavbar = !hideNavbar;
   }
 

@@ -1,16 +1,20 @@
-<ion-app [class.app-has-navbar]="showNavbar" [class.app-no-navbar]="!showNavbar">
+<ion-app [class.app-has-navbar]="hasTopBar" [class.app-no-navbar]="!hasTopBar">
   <ion-header *ngIf="showNavbar && !isMobileLayout" slot="fixed">
-    <th-navbar mode="full" layout="desktop"></th-navbar>
+    <th-navbar mode="auth" layout="desktop"></th-navbar>
   </ion-header>
   <ion-header
-    *ngIf="showNavbar && isMobileLayout"
+    *ngIf="showMobileTopBar && isMobileLayout"
     slot="fixed"
     [class.app-header--mobile-search-results]="isSearchResultsRoute"
   >
-    <th-navbar mode="full" layout="mobile"></th-navbar>
+    <th-navbar mode="auth" layout="mobile"></th-navbar>
   </ion-header>
-  <ion-router-outlet class="site-content" [class.site-content--detail-mobile]="isPropertyDetailRoute"></ion-router-outlet>
-  <ion-footer slot="fixed" appPlatformText appPlatformShow="mobile" *ngIf="!isPropertyDetailRoute">
+  <ion-router-outlet
+    class="site-content"
+    [class.site-content--no-navbar]="!hasTopBar"
+    [class.site-content--detail-mobile]="isPropertyDetailRoute"
+  ></ion-router-outlet>
+  <ion-footer slot="fixed" appPlatformText appPlatformShow="mobile" *ngIf="showNavbar && !isPropertyDetailRoute">
     <ion-toolbar class="mobile-tab-bar">
       <ion-buttons class="mobile-tab-bar__buttons" slot="start">
         <ion-button class="mobile-tab-bar__button" fill="clear" routerLink="/home" routerLinkActive="is-active" [routerLinkActiveOptions]="{ exact: true }">

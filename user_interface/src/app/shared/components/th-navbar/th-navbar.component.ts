@@ -15,7 +15,7 @@ export type ThNavbarLayout = 'auto' | 'desktop' | 'mobile';
   imports: [CommonModule, RouterModule, IonicModule]
 })
 export class ThNavbarComponent {
-  @Input() mode: ThNavbarMode = 'full';
+  @Input() mode: ThNavbarMode = 'auth';
   @Input() layout: ThNavbarLayout = 'auto';
   @Input() logoSrc = 'assets/logos/portal_web.svg';
   @Input() logoAlt = 'TravelHub';
