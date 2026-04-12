@@ -2,6 +2,7 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from starlette.middleware.cors import CORSMiddleware
 
 from booking_orchestrator.bootstrap import close_http_clients
 from booking_orchestrator.config import settings
@@ -19,6 +20,13 @@ def create_app() -> FastAPI:
         title=settings.APP_NAME,
         version="0.1.0",
         lifespan=lifespan,
+    )
+
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_methods=["*"],
+        allow_headers=["*"],
     )
 
     app.include_router(reservations_router)
