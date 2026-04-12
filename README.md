@@ -437,6 +437,17 @@ make docker-deploy SERVICE=auth       # Login + build + push
 make ecr-login                        # Authenticate Docker with ECR
 ```
 
+### Branch Coverage Report (Terminal Table)
+```bash
+bash scripts/coverage_report.sh
+```
+
+This command runs unit tests for `user_interface` and each project in `services/`, calculates **branch coverage**, and prints a colorized table:
+- `user_interface` row in cyan
+- `services/*` rows in green
+- any row below `85%` in red
+- projects without unit tests in red with `0.00%`
+
 ---
 
 ## Networking Notes
