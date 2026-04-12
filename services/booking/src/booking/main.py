@@ -2,11 +2,12 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
+import booking.infrastructure.models  # noqa: F401 — registers ORM models with Base
 from booking.config import settings
 from booking.controllers import router as booking_router
 from booking.database import Base, engine
-import booking.infrastructure.models  # noqa: F401 — registers ORM models with Base
 
 
 @asynccontextmanager
@@ -22,6 +23,13 @@ def create_app() -> FastAPI:
         title=settings.APP_NAME,
         version="0.1.0",
         lifespan=lifespan,
+    )
+
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_methods=["*"],
+        allow_headers=["*"],
     )
 
     app.include_router(booking_router)
