@@ -36,6 +36,17 @@ show_android_setup_help() {
 	printf "%b\n" "  npm run e2e:android:espresso:script:auto-emulator"
 }
 
+is_android_e2e_strict() {
+	case "${PRECOMMIT_ANDROID_E2E_STRICT:-false}" in
+		1|true|TRUE|yes|YES|on|ON)
+			return 0
+			;;
+		*)
+			return 1
+			;;
+	esac
+}
+
 has_user_interface_staged_changes() {
 	git diff --cached --name-only --diff-filter=ACMR -- user_interface | grep -q .
 }
@@ -85,10 +96,18 @@ if ! npm run e2e:android:espresso:script:auto-emulator 2>&1 | tee "$ANDROID_E2E_
 	if grep -Eq "adb not found|emulator command not found|No AVD found|AVD '.+' was not found|Android emulator binary not found" "$ANDROID_E2E_LOG"; then
 		log_warn "Android E2E falló por dependencias/emulador faltante. Se omite bloqueo de commit."
 		show_android_setup_help
+		if is_android_e2e_strict; then
+			log_fail "Modo estricto activo: se cancela el commit por fallo en Android E2E."
+			rm -f "$ANDROID_E2E_LOG"
+			exit 1
+		fi
 	else
-		log_fail "Fallaron las pruebas E2E Android. No se creó el commit."
-		rm -f "$ANDROID_E2E_LOG"
-		exit 1
+		log_warn "Fallaron las pruebas E2E Android. Se permite continuar el commit por configuración por defecto."
+		if is_android_e2e_strict; then
+			log_fail "Modo estricto activo: se cancela el commit por fallo en Android E2E."
+			rm -f "$ANDROID_E2E_LOG"
+			exit 1
+		fi
 	fi
 else
 	log_ok "Pruebas E2E Android completadas correctamente."
