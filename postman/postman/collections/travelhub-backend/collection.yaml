@@ -62,3 +62,7 @@ variable:
     value: ""
     type: default
     description: adminGroupId extracted from property search result in the flow
+  - key: flow_new_price
+    value: ""
+    type: default
+    description: Auto-generated new price used in the Change Booking Dates step of the flow

@@ -13,3 +13,4 @@ variables:
   flow_property_id: ""
   flow_admin_group_id: ""
   flow_price: ""
+  flow_new_price: ""

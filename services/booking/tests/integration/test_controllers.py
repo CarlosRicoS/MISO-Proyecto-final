@@ -142,3 +142,160 @@ class TestCancelBooking:
             headers={"X-User-Id": str(uuid4())},
         )
         assert response.status_code == 404
+
+
+class TestChangeBookingDates:
+    async def _create_confirmed_booking(self, client: AsyncClient) -> dict:
+        user_id = str(uuid4())
+        create_resp = await client.post(
+            "/api/booking/",
+            json={
+                "property_id": str(uuid4()),
+                "guests": 2,
+                "period_start": "2026-06-01",
+                "period_end": "2026-06-05",
+                "price": 250.00,
+                "admin_group_id": str(uuid4()),
+            },
+            headers={"X-User-Id": user_id},
+        )
+        assert create_resp.status_code == 201
+        booking_id = create_resp.json()["id"]
+
+        # Transition to CONFIRMED via the in-memory repo through the app fixture
+        from booking.infrastructure.in_memory_booking_repo import InMemoryBookingRepository
+        from uuid import UUID as _UUID
+
+        # Access the repo from the app's dependency overrides
+        app = client._transport.app  # type: ignore[attr-defined]
+        repo: InMemoryBookingRepository = app.dependency_overrides[
+            __import__("booking.bootstrap", fromlist=["get_booking_repository"]).get_booking_repository
+        ]()
+        stored = await repo.get_by_id(_UUID(booking_id))
+        stored.approve()
+        stored.confirm(payment_reference="PAY-TEST")
+        await repo.save(stored)
+
+        return {"booking_id": booking_id, "user_id": user_id}
+
+    async def test_change_dates_success(self, client: AsyncClient, repo):
+        user_id = str(uuid4())
+        create_resp = await client.post(
+            "/api/booking/",
+            json={
+                "property_id": str(uuid4()),
+                "guests": 2,
+                "period_start": "2026-06-01",
+                "period_end": "2026-06-05",
+                "price": 250.00,
+                "admin_group_id": str(uuid4()),
+            },
+            headers={"X-User-Id": user_id},
+        )
+        booking_id = create_resp.json()["id"]
+
+        from uuid import UUID as _UUID
+        stored = await repo.get_by_id(_UUID(booking_id))
+        stored.approve()
+        stored.confirm(payment_reference="PAY-TEST")
+        await repo.save(stored)
+
+        response = await client.patch(
+            f"/api/booking/{booking_id}/dates",
+            json={
+                "new_period_start": "2026-07-01",
+                "new_period_end": "2026-07-06",
+                "new_price": "320.00",
+            },
+            headers={"X-User-Id": user_id},
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["period_start"] == "2026-07-01"
+        assert data["period_end"] == "2026-07-06"
+        assert float(data["price"]) == 320.00
+        assert float(data["price_difference"]) == 70.00
+        assert data["status"] == "CONFIRMED"
+
+    async def test_change_dates_not_found(self, client: AsyncClient):
+        response = await client.patch(
+            f"/api/booking/{uuid4()}/dates",
+            json={
+                "new_period_start": "2026-07-01",
+                "new_period_end": "2026-07-05",
+                "new_price": "200.00",
+            },
+            headers={"X-User-Id": str(uuid4())},
+        )
+        assert response.status_code == 404
+
+    async def test_change_dates_not_confirmed(self, client: AsyncClient):
+        user_id = str(uuid4())
+        create_resp = await client.post(
+            "/api/booking/",
+            json={
+                "property_id": str(uuid4()),
+                "guests": 2,
+                "period_start": "2026-06-01",
+                "period_end": "2026-06-05",
+                "price": 250.00,
+                "admin_group_id": str(uuid4()),
+            },
+            headers={"X-User-Id": user_id},
+        )
+        booking_id = create_resp.json()["id"]
+
+        response = await client.patch(
+            f"/api/booking/{booking_id}/dates",
+            json={
+                "new_period_start": "2026-07-01",
+                "new_period_end": "2026-07-05",
+                "new_price": "300.00",
+            },
+            headers={"X-User-Id": user_id},
+        )
+        assert response.status_code == 409
+
+    async def test_change_dates_invalid_period(self, client: AsyncClient, repo):
+        user_id = str(uuid4())
+        create_resp = await client.post(
+            "/api/booking/",
+            json={
+                "property_id": str(uuid4()),
+                "guests": 1,
+                "period_start": "2026-06-01",
+                "period_end": "2026-06-05",
+                "price": 150.00,
+                "admin_group_id": str(uuid4()),
+            },
+            headers={"X-User-Id": user_id},
+        )
+        booking_id = create_resp.json()["id"]
+
+        from uuid import UUID as _UUID
+        stored = await repo.get_by_id(_UUID(booking_id))
+        stored.approve()
+        stored.confirm(payment_reference="PAY-INVALID")
+        await repo.save(stored)
+
+        response = await client.patch(
+            f"/api/booking/{booking_id}/dates",
+            json={
+                "new_period_start": "2026-07-05",
+                "new_period_end": "2026-07-01",
+                "new_price": "150.00",
+            },
+            headers={"X-User-Id": user_id},
+        )
+        assert response.status_code == 422
+
+    async def test_change_dates_missing_header(self, client: AsyncClient):
+        response = await client.patch(
+            f"/api/booking/{uuid4()}/dates",
+            json={
+                "new_period_start": "2026-07-01",
+                "new_period_end": "2026-07-05",
+                "new_price": "200.00",
+            },
+        )
+        assert response.status_code == 422

@@ -21,3 +21,14 @@ class CancelBookingCommand:
 
     booking_id: str
     user_id: str
+
+
+@dataclass(frozen=True)
+class ChangeDatesCommand:
+    """Command to change dates and price of a confirmed booking."""
+
+    booking_id: str
+    user_id: str
+    new_period_start: str  # ISO date string YYYY-MM-DD
+    new_period_end: str  # ISO date string YYYY-MM-DD
+    new_price: Decimal

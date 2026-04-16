@@ -4,23 +4,26 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Header, HTTPException, status
 
 from booking.application.cancel_booking import CancelBookingUseCase
-from booking.application.commands import CancelBookingCommand, CreateBookingCommand
+from booking.application.change_dates import ChangeDatesUseCase
+from booking.application.commands import CancelBookingCommand, ChangeDatesCommand, CreateBookingCommand
 from booking.application.create_booking import CreateBookingUseCase
 from booking.application.get_booking import GetBookingUseCase, ListUserBookingsUseCase
 from booking.bootstrap import (
     get_cancel_booking_use_case,
+    get_change_dates_use_case,
     get_create_booking_use_case,
     get_get_booking_use_case,
     get_list_user_bookings_use_case,
 )
 from booking.domain.exceptions import (
     BookingAlreadyCancelledError,
+    BookingDateChangeNotAllowedError,
     BookingNotFoundError,
     BookingValidationError,
     InvalidBookingPeriodError,
     InvalidBookingStatusTransitionError,
 )
-from booking.schemas import BookingResponse, CreateBookingRequest
+from booking.schemas import BookingResponse, ChangeDatesRequest, ChangeDatesResponse, CreateBookingRequest
 
 router = APIRouter(prefix="/api/booking", tags=["bookings"])
 
@@ -29,6 +32,7 @@ CreateBookingDep = Annotated[CreateBookingUseCase, Depends(get_create_booking_us
 GetBookingDep = Annotated[GetBookingUseCase, Depends(get_get_booking_use_case)]
 ListBookingDep = Annotated[ListUserBookingsUseCase, Depends(get_list_user_bookings_use_case)]
 CancelBookingDep = Annotated[CancelBookingUseCase, Depends(get_cancel_booking_use_case)]
+ChangeDatesDep = Annotated[ChangeDatesUseCase, Depends(get_change_dates_use_case)]
 
 
 @router.post(
@@ -103,3 +107,28 @@ async def cancel_booking(
         ) from e
     except InvalidBookingStatusTransitionError as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e)) from e
+
+
+@router.patch("/{booking_id}/dates", response_model=ChangeDatesResponse)
+async def change_booking_dates(
+    booking_id: UUID,
+    request: ChangeDatesRequest,
+    use_case: ChangeDatesDep,
+    x_user_id: str = Header(..., alias="X-User-Id"),
+) -> ChangeDatesResponse:
+    try:
+        command = ChangeDatesCommand(
+            booking_id=str(booking_id),
+            user_id=x_user_id,
+            new_period_start=request.new_period_start.isoformat(),
+            new_period_end=request.new_period_end.isoformat(),
+            new_price=request.new_price,
+        )
+        booking, price_difference = await use_case.execute(command)
+        return ChangeDatesResponse.from_domain(booking, price_difference)
+    except BookingNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Booking not found") from e
+    except BookingDateChangeNotAllowedError as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e)) from e
+    except (BookingValidationError, InvalidBookingPeriodError) as e:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e)) from e

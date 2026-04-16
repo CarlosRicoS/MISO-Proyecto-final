@@ -170,6 +170,75 @@ Returns an empty array `[]` if the user has no bookings.
 
 ---
 
+### Change Booking Dates
+
+```
+PATCH /api/booking/{booking_id}/dates
+```
+
+Changes the dates and price of an existing booking. **Only `CONFIRMED` bookings can have their dates changed.**
+
+The response includes a `price_difference` field (new price − original price) so the caller can display the cost delta before the traveler confirms the change.
+
+**Availability checking** (AC2) is the responsibility of the calling layer (e.g., the booking-orchestrator verifying against the property service). **Hotel notification** (AC3) is handled by the booking-orchestrator, which should publish a `BOOKING_DATES_CHANGED` event upon receiving a successful response from this endpoint.
+
+**Path Parameters**
+
+| Parameter  | Type | Description               |
+|------------|------|---------------------------|
+| booking_id | UUID | ID of the booking to update |
+
+**Headers**
+
+| Header       | Value            | Required |
+|--------------|------------------|----------|
+| Content-Type | application/json | Yes      |
+| X-User-Id    | `<user UUID>`    | Yes      |
+
+**Request Body**
+
+| Field            | Type    | Required | Description                                     |
+|------------------|---------|----------|-------------------------------------------------|
+| new_period_start | date    | Yes      | New check-in date (`YYYY-MM-DD`)                |
+| new_period_end   | date    | Yes      | New check-out date (`YYYY-MM-DD`)               |
+| new_price        | decimal | Yes      | New total price (must be >= 0)                  |
+
+#### Example
+
+**Request**
+```bash
+curl -X PATCH https://{api-gateway-url}/booking/api/booking/a1b2c3d4-e5f6-7890-abcd-ef1234567890/dates \
+  -H 'Content-Type: application/json' \
+  -H 'X-User-Id: 550e8400-e29b-41d4-a716-446655440000' \
+  -d '{
+    "new_period_start": "2026-07-01",
+    "new_period_end": "2026-07-05",
+    "new_price": 320.00
+  }'
+```
+
+**Response** `200 OK`
+```json
+{
+  "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "property_id": "660e8400-e29b-41d4-a716-446655440000",
+  "user_id": "550e8400-e29b-41d4-a716-446655440000",
+  "guests": 2,
+  "period_start": "2026-07-01",
+  "period_end": "2026-07-05",
+  "price": 320.00,
+  "status": "CONFIRMED",
+  "admin_group_id": "770e8400-e29b-41d4-a716-446655440000",
+  "payment_reference": "PAY-123",
+  "created_at": "2026-03-27T12:00:00Z",
+  "price_difference": 70.00
+}
+```
+
+A **negative** `price_difference` means the new dates are cheaper than the original booking.
+
+---
+
 ### Cancel Booking
 
 ```
@@ -224,6 +293,7 @@ curl -X POST https://{api-gateway-url}/booking/api/booking/a1b2c3d4-e5f6-7890-ab
 | 404    | Booking ID not found                         | `{"detail": "Booking not found"}`                             |
 | 409    | Booking is already cancelled                 | `{"detail": "Booking is already cancelled"}`                  |
 | 409    | Invalid status transition (e.g., cancel a completed booking) | `{"detail": "Cannot transition from COMPLETED to CANCELED"}` |
+| 409    | Attempt to change dates on a non-CONFIRMED booking | `{"detail": "Booking <id> cannot have its dates changed in status PENDING. Only CONFIRMED bookings allow date changes."}` |
 | 422    | Invalid period (start date >= end date)      | `{"detail": "period_start must be before period_end"}`        |
 | 422    | Guests < 1, price < 0, or missing fields     | `{"detail": [{"msg": "...", "loc": [...]}]}`                  |
 | 422    | Missing `X-User-Id` header                   | `{"detail": [{"msg": "Field required", "loc": ["header", "x-user-id"]}]}` |
@@ -347,11 +417,12 @@ src/booking/
 │   ├── value_objects.py # BookingPeriod, Money
 │   └── exceptions.py    # Domain errors
 ├── application/         # Use cases — depends only on domain
-│   ├── commands.py      # CreateBookingCommand, CancelBookingCommand
+│   ├── commands.py      # CreateBookingCommand, CancelBookingCommand, ChangeDatesCommand
 │   ├── ports.py         # BookingRepository protocol (interface)
 │   ├── create_booking.py
 │   ├── get_booking.py
-│   └── cancel_booking.py
+│   ├── cancel_booking.py
+│   └── change_dates.py
 ├── infrastructure/      # Adapters — implements domain ports
 │   ├── models.py        # SQLAlchemy ORM model
 │   ├── sqlalchemy_booking_repo.py
@@ -362,6 +433,15 @@ src/booking/
 ├── database.py          # Async SQLAlchemy engine & session
 └── config.py            # Settings loaded from environment
 ```
+
+### Cross-service responsibilities
+
+| Concern | Owner |
+|---------|-------|
+| Date change enforcement (CONFIRMED-only rule) | This service (`booking`) |
+| Price recalculation / preview (`price_difference`) | This service — returned in response |
+| Property availability check before changing dates | Calling layer (booking-orchestrator → property service) |
+| Hotel notification on date change | Calling layer (booking-orchestrator publishes event to SQS) |
 
 **Key rules enforced by tests:**
 - The `domain` layer must not import from `application` or `infrastructure`
