@@ -4,13 +4,13 @@
 
 .th-filter-summary {
   width: 100%;
-  border-radius: 0;
+  border-radius: var(--th-space-0);
   overflow: hidden;
-  --background: #2563eb;
-  --color: #111827;
+  --background: var(--th-blue-600-alt);
+  --color: var(--th-slate-900);
   border: none;
   min-height: 80px;
-  margin: 0;
+  margin: var(--th-space-0);
 }
 
 .th-filter-summary__content {
@@ -20,48 +20,48 @@
 .th-filter-summary__top-bar {
   display: flex;
   align-items: center;
-  gap: 14px;
-  background: rgba(243, 244, 246, 0.62);
-  border: 1px solid rgba(229, 231, 235, 0.75);
-  border-radius: 8px;
+gap: var(--th-space-3);
+  background: var(--th-overlay-gray-62);
+  border: 1px solid var(--th-overlay-border-75);
+  border-radius: var(--th-radius-md);
   padding: 8px 12px;
-  margin: 0;
+  margin: var(--th-space-0);
 }
 
 .th-filter-summary__desktop-actions {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+gap: var(--th-space-2);
   margin-top: 10px;
 }
 
 .th-filter-summary__desktop-pill {
-  border: 1px solid #dbe3f3;
-  border-radius: 6px;
-  background: #ffffff;
-  color: #374151;
+  border: 1px solid var(--th-border-blue-soft);
+border-radius: var(--th-radius-sm);
+  background: var(--th-white);
+  color: var(--th-slate-700);
   min-height: 22px;
   padding: 3px 10px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  font-size: 11px;
-  font-weight: 500;
+gap: var(--th-space-2);
+  font-size: var(--th-text-overline-size);
+  font-weight: var(--th-font-weight-medium);
   cursor: pointer;
 }
 
 .th-filter-summary__desktop-pill-icon {
-  font-size: 11px;
-  color: #374151;
+  font-size: var(--th-text-overline-size);
+  color: var(--th-slate-700);
 }
 
 .th-filter-summary__icon-box {
   width: 20px;
   height: 20px;
-  border: 1px solid #e5e7eb;
-  border-radius: 4px;
-  background: #ffffff;
+  border: 1px solid var(--th-neutral-250);
+  border-radius: var(--th-radius-sm);
+  background: var(--th-white);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -69,38 +69,38 @@
 }
 
 .th-filter-summary__icon {
-  font-size: 14px;
-  color: #2563eb;
+  font-size: var(--th-text-body-md-size);
+  color: var(--th-blue-600-alt);
 }
 
 .th-filter-summary__icon--accent {
-  color: #2563eb;
+  color: var(--th-blue-600-alt);
 }
 
 .th-filter-summary__icon--dark {
-  color: #374151;
+  color: var(--th-slate-700);
 }
 
 .th-filter-summary__top-text {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+gap: var(--th-space-1);
   min-width: 0;
   flex: 1;
 }
 
 .th-filter-summary__top-title {
-  font-size: 13px;
-  font-weight: 600;
-  color: #111827;
+  font-size: var(--th-text-body-sm-size);
+  font-weight: var(--th-font-weight-semibold);
+  color: var(--th-slate-900);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .th-filter-summary__top-subtitle {
-  font-size: 11px;
-  color: #6b7280;
+  font-size: var(--th-text-overline-size);
+  color: var(--th-slate-500);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -109,20 +109,20 @@
 .th-filter-summary__bottom {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
+  gap: var(--th-space-3);
   padding: 12px 0 0;
 }
 
 .th-filter-summary__card {
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
+  border: 1px solid var(--th-gray-300-alt);
+  border-radius: var(--th-radius-md);
   padding: 10px 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: var(--th-space-3);
   min-height: 42px;
-  background: #ffffff;
+  background: var(--th-white);
   text-align: center;
 }
 
@@ -130,18 +130,18 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: var(--th-space-1);
 }
 
 .th-filter-summary__card-title {
-  font-size: 12px;
-  font-weight: 600;
-  color: #111827;
+  font-size: var(--th-text-caption-size);
+  font-weight: var(--th-font-weight-semibold);
+  color: var(--th-slate-900);
 }
 
 .th-filter-summary__card-subtitle {
-  font-size: 11px;
-  color: #6b7280;
+  font-size: var(--th-text-overline-size);
+  color: var(--th-slate-500);
 }
 
 .th-filter-summary__mobile-actions {
@@ -152,7 +152,7 @@
 
 @media (max-width: 720px) {
   .th-filter-summary {
-    --background: #2d67ea;
+    --background: var(--th-blue-620);
   }
 
   .th-filter-summary__content {
@@ -164,44 +164,44 @@
   }
 
   .th-filter-summary__top-bar {
-    background: rgba(255, 255, 255, 0.18);
+    background: var(--th-overlay-white-18);
     border: none;
-    border-radius: 12px;
+    border-radius: var(--th-radius-lg);
     padding: 10px 12px;
   }
 
   .th-filter-summary__icon-box {
-    background: rgba(255, 255, 255, 0.2);
+    background: var(--th-overlay-white-20);
     border-color: transparent;
   }
 
   .th-filter-summary__icon {
-    color: #ffffff;
+    color: var(--th-white);
   }
 
   .th-filter-summary__icon--dark,
   .th-filter-summary__icon--accent {
-    color: #ffffff;
+    color: var(--th-white);
   }
 
   .th-filter-summary__top-title {
-    color: #ffffff;
+    color: var(--th-white);
   }
 
   .th-filter-summary__top-subtitle {
-    color: rgba(255, 255, 255, 0.85);
+    color: var(--th-overlay-white-85);
   }
 
   .th-filter-summary__bottom {
     grid-template-columns: repeat(2, minmax(0, max-content));
     justify-content: flex-start;
-    gap: 10px;
+gap: var(--th-space-2);
     padding: 12px 0 0;
   }
 
   .th-filter-summary__card {
     border: none;
-    border-radius: 999px;
+    border-radius: var(--th-radius-full);
     padding: 8px 14px;
     min-height: 36px;
   }
@@ -212,22 +212,22 @@
 
   .th-filter-summary__mobile-actions {
     display: flex;
-    gap: 10px;
+gap: var(--th-space-2);
     flex-wrap: wrap;
-    padding: 12px;
+    padding: var(--th-space-3);
   }
 
   .th-filter-summary__pill {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--th-space-2);
     padding: 8px 14px;
-    border-radius: 999px;
+    border-radius: var(--th-radius-full);
     border: none;
     background: var(--th-neutral-250);
     color: var(--th-neutral-900);
-    font-size: 12px;
-    font-weight: 600;
+    font-size: var(--th-text-caption-size);
+    font-weight: var(--th-font-weight-semibold);
     cursor: pointer;
   }
 
@@ -240,7 +240,7 @@
   }
 
   .th-filter-summary__pill-icon {
-    font-size: 14px;
-    color: #111827;
+    font-size: var(--th-text-body-md-size);
+    color: var(--th-slate-900);
   }
 }

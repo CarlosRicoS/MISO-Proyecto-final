@@ -65,8 +65,12 @@ export class AppComponent implements OnInit, OnDestroy {
     return this.router.url.startsWith('/search-results');
   }
 
+  get isBookingListRoute(): boolean {
+    return this.router.url.startsWith('/booking-list');
+  }
+
   get showMobileTopBar(): boolean {
-    return this.showNavbar || this.isSearchResultsRoute || this.isPropertyDetailRoute;
+    return this.showNavbar || this.isSearchResultsRoute || this.isBookingListRoute || this.isPropertyDetailRoute;
   }
 
   get hasTopBar(): boolean {

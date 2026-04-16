@@ -24,5 +24,31 @@
     "admin_group_id": "d2a1b3c4-5d6e-7f89-0123-456789abcdef",
     "payment_reference": null,
     "created_at": "2026-04-07T12:05:00Z"
+  },
+  {
+    "id": "c4bb7d2e-6a1c-4a2f-a9de-74f5e3a8c1d9",
+    "property_id": "2b8f7d6a-90ac-4d19-b9f0-7cc3a19b4c2d",
+    "user_id": "0d2cb98b-3998-47e5-bb7d-6d8f1c2bdc2a",
+    "guests": 1,
+    "period_start": "2026-03-12",
+    "period_end": "2026-03-15",
+    "price": 430000.00,
+    "status": "COMPLETED",
+    "admin_group_id": "d2a1b3c4-5d6e-7f89-0123-456789abcdef",
+    "payment_reference": "PAY-20260312-014",
+    "created_at": "2026-03-01T09:10:00Z"
+  },
+  {
+    "id": "e5cc8e3f-7b2d-4f31-b4ab-1e9d4f7a3b80",
+    "property_id": "1d4e3c2b-7a6f-4f10-9d22-5fb8c9d0a7e6",
+    "user_id": "0d2cb98b-3998-47e5-bb7d-6d8f1c2bdc2a",
+    "guests": 2,
+    "period_start": "2026-04-22",
+    "period_end": "2026-04-24",
+    "price": 620000.00,
+    "status": "CANCELLED",
+    "admin_group_id": "d2a1b3c4-5d6e-7f89-0123-456789abcdef",
+    "payment_reference": null,
+    "created_at": "2026-04-10T15:35:00Z"
   }
 ]

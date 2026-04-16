@@ -4,7 +4,7 @@ import { IonicModule } from '@ionic/angular';
 import { ThBadgeComponent } from '../th-badge/th-badge.component';
 import { ThButtonComponent } from '../th-button/th-button.component';
 
-export type ThHotelCardVariant = 'compact' | 'list' | 'mobile';
+export type ThHotelCardVariant = 'compact' | 'list' | 'mobile' | 'booking';
 
 @Component({
   selector: 'th-hotel-card',

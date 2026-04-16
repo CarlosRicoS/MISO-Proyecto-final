@@ -1,0 +1,16 @@
+{
+  "request": {
+    "method": "POST",
+    "urlPathPattern": "^/(booking-orchestrator/)?api/reservations$"
+  },
+  "response": {
+    "status": 201,
+    "headers": {
+      "Content-Type": "application/json",
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization, X-User-Id, X-User-Email"
+    },
+    "bodyFileName": "booking-response.json"
+  }
+}

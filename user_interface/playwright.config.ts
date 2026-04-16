@@ -1,6 +1,25 @@
 import { defineConfig, devices } from '@playwright/test';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
 
-const baseURL = process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:8100';
+interface E2EConfig {
+  playwrightBaseUrl?: string;
+}
+
+function loadBaseUrlFromConfig(): string {
+  const configPath = path.resolve(__dirname, 'src/assets/config.json');
+
+  try {
+    const rawConfig = readFileSync(configPath, 'utf-8');
+    const parsedConfig = JSON.parse(rawConfig) as E2EConfig;
+
+    return parsedConfig.playwrightBaseUrl || 'http://localhost:4200';
+  } catch {
+    return 'http://localhost:4200';
+  }
+}
+
+const baseURL = process.env.PLAYWRIGHT_BASE_URL || loadBaseUrlFromConfig();
 
 export default defineConfig({
   testDir: './e2e/web',

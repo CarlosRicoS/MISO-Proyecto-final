@@ -6,6 +6,7 @@
     *ngIf="showMobileTopBar && isMobileLayout"
     slot="fixed"
     [class.app-header--mobile-search-results]="isSearchResultsRoute"
+    [class.app-header--mobile-booking-list]="isBookingListRoute"
   >
     <th-navbar [mode]="navbarMode" layout="mobile"></th-navbar>
   </ion-header>
@@ -14,7 +15,7 @@
     [class.site-content--no-navbar]="!hasTopBar"
     [class.site-content--detail-mobile]="isPropertyDetailRoute"
   ></ion-router-outlet>
-  <ion-footer slot="fixed" appPlatformText appPlatformShow="mobile" *ngIf="showNavbar && !isPropertyDetailRoute">
+  <ion-footer slot="fixed" appPlatformText appPlatformShow="mobile" *ngIf="showNavbar && !isPropertyDetailRoute && !isSearchResultsRoute">
     <ion-toolbar class="mobile-tab-bar">
       <ion-buttons class="mobile-tab-bar__buttons" slot="start">
         <ion-button class="mobile-tab-bar__button" fill="clear" routerLink="/home" routerLinkActive="is-active" [routerLinkActiveOptions]="{ exact: true }">
@@ -29,7 +30,7 @@
             <span class="mobile-tab-bar__label">Favorites</span>
           </div>
         </ion-button>
-        <ion-button class="mobile-tab-bar__button" fill="clear" aria-label="Bookings">
+        <ion-button class="mobile-tab-bar__button" fill="clear" aria-label="Bookings" routerLink="/booking-list" routerLinkActive="is-active" [routerLinkActiveOptions]="{ exact: true }">
           <div class="stack-item">
             <ion-icon name="calendar-outline"></ion-icon>
             <span class="mobile-tab-bar__label">Bookings</span>

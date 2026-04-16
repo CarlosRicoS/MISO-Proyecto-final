@@ -68,18 +68,18 @@
 .register-form__logo {
 	width: 64px;
 	height: 64px;
-	border-radius: 50%;
+	border-radius: var(--th-radius-circle, 50%);
 	background: var(--th-primary-500);
 	color: var(--th-white);
 	margin: 0 auto var(--th-space-4);
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	font-size: 26px;
+font-size: var(--th-text-heading-md-size);
 }
 
 .register-form__title {
-	margin: 0;
+	margin: var(--th-space-0);
 	font-size: var(--th-text-h1-size);
 	line-height: var(--th-text-h1-line-height);
 	font-weight: var(--th-font-weight-bold);
@@ -117,7 +117,7 @@
 }
 
 .register-form__terms p {
-	margin: 0;
+	margin: var(--th-space-0);
 	font-size: var(--th-text-body-sm-size);
 	line-height: var(--th-text-body-sm-line-height);
 	color: var(--th-neutral-600);
@@ -171,7 +171,7 @@
 	left: 50%;
 	transform: translateX(-50%);
 	width: 1px;
-	background: rgba(59, 99, 247, 0.45);
+	background: var(--th-overlay-primary-45);
 }
 
 .register-layout__divider::before {
@@ -247,13 +247,13 @@
 	text-transform: none;
 	letter-spacing: 0;
 	line-height: inherit;
-	margin: 0;
+	margin: var(--th-space-0);
 	transform: none;
 	cursor: pointer;
 }
 
 .register-social__signin-link::part(native) {
-	padding: 0;
+	padding: var(--th-space-0);
 	min-height: auto;
 	line-height: inherit;
 	font-size: inherit;
@@ -333,11 +333,11 @@
 		--min-height: 52px;
 		--color: var(--th-neutral-900);
 		justify-self: start;
-		margin: 0;
+		margin: var(--th-space-0);
 	}
 
 	.register-mobile-bar__title {
-		margin: 0;
+		margin: var(--th-space-0);
 		text-align: center;
 		font-size: var(--th-text-body-lg-size);
 		line-height: var(--th-text-body-lg-line-height);
@@ -354,12 +354,12 @@
 	}
 
 	.register-col {
-		padding: 0;
+		padding: var(--th-space-0);
 	}
 
 	.register-card {
 		width: 100%;
-		margin: 0;
+		margin: var(--th-space-0);
 		min-height: calc(100dvh - var(--th-space-3) - var(--th-space-5));
 		border-radius: var(--th-radius-lg);
 		box-shadow: var(--th-shadow-2);

@@ -30,8 +30,8 @@
 .propertydetail-hero__inner,
 .propertydetail-body__inner {
   max-width: 100%;
-  margin: 0;
-  padding: 0;
+  margin: var(--th-space-0);
+  padding: var(--th-space-0);
 }
 
 .propertydetail-hero__inner th-details-mosaic {
@@ -40,7 +40,7 @@
 
 .propertydetail-summary__inner {
   max-width: 100%;
-  margin: 0;
+  margin: var(--th-space-0);
 }
 
 .propertydetail-body {
@@ -54,11 +54,11 @@
 .propertydetail-body__details {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--th-space-4);
 }
 
 .propertydetail-body__title {
-  margin: 0;
+  margin: var(--th-space-0);
   font-size: var(--th-text-h2-size);
   line-height: var(--th-text-h2-line-height);
   font-weight: var(--th-font-weight-semibold);
@@ -66,7 +66,7 @@
 }
 
 .propertydetail-body__copy {
-  margin: 0;
+  margin: var(--th-space-0);
   font-size: var(--th-text-body-md-size);
   line-height: var(--th-text-body-md-line-height);
   color: var(--th-neutral-700);
@@ -75,7 +75,7 @@
 .propertydetail-body__highlights {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+gap: var(--th-space-2);
 }
 
 .propertydetail-body__summary {

@@ -14,22 +14,58 @@
   </div>
 
   <ion-card-content class="th-hotel-card__content">
-    <!-- Title & Location -->
-    <div class="th-hotel-card__header">
-      <h3 class="th-hotel-card__title">{{ title }}</h3>
-      <p class="th-hotel-card__location">
-        <ion-icon name="location-outline"></ion-icon>
-        {{ location }}
-      </p>
+    <div class="th-hotel-card__booking-top" *ngIf="variant === 'booking'; else defaultCardTop">
+      <div class="th-hotel-card__header">
+        <h3 class="th-hotel-card__title">{{ title }}</h3>
+        <p class="th-hotel-card__location">
+          <ion-icon name="location-outline"></ion-icon>
+          {{ location }}
+        </p>
+      </div>
+
+      <div class="th-hotel-card__booking-status">
+        <ng-content select="[th-card-status]"></ng-content>
+      </div>
+
+      <div class="th-hotel-card__booking-times">
+        <ng-content select="[th-card-times]"></ng-content>
+      </div>
     </div>
 
-    <!-- Tags/Badges -->
-    <div class="th-hotel-card__tags">
-      <ng-content select="[th-card-tags]"></ng-content>
+    <ng-template #defaultCardTop>
+      <div class="th-hotel-card__header">
+        <h3 class="th-hotel-card__title">{{ title }}</h3>
+        <p class="th-hotel-card__location">
+          <ion-icon name="location-outline"></ion-icon>
+          {{ location }}
+        </p>
+      </div>
+
+      <div class="th-hotel-card__tags">
+        <ng-content select="[th-card-tags]"></ng-content>
+      </div>
+    </ng-template>
+
+    <div class="th-hotel-card__booking-meta" *ngIf="variant === 'booking'">
+      <div class="th-hotel-card__booking-price">
+        <span class="th-hotel-card__price-label">{{ pricePrefix }}</span>
+        <span class="th-hotel-card__price-value">{{ price }}</span>
+        <span class="th-hotel-card__price-suffix">{{ priceSuffix }}</span>
+      </div>
+      <div class="th-hotel-card__booking-cta">
+        <th-button
+          variant="primary"
+          size="sm"
+          [routerLink]="ctaRouterLink"
+          (click)="ctaClick.emit()"
+        >
+          {{ ctaLabel }}
+        </th-button>
+      </div>
     </div>
 
     <!-- Price & CTA Footer -->
-    <div class="th-hotel-card__footer">
+    <div class="th-hotel-card__footer" *ngIf="variant !== 'booking'">
       <div class="th-hotel-card__price">
         <span class="th-hotel-card__price-label">{{ pricePrefix }}</span>
         <span class="th-hotel-card__price-value">{{ price }}</span>

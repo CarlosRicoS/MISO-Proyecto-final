@@ -1,5 +1,6 @@
 import { NgModule } from '@angular/core';
 import { PreloadAllModules, RouterModule, Routes } from '@angular/router';
+import { bookingListAuthGuard } from './core/guards/booking-list-auth.guard';
 
 const routes: Routes = [
   {
@@ -8,12 +9,15 @@ const routes: Routes = [
   },
   {
     path: 'search-results',
-    data: { hideNavbar: true },
     loadChildren: () => import('./pages/search-results/search-results.module').then( m => m.SearchResultsPageModule)
   },
   {
+    path: 'booking-list',
+    canActivate: [bookingListAuthGuard],
+    loadChildren: () => import('./pages/booking-list/booking-list.module').then( m => m.BookingListPageModule)
+  },
+  {
     path: 'propertydetail',
-    data: { hideNavbar: true },
     loadChildren: () => import('./pages/propertydetail/propertydetail.module').then(m => m.PropertydetailPageModule)
   },
   {

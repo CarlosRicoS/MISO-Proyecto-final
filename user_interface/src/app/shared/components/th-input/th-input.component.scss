@@ -56,7 +56,7 @@
   justify-content: center;
   background: transparent;
   border: 0;
-  padding: 0;
+  padding: var(--th-space-0);
   margin-left: var(--th-space-2);
   cursor: pointer;
 }
@@ -76,12 +76,12 @@
   font-size: var(--th-text-body-sm-size);
   line-height: var(--th-text-body-sm-line-height);
   color: var(--th-neutral-600);
-  margin: 0;
+  margin: var(--th-space-0);
 }
 
 .th-input--focus .th-input__item {
   border-color: var(--th-primary-500);
-  box-shadow: 0 0 0 2px rgba(59, 99, 247, 0.2);
+  box-shadow: 0 0 0 2px var(--th-overlay-primary-20);
 }
 
 .th-input--focus .th-input__badge {

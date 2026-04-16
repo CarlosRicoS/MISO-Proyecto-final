@@ -5,48 +5,48 @@
 .th-review-card {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--th-space-3);
 }
 
 .th-review-card__header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 12px;
+  gap: var(--th-space-3);
 }
 
 .th-review-card__identity {
   display: inline-flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--th-space-3);
 }
 
 .th-review-card__avatar {
   width: 38px;
   height: 38px;
-  border-radius: 999px;
+  border-radius: var(--th-radius-full);
   object-fit: cover;
-  background: #d1d5db;
+  background: var(--th-gray-300-alt);
 }
 
 .th-review-card__meta {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+gap: var(--th-space-1);
 }
 
 .th-review-card__name {
-  margin: 0;
-  color: #111827;
-  font-size: 14px;
+  margin: var(--th-space-0);
+  color: var(--th-slate-900);
+  font-size: var(--th-text-body-md-size);
   line-height: 1.2;
-  font-weight: 700;
+  font-weight: var(--th-font-weight-bold);
 }
 
 .th-review-card__sub {
-  margin: 0;
-  color: #6b7280;
-  font-size: 13px;
+  margin: var(--th-space-0);
+  color: var(--th-slate-500);
+  font-size: var(--th-text-body-sm-size);
 }
 
 .th-review-card__sub--mobile {
@@ -56,46 +56,46 @@
 .th-review-card__score-pill {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--th-space-1);
   padding: 3px 9px;
-  border-radius: 6px;
-  background: #0a67e8;
-  color: #ffffff;
-  font-size: 20px;
+border-radius: var(--th-radius-sm);
+  background: var(--th-blue-650);
+  color: var(--th-white);
+  font-size: var(--th-text-h3-size);
   line-height: 1;
-  font-weight: 700;
+  font-weight: var(--th-font-weight-bold);
 }
 
 .th-review-card__score-pill-icon {
   display: none;
-  font-size: 13px;
+  font-size: var(--th-text-body-sm-size);
 }
 
 
 
 .th-review-card__stars {
   display: inline-flex;
-  gap: 2px;
-  color: #e6ab00;
+gap: var(--th-space-1);
+  color: var(--th-warning-600-alt);
 
   ion-icon {
-    font-size: 16px;
+    font-size: var(--th-text-body-lg-size);
   }
 }
 
 .th-review-card__text {
-  margin: 0;
-  color: #374151;
-  font-size: 16px;
+  margin: var(--th-space-0);
+  color: var(--th-slate-700);
+  font-size: var(--th-text-body-lg-size);
   line-height: 1.55;
 }
 
 @media (max-width: 720px) {
   .th-review-card {
-    border: 1px solid #d8dde6;
-    border-radius: 12px;
-    padding: 14px;
-    background: #f8fafc;
+    border: 1px solid var(--th-border-soft);
+    border-radius: var(--th-radius-lg);
+padding: var(--th-space-3);
+    background: var(--th-neutral-50);
   }
 
   .th-review-card__sub--desktop {
@@ -111,12 +111,12 @@
   }
 
   .th-review-card__name {
-    font-size: 18px;
+    font-size: var(--th-text-h4-size);
   }
 
   .th-review-card__score-pill {
-    font-size: 16px;
-    gap: 5px;
+    font-size: var(--th-text-body-lg-size);
+gap: var(--th-space-1);
   }
 
   .th-review-card__score-pill-icon {
@@ -124,11 +124,11 @@
   }
 
   .th-review-card__sub {
-    font-size: 14px;
+    font-size: var(--th-text-body-md-size);
   }
 
   .th-review-card__text {
-    font-size: 16px;
+    font-size: var(--th-text-body-lg-size);
     line-height: 1.55;
     margin-left: 50px;
   }

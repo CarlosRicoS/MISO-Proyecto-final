@@ -25,7 +25,7 @@
 .th-datetime-modal__backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(15, 23, 42, 0.3);
+  background: var(--th-overlay-slate-30);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
   pointer-events: auto;
@@ -39,11 +39,11 @@
   width: max-content;
   max-width: min(90vw, 480px);
   height: auto;
-  --background: #ffffff;
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.18);
+  --background: var(--th-white);
+  background: var(--th-white);
+  border: 1px solid var(--th-neutral-250);
+  border-radius: var(--th-radius-lg);
+  box-shadow: 0 18px 40px var(--th-overlay-slate-18);
   display: flex;
   flex-direction: column;
   gap: 0;
@@ -64,7 +64,7 @@
 
 // Content Area
 .th-datetime-modal__content {
-  padding: 0;
+  padding: var(--th-space-0);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -90,62 +90,62 @@
     ion-datetime {
       width: 100%;
       max-width: 100%;
-      --background: #ffffff;
-      --header-background: #0066ff;
-      --header-color: #ffffff;
-      --title-color: #ffffff;
-      --button-color: #ffffff;
-      --color: #111827;
-      --day-color: #111827;
-      --placeholder-color: #94a3b8;
-      --indicator-color: #0066ff;
-      --wheel-highlight-background: #e0ecff;
+      --background: var(--th-white);
+      --header-background: var(--th-blue-640);
+      --header-color: var(--th-white);
+      --title-color: var(--th-white);
+      --button-color: var(--th-white);
+      --color: var(--th-slate-900);
+      --day-color: var(--th-slate-900);
+      --placeholder-color: var(--th-slate-400);
+      --indicator-color: var(--th-blue-640);
+      --wheel-highlight-background: var(--th-blue-90-alt);
       --wheel-highlight-border-radius: 10px;
       --wheel-fade-background-rgb: 255, 255, 255;
     }
 
     ion-datetime::part(calendar) {
-      background: #ffffff;
-      border-radius: 10px;
+      background: var(--th-white);
+border-radius: var(--th-radius-md);
       width: 100%;
     }
 
     ion-datetime::part(calendar-header) {
-      background: #0066ff;
-      color: #ffffff;
+      background: var(--th-blue-640);
+      color: var(--th-white);
       padding: 12px 16px;
     }
 
     ion-datetime::part(calendar-weekday) {
-      color: #ffffff !important;
-      font-weight: 600;
+      color: var(--th-white) !important;
+      font-weight: var(--th-font-weight-semibold);
     }
 
     ion-datetime::part(month-year-button) {
-      color: #ffffff;
-      font-weight: 600;
+      color: var(--th-white);
+      font-weight: var(--th-font-weight-semibold);
     }
 
     ion-datetime::part(calendar-days-of-week) {
-      color: #ffffff;
+      color: var(--th-white);
     }
 
     ion-datetime::part(calendar-day) {
-      color: #111827;
+      color: var(--th-slate-900);
     }
 
     ion-datetime::part(calendar-day today) {
-      border-color: #0066ff;
-      color: #0066ff;
+      border-color: var(--th-blue-640);
+      color: var(--th-blue-640);
     }
 
     ion-datetime::part(calendar-day active) {
-      background: #0066ff;
-      color: #ffffff;
+      background: var(--th-blue-640);
+      color: var(--th-white);
     }
 
     ion-datetime::part(calendar-day disabled) {
-      color: #cbd5f5;
+      color: var(--th-indigo-200);
     }
   }
 }
