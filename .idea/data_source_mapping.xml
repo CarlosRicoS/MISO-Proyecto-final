@@ -1,9 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourcePerFileMappings">
-    <file url="file://$PROJECT_DIR$/db/seeds/poc-properties/001_seed_properties_data.sql" value="362e0de1-a2cd-4664-8633-3a283aea776a" />
-    <file url="file://$PROJECT_DIR$/db/seeds/pricing-engine/001_seed_pricing_data.sql" value="362e0de1-a2cd-4664-8633-3a283aea776a" />
-    <file url="file://$PROJECT_DIR$/load-tests/scripts/seed_pricing_engine_data.sql" value="362e0de1-a2cd-4664-8633-3a283aea776a" />
     <file url="file://$PROJECT_DIR$/load-tests/scripts/seed_properties_mock_data.sql" value="362e0de1-a2cd-4664-8633-3a283aea776a" />
   </component>
 </project>

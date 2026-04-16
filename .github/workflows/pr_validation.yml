@@ -25,6 +25,12 @@ jobs:
           - name: poc-properties
             language: java
             context-path: services/poc_properties
+          - name: billing
+            language: java
+            context-path: services/billing
+          - name: stripe_mock
+            language: java
+            context-path: services/stripe_mock
     name: Test ${{ matrix.name }}
     steps:
       - name: Checkout repository
@@ -93,6 +99,14 @@ jobs:
             language: java
             ecr-repo: api_poc_properties
             context-path: services/poc_properties
+          - name: billing
+            language: java
+            ecr-repo: api_billing
+            context-path: services/billing
+          - name: stripe_mock
+            language: java
+            ecr-repo: api_stripe_mock
+            context-path: services/stripe_mock
     name: Build ${{ matrix.name }}
     steps:
       - name: Checkout repository

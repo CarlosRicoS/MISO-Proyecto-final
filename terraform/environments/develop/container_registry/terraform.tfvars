@@ -11,5 +11,7 @@ repository_names = [
   "api_booking",
   "api_booking_orchestrator",
   "api_notifications",
+  "api_billing",
+  "api_stripe_mock",
   "web_travelhub"
 ]
