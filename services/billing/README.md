@@ -1,200 +1,129 @@
-# Properties PoC Microservice
+# Billing Microservice
 
-Proof of concept for the property management and search service for TravelHub, built with Spring Boot and PostgreSQL. This service handles property listings, availability searching, and booking locks.
+Billing microservice for TravelHub, built with **Spring Boot** and **PostgreSQL**. It manages billing records for bookings and processes billing operations **asynchronously** by consuming messages from an **AWS SQS** queue.
 
 ## Base URL
 
-**Production:** `https://{api-gateway-url}/property`
+This service runs with `server.servlet.context-path: /api`.
 
-## Endpoints
+- **Production (via API Gateway):** `https://{api-gateway-url}/billing/api`
+- **Local (default):** `http://localhost:8080/api`
 
-### Health Check
+## Key Components
 
-```
+- **Commands (write side)**: `src/main/java/**/business/command/**`
+  - `CreateBillingCommandHandler`
+  - `ConfirmBillingCommandHandler`
+  - `CancelBillingCommandHandler`
+- **SQS Listener (integration)**: `src/main/java/**/contract/sqs/listener/BillingSqsListener.java`
+- **Persistence**:
+  - Entity: `src/main/java/**/infrastructure/persistence/entity/BillingEntity.java`
+  - Repository: `src/main/java/**/infrastructure/persistence/repository/BillingRepository.java`
+
+## Billing Lifecycle
+
+The service persists a `BillingEntity` with these state transitions:
+
+- `PENDING` (initial, created on `CREATE`)
+- `CONFIRMED` (on `CONFIRM`, only if current state is `PENDING`)
+- `CANCELLED` (on `CANCEL`, unless already `CANCELLED`)
+
+## Health Check
+
+```http
 GET /api/actuator/health
 ```
 
-**Response** `200 OK`
+## SQS Message Contract
+
+Billing messages are JSON with 2 fields: `operation` and `payload`.
+
+### DTO
+
+Implemented at: `src/main/java/**/contract/sqs/dto/BillingMessageDto.java`
+
 ```json
 {
-  "status": "UP"
-}
-```
-
----
-
-### Search Properties
-
-```
-GET /api/property
-```
-
-Searches for available properties based on location, capacity, and dates. Supports pagination.
-
-**Query Parameters**
-
-| Parameter    | Type    | Required | Description                                      |
-|--------------|---------|----------|--------------------------------------------------|
-| city         | string  | No*      | City to search in                                |
-| capacity     | integer | No*      | Minimum required capacity                        |
-| startDate    | string  | No*      | Format: `dd/MM/yyyy`                             |
-| endDate      | string  | No*      | Format: `dd/MM/yyyy`                             |
-| page         | integer | No       | Page number (default: 0)                         |
-| size         | integer | No       | Items per page (default: 10)                     |
-
-*\*Note: While optional individually, typical searches require all four criteria to filter by availability. Providing no filters returns all properties.*
-
-#### Example
-
-**Request**
-```bash
-curl -X GET "https://{api-gateway-url}/property/api/property?city=Bogota&capacity=4&startDate=01/12/2024&endDate=10/12/2024"
-```
-
-**Response** `200 OK`
-```json
-[
-  {
-    "id": "prop-123",
-    "name": "Luxury Apartment Bogota",
-    "maxCapacity": 4,
-    "description": "Beautiful apartment in the north of the city.",
-    "photos": ["https://assets.travelhub.com/prop123/1.jpg"],
-    "checkInTime": "15:00:00",
-    "checkOutTime": "11:00:00",
-    "adminGroupId": "hotel-admin-group-001"
+  "operation": "CREATE|CONFIRM|CANCEL",
+  "payload": {
+    "bookingId": "...",
+    "paymentReference": "...",
+    "paymentDate": "2026-04-16T10:15:30",
+    "adminGroupId": "...",
+    "value": "1250.50",
+    "reason": "..."
   }
-]
-```
-
----
-
-### Get Property Details
-
-```
-GET /api/property/{id}
-```
-
-Returns full details for a specific property, including amenities and reviews.
-
-**Path Variables**
-
-| Variable | Description         |
-|----------|---------------------|
-| id       | Unique property ID  |
-
-#### Example
-
-**Request**
-```bash
-curl -X GET https://{api-gateway-url}/property/api/property/prop-123
-```
-
-**Response** `200 OK`
-```json
-{
-  "id": "prop-123",
-  "name": "Luxury Apartment Bogota",
-  "maxCapacity": 4,
-  "description": "Beautiful apartment in the north of the city.",
-  "photos": ["https://assets.travelhub.com/prop123/1.jpg"],
-  "checkInTime": "15:00:00",
-  "checkOutTime": "11:00:00",
-  "adminGroupId": "hotel-admin-group-001",
-  "reviews": [
-    {
-      "id": "rev-456",
-      "description": "Excellent stay!",
-      "rating": 5,
-      "name": "Juan Perez"
-    }
-  ],
-  "amenities": [
-    {
-      "id": "am-1",
-      "description": "WiFi"
-    },
-    {
-      "id": "am-2",
-      "description": "Pool"
-    }
-  ]
 }
 ```
 
----
+### Operation details
 
-### Lock Property (Internal/Booking)
+- **CREATE**
+  - Required keys (as parsed by `BillingSqsListener`):
+    - `bookingId`, `paymentReference`, `paymentDate` (ISO-8601), `adminGroupId`, `value`
+  - Effect:
+    - Stores a new `BillingEntity` with `state = PENDING`, `id = UUID.randomUUID()`, `updateDate = now`
 
-```
-POST /api/property/lock
-```
+- **CONFIRM**
+  - Required keys:
+    - `bookingId`
+  - Effect:
+    - Loads billing by `bookingId`, validates it is `PENDING`, sets `state = CONFIRMED`, updates `updateDate`
 
-Locks a property for a specific date range to prevent double bookings.
-
-**Request Body**
-
-| Field            | Type   | Required | Description                          |
-|------------------|--------|----------|--------------------------------------|
-| propertyDetailId | string | Yes      | ID of the property to lock           |
-| startDate        | string | Yes      | Format: `dd/MM/yyyy`                 |
-| endDate          | string | Yes      | Format: `dd/MM/yyyy`                 |
-
-#### Example
-
-**Request**
-```bash
-curl -X POST https://{api-gateway-url}/property/api/property/lock \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "propertyDetailId": "prop-123",
-    "startDate": "01/12/2024",
-    "endDate": "05/12/2024"
-  }'
-```
-
-**Response** `204 No Content`
-
----
-
-### Error Responses
-
-| Status | Condition                         | Example Response                                           |
-|--------|-----------------------------------|------------------------------------------------------------|
-| 400    | Validation error / Date conflict  | `{"error": "Invalid input data. Errors -> [...]", "date": "..."}` |
-| 404    | Property not found                | `{"error": "The property with id ... could not be found.", "date": "..."}` |
-| 500    | Unexpected server error           | `{"error": "Unexpected error, check logs.", "date": "..."}` |
-
----
-
-## Technical Stack
-
-- **Runtime:** Java 25 (Eclipse Temurin)
-- **Framework:** Spring Boot 4.0.3
-- **Database:** PostgreSQL
-- **Persistence:** Spring Data JPA / Hibernate
-- **Monitoring:** Spring Boot Actuator + Prometheus
+- **CANCEL**
+  - Required keys:
+    - `bookingId`, `reason`
+  - Effect:
+    - Loads billing by `bookingId`, validates it is not `CANCELLED`, sets `state = CANCELLED`, sets `reason`, updates `updateDate`
 
 ## Local Development
 
 ```bash
-# Build the project
+cd services/billing
+
+# Compile
 ./mvnw clean compile
 
-# Run tests
+# Run unit tests
 ./mvnw test
 
 # Run locally
 ./mvnw spring-boot:run
 ```
 
-### Environment Variables
+## Configuration
 
-| Variable          | Description                    | Default         |
-|-------------------|--------------------------------|-----------------|
-| DB_HOST           | Database hostname              | localhost       |
-| DB_NAME           | Database name                  | postgres        |
-| DB_USERNAME       | Database user                  | postgres        |
-| DB_PASSWORD       | Database password              | 123456          |
-| JPA_DDL_AUTO      | Hibernate DDL strategy         | none            |
-| JPA_SHOW_SQL      | Log SQL queries                | false           |
+Main configuration file: `src/main/resources/application.yml`
+
+### Database (PostgreSQL)
+
+Configured in `application.yml`:
+
+- `DB_HOST` (default `localhost`)
+- `DB_NAME` (default `postgres`)
+- `DB_USERNAME` (default `postgres`)
+- `DB_PASSWORD` (default `123456`)
+
+### SQS Listener
+
+The polling consumer is enabled/disabled with:
+
+```yaml
+billing.listener.sqs.enabled: ${BILLING_SQS_LISTENER_ENABLED:true}
+```
+
+Configuration keys (from `application.yml`):
+
+- `billing.listener.sqs.queue-url` (`BILLING_QUEUE_URL`)
+- `billing.listener.sqs.max-messages` (`BILLING_SQS_MAX_MESSAGES`, default `10`)
+- `billing.listener.sqs.wait-time-seconds` (`BILLING_SQS_WAIT_TIME_SECONDS`, default `20`)
+- `billing.listener.sqs.visibility-timeout-seconds` (`BILLING_SQS_VISIBILITY_TIMEOUT_SECONDS`, default `30`)
+- `billing.listener.sqs.poll-delay-ms` (`BILLING_SQS_POLL_DELAY_MS`, default `1000`)
+- `billing.listener.sqs.region` (`AWS_REGION`)
+- `billing.listener.sqs.security.access-key` (`AWS_ACCESS_KEY`)
+- `billing.listener.sqs.security.secret-key` (`AWS_SECRET_KEY`)
+
+## Notes / Known Issues
+
+- `spring.application.name` in `application.yml` is currently set to `poc_properties` (copied config). Consider changing it to `billing`.
+- `BillingSqsListener` acknowledges (deletes) messages even if processing fails (best-effort). See `processMessage()`.

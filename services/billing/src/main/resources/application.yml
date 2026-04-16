@@ -22,7 +22,7 @@ spring:
         hibernate:
           format_sql: true
   application:
-    name: poc_properties
+    name: billing
 
 management:
   endpoints:
