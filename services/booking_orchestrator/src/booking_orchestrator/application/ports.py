@@ -2,8 +2,11 @@
 
 from typing import Any, Protocol
 
-from booking_orchestrator.application.commands import CreateReservationCommand
-from booking_orchestrator.domain.events import BookingCreatedEvent
+from booking_orchestrator.application.commands import (
+    ChangeDatesReservationCommand,
+    CreateReservationCommand,
+)
+from booking_orchestrator.domain.events import BookingCreatedEvent, BookingDatesChangedEvent
 
 
 class BookingClient(Protocol):
@@ -15,6 +18,14 @@ class BookingClient(Protocol):
 
     async def cancel(self, booking_id: str, user_id: str) -> None:
         """Cancel a booking. Used for saga compensation."""
+        ...
+
+    async def get(self, booking_id: str) -> dict[str, Any]:
+        """Retrieve a booking by ID. Raises BookingNotFoundError on 404."""
+        ...
+
+    async def change_dates(self, command: ChangeDatesReservationCommand) -> dict[str, Any]:
+        """Change dates of a confirmed booking. Returns updated booking with price_difference."""
         ...
 
 
@@ -29,6 +40,6 @@ class PropertyClient(Protocol):
 class NotificationPublisher(Protocol):
     """Port for publishing domain events onto the notifications queue."""
 
-    async def publish(self, event: BookingCreatedEvent) -> None:
+    async def publish(self, event: BookingCreatedEvent | BookingDatesChangedEvent) -> None:
         """Publish the event. Raises NotificationPublishError on failure."""
         ...

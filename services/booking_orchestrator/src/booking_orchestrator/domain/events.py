@@ -40,3 +40,39 @@ class BookingCreatedEvent:
                 "email": self.user_email,
             },
         }
+
+
+@dataclass(frozen=True)
+class BookingDatesChangedEvent:
+    booking_id: str
+    property_id: str
+    user_id: str
+    user_email: str
+    old_period_start: str
+    old_period_end: str
+    new_period_start: str
+    new_period_end: str
+    new_price: Decimal
+    price_difference: Decimal
+
+    def to_message(self) -> dict[str, Any]:
+        """Serialize to the versioned JSON schema consumed by the notifications service."""
+        return {
+            "schema_version": SCHEMA_VERSION,
+            "type": "BOOKING_DATES_CHANGED",
+            "occurred_at": datetime.now(UTC).isoformat(),
+            "booking": {
+                "id": self.booking_id,
+                "property_id": self.property_id,
+                "old_period_start": self.old_period_start,
+                "old_period_end": self.old_period_end,
+                "new_period_start": self.new_period_start,
+                "new_period_end": self.new_period_end,
+                "new_price": str(self.new_price),
+                "price_difference": str(self.price_difference),
+            },
+            "recipient": {
+                "user_id": self.user_id,
+                "email": self.user_email,
+            },
+        }

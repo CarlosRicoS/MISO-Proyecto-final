@@ -8,17 +8,27 @@ where operators can inspect them.
 import logging
 from typing import Any, Callable
 
-from notifications.domain.events import SUPPORTED_SCHEMA_VERSION, BookingCreatedEvent
+from notifications.domain.events import (
+    SUPPORTED_SCHEMA_VERSION,
+    BookingCreatedEvent,
+    BookingDatesChangedEvent,
+)
 from notifications.domain.exceptions import UnsupportedSchemaError
 
 logger = logging.getLogger(__name__)
 
 BookingCreatedHandler = Callable[[BookingCreatedEvent], None]
+BookingDatesChangedHandler = Callable[[BookingDatesChangedEvent], None]
 
 
 class MessageDispatcher:
-    def __init__(self, booking_created_handler: BookingCreatedHandler) -> None:
+    def __init__(
+        self,
+        booking_created_handler: BookingCreatedHandler,
+        booking_dates_changed_handler: BookingDatesChangedHandler,
+    ) -> None:
         self._booking_created = booking_created_handler
+        self._booking_dates_changed = booking_dates_changed_handler
 
     def dispatch(self, message: dict[str, Any]) -> None:
         schema_version = message.get("schema_version")
@@ -32,6 +42,11 @@ class MessageDispatcher:
         if msg_type == "BOOKING_CREATED":
             event = BookingCreatedEvent.from_message(message)
             self._booking_created(event)
+            return
+
+        if msg_type == "BOOKING_DATES_CHANGED":
+            event = BookingDatesChangedEvent.from_message(message)
+            self._booking_dates_changed(event)
             return
 
         raise UnsupportedSchemaError(f"unknown message type={msg_type}")

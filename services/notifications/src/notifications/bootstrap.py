@@ -3,6 +3,7 @@
 import boto3
 
 from notifications.application.handle_booking_created import HandleBookingCreated
+from notifications.application.handle_booking_dates_changed import HandleBookingDatesChanged
 from notifications.config import settings
 from notifications.infrastructure.dispatcher import MessageDispatcher
 from notifications.infrastructure.smtp_email_sender import SmtpEmailSender
@@ -18,8 +19,10 @@ def build_consumer() -> SqsConsumer:
         use_tls=settings.SMTP_USE_TLS,
         from_address=settings.SMTP_FROM,
     )
-    handler = HandleBookingCreated(email_sender)
-    dispatcher = MessageDispatcher(booking_created_handler=handler)
+    dispatcher = MessageDispatcher(
+        booking_created_handler=HandleBookingCreated(email_sender),
+        booking_dates_changed_handler=HandleBookingDatesChanged(email_sender),
+    )
     sqs_client = boto3.client("sqs", region_name=settings.AWS_REGION)
     return SqsConsumer(
         sqs_client=sqs_client,

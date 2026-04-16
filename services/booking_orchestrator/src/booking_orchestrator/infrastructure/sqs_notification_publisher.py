@@ -9,7 +9,7 @@ import asyncio
 import json
 from typing import Any
 
-from booking_orchestrator.domain.events import BookingCreatedEvent
+from booking_orchestrator.domain.events import BookingCreatedEvent, BookingDatesChangedEvent
 from booking_orchestrator.domain.exceptions import NotificationPublishError
 
 
@@ -18,7 +18,7 @@ class SqsNotificationPublisher:
         self._client = sqs_client
         self._queue_url = queue_url
 
-    async def publish(self, event: BookingCreatedEvent) -> None:
+    async def publish(self, event: BookingCreatedEvent | BookingDatesChangedEvent) -> None:
         body = json.dumps(event.to_message())
         try:
             await asyncio.to_thread(
