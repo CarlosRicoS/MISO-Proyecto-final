@@ -1,0 +1,51 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+
+spring:
+  datasource:
+    hikari:
+      connection-timeout: ${HIKARI_CONNECTION_TIMEOUT:30000}
+      maximum-pool-size: ${HIKARI_MAX_POOL_SIZE:50}
+    url: jdbc:postgresql://${DB_HOST:localhost}:5432/${DB_NAME:postgres}?currentSchema=public
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:123456}
+    driverClassName: org.postgresql.Driver
+  jpa:
+    show-sql: ${JPA_SHOW_SQL:false}
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: ${JPA_DDL_AUTO:none}
+      show-sql: true
+      properties:
+        hibernate:
+          format_sql: true
+  application:
+    name: billing
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,traces
+  endpoint:
+    prometheus:
+      enabled: true
+
+logging:
+  include-details: true
+
+billing:
+  listener:
+    sqs:
+      enabled: ${BILLING_SQS_LISTENER_ENABLED:true}
+      queue-url: ${BILLING_QUEUE_URL}
+      max-messages: ${BILLING_SQS_MAX_MESSAGES:10}
+      wait-time-seconds: ${BILLING_SQS_WAIT_TIME_SECONDS:20}
+      visibility-timeout-seconds: ${BILLING_SQS_VISIBILITY_TIMEOUT_SECONDS:30}
+      poll-delay-ms: ${BILLING_SQS_POLL_DELAY_MS:1000}
+      region: ${AWS_REGION}
+      security:
+        access-key: ${AWS_ACCESS_KEY}
+        secret-key: ${AWS_SECRET_KEY}

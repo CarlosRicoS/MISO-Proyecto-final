@@ -9,6 +9,7 @@
       <list>
         <option value="$PROJECT_DIR$/services/poc_properties/pom.xml" />
         <option value="$PROJECT_DIR$/services/stripe_mock/pom.xml" />
+        <option value="$PROJECT_DIR$/services/billing/pom.xml" />
       </list>
     </option>
   </component>
