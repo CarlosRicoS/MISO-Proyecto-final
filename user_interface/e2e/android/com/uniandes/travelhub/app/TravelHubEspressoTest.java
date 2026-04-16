@@ -120,6 +120,43 @@ public class TravelHubEspressoTest {
         onWebView().check(webMatches(getCurrentUrl(), Matchers.containsString("capacity=2")));
     }
 
+    @Test
+    public void bookingListRouteRedirectsToLoginForAnonymousSession() {
+        onWebView().forceJavascriptEnabled();
+
+        onWebView().perform(script("sessionStorage.clear(); window.location.href='/booking-list';"));
+
+        waitForUrlContains("/login");
+        onWebView().check(webMatches(getCurrentUrl(), Matchers.containsString("returnUrl=%2Fbooking-list")));
+        waitForElement("//*[contains(text(),'Welcome Back')]");
+    }
+
+    @Test
+    public void bookingListRouteAllowsAuthenticatedSession() {
+        onWebView().forceJavascriptEnabled();
+
+        injectAuthenticatedSession();
+        onWebView().perform(script("window.location.href='/booking-list';"));
+
+        waitForUrlContains("/booking-list");
+        onWebView().check(webMatches(getCurrentUrl(), Matchers.containsString("/booking-list")));
+    }
+
+    private void injectAuthenticatedSession() {
+        String loginResponse =
+                "{"
+                        + "\\\"id_token\\\":\\\"header.eyJzdWIiOiJ1c2VyLTEyMyIsImVtYWlsIjoidHJhdmVsZXJAZXhhbXBsZS5jb20ifQ.signature\\\"," 
+                        + "\\\"access_token\\\":\\\"header.eyJzdWIiOiJ1c2VyLTEyMyIsImVtYWlsIjoidHJhdmVsZXJAZXhhbXBsZS5jb20ifQ.signature\\\"," 
+                        + "\\\"refresh_token\\\":\\\"refresh-token\\\"," 
+                        + "\\\"expires_in\\\":3600," 
+                        + "\\\"token_type\\\":\\\"Bearer\\\""
+                        + "}";
+
+        onWebView().perform(script(
+                "sessionStorage.setItem('th_auth_session', '" + loginResponse + "');"
+        ));
+    }
+
     private void waitForElement(String xpath) {
         long start = System.currentTimeMillis();
         long timeoutMs = 15000;

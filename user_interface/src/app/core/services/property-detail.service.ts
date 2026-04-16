@@ -8,6 +8,8 @@ import { PropertyAmenity, PropertyDetail, PropertyReview } from '../models/prope
 interface PropertyDetailApiResponse {
   id?: string;
   name?: string;
+  city?: string;
+  country?: string;
   maxCapacity?: number;
   description?: string;
   photos?: string[];
@@ -22,7 +24,7 @@ interface PropertyDetailApiResponse {
 export class PropertyDetailService {
   constructor(private http: HttpClient, private config: ConfigService) {}
 
-  getPropertyDetail(propertyId: string): Observable<PropertyDetail> {
+  getPropertyDetail(propertyId: string, accessToken?: string): Observable<PropertyDetail> {
     const baseUrl = this.config.apiBaseUrl?.replace(/\/$/, '');
     const propertyPath = this.config.propertyApiPath?.replace(/^\//, '') || 'poc-properties/api/property';
     const url = baseUrl ? `${baseUrl}/${propertyPath}/${propertyId}` : `/${propertyPath}/${propertyId}`;
@@ -31,8 +33,10 @@ export class PropertyDetailService {
       'Content-Type': 'application/json',
     };
 
-    if (this.config.propertyApiToken) {
-      headersConfig['Authorization'] = `Bearer ${this.config.propertyApiToken}`;
+    const token = accessToken || this.config.propertyApiToken;
+
+    if (token) {
+      headersConfig['Authorization'] = `Bearer ${token}`;
     }
 
     const headers = new HttpHeaders(headersConfig);
@@ -62,6 +66,8 @@ export class PropertyDetailService {
     return {
       id: response.id || fallbackId,
       name: response.name || 'Property',
+      city: response.city || '',
+      country: response.country || '',
       maxCapacity: response.maxCapacity ?? 0,
       description: response.description || '',
       photos: response.photos || [],

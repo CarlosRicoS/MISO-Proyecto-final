@@ -1,0 +1,67 @@
+<ion-content class="booking-list-content">
+  <section class="booking-list">
+    <div class="booking-list__inner">
+      <div class="booking-filters" role="tablist" aria-label="Reservation filters">
+        <button
+          type="button"
+          class="booking-filters__button"
+          *ngFor="let filter of bookingFilters"
+          [class.booking-filters__button--active]="isFilterActive(filter.key)"
+          (click)="setFilter(filter.key)"
+          [attr.aria-selected]="isFilterActive(filter.key)"
+        >
+          {{ filter.label }} ({{ filter.count }})
+        </button>
+      </div>
+    </div>
+
+    <div class="booking-list__inner">
+      <div class="booking-list__cards" *ngIf="!isLoading && visibleReservations.length">
+        <th-hotel-card
+          *ngFor="let reservation of visibleReservations"
+          class="booking-list-card"
+          variant="booking"
+          [title]="reservation.propertyName"
+          [location]="reservation.location"
+          [price]="formatPrice(reservation.price)"
+          pricePrefix="Total"
+          priceSuffix=""
+          [rating]="getReservationRating(reservation)"
+          [imageUrl]="reservation.photoUrl"
+          [ctaRouterLink]="null"
+          [showFavorite]="false"
+        >
+          <span th-card-status class="booking-list-tag booking-list-tag--status" [ngClass]="getStatusClass(reservation.status)">
+            {{ reservation.status }}
+          </span>
+
+          <div th-card-times class="booking-list-card__meta-row">
+            <span class="booking-list-tag booking-list-tag--meta">
+              <ion-icon name="calendar-outline" aria-hidden="true"></ion-icon>
+              {{ formatStayDateRange(reservation.period_start, reservation.period_end) }}
+            </span>
+            <span class="booking-list-tag booking-list-tag--meta">
+              <ion-icon name="moon" aria-hidden="true"></ion-icon>
+              {{ getNightsLabel(reservation.period_start, reservation.period_end) }}
+            </span>
+          </div>
+        </th-hotel-card>
+      </div>
+
+      <ion-infinite-scroll
+        threshold="120px"
+        [disabled]="isLoading || isPaging || !canLoadNext"
+        (ionInfinite)="loadMoreReservations($event)"
+      >
+        <ion-infinite-scroll-content
+          loadingSpinner="bubbles"
+          loadingText="Loading more reservations..."
+        ></ion-infinite-scroll-content>
+      </ion-infinite-scroll>
+
+      <p class="booking-list-empty" *ngIf="isLoading">Loading reservations...</p>
+      <p class="booking-list-empty" *ngIf="!isLoading && errorMessage">{{ errorMessage }}</p>
+      <p class="booking-list-empty" *ngIf="!isLoading && !errorMessage && !visibleReservations.length">{{ emptyLabel }}</p>
+    </div>
+  </section>
+</ion-content>

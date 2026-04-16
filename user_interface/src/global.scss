@@ -58,7 +58,7 @@ ion-input.th-filter__input[type='number'] input[type='number'] {
 ion-input.th-filter__input[type='number'] input[type='number']::-webkit-outer-spin-button,
 ion-input.th-filter__input[type='number'] input[type='number']::-webkit-inner-spin-button {
 	-webkit-appearance: none !important;
-	margin: 0;
+	margin: var(--th-space-0);
 }
 
 /* Shadow-part fallback for engines/builds that expose ion-input native part. */
@@ -78,7 +78,7 @@ ion-input.th-payment-summary__input[type='number'] input[type='number'] {
 ion-input.th-payment-summary__input[type='number'] input[type='number']::-webkit-outer-spin-button,
 ion-input.th-payment-summary__input[type='number'] input[type='number']::-webkit-inner-spin-button {
 	-webkit-appearance: none !important;
-	margin: 0;
+	margin: var(--th-space-0);
 }
 
 /* Shadow-part fallback for engines/builds that expose ion-input native part. */

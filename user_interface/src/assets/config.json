@@ -1,6 +1,8 @@
 {
-  "apiBaseUrl": "https://3pwlikf891.execute-api.us-east-1.amazonaws.com",
+  "playwrightBaseUrl": "http://localhost:4200",
+  "apiBaseUrl": "http://localhost:8080",
   "propertyApiPath": "/poc-properties/api/property",
   "propertyApiToken": "",
-  "bookingApiPath": "/booking-orchestrator/api/reservations"
+  "bookingApiPath": "/booking-orchestrator/api/reservations",
+  "bookingListApiPath": "/booking/api/booking"
 }

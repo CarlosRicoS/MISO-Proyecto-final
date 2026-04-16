@@ -195,4 +195,188 @@ describe('ThPaymentSummaryComponent', () => {
 
     expect(actionSpy).toHaveBeenCalled();
   });
+
+  it('resets mobile editor when sticky mode is disabled', () => {
+    TestBed.configureTestingModule({
+      imports: [ThPaymentSummaryComponent],
+      providers: [
+        {
+          provide: ActivatedRoute,
+          useValue: {},
+        },
+      ],
+    });
+
+    const fixture = TestBed.createComponent(ThPaymentSummaryComponent);
+    const component = fixture.componentInstance;
+
+    component.isMobileEditorOpen = true;
+    component.mobileSticky = false;
+
+    component.ngOnChanges({
+      mobileSticky: {
+        currentValue: false,
+        previousValue: true,
+        firstChange: false,
+        isFirstChange: () => false,
+      },
+    });
+
+    expect(component.isMobileEditorOpen).toBeFalse();
+  });
+
+  it('resets mobile editor when reset trigger changes in sticky mode', () => {
+    TestBed.configureTestingModule({
+      imports: [ThPaymentSummaryComponent],
+      providers: [
+        {
+          provide: ActivatedRoute,
+          useValue: {},
+        },
+      ],
+    });
+
+    const fixture = TestBed.createComponent(ThPaymentSummaryComponent);
+    const component = fixture.componentInstance;
+
+    component.mobileSticky = true;
+    component.isMobileEditorOpen = true;
+
+    component.ngOnChanges({
+      editorResetTrigger: {
+        currentValue: 2,
+        previousValue: 1,
+        firstChange: false,
+        isFirstChange: () => false,
+      },
+    });
+
+    expect(component.isMobileEditorOpen).toBeFalse();
+  });
+
+  it('opens mobile editor when errors are present in sticky mode', () => {
+    TestBed.configureTestingModule({
+      imports: [ThPaymentSummaryComponent],
+      providers: [
+        {
+          provide: ActivatedRoute,
+          useValue: {},
+        },
+      ],
+    });
+
+    const fixture = TestBed.createComponent(ThPaymentSummaryComponent);
+    const component = fixture.componentInstance;
+
+    component.mobileSticky = true;
+    component.isMobileEditorOpen = false;
+    component.checkInError = 'Missing check-in';
+
+    component.ngOnChanges({
+      checkInError: {
+        currentValue: 'Missing check-in',
+        previousValue: '',
+        firstChange: false,
+        isFirstChange: () => false,
+      },
+    });
+
+    expect(component.isMobileEditorOpen).toBeTrue();
+  });
+
+  it('normalizes guests value on input changes', () => {
+    TestBed.configureTestingModule({
+      imports: [ThPaymentSummaryComponent],
+      providers: [
+        {
+          provide: ActivatedRoute,
+          useValue: {},
+        },
+      ],
+    });
+
+    const fixture = TestBed.createComponent(ThPaymentSummaryComponent);
+    const component = fixture.componentInstance;
+
+    component.guestsValue = '2 adults';
+
+    component.ngOnChanges({
+      guestsValue: {
+        currentValue: '2 adults',
+        previousValue: '1',
+        firstChange: false,
+        isFirstChange: () => false,
+      },
+    });
+
+    expect(component.guestsValue).toBe('2');
+  });
+
+  it('closes check-out modal when cancelled and confirms checkout date', () => {
+    TestBed.configureTestingModule({
+      imports: [ThPaymentSummaryComponent],
+      providers: [
+        {
+          provide: ActivatedRoute,
+          useValue: {},
+        },
+      ],
+    });
+
+    const fixture = TestBed.createComponent(ThPaymentSummaryComponent);
+    const component = fixture.componentInstance;
+    const checkOutSpy = spyOn(component.checkOutValueChange, 'emit');
+
+    component.onCheckOutConfirmed(new Date(2024, 11, 25));
+    expect(component.checkOutValue).toBe('25/12/2024');
+    expect(checkOutSpy).toHaveBeenCalledWith('25/12/2024');
+
+    component.showCheckOutModal = true;
+    component.tempDate = '2024-12-25';
+    component.onCheckOutCancelled();
+
+    expect(component.showCheckOutModal).toBeFalse();
+    expect(component.tempDate).toBeNull();
+  });
+
+  it('opens mobile editor when action is clicked and errors exist', () => {
+    TestBed.configureTestingModule({
+      imports: [ThPaymentSummaryComponent],
+      providers: [
+        {
+          provide: ActivatedRoute,
+          useValue: {},
+        },
+      ],
+    });
+
+    const fixture = TestBed.createComponent(ThPaymentSummaryComponent);
+    const component = fixture.componentInstance;
+    const actionSpy = spyOn(component.actionClick, 'emit');
+
+    component.mobileSticky = true;
+    component.checkOutError = 'Invalid checkout';
+    component.onActionClicked();
+
+    expect(component.isMobileEditorOpen).toBeTrue();
+    expect(actionSpy).toHaveBeenCalled();
+  });
+
+  it('returns null when converting malformed date strings', () => {
+    TestBed.configureTestingModule({
+      imports: [ThPaymentSummaryComponent],
+      providers: [
+        {
+          provide: ActivatedRoute,
+          useValue: {},
+        },
+      ],
+    });
+
+    const fixture = TestBed.createComponent(ThPaymentSummaryComponent);
+    const component = fixture.componentInstance;
+
+    expect(component.convertDDMMYYYYToISO('2024-12-25')).toBeNull();
+    expect(component.convertDDMMYYYYToISO('')).toBeNull();
+  });
 });

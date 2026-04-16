@@ -1,4 +1,4 @@
-import { Directive, ElementRef, Input, OnDestroy, OnInit, Renderer2 } from '@angular/core';
+import { Directive, ElementRef, Input, OnDestroy, OnInit, Renderer2, inject } from '@angular/core';
 import { Platform } from '@ionic/angular';
 
 @Directive({
@@ -10,13 +10,10 @@ export class PlatformTextDirective implements OnInit, OnDestroy {
   @Input() appPlatformTextMobile = '';
   @Input() appPlatformShow: 'web' | 'mobile' | '' = '';
 
+  private readonly elementRef = inject(ElementRef<HTMLElement>);
+  private readonly renderer = inject(Renderer2);
+  private readonly platform = inject(Platform);
   private removeResizeListener?: () => void;
-
-  constructor(
-    private elementRef: ElementRef,
-    private renderer: Renderer2,
-    private platform: Platform
-  ) {}
 
   ngOnInit(): void {
     this.applyText();

@@ -17,7 +17,7 @@
 }
 
 .th-navbar--mobile-search {
-  background: #2d67ea;
+  background: var(--th-blue-620);
   border: none;
   box-shadow: none;
   --border-color: transparent;
@@ -30,11 +30,41 @@
 }
 
 .th-navbar--mobile-search .th-navbar__toolbar {
-  --background: #2d67ea;
+  --background: var(--th-blue-620);
+}
+
+.th-navbar--mobile-booking {
+  background: var(--th-page-background);
+  border: none;
+  box-shadow: none;
+  --border-color: transparent;
+  --border-width: 0;
+}
+
+.th-navbar--mobile-booking .th-navbar__toolbar::part(container) {
+	border-bottom: none;
+	box-shadow: none;
+}
+
+.th-navbar--mobile-booking .th-navbar__toolbar {
+  --background: var(--th-page-background);
+}
+
+.th-navbar--mobile-booking .th-navbar__mobile-action {
+  color: var(--th-neutral-700);
+  --color: var(--th-neutral-700);
+}
+
+.th-navbar--mobile-booking .th-navbar__mobile-title {
+  color: var(--th-neutral-900);
+}
+
+.th-navbar--mobile-booking .th-navbar__mobile-action ion-icon {
+  color: var(--th-neutral-700);
 }
 
 .th-navbar--mobile-detail {
-  background: #f3f4f6;
+  background: var(--th-gray-100-alt);
   border: none;
   box-shadow: none;
   --border-color: transparent;
@@ -42,7 +72,7 @@
 }
 
 .th-navbar--mobile-detail .th-navbar__toolbar {
-  --background: #f3f4f6;
+  --background: var(--th-gray-100-alt);
 }
 
 .th-navbar__inner {
@@ -107,10 +137,10 @@
   align-items: center;
   gap: var(--th-space-2);
   font-size: var(--th-text-body-md-size);
-  color: #000000;
+  color: var(--th-black);
   text-decoration: none;
   font-weight: var(--th-font-weight-medium);
-  --color: #000000;
+  --color: var(--th-black);
   --background: transparent;
   --box-shadow: none;
   --padding-start: 8px;
@@ -145,7 +175,7 @@
 .th-navbar__icon-btn {
   width: 36px;
   height: 36px;
-  border-radius: 50%;
+  border-radius: var(--th-radius-circle, 50%);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -163,8 +193,8 @@
 .th-navbar__mobile-action {
   width: 40px;
   height: 40px;
-  color: #ffffff;
-  --color: #ffffff;
+  color: var(--th-white);
+  --color: var(--th-white);
   --background: transparent;
   --box-shadow: none;
   --padding-start: 0;
@@ -174,25 +204,25 @@
 .th-navbar__mobile-title {
   flex: 1;
   text-align: center;
-  font-size: 16px;
-  font-weight: 600;
-  color: #ffffff;
+  font-size: var(--th-text-body-lg-size);
+  font-weight: var(--th-font-weight-semibold);
+  color: var(--th-white);
 }
 
 .th-navbar__mobile-actions-right {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+gap: var(--th-space-2);
 }
 
 .th-navbar__mobile-action--detail {
   width: 42px;
   height: 42px;
-  color: #1f2937;
-  --color: #1f2937;
-  --background: #ffffff;
+  color: var(--th-slate-800);
+  --color: var(--th-slate-800);
+  --background: var(--th-white);
   --border-radius: 999px;
-  --box-shadow: 0 2px 6px rgba(15, 23, 42, 0.15);
+  --box-shadow: 0 2px 6px var(--th-overlay-slate-15);
   --padding-start: 0;
   --padding-end: 0;
 }

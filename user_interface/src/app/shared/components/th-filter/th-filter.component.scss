@@ -23,7 +23,7 @@
 .th-filter__group {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--th-space-2);
 }
 
 .th-filter__group--location {
@@ -65,19 +65,19 @@
 
 .th-filter__field:focus-within {
   border-color: var(--th-primary-500);
-  box-shadow: 0 0 0 2px rgba(59, 99, 247, 0.2);
+  box-shadow: 0 0 0 2px var(--th-overlay-primary-20);
 }
 
 .th-filter__field:focus-visible {
   outline: none;
   border-color: var(--th-primary-500);
-  box-shadow: 0 0 0 2px rgba(59, 99, 247, 0.2);
+  box-shadow: 0 0 0 2px var(--th-overlay-primary-20);
 }
 
 @media (hover: hover) and (pointer: fine) {
   .th-filter__field:hover {
     border-color: var(--th-primary-300);
-    box-shadow: 0 1px 0 rgba(59, 99, 247, 0.12);
+    box-shadow: 0 1px 0 var(--th-overlay-primary-12);
   }
 }
 
@@ -86,7 +86,7 @@
 }
 
 .th-filter__icon {
-  font-size: 20px;
+  font-size: var(--th-text-h3-size);
   color: var(--th-neutral-700);
   margin-right: 8px;
 }
@@ -97,8 +97,8 @@
 
 .th-filter__text {
   display: grid;
-  gap: 2px;
-  margin: 0;
+gap: var(--th-space-1);
+  margin: var(--th-space-0);
 }
 
 .th-filter__input {
@@ -113,13 +113,13 @@
 }
 
 ::ng-deep .th-filter__input::part(native) {
-  padding: 0;
+  padding: var(--th-space-0);
 }
 
 ::ng-deep .th-filter__group--guests .th-filter__input::part(native)::-webkit-outer-spin-button,
 ::ng-deep .th-filter__group--guests .th-filter__input::part(native)::-webkit-inner-spin-button {
   -webkit-appearance: none;
-  margin: 0;
+  margin: var(--th-space-0);
 }
 
 ::ng-deep .th-filter__group--guests .th-filter__input::part(native) {
@@ -171,7 +171,7 @@
 @media (hover: hover) and (pointer: fine) {
   .th-filter__action:not(:disabled):hover {
     --background: var(--th-primary-600);
-    box-shadow: 0 8px 16px rgba(59, 99, 247, 0.2);
+    box-shadow: 0 8px 16px var(--th-overlay-primary-20);
   }
 }
 

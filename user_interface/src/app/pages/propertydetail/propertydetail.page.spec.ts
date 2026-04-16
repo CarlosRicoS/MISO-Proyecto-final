@@ -341,4 +341,25 @@ describe('PropertydetailPage', () => {
     expect(payload.period_end).toBe('2026-05-12');
     expect(token).toBe('token-123');
   });
+
+  it('redirects to booking-list after successful booking alert is dismissed', async () => {
+    const authSession = TestBed.inject(AuthSessionService) as unknown as AuthSessionServiceMock;
+
+    authSession.isLoggedIn = true;
+    authSession.userId = 'user-1';
+    authSession.userEmail = 'user@example.com';
+    authSession.idToken = 'token-123';
+
+    component.paymentSummary = {
+      ...component.paymentSummary,
+      checkInValue: '2026-05-10',
+      checkOutValue: '2026-05-12',
+      guestsValue: '2',
+    };
+
+    await component.onBookNow();
+    component.onAlertDismissed();
+
+    expect((routerMock.navigate as jasmine.Spy)).toHaveBeenCalledWith(['/booking-list']);
+  });
 });

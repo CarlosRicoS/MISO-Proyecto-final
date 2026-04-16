@@ -27,6 +27,22 @@ export class ThNavbarComponent {
     return this.router.url.startsWith('/search-results');
   }
 
+  get isBookingList(): boolean {
+    return this.router.url.startsWith('/booking-list');
+  }
+
+  get isSearchLikeRoute(): boolean {
+    return this.isSearchResults || this.isBookingList;
+  }
+
+  get mobileTitle(): string {
+    if (this.isBookingList) {
+      return 'My Reservations';
+    }
+
+    return 'Search Results';
+  }
+
   get isPropertyDetail(): boolean {
     return this.router.url.startsWith('/propertydetail');
   }

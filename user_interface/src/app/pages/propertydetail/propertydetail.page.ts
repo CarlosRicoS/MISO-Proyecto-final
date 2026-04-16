@@ -418,7 +418,7 @@ export class PropertydetailPage implements OnInit {
     if (this.bookingSuccess) {
       this.bookingSuccess = false;
       this.clearLoadedPropertyDetails();
-      this.router.navigate(['/home']);
+      this.router.navigate(['/booking-list']);
     }
   }
 

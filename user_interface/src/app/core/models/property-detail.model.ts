@@ -13,6 +13,8 @@ export interface PropertyReview {
 export interface PropertyDetail {
   id: string;
   name: string;
+  city: string;
+  country: string;
   maxCapacity: number;
   description: string;
   photos: string[];

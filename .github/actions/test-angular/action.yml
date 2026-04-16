@@ -24,6 +24,19 @@ runs:
         cd ${{ inputs.context-path }}
         npm ci
 
+    - name: Fetch base branch for guardrail diff context
+      shell: bash
+      run: |
+        if [[ -n "${GITHUB_BASE_REF:-}" ]]; then
+          git fetch --no-tags --depth=200 origin "refs/heads/${GITHUB_BASE_REF}:refs/remotes/origin/${GITHUB_BASE_REF}" || true
+        fi
+
+    - name: Run lint and frontend guardrails
+      shell: bash
+      run: |
+        cd ${{ inputs.context-path }}
+        npm run lint:ci
+
     - name: Run tests and check coverage
       shell: bash
       run: |

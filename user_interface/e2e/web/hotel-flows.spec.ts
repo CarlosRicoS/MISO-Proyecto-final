@@ -47,6 +47,11 @@ const mockedPropertyDetail = {
   reviews: [{ id: 'rev-1', description: 'Great stay!', rating: 5, name: 'Ana' }],
 };
 
+function buildJwt(payload: Record<string, string>): string {
+  const encodedPayload = Buffer.from(JSON.stringify(payload)).toString('base64url');
+  return `header.${encodedPayload}.signature`;
+}
+
 async function mockPropertyApis(page: Page): Promise<void> {
   await page.route('**/api/property**', async (route) => {
     const requestUrl = new URL(route.request().url());
@@ -75,6 +80,13 @@ async function mockPropertyApis(page: Page): Promise<void> {
       contentType: 'application/json',
       body: JSON.stringify({ message: 'Not found' }),
     });
+  });
+}
+
+async function triggerInfiniteScrollLoad(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    const infinite = document.querySelector('ion-infinite-scroll');
+    infinite?.dispatchEvent(new CustomEvent('ionInfinite', { bubbles: true, composed: true }));
   });
 }
 
@@ -114,6 +126,49 @@ test.describe('TravelHub core journeys', () => {
     await expect(page.getByRole('heading', { level: 1, name: 'Andes Palace Hotel' })).toBeVisible();
     await expect(page.getByText('Free WiFi').first()).toBeVisible();
     await expect(page.getByText('Book Now').first()).toBeVisible();
+  });
+
+  test('book now success redirects to booking list', async ({ page }) => {
+    const idToken = buildJwt({ email: 'traveler@example.com', sub: 'user-123' });
+    const accessToken = buildJwt({ email: 'traveler@example.com', sub: 'user-123' });
+
+    await page.addInitScript(([id, access]) => {
+      const loginResponse = {
+        id_token: id,
+        access_token: access,
+        refresh_token: 'refresh-token',
+        expires_in: 3600,
+        token_type: 'Bearer',
+      };
+
+      window.sessionStorage.setItem('th_auth_session', JSON.stringify(loginResponse));
+    }, [idToken, accessToken]);
+
+    await page.route('**/booking-orchestrator/api/reservations', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ reservation_id: 'r-1' }),
+      });
+    });
+
+    await page.route('**/booking/api/booking**', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify([]),
+      });
+    });
+
+    await page.goto('/search-results?city=Bogota&startDate=2026-05-10&endDate=2026-05-12&capacity=2');
+    await page.getByRole('button', { name: 'View Details' }).first().click();
+
+    await expect(page).toHaveURL(/\/propertydetail\//);
+    await page.getByRole('button', { name: 'Book Now' }).click();
+
+    await expect(page.getByText('Reservation Created')).toBeVisible();
+    await page.getByRole('button', { name: 'OK' }).click();
+    await expect(page).toHaveURL(/\/booking-list/);
   });
 
   test('search results shows empty state for no matches', async ({ page }) => {
@@ -218,6 +273,8 @@ test.describe('TravelHub core journeys', () => {
   });
 
   test('search results can advance beyond 3 pages', async ({ page }) => {
+    let highestRequestedPage = 0;
+
     await page.route('**/api/property**', async (route) => {
       const requestUrl = new URL(route.request().url());
       const path = requestUrl.pathname;
@@ -231,6 +288,8 @@ test.describe('TravelHub core journeys', () => {
       const sizeParam = Number.parseInt(requestUrl.searchParams.get('size') ?? '10', 10);
       const pageIndex = Number.isNaN(pageParam) ? 0 : pageParam;
       const pageSize = Number.isNaN(sizeParam) ? 10 : sizeParam;
+
+      highestRequestedPage = Math.max(highestRequestedPage, pageIndex);
 
       const allHotels = Array.from({ length: 70 }, (_, index) => ({
         id: `hotel-${index + 1}`,
@@ -258,31 +317,20 @@ test.describe('TravelHub core journeys', () => {
 
     for (let i = 0; i < 4; i += 1) {
       const expectedPage = i + 1;
-      const responsePromise = page.waitForResponse((response) => {
-        if (!response.url().includes('/api/property')) {
-          return false;
-        }
-
-        const requestUrl = new URL(response.url());
-        return requestUrl.searchParams.get('page') === String(expectedPage);
+      const pageBoundaryHotelHeading = page.getByRole('heading', {
+        name: `Infinite Hotel ${(expectedPage + 1) * 10}`,
+        exact: true,
       });
 
-      await page.evaluate(() => {
-        const content = document.querySelector('ion-content');
-        const scrollContainer = content?.shadowRoot?.querySelector('.inner-scroll') as HTMLElement | null;
-        scrollContainer?.scrollTo({ top: scrollContainer.scrollHeight, behavior: 'instant' as ScrollBehavior });
-      });
+      await triggerInfiniteScrollLoad(page);
 
-      await page.evaluate(() => {
-        const infinite = document.querySelector('ion-infinite-scroll');
-        infinite?.dispatchEvent(new CustomEvent('ionInfinite', { bubbles: true, composed: true }));
-      });
+      await expect
+        .poll(() => highestRequestedPage, {
+          message: `Expected API page ${expectedPage} to be requested`,
+        })
+        .toBeGreaterThanOrEqual(expectedPage);
 
-      await responsePromise;
-
-      await expect(
-        page.getByRole('heading', { name: `Infinite Hotel ${(expectedPage + 1) * 10}`, exact: true })
-      ).toBeVisible();
+      await expect(pageBoundaryHotelHeading).toBeVisible({ timeout: 10000 });
     }
 
     await expect(page.getByText('20 hotels found')).toBeVisible();

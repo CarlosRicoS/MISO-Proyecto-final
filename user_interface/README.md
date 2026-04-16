@@ -182,6 +182,45 @@ APK esperado:
 - Mantener lógica de negocio en servicios, no en plantillas
 - Mantener alineados los escenarios de Playwright y Espresso cuando cambien flujos
 
+## Frontend guardrails (toggle)
+
+El chequeo de guardrails de frontend existe en `scripts/check-frontend-guardrails.mjs` y valida:
+
+- uso de tokens de tema en SCSS (evitar literales crudos)
+- preferencia por controles Ionic en HTML
+- consistencia de ubicación para selectores `th-*`
+
+Estado por defecto:
+
+- deshabilitado (no bloquea por defecto)
+
+Cómo habilitar localmente:
+
+1. `cd user_interface`
+2. `npm run lint:guardrails:enable`
+
+Escaneo completo habilitado:
+
+1. `cd user_interface`
+2. `npm run lint:guardrails:all:enable`
+
+Habilitar con variable de entorno (alternativa):
+
+1. `cd user_interface`
+2. `FRONTEND_GUARDRAILS_ENABLED=true npm run lint:guardrails`
+
+Cómo deshabilitar explícitamente:
+
+1. `cd user_interface`
+2. `npm run lint:guardrails:disable`
+
+Comportamiento en CI:
+
+- `npm run lint:ci` ejecuta `lint` y luego `lint:guardrails`.
+- Como el checker está deshabilitado por defecto, para activarlo en CI configura:
+  `FRONTEND_GUARDRAILS_ENABLED=true`
+- Puedes definir esa variable a nivel workflow/job/step para encender o apagar la validación según el pipeline.
+
 ## Notas
 
 - Si falta Gradle wrapper en android/gradle/wrapper, restáuralo antes de ejecutar pruebas Android.
