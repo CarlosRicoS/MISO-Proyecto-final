@@ -9,7 +9,9 @@ service_names = [
   "pricing-orchestator",
   "booking",
   "booking-orchestrator",
-  "auth"
+  "auth",
+  "billing",
+  "stripe-mock"
 ]
 
 enable_auth = true
@@ -18,5 +20,7 @@ public_services = [
   "auth",
   "poc-properties",
   "pricing-engine",
-  "pricing-orchestator"
+  "pricing-orchestator",
+  "billing",
+  "stripe-mock"
 ]

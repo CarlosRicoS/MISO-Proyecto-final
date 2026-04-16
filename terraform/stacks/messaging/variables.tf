@@ -20,3 +20,15 @@ variable "notifications_queue_max_receive_count" {
   type        = number
   default     = 5
 }
+
+variable "billing_queue_visibility_timeout" {
+  description = "Visibility timeout for the billing queue. Must exceed the longest billing processing path."
+  type        = number
+  default     = 60
+}
+
+variable "billing_queue_max_receive_count" {
+  description = "Max deliveries before messages go to the billing DLQ."
+  type        = number
+  default     = 5
+}
