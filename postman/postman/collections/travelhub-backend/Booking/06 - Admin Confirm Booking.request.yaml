@@ -1,0 +1,19 @@
+$kind: http-request
+name: Admin Confirm Booking
+url: "{{base_url}}/booking/api/booking/{{booking_id}}/admin-confirm"
+method: POST
+headers:
+  Authorization: "Bearer {{id_token}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Returns 200 with CONFIRMED status', function () {
+        pm.response.to.have.status(200);
+        pm.expect(pm.response.json().status).to.equal('CONFIRMED');
+      });
+      pm.test('Response has ADMIN payment_reference', function () {
+        const json = pm.response.json();
+        pm.expect(json.payment_reference).to.match(/^ADMIN-/);
+      });
+    language: text/javascript
+order: 6000

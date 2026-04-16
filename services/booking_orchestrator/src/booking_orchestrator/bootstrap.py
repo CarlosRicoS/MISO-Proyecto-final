@@ -10,6 +10,9 @@ import boto3
 import httpx
 from fastapi import Depends
 
+from booking_orchestrator.application.admin_confirm_reservation import AdminConfirmReservationUseCase
+from booking_orchestrator.application.admin_reject_reservation import AdminRejectReservationUseCase
+from booking_orchestrator.application.change_dates_reservation import ChangeDatesReservationUseCase
 from booking_orchestrator.application.create_reservation import CreateReservationUseCase
 from booking_orchestrator.config import settings
 from booking_orchestrator.infrastructure.httpx_booking_client import HttpxBookingClient
@@ -54,6 +57,38 @@ def get_create_reservation_use_case(
     return CreateReservationUseCase(
         booking_client=booking_client,
         property_client=property_client,
+        publisher=publisher,
+    )
+
+
+def get_change_dates_reservation_use_case(
+    booking_client: BookingClientDep,
+    property_client: PropertyClientDep,
+    publisher: PublisherDep,
+) -> ChangeDatesReservationUseCase:
+    return ChangeDatesReservationUseCase(
+        booking_client=booking_client,
+        property_client=property_client,
+        publisher=publisher,
+    )
+
+
+def get_admin_confirm_reservation_use_case(
+    booking_client: BookingClientDep,
+    publisher: PublisherDep,
+) -> AdminConfirmReservationUseCase:
+    return AdminConfirmReservationUseCase(
+        booking_client=booking_client,
+        publisher=publisher,
+    )
+
+
+def get_admin_reject_reservation_use_case(
+    booking_client: BookingClientDep,
+    publisher: PublisherDep,
+) -> AdminRejectReservationUseCase:
+    return AdminRejectReservationUseCase(
+        booking_client=booking_client,
         publisher=publisher,
     )
 

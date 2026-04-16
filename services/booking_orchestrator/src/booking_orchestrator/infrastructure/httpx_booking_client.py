@@ -8,8 +8,17 @@ from typing import Any
 
 import httpx
 
-from booking_orchestrator.application.commands import CreateReservationCommand
-from booking_orchestrator.domain.exceptions import BookingCreateError
+from booking_orchestrator.application.commands import (
+    ChangeDatesReservationCommand,
+    CreateReservationCommand,
+)
+from booking_orchestrator.domain.exceptions import (
+    BookingChangeDatesError,
+    BookingConfirmError,
+    BookingCreateError,
+    BookingNotFoundError,
+    BookingRejectError,
+)
 
 
 class HttpxBookingClient:
@@ -48,3 +57,64 @@ class HttpxBookingClient:
         if response.status_code not in (200, 409):
             # 409 already-cancelled is acceptable for compensation idempotency.
             response.raise_for_status()
+
+    async def get(self, booking_id: str) -> dict[str, Any]:
+        try:
+            response = await self._client.get(f"/api/booking/{booking_id}")
+        except httpx.HTTPError as exc:
+            raise BookingCreateError(f"booking service unreachable: {exc}") from exc
+
+        if response.status_code == 404:
+            raise BookingNotFoundError(booking_id)
+
+        if response.status_code != 200:
+            raise BookingCreateError(
+                f"booking service returned {response.status_code}: {response.text}"
+            )
+        return response.json()
+
+    async def change_dates(self, command: ChangeDatesReservationCommand) -> dict[str, Any]:
+        payload = {
+            "new_period_start": command.new_period_start,
+            "new_period_end": command.new_period_end,
+            "new_price": str(command.new_price),
+        }
+        headers = {"X-User-Id": command.user_id}
+        try:
+            response = await self._client.patch(
+                f"/api/booking/{command.booking_id}/dates", json=payload, headers=headers
+            )
+        except httpx.HTTPError as exc:
+            raise BookingChangeDatesError(f"booking service unreachable: {exc}", 502) from exc
+
+        if response.status_code != 200:
+            detail = response.json().get("detail", response.text) if response.content else response.text
+            raise BookingChangeDatesError(detail, response.status_code)
+
+        return response.json()
+
+    async def admin_confirm(self, booking_id: str) -> dict[str, Any]:
+        try:
+            response = await self._client.post(f"/api/booking/{booking_id}/admin-confirm")
+        except httpx.HTTPError as exc:
+            raise BookingConfirmError(f"booking service unreachable: {exc}", 502) from exc
+
+        if response.status_code != 200:
+            detail = response.json().get("detail", response.text) if response.content else response.text
+            raise BookingConfirmError(detail, response.status_code)
+
+        return response.json()
+
+    async def admin_reject(self, booking_id: str, reason: str) -> dict[str, Any]:
+        try:
+            response = await self._client.post(
+                f"/api/booking/{booking_id}/admin-reject", json={"reason": reason}
+            )
+        except httpx.HTTPError as exc:
+            raise BookingRejectError(f"booking service unreachable: {exc}", 502) from exc
+
+        if response.status_code != 200:
+            detail = response.json().get("detail", response.text) if response.content else response.text
+            raise BookingRejectError(detail, response.status_code)
+
+        return response.json()

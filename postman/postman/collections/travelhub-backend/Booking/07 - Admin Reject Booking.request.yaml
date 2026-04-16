@@ -1,0 +1,26 @@
+$kind: http-request
+name: Admin Reject Booking
+url: "{{base_url}}/booking/api/booking/{{booking_id}}/admin-reject"
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: "Bearer {{id_token}}"
+body:
+  type: json
+  content: |-
+    {
+      "reason": "La propiedad no está disponible para las fechas seleccionadas."
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Returns 200 with REJECTED status', function () {
+        pm.response.to.have.status(200);
+        pm.expect(pm.response.json().status).to.equal('REJECTED');
+      });
+      pm.test('Response has rejection_reason', function () {
+        const json = pm.response.json();
+        pm.expect(json.rejection_reason).to.be.a('string').and.not.empty;
+      });
+    language: text/javascript
+order: 7000

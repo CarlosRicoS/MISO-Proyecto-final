@@ -1,0 +1,30 @@
+$kind: http-request
+name: Admin Confirm Reservation
+url: "{{base_url}}/booking-orchestrator/api/reservations/{{booking_id}}/admin-confirm"
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{id_token}}
+body:
+  type: json
+  content: |-
+    {
+      "traveler_email": "{{traveler_email}}"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Returns 200 OK', function () {
+        pm.response.to.have.status(200);
+      });
+      pm.test('Booking status is CONFIRMED', function () {
+        const json = pm.response.json();
+        pm.expect(json.status).to.eql('CONFIRMED');
+      });
+      pm.test('Response has payment_reference', function () {
+        const json = pm.response.json();
+        pm.expect(json).to.have.property('payment_reference');
+        pm.expect(json.payment_reference).to.match(/^ADMIN-/);
+      });
+    language: text/javascript
+order: 3000

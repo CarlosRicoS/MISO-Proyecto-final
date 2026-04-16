@@ -1,0 +1,43 @@
+$kind: http-request
+name: "06 - Change Booking Dates"
+url: "{{base_url}}/booking/api/booking/{{booking_id}}/dates"
+method: PATCH
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{id_token}}
+body:
+  type: json
+  content: |-
+    {
+      "new_period_start": "2026-08-01",
+      "new_period_end": "2026-08-06",
+      "new_price": "{{flow_new_price}}"
+    }
+scripts:
+  - type: beforeRequest
+    code: |-
+      // Only CONFIRMED bookings can have their dates changed.
+      // The booking created in step 05 via the orchestrator starts in PENDING status.
+      // This step demonstrates the 409 response the service returns when the booking
+      // is not yet CONFIRMED, which maps to the "no availability / not allowed" guard.
+      // In production, the booking-orchestrator would verify availability with the
+      // property service before calling this endpoint on a CONFIRMED booking.
+      const newPrice = (Math.random() * 200 + 200).toFixed(2);
+      pm.collectionVariables.set('flow_new_price', newPrice);
+      console.log('Attempting date change for booking_id:', pm.collectionVariables.get('booking_id'));
+      console.log('New price generated:', newPrice);
+    language: text/javascript
+  - type: afterResponse
+    code: |-
+      // The booking from step 05 is PENDING, so the service correctly rejects the
+      // date change with 409 Conflict — only CONFIRMED bookings are allowed.
+      pm.test('Returns 409 - booking not in CONFIRMED status', function () {
+        pm.response.to.have.status(409);
+      });
+      const json = pm.response.json();
+      pm.test('Error message mentions CONFIRMED requirement', function () {
+        pm.expect(json.detail).to.include('CONFIRMED');
+      });
+      console.log('Expected rejection received:', json.detail);
+    language: text/javascript
+order: 6000

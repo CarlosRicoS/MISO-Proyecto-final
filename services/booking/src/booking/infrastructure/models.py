@@ -22,4 +22,5 @@ class BookingModel(Base):
     status: Mapped[str] = mapped_column(String(20), nullable=False, default="PENDING")
     admin_group_id: Mapped[str] = mapped_column(UUID(as_uuid=True), nullable=False)
     payment_reference: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    rejection_reason: Mapped[str | None] = mapped_column(String(500), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)

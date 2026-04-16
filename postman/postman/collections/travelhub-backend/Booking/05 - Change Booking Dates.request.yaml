@@ -1,0 +1,35 @@
+$kind: http-request
+name: Change Booking Dates
+url: "{{base_url}}/booking/api/booking/{{booking_id}}/dates"
+method: PATCH
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{id_token}}
+body:
+  type: json
+  content: |-
+    {
+      "new_period_start": "2026-07-01",
+      "new_period_end": "2026-07-05",
+      "new_price": "320.00"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Returns 200 OK', function () {
+        pm.response.to.have.status(200);
+      });
+      const json = pm.response.json();
+      pm.test('Response contains price_difference', function () {
+        pm.expect(json).to.have.property('price_difference');
+      });
+      pm.test('Booking is still CONFIRMED', function () {
+        pm.expect(json.status).to.equal('CONFIRMED');
+      });
+      pm.test('Period was updated', function () {
+        pm.expect(json.period_start).to.equal('2026-07-01');
+        pm.expect(json.period_end).to.equal('2026-07-05');
+      });
+      console.log('price_difference:', json.price_difference);
+    language: text/javascript
+order: 5000

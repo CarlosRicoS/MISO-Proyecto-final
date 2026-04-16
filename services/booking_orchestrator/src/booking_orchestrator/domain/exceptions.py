@@ -26,6 +26,41 @@ class ReservationFailedError(OrchestratorError):
         self.reason = reason
 
 
+class BookingNotFoundError(OrchestratorError):
+    """Raised when the booking service returns 404 for a booking lookup."""
+
+    def __init__(self, booking_id: str) -> None:
+        super().__init__(f"booking {booking_id} not found")
+        self.booking_id = booking_id
+
+
+class BookingChangeDatesError(OrchestratorError):
+    """Raised when the booking service rejects the date-change request."""
+
+    def __init__(self, detail: str, status_code: int) -> None:
+        super().__init__(f"booking change_dates failed ({status_code}): {detail}")
+        self.detail = detail
+        self.status_code = status_code
+
+
+class BookingConfirmError(OrchestratorError):
+    """Raised when the booking service rejects the admin-confirm request."""
+
+    def __init__(self, detail: str, status_code: int) -> None:
+        super().__init__(f"booking admin-confirm failed ({status_code}): {detail}")
+        self.detail = detail
+        self.status_code = status_code
+
+
+class BookingRejectError(OrchestratorError):
+    """Raised when the booking service rejects the admin-reject request."""
+
+    def __init__(self, detail: str, status_code: int) -> None:
+        super().__init__(f"booking admin-reject failed ({status_code}): {detail}")
+        self.detail = detail
+        self.status_code = status_code
+
+
 class NotificationPublishError(OrchestratorError):
     """Raised when the orchestrator cannot publish to the notifications queue.
 

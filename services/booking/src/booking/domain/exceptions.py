@@ -32,3 +32,13 @@ class InvalidBookingStatusTransitionError(DomainError):
         self.current = current
         self.target = target
         super().__init__(f"Cannot transition from {current} to {target}")
+
+
+class BookingDateChangeNotAllowedError(DomainError):
+    def __init__(self, booking_id: UUID, current_status: str) -> None:
+        self.booking_id = booking_id
+        self.current_status = current_status
+        super().__init__(
+            f"Booking {booking_id} cannot have its dates changed in status {current_status}. "
+            "Only CONFIRMED bookings allow date changes."
+        )

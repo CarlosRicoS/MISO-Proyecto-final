@@ -7,7 +7,9 @@ import pytest
 from booking.domain.booking import Booking, BookingStatus
 from booking.domain.exceptions import (
     BookingAlreadyCancelledError,
+    BookingDateChangeNotAllowedError,
     BookingValidationError,
+    InvalidBookingPeriodError,
     InvalidBookingStatusTransitionError,
 )
 from booking.domain.value_objects import BookingPeriod, Money
@@ -130,3 +132,137 @@ class TestBookingStatusTransitions:
         booking = _make_booking()
         with pytest.raises(InvalidBookingStatusTransitionError):
             booking.confirm(payment_reference="PAY-123")
+
+
+class TestChangeDates:
+    def _confirmed_booking(self) -> Booking:
+        booking = _make_booking()
+        booking.approve()
+        booking.confirm(payment_reference="PAY-001")
+        return booking
+
+    def test_change_dates_updates_period_and_price(self):
+        booking = self._confirmed_booking()
+        new_period = BookingPeriod(start_date=date(2026, 7, 1), end_date=date(2026, 7, 5))
+        new_price = Money(amount=Decimal("350.00"))
+        booking.change_dates(new_period, new_price)
+        assert booking.period == new_period
+        assert booking.price == new_price
+        assert booking.status == BookingStatus.CONFIRMED
+
+    def test_change_dates_returns_positive_price_difference(self):
+        booking = self._confirmed_booking()
+        original_price = booking.price.amount
+        new_price = Money(amount=original_price + Decimal("50.00"))
+        diff = booking.change_dates(
+            BookingPeriod(start_date=date(2026, 7, 1), end_date=date(2026, 7, 6)),
+            new_price,
+        )
+        assert diff == Decimal("50.00")
+
+    def test_change_dates_returns_negative_price_difference(self):
+        booking = self._confirmed_booking()
+        original_price = booking.price.amount
+        new_price = Money(amount=original_price - Decimal("30.00"))
+        diff = booking.change_dates(
+            BookingPeriod(start_date=date(2026, 7, 1), end_date=date(2026, 7, 3)),
+            new_price,
+        )
+        assert diff == Decimal("-30.00")
+
+    def test_change_dates_on_pending_booking_raises(self):
+        booking = _make_booking()
+        with pytest.raises(BookingDateChangeNotAllowedError):
+            booking.change_dates(
+                BookingPeriod(start_date=date(2026, 7, 1), end_date=date(2026, 7, 5)),
+                Money(amount=Decimal("200.00")),
+            )
+
+    def test_change_dates_on_approved_booking_raises(self):
+        booking = _make_booking()
+        booking.approve()
+        with pytest.raises(BookingDateChangeNotAllowedError):
+            booking.change_dates(
+                BookingPeriod(start_date=date(2026, 7, 1), end_date=date(2026, 7, 5)),
+                Money(amount=Decimal("200.00")),
+            )
+
+    def test_change_dates_on_canceled_booking_raises(self):
+        booking = _make_booking()
+        booking.cancel()
+        with pytest.raises(BookingDateChangeNotAllowedError):
+            booking.change_dates(
+                BookingPeriod(start_date=date(2026, 7, 1), end_date=date(2026, 7, 5)),
+                Money(amount=Decimal("200.00")),
+            )
+
+    def test_change_dates_on_completed_booking_raises(self):
+        booking = self._confirmed_booking()
+        booking.complete()
+        with pytest.raises(BookingDateChangeNotAllowedError):
+            booking.change_dates(
+                BookingPeriod(start_date=date(2026, 7, 1), end_date=date(2026, 7, 5)),
+                Money(amount=Decimal("200.00")),
+            )
+
+    def test_change_dates_with_invalid_period_raises(self):
+        booking = self._confirmed_booking()
+        with pytest.raises(InvalidBookingPeriodError):
+            booking.change_dates(
+                BookingPeriod(start_date=date(2026, 7, 5), end_date=date(2026, 7, 1)),
+                Money(amount=Decimal("200.00")),
+            )
+
+
+class TestAdminActions:
+    def test_reject_pending_booking(self):
+        booking = _make_booking()
+        booking.reject("Double booking")
+        assert booking.status == BookingStatus.REJECTED
+        assert booking.rejection_reason == "Double booking"
+
+    def test_reject_stores_reason(self):
+        booking = _make_booking()
+        booking.reject("Price dispute")
+        assert booking.rejection_reason == "Price dispute"
+
+    def test_cannot_reject_approved_booking(self):
+        booking = _make_booking()
+        booking.approve()
+        with pytest.raises(InvalidBookingStatusTransitionError):
+            booking.reject("Too late")
+
+    def test_cannot_reject_confirmed_booking(self):
+        booking = _make_booking()
+        booking.approve()
+        booking.confirm("PAY-X")
+        with pytest.raises(InvalidBookingStatusTransitionError):
+            booking.reject("Nope")
+
+    def test_cannot_reject_with_empty_reason(self):
+        booking = _make_booking()
+        with pytest.raises(BookingValidationError):
+            booking.reject("")
+
+    def test_cannot_reject_with_whitespace_reason(self):
+        booking = _make_booking()
+        with pytest.raises(BookingValidationError):
+            booking.reject("   ")
+
+    def test_rejected_is_terminal(self):
+        booking = _make_booking()
+        booking.reject("Reason")
+        with pytest.raises(InvalidBookingStatusTransitionError):
+            booking.cancel()
+
+    def test_admin_confirm_traverses_pending_to_confirmed(self):
+        booking = _make_booking()
+        booking.approve()
+        booking.confirm("ADMIN-ABCD1234")
+        assert booking.status == BookingStatus.CONFIRMED
+        assert booking.payment_reference == "ADMIN-ABCD1234"
+        assert booking.rejection_reason is None
+
+    def test_new_booking_has_no_rejection_reason(self):
+        booking = _make_booking()
+        assert booking.rejection_reason is None

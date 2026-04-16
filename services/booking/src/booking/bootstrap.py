@@ -3,7 +3,10 @@ from typing import Annotated
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from booking.application.admin_confirm_booking import AdminConfirmBookingUseCase
+from booking.application.admin_reject_booking import AdminRejectBookingUseCase
 from booking.application.cancel_booking import CancelBookingUseCase
+from booking.application.change_dates import ChangeDatesUseCase
 from booking.application.create_booking import CreateBookingUseCase
 from booking.application.get_booking import GetBookingUseCase, ListUserBookingsUseCase
 from booking.database import get_session
@@ -43,3 +46,21 @@ def get_cancel_booking_use_case(
     repo: RepoDep,
 ) -> CancelBookingUseCase:
     return CancelBookingUseCase(booking_repository=repo)
+
+
+def get_change_dates_use_case(
+    repo: RepoDep,
+) -> ChangeDatesUseCase:
+    return ChangeDatesUseCase(booking_repository=repo)
+
+
+def get_admin_confirm_booking_use_case(
+    repo: RepoDep,
+) -> AdminConfirmBookingUseCase:
+    return AdminConfirmBookingUseCase(booking_repository=repo)
+
+
+def get_admin_reject_booking_use_case(
+    repo: RepoDep,
+) -> AdminRejectBookingUseCase:
+    return AdminRejectBookingUseCase(booking_repository=repo)

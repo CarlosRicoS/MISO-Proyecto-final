@@ -14,6 +14,21 @@ class CreateReservationRequest(BaseModel):
     admin_group_id: str
 
 
+class ChangeDatesReservationRequest(BaseModel):
+    new_period_start: date
+    new_period_end: date
+    new_price: Decimal = Field(ge=0)
+
+
+class AdminConfirmReservationRequest(BaseModel):
+    traveler_email: str
+
+
+class AdminRejectReservationRequest(BaseModel):
+    reason: str = Field(..., min_length=1, max_length=500)
+    traveler_email: str
+
+
 class ReservationResponse(BaseModel):
     """Returns the booking payload as the booking service reported it."""
 
