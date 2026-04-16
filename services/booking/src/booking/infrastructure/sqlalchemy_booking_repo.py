@@ -64,6 +64,7 @@ class SqlAlchemyBookingRepository:
             status=booking.status.value,
             admin_group_id=booking.admin_group_id,
             payment_reference=booking.payment_reference,
+            rejection_reason=booking.rejection_reason,
             created_at=booking.created_at,
         )
 
@@ -82,5 +83,6 @@ class SqlAlchemyBookingRepository:
             status=BookingStatus(model.status),
             admin_group_id=model.admin_group_id,
             payment_reference=model.payment_reference,
+            rejection_reason=model.rejection_reason,
             created_at=model.created_at,
         )

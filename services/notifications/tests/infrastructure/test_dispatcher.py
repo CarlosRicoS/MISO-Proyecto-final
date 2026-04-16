@@ -1,6 +1,11 @@
 import pytest
 
-from notifications.domain.events import BookingCreatedEvent, BookingDatesChangedEvent
+from notifications.domain.events import (
+    BookingConfirmedEvent,
+    BookingCreatedEvent,
+    BookingDatesChangedEvent,
+    BookingRejectedEvent,
+)
 from notifications.domain.exceptions import UnsupportedSchemaError
 from notifications.infrastructure.dispatcher import MessageDispatcher
 
@@ -9,6 +14,8 @@ def _make_dispatcher(**overrides):
     defaults = dict(
         booking_created_handler=lambda e: None,
         booking_dates_changed_handler=lambda e: None,
+        booking_confirmed_handler=lambda e: None,
+        booking_rejected_handler=lambda e: None,
     )
     defaults.update(overrides)
     return MessageDispatcher(**defaults)
@@ -65,6 +72,56 @@ def test_dispatches_booking_dates_changed_to_handler():
     assert received[0].booking_id == "b1"
     assert received[0].new_period_start == "2026-07-01"
     assert received[0].price_difference == "70.00"
+
+
+def _booking_confirmed_message() -> dict:
+    return {
+        "schema_version": 1,
+        "type": "BOOKING_CONFIRMED",
+        "booking": {
+            "id": "b2",
+            "property_id": "p2",
+            "period_start": "2026-07-01",
+            "period_end": "2026-07-05",
+            "guests": 2,
+            "price": "400.00",
+            "payment_reference": "ADMIN-ABCD1234",
+        },
+        "recipient": {"user_id": "u2", "email": "confirmed@x.com"},
+    }
+
+
+def _booking_rejected_message() -> dict:
+    return {
+        "schema_version": 1,
+        "type": "BOOKING_REJECTED",
+        "booking": {
+            "id": "b3",
+            "property_id": "p3",
+            "period_start": "2026-08-01",
+            "period_end": "2026-08-05",
+            "rejection_reason": "La propiedad no está disponible.",
+        },
+        "recipient": {"user_id": "u3", "email": "rejected@x.com"},
+    }
+
+
+def test_dispatches_booking_confirmed_to_handler():
+    received: list[BookingConfirmedEvent] = []
+    dispatcher = _make_dispatcher(booking_confirmed_handler=received.append)
+    dispatcher.dispatch(_booking_confirmed_message())
+    assert len(received) == 1
+    assert received[0].booking_id == "b2"
+    assert received[0].payment_reference == "ADMIN-ABCD1234"
+
+
+def test_dispatches_booking_rejected_to_handler():
+    received: list[BookingRejectedEvent] = []
+    dispatcher = _make_dispatcher(booking_rejected_handler=received.append)
+    dispatcher.dispatch(_booking_rejected_message())
+    assert len(received) == 1
+    assert received[0].booking_id == "b3"
+    assert received[0].rejection_reason == "La propiedad no está disponible."
 
 
 def test_rejects_unknown_schema_version():

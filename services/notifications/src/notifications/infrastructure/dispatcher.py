@@ -10,8 +10,10 @@ from typing import Any, Callable
 
 from notifications.domain.events import (
     SUPPORTED_SCHEMA_VERSION,
+    BookingConfirmedEvent,
     BookingCreatedEvent,
     BookingDatesChangedEvent,
+    BookingRejectedEvent,
 )
 from notifications.domain.exceptions import UnsupportedSchemaError
 
@@ -19,6 +21,8 @@ logger = logging.getLogger(__name__)
 
 BookingCreatedHandler = Callable[[BookingCreatedEvent], None]
 BookingDatesChangedHandler = Callable[[BookingDatesChangedEvent], None]
+BookingConfirmedHandler = Callable[[BookingConfirmedEvent], None]
+BookingRejectedHandler = Callable[[BookingRejectedEvent], None]
 
 
 class MessageDispatcher:
@@ -26,9 +30,13 @@ class MessageDispatcher:
         self,
         booking_created_handler: BookingCreatedHandler,
         booking_dates_changed_handler: BookingDatesChangedHandler,
+        booking_confirmed_handler: BookingConfirmedHandler,
+        booking_rejected_handler: BookingRejectedHandler,
     ) -> None:
         self._booking_created = booking_created_handler
         self._booking_dates_changed = booking_dates_changed_handler
+        self._booking_confirmed = booking_confirmed_handler
+        self._booking_rejected = booking_rejected_handler
 
     def dispatch(self, message: dict[str, Any]) -> None:
         schema_version = message.get("schema_version")
@@ -47,6 +55,16 @@ class MessageDispatcher:
         if msg_type == "BOOKING_DATES_CHANGED":
             event = BookingDatesChangedEvent.from_message(message)
             self._booking_dates_changed(event)
+            return
+
+        if msg_type == "BOOKING_CONFIRMED":
+            event = BookingConfirmedEvent.from_message(message)
+            self._booking_confirmed(event)
+            return
+
+        if msg_type == "BOOKING_REJECTED":
+            event = BookingRejectedEvent.from_message(message)
+            self._booking_rejected(event)
             return
 
         raise UnsupportedSchemaError(f"unknown message type={msg_type}")

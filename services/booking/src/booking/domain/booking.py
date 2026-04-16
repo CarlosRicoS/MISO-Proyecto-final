@@ -19,15 +19,17 @@ class BookingStatus(StrEnum):
     CONFIRMED = "CONFIRMED"
     CANCELED = "CANCELED"
     COMPLETED = "COMPLETED"
+    REJECTED = "REJECTED"
 
 
 # Valid status transitions: current_status -> set of allowed next statuses
 _VALID_TRANSITIONS: dict[BookingStatus, set[BookingStatus]] = {
-    BookingStatus.PENDING: {BookingStatus.APPROVED, BookingStatus.CANCELED},
+    BookingStatus.PENDING: {BookingStatus.APPROVED, BookingStatus.CANCELED, BookingStatus.REJECTED},
     BookingStatus.APPROVED: {BookingStatus.CONFIRMED, BookingStatus.CANCELED},
     BookingStatus.CONFIRMED: {BookingStatus.COMPLETED, BookingStatus.CANCELED},
     BookingStatus.COMPLETED: set(),
     BookingStatus.CANCELED: set(),
+    BookingStatus.REJECTED: set(),
 }
 
 
@@ -52,6 +54,7 @@ class Booking:
     id: UUID = field(default_factory=uuid4)
     status: BookingStatus = BookingStatus.PENDING
     payment_reference: str | None = None
+    rejection_reason: str | None = None
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
     def __post_init__(self) -> None:
@@ -79,6 +82,13 @@ class Booking:
     def complete(self) -> None:
         """Mark a confirmed booking as completed."""
         self._transition_to(BookingStatus.COMPLETED)
+
+    def reject(self, reason: str) -> None:
+        """Reject a pending booking. A non-empty reason is required."""
+        if not reason or not reason.strip():
+            raise BookingValidationError("Rejection reason cannot be empty")
+        self._transition_to(BookingStatus.REJECTED)
+        self.rejection_reason = reason
 
     def change_dates(self, new_period: BookingPeriod, new_price: Money) -> Decimal:
         """Change booking dates and price. Returns price_difference (new - old).

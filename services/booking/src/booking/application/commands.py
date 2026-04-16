@@ -32,3 +32,18 @@ class ChangeDatesCommand:
     new_period_start: str  # ISO date string YYYY-MM-DD
     new_period_end: str  # ISO date string YYYY-MM-DD
     new_price: Decimal
+
+
+@dataclass(frozen=True)
+class AdminConfirmBookingCommand:
+    """Command for admin to confirm a pending booking (PENDING → APPROVED → CONFIRMED)."""
+
+    booking_id: str
+
+
+@dataclass(frozen=True)
+class AdminRejectBookingCommand:
+    """Command for admin to reject a pending booking (PENDING → REJECTED)."""
+
+    booking_id: str
+    reason: str

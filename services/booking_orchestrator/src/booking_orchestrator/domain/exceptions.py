@@ -43,6 +43,24 @@ class BookingChangeDatesError(OrchestratorError):
         self.status_code = status_code
 
 
+class BookingConfirmError(OrchestratorError):
+    """Raised when the booking service rejects the admin-confirm request."""
+
+    def __init__(self, detail: str, status_code: int) -> None:
+        super().__init__(f"booking admin-confirm failed ({status_code}): {detail}")
+        self.detail = detail
+        self.status_code = status_code
+
+
+class BookingRejectError(OrchestratorError):
+    """Raised when the booking service rejects the admin-reject request."""
+
+    def __init__(self, detail: str, status_code: int) -> None:
+        super().__init__(f"booking admin-reject failed ({status_code}): {detail}")
+        self.detail = detail
+        self.status_code = status_code
+
+
 class NotificationPublishError(OrchestratorError):
     """Raised when the orchestrator cannot publish to the notifications queue.
 

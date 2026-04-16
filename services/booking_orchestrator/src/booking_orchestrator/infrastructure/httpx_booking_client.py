@@ -14,8 +14,10 @@ from booking_orchestrator.application.commands import (
 )
 from booking_orchestrator.domain.exceptions import (
     BookingChangeDatesError,
+    BookingConfirmError,
     BookingCreateError,
     BookingNotFoundError,
+    BookingRejectError,
 )
 
 
@@ -88,5 +90,31 @@ class HttpxBookingClient:
         if response.status_code != 200:
             detail = response.json().get("detail", response.text) if response.content else response.text
             raise BookingChangeDatesError(detail, response.status_code)
+
+        return response.json()
+
+    async def admin_confirm(self, booking_id: str) -> dict[str, Any]:
+        try:
+            response = await self._client.post(f"/api/booking/{booking_id}/admin-confirm")
+        except httpx.HTTPError as exc:
+            raise BookingConfirmError(f"booking service unreachable: {exc}", 502) from exc
+
+        if response.status_code != 200:
+            detail = response.json().get("detail", response.text) if response.content else response.text
+            raise BookingConfirmError(detail, response.status_code)
+
+        return response.json()
+
+    async def admin_reject(self, booking_id: str, reason: str) -> dict[str, Any]:
+        try:
+            response = await self._client.post(
+                f"/api/booking/{booking_id}/admin-reject", json={"reason": reason}
+            )
+        except httpx.HTTPError as exc:
+            raise BookingRejectError(f"booking service unreachable: {exc}", 502) from exc
+
+        if response.status_code != 200:
+            detail = response.json().get("detail", response.text) if response.content else response.text
+            raise BookingRejectError(detail, response.status_code)
 
         return response.json()

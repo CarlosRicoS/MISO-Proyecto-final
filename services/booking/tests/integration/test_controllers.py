@@ -299,3 +299,115 @@ class TestChangeBookingDates:
             },
         )
         assert response.status_code == 422
+
+
+async def _create_booking(client: AsyncClient, **overrides) -> dict:
+    payload = {
+        "property_id": str(uuid4()),
+        "guests": 2,
+        "period_start": "2026-06-01",
+        "period_end": "2026-06-05",
+        "price": 250.00,
+        "admin_group_id": str(uuid4()),
+        **overrides,
+    }
+    resp = await client.post(
+        "/api/booking/",
+        json=payload,
+        headers={"X-User-Id": str(uuid4())},
+    )
+    assert resp.status_code == 201
+    return resp.json()
+
+
+class TestAdminConfirmBooking:
+    async def test_confirm_pending_booking_success(self, client: AsyncClient):
+        booking = await _create_booking(client)
+        booking_id = booking["id"]
+
+        response = await client.post(f"/api/booking/{booking_id}/admin-confirm")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == "CONFIRMED"
+        assert data["payment_reference"].startswith("ADMIN-")
+        assert data["rejection_reason"] is None
+
+    async def test_confirm_nonexistent_booking(self, client: AsyncClient):
+        response = await client.post(f"/api/booking/{uuid4()}/admin-confirm")
+        assert response.status_code == 404
+
+    async def test_confirm_already_confirmed_booking_returns_409(self, client: AsyncClient, repo):
+        booking = await _create_booking(client)
+        booking_id = booking["id"]
+
+        from uuid import UUID as _UUID
+        stored = await repo.get_by_id(_UUID(booking_id))
+        stored.approve()
+        stored.confirm(payment_reference="PAY-EXISTING")
+        await repo.save(stored)
+
+        response = await client.post(f"/api/booking/{booking_id}/admin-confirm")
+        assert response.status_code == 409
+
+    async def test_confirm_rejected_booking_returns_409(self, client: AsyncClient, repo):
+        booking = await _create_booking(client)
+        booking_id = booking["id"]
+
+        from uuid import UUID as _UUID
+        stored = await repo.get_by_id(_UUID(booking_id))
+        stored.reject("Already rejected")
+        await repo.save(stored)
+
+        response = await client.post(f"/api/booking/{booking_id}/admin-confirm")
+        assert response.status_code == 409
+
+
+class TestAdminRejectBooking:
+    async def test_reject_pending_booking_success(self, client: AsyncClient):
+        booking = await _create_booking(client)
+        booking_id = booking["id"]
+
+        response = await client.post(
+            f"/api/booking/{booking_id}/admin-reject",
+            json={"reason": "Double booking"},
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == "REJECTED"
+        assert data["rejection_reason"] == "Double booking"
+
+    async def test_reject_nonexistent_booking(self, client: AsyncClient):
+        response = await client.post(
+            f"/api/booking/{uuid4()}/admin-reject",
+            json={"reason": "Not found"},
+        )
+        assert response.status_code == 404
+
+    async def test_reject_confirmed_booking_returns_409(self, client: AsyncClient, repo):
+        booking = await _create_booking(client)
+        booking_id = booking["id"]
+
+        from uuid import UUID as _UUID
+        stored = await repo.get_by_id(_UUID(booking_id))
+        stored.approve()
+        stored.confirm(payment_reference="PAY-XYZ")
+        await repo.save(stored)
+
+        response = await client.post(
+            f"/api/booking/{booking_id}/admin-reject",
+            json={"reason": "Changed mind"},
+        )
+        assert response.status_code == 409
+
+    async def test_reject_with_empty_reason_returns_422(self, client: AsyncClient):
+        booking = await _create_booking(client)
+        response = await client.post(
+            f"/api/booking/{booking['id']}/admin-reject",
+            json={"reason": ""},
+        )
+        assert response.status_code == 422
+
+    async def test_reject_missing_body_returns_422(self, client: AsyncClient):
+        booking = await _create_booking(client)
+        response = await client.post(f"/api/booking/{booking['id']}/admin-reject")
+        assert response.status_code == 422

@@ -20,6 +20,15 @@ class ChangeDatesReservationRequest(BaseModel):
     new_price: Decimal = Field(ge=0)
 
 
+class AdminConfirmReservationRequest(BaseModel):
+    traveler_email: str
+
+
+class AdminRejectReservationRequest(BaseModel):
+    reason: str = Field(..., min_length=1, max_length=500)
+    traveler_email: str
+
+
 class ReservationResponse(BaseModel):
     """Returns the booking payload as the booking service reported it."""
 

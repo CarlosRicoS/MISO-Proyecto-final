@@ -3,12 +3,22 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, Header, HTTPException, status
 
+from booking.application.admin_confirm_booking import AdminConfirmBookingUseCase
+from booking.application.admin_reject_booking import AdminRejectBookingUseCase
 from booking.application.cancel_booking import CancelBookingUseCase
 from booking.application.change_dates import ChangeDatesUseCase
-from booking.application.commands import CancelBookingCommand, ChangeDatesCommand, CreateBookingCommand
+from booking.application.commands import (
+    AdminConfirmBookingCommand,
+    AdminRejectBookingCommand,
+    CancelBookingCommand,
+    ChangeDatesCommand,
+    CreateBookingCommand,
+)
 from booking.application.create_booking import CreateBookingUseCase
 from booking.application.get_booking import GetBookingUseCase, ListUserBookingsUseCase
 from booking.bootstrap import (
+    get_admin_confirm_booking_use_case,
+    get_admin_reject_booking_use_case,
     get_cancel_booking_use_case,
     get_change_dates_use_case,
     get_create_booking_use_case,
@@ -23,7 +33,13 @@ from booking.domain.exceptions import (
     InvalidBookingPeriodError,
     InvalidBookingStatusTransitionError,
 )
-from booking.schemas import BookingResponse, ChangeDatesRequest, ChangeDatesResponse, CreateBookingRequest
+from booking.schemas import (
+    AdminRejectBookingRequest,
+    BookingResponse,
+    ChangeDatesRequest,
+    ChangeDatesResponse,
+    CreateBookingRequest,
+)
 
 router = APIRouter(prefix="/api/booking", tags=["bookings"])
 
@@ -33,6 +49,8 @@ GetBookingDep = Annotated[GetBookingUseCase, Depends(get_get_booking_use_case)]
 ListBookingDep = Annotated[ListUserBookingsUseCase, Depends(get_list_user_bookings_use_case)]
 CancelBookingDep = Annotated[CancelBookingUseCase, Depends(get_cancel_booking_use_case)]
 ChangeDatesDep = Annotated[ChangeDatesUseCase, Depends(get_change_dates_use_case)]
+AdminConfirmBookingDep = Annotated[AdminConfirmBookingUseCase, Depends(get_admin_confirm_booking_use_case)]
+AdminRejectBookingDep = Annotated[AdminRejectBookingUseCase, Depends(get_admin_reject_booking_use_case)]
 
 
 @router.post(
@@ -132,3 +150,39 @@ async def change_booking_dates(
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e)) from e
     except (BookingValidationError, InvalidBookingPeriodError) as e:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e)) from e
+
+
+@router.post("/{booking_id}/admin-confirm", response_model=BookingResponse)
+async def admin_confirm_booking(
+    booking_id: UUID,
+    use_case: AdminConfirmBookingDep,
+) -> BookingResponse:
+    try:
+        command = AdminConfirmBookingCommand(booking_id=str(booking_id))
+        booking = await use_case.execute(command)
+        return BookingResponse.from_domain(booking)
+    except BookingNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Booking not found") from e
+    except InvalidBookingStatusTransitionError as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e)) from e
+
+
+@router.post("/{booking_id}/admin-reject", response_model=BookingResponse)
+async def admin_reject_booking(
+    booking_id: UUID,
+    request: AdminRejectBookingRequest,
+    use_case: AdminRejectBookingDep,
+) -> BookingResponse:
+    try:
+        command = AdminRejectBookingCommand(
+            booking_id=str(booking_id),
+            reason=request.reason,
+        )
+        booking = await use_case.execute(command)
+        return BookingResponse.from_domain(booking)
+    except BookingNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Booking not found") from e
+    except BookingValidationError as e:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e)) from e
+    except InvalidBookingStatusTransitionError as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e)) from e

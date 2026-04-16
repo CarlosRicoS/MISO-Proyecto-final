@@ -22,6 +22,10 @@ class ChangeDatesRequest(BaseModel):
     new_price: Decimal = Field(..., ge=0, decimal_places=2)
 
 
+class AdminRejectBookingRequest(BaseModel):
+    reason: str = Field(..., min_length=1, max_length=500)
+
+
 class BookingResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -35,6 +39,7 @@ class BookingResponse(BaseModel):
     status: str
     admin_group_id: UUID
     payment_reference: str | None
+    rejection_reason: str | None
     created_at: datetime
 
     @classmethod
@@ -50,6 +55,7 @@ class BookingResponse(BaseModel):
             status=booking.status.value,
             admin_group_id=booking.admin_group_id,
             payment_reference=booking.payment_reference,
+            rejection_reason=booking.rejection_reason,
             created_at=booking.created_at,
         )
 
@@ -67,6 +73,7 @@ class ChangeDatesResponse(BaseModel):
     status: str
     admin_group_id: UUID
     payment_reference: str | None
+    rejection_reason: str | None
     created_at: datetime
     price_difference: Decimal
 
@@ -83,6 +90,7 @@ class ChangeDatesResponse(BaseModel):
             status=booking.status.value,
             admin_group_id=booking.admin_group_id,
             payment_reference=booking.payment_reference,
+            rejection_reason=booking.rejection_reason,
             created_at=booking.created_at,
             price_difference=price_difference,
         )
