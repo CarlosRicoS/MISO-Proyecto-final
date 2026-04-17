@@ -400,13 +400,17 @@ Bookings follow a strict state machine. Only the transitions shown below are val
 
 ```
 PENDING ──→ APPROVED ──→ CONFIRMED ──→ COMPLETED
+   │    ╲        │             │
+   │     ╲───────┼─────────────┤
    │             │             │
    └─────────────┴─────────────┴──→ CANCELED
 ```
 
+> `PENDING` can transition directly to `CONFIRMED` (payment without prior admin approval).
+
 | Status      | Description                                      | Can transition to                    |
 |-------------|--------------------------------------------------|--------------------------------------|
-| `PENDING`   | Initial status after creation                    | `APPROVED`, `CANCELED`, `REJECTED`   |
+| `PENDING`   | Initial status after creation                    | `APPROVED`, `CONFIRMED`, `CANCELED`, `REJECTED` |
 | `APPROVED`  | Booking approved by admin                        | `CONFIRMED`, `CANCELED`              |
 | `CONFIRMED` | Payment received                                 | `COMPLETED`, `CANCELED`              |
 | `COMPLETED` | Stay period finished                             | _(terminal — no transitions)_        |

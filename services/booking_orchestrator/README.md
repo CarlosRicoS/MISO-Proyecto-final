@@ -74,7 +74,7 @@ The saga creates the booking **before** locking the property so that there is al
 POST /api/reservations/{booking_id}/admin-approve
 ```
 
-Approves a `PENDING` booking (PENDING → APPROVED). The traveler must subsequently make a payment to reach `CONFIRMED`.
+Approves a `PENDING` booking (PENDING → APPROVED) and enqueues a `BOOKING_APPROVED` notification.
 
 **Headers**
 
@@ -106,13 +106,13 @@ Approves a `PENDING` booking (PENDING → APPROVED). The traveler must subsequen
 POST /api/reservations/{booking_id}/make-payment
 ```
 
-Processes payment for an `APPROVED` booking via Stripe, confirms the booking, records a billing entry, and sends a payment confirmation notification.
+Processes payment for a booking via Stripe, confirms it, records a billing entry, and sends a payment confirmation notification. The booking does not need to be in `APPROVED` status — payment can proceed from any non-terminal state (e.g., directly from `PENDING`).
 
 **Saga steps:**
-1. Verify booking is `APPROVED`
+1. Fetch booking
 2. Stripe create payment → get `referencePaymentId`
 3. Stripe confirm payment
-4. Update booking payment state (APPROVED → CONFIRMED)
+4. Update booking payment state (→ CONFIRMED)
 5. Publish billing CREATE to `billing_queue` (best-effort)
 6. Publish `PAYMENT_CONFIRMED` to `notifications_queue` (best-effort)
 
@@ -140,7 +140,33 @@ Processes payment for an `APPROVED` booking via Stripe, confirms the booking, re
 |--------|----------------------------------------------------------------------------|
 | 200    | Payment processed, booking is `CONFIRMED`. Body is the updated booking.   |
 | 404    | Booking not found.                                                         |
-| 409    | Booking is not `APPROVED`, or Stripe/booking update failed (with compensation). |
+| 409    | Stripe or booking update failed (with compensation).                       |
+
+---
+
+### Cancel Reservation
+
+```
+POST /api/reservations/{booking_id}/cancel
+```
+
+Cancels a booking in `PENDING`, `APPROVED`, or `CONFIRMED` status and enqueues a `BOOKING_CANCELLED` notification.
+
+**Headers**
+
+| Header        | Value            | Required |
+|---------------|------------------|----------|
+| Authorization | Bearer `<JWT>`   | Yes      |
+| X-User-Id     | `<user UUID>`    | Yes      |
+| X-User-Email  | `<email>`        | Yes      |
+
+**Responses**
+
+| Status | Meaning                                                          |
+|--------|------------------------------------------------------------------|
+| 200    | Booking cancelled. Body: `{"booking_id": "...", "status": "CANCELED"}` |
+| 404    | Booking not found.                                               |
+| 409    | Booking is not in a cancellable state.                           |
 
 ---
 
@@ -170,7 +196,7 @@ The orchestrator publishes JSON messages onto `notifications_queue`:
 }
 ```
 
-Other event types: `BOOKING_CONFIRMED`, `BOOKING_REJECTED`, `BOOKING_DATES_CHANGED`.
+Other event types: `BOOKING_APPROVED`, `BOOKING_CONFIRMED`, `BOOKING_REJECTED`, `BOOKING_CANCELLED`, `BOOKING_DATES_CHANGED`.
 
 ## Billing schema
 
@@ -227,7 +253,7 @@ Coverage gate: 80 %.
 ```
 src/booking_orchestrator/
 ├── domain/
-│   ├── events.py              # BookingCreatedEvent, PaymentConfirmedEvent, etc.
+│   ├── events.py              # BookingCreatedEvent, BookingApprovedEvent, BookingCancelledEvent, PaymentConfirmedEvent, etc.
 │   └── exceptions.py
 ├── application/
 │   ├── commands.py
@@ -236,6 +262,7 @@ src/booking_orchestrator/
 │   ├── admin_approve_reservation.py
 │   ├── admin_confirm_reservation.py
 │   ├── admin_reject_reservation.py
+│   ├── cancel_reservation.py
 │   ├── change_dates_reservation.py
 │   └── make_payment.py        # payment saga (Stripe + billing + booking update)
 ├── infrastructure/

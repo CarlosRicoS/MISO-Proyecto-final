@@ -99,16 +99,6 @@ async def test_booking_not_found_raises():
         await uc.execute(_make_command())
 
 
-async def test_booking_not_approved_raises():
-    booking = FakeBookingClient(booking_status="PENDING")
-    uc = _make_use_case(booking=booking)
-
-    with pytest.raises(ReservationFailedError) as exc_info:
-        await uc.execute(_make_command())
-
-    assert exc_info.value.reason == "booking_not_approved"
-
-
 async def test_stripe_create_failure_raises_without_compensation():
     stripe = FakeStripeClient(fail_create=True)
     uc = _make_use_case(stripe=stripe)

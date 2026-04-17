@@ -29,6 +29,8 @@ Messages on `notifications_queue` are JSON with a versioned envelope:
 | Type                    | Handler                     | Email subject                                |
 |-------------------------|-----------------------------|----------------------------------------------|
 | `BOOKING_CREATED`       | `HandleBookingCreated`      | Tu reserva {id} fue creada                   |
+| `BOOKING_APPROVED`      | `HandleBookingApproved`     | Tu reserva {id} fue aprobada                 |
+| `BOOKING_CANCELLED`     | `HandleBookingCancelled`    | Tu reserva {id} fue cancelada                |
 | `BOOKING_CONFIRMED`     | `HandleBookingConfirmed`    | Tu reserva {id} fue confirmada               |
 | `BOOKING_REJECTED`      | `HandleBookingRejected`     | Tu reserva {id} fue rechazada                |
 | `BOOKING_DATES_CHANGED` | `HandleBookingDatesChanged` | Tu reserva {id} fue modificada               |
@@ -95,6 +97,8 @@ src/notifications/
 ├── application/
 │   ├── ports.py           # EmailSender protocol
 │   ├── handle_booking_created.py
+│   ├── handle_booking_approved.py
+│   ├── handle_booking_cancelled.py
 │   ├── handle_booking_confirmed.py
 │   ├── handle_booking_rejected.py
 │   ├── handle_booking_dates_changed.py

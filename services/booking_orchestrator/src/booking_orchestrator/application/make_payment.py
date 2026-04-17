@@ -59,9 +59,6 @@ class MakePaymentUseCase:
         except BookingNotFoundError:
             raise
 
-        if booking.get("status") != "APPROVED":
-            raise ReservationFailedError("booking_not_approved")
-
         amount = Decimal(str(booking["price"]))
         transaction_id = command.booking_id
 
