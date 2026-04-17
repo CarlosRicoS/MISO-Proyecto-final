@@ -1,15 +1,16 @@
 {
   "request": {
-    "method": "OPTIONS",
-    "urlPattern": ".*"
+    "method": "PATCH",
+    "urlPathPattern": "^/(booking-orchestrator/)?api/reservations/[0-9a-fA-F-]{36}/dates$"
   },
   "response": {
     "status": 200,
     "headers": {
+      "Content-Type": "application/json",
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Methods": "GET, POST, PATCH, OPTIONS",
       "Access-Control-Allow-Headers": "Content-Type, Authorization, X-User-Id, X-User-Email"
     },
-    "body": ""
+    "bodyFileName": "booking-orchestrator-update-dates-response.json"
   }
 }

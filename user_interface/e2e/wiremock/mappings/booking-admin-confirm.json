@@ -1,7 +1,7 @@
 {
   "request": {
-    "method": "GET",
-    "urlPathPattern": "^/booking/api/booking/$"
+    "method": "POST",
+    "urlPathPattern": "^/(booking/)?api/booking/[0-9a-fA-F-]{36}/admin-confirm$"
   },
   "response": {
     "status": 200,
@@ -11,6 +11,6 @@
       "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
       "Access-Control-Allow-Headers": "Content-Type, Authorization, X-User-Id"
     },
-    "bodyFileName": "booking-list-response.json"
+    "bodyFileName": "booking-response.json"
   }
 }

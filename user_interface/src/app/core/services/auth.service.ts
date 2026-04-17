@@ -29,6 +29,13 @@ export interface RegisterResponse {
   role: string;
 }
 
+export interface AuthMeResponse {
+  user_id: string;
+  email: string;
+  email_verified: boolean;
+  role: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   constructor(private http: HttpClient, private config: ConfigService) {}
@@ -67,5 +74,17 @@ export class AuthService {
     });
 
     return this.http.post<RegisterResponse>(url, body, { headers });
+  }
+
+  me(accessToken: string): Observable<AuthMeResponse> {
+    const baseUrl = this.config.apiBaseUrl?.replace(/\/$/, '');
+    const authPath = 'auth/api/auth/me';
+    const url = baseUrl ? `${baseUrl}/${authPath}` : `/${authPath}`;
+
+    const headers = new HttpHeaders({
+      Authorization: `Bearer ${accessToken}`,
+    });
+
+    return this.http.get<AuthMeResponse>(url, { headers });
   }
 }

@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
-import { AuthService, LoginResponse, RegisterResponse } from './auth.service';
+import { AuthMeResponse, AuthService, LoginResponse, RegisterResponse } from './auth.service';
 import { ConfigService } from './config.service';
 
 describe('AuthService', () => {
@@ -342,6 +342,43 @@ describe('AuthService', () => {
 
       const req = httpMock.expectOne('/auth/api/auth/register');
       req.flush({ detail: 'Password does not meet criteria' }, { status: 400, statusText: 'Bad Request' });
+    });
+  });
+
+  describe('me', () => {
+    it('should make a GET request to the me endpoint with Bearer token', () => {
+      const token = 'access-token-123';
+      const mockResponse: AuthMeResponse = {
+        user_id: 'user-123',
+        email: 'traveler@example.com',
+        email_verified: true,
+        role: 'travelers',
+      };
+
+      service.me(token).subscribe((response) => {
+        expect(response).toEqual(mockResponse);
+      });
+
+      const req = httpMock.expectOne('/auth/api/auth/me');
+      expect(req.request.method).toBe('GET');
+      expect(req.request.headers.get('Authorization')).toBe('Bearer access-token-123');
+      req.flush(mockResponse);
+    });
+
+    it('should use custom API base URL for me endpoint', () => {
+      spyOnProperty(configService, 'apiBaseUrl', 'get').and.returnValue('https://api.example.com/');
+
+      service.me('token-xyz').subscribe();
+
+      const req = httpMock.expectOne('https://api.example.com/auth/api/auth/me');
+      expect(req.request.method).toBe('GET');
+      expect(req.request.headers.get('Authorization')).toBe('Bearer token-xyz');
+      req.flush({
+        user_id: 'user-1',
+        email: 'user@example.com',
+        email_verified: true,
+        role: 'travelers',
+      } satisfies AuthMeResponse);
     });
   });
 });
