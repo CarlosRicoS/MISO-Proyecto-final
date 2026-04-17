@@ -37,3 +37,15 @@ output "billing_ssm_param_paths" {
   description = "SSM parameter paths for the billing queue."
   value       = module.billing_queue.ssm_param_paths
 }
+
+# Test queues (local development)
+
+output "test_notifications_queue_url" {
+  description = "URL of the test notifications SQS queue."
+  value       = module.test_notifications_queue.queue_url
+}
+
+output "test_billing_queue_url" {
+  description = "URL of the test billing SQS queue."
+  value       = module.test_billing_queue.queue_url
+}

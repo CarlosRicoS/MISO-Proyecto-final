@@ -1,0 +1,282 @@
+services:
+  # =====================================================================
+  # INFRASTRUCTURE
+  # =====================================================================
+
+  postgres:
+    image: postgres:16-alpine
+    command: postgres -c max_connections=300
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./postgres/init-databases.sh:/docker-entrypoint-initdb.d/init-databases.sh
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # =====================================================================
+  # GATEWAY (simulates API Gateway)
+  # =====================================================================
+
+  gateway:
+    build:
+      context: ./gateway
+    ports:
+      - "8080:80"
+    depends_on:
+      auth:
+        condition: service_started
+      booking:
+        condition: service_started
+      booking-orchestrator:
+        condition: service_started
+      poc-properties:
+        condition: service_started
+      pricing-engine:
+        condition: service_started
+      pricing-orchestator:
+        condition: service_started
+      pms:
+        condition: service_started
+      billing:
+        condition: service_started
+      stripe-mock:
+        condition: service_started
+
+  # =====================================================================
+  # PYTHON SERVICES
+  # =====================================================================
+
+  auth:
+    build:
+      context: ../services/auth
+    environment:
+      AWS_REGION: ${AWS_REGION:-us-east-1}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_SESSION_TOKEN: ${AWS_SESSION_TOKEN:-}
+      COGNITO_USER_POOL_ID: ${COGNITO_USER_POOL_ID}
+      COGNITO_CLIENT_ID: ${COGNITO_CLIENT_ID}
+    healthcheck:
+      test: ["CMD-SHELL", "python3 -c \"import urllib.request; urllib.request.urlopen('http://localhost:80/api/health')\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  booking:
+    build:
+      context: ../services/booking
+    environment:
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_NAME: booking
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      DB_POOL_SIZE: "5"
+      DB_MAX_OVERFLOW: "5"
+      DEBUG: "true"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python3 -c \"import urllib.request; urllib.request.urlopen('http://localhost:80/api/health')\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  booking-orchestrator:
+    build:
+      context: ../services/booking_orchestrator
+    environment:
+      BOOKING_SERVICE_URL: http://booking:80
+      PROPERTIES_SERVICE_URL: http://poc-properties:8080
+      STRIPE_MOCK_SERVICE_URL: http://stripe-mock:8080
+      NOTIFICATIONS_QUEUE_URL: ${NOTIFICATIONS_QUEUE_URL}
+      BILLING_QUEUE_URL: ${BILLING_QUEUE_URL}
+      AWS_REGION: ${AWS_REGION:-us-east-1}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_SESSION_TOKEN: ${AWS_SESSION_TOKEN:-}
+      DEBUG: "true"
+    depends_on:
+      booking:
+        condition: service_healthy
+      poc-properties:
+        condition: service_healthy
+      stripe-mock:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python3 -c \"import urllib.request; urllib.request.urlopen('http://localhost:80/api/health')\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  notifications:
+    build:
+      context: ../services/notifications
+    environment:
+      NOTIFICATIONS_QUEUE_URL: ${NOTIFICATIONS_QUEUE_URL}
+      AWS_REGION: ${AWS_REGION:-us-east-1}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_SESSION_TOKEN: ${AWS_SESSION_TOKEN:-}
+      CONSUMER_ENABLED: "true"
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USERNAME: ${SMTP_USERNAME}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      SMTP_USE_TLS: ${SMTP_USE_TLS:-true}
+      SMTP_FROM: ${SMTP_FROM:-no-reply@travelhub.local}
+      DEBUG: "true"
+    healthcheck:
+      test: ["CMD-SHELL", "python3 -c \"import urllib.request; urllib.request.urlopen('http://localhost:80/api/health')\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  pms:
+    build:
+      context: ../services/pms
+    environment:
+      PROPERTIES_SERVICE_URL: http://poc-properties:8080
+    depends_on:
+      poc-properties:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python3 -c \"import urllib.request; urllib.request.urlopen('http://localhost:80/api/health')\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  # =====================================================================
+  # JAVA SERVICES (require pre-built JARs — see start.sh)
+  # =====================================================================
+
+  poc-properties:
+    build:
+      context: ../services/poc_properties
+    environment:
+      DB_HOST: postgres
+      DB_NAME: poc_properties
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      JPA_DDL_AUTO: update
+      JPA_SHOW_SQL: "true"
+      HIKARI_MAX_POOL_SIZE: "10"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q http://localhost:8080/api/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+
+  billing:
+    build:
+      context: ../services/billing
+    environment:
+      DB_HOST: postgres
+      DB_NAME: billing
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      JPA_DDL_AUTO: update
+      HIKARI_MAX_POOL_SIZE: "10"
+      BILLING_QUEUE_URL: ${BILLING_QUEUE_URL}
+      BILLING_SQS_LISTENER_ENABLED: "true"
+      AWS_ACCESS_KEY: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_REGION: ${AWS_REGION:-us-east-1}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q http://localhost:8080/api/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+
+  stripe-mock:
+    build:
+      context: ../services/stripe_mock
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q http://localhost:8080/api/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+
+  # =====================================================================
+  # .NET SERVICES
+  # =====================================================================
+
+  pricing-engine:
+    build:
+      context: ../services/PricingEngine
+    environment:
+      DB_HOST: postgres
+      DB_NAME: PricingRuleDB
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      DB_PORT: "5432"
+      ASPNETCORE_URLS: http://+:8080
+      ASPNETCORE_ENVIRONMENT: Development
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c '</dev/tcp/localhost/8080' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+
+  pricing-orchestator:
+    build:
+      context: ../services/PricingOrchestator
+    environment:
+      PROPERTIES_ENGINE_URL: http://poc-properties:8080
+      PRICING_SERVICE_URL: http://pricing-engine:8080
+      ASPNETCORE_URLS: http://+:8080
+      ASPNETCORE_ENVIRONMENT: Development
+    depends_on:
+      poc-properties:
+        condition: service_healthy
+      pricing-engine:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c '</dev/tcp/localhost/8080' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+
+  # =====================================================================
+  # FRONTEND
+  # =====================================================================
+
+  user-interface:
+    build:
+      context: ../user_interface
+    environment:
+      API_BASE_URL: http://localhost:8080
+      PROPERTY_API_PATH: /poc-properties/api/property
+      PROPERTY_API_TOKEN: ""
+    ports:
+      - "4200:80"
+
+volumes:
+  pgdata:
