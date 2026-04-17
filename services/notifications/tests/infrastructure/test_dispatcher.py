@@ -14,6 +14,8 @@ from notifications.infrastructure.dispatcher import MessageDispatcher
 def _make_dispatcher(**overrides):
     defaults = dict(
         booking_created_handler=lambda e: None,
+        booking_approved_handler=lambda e: None,
+        booking_cancelled_handler=lambda e: None,
         booking_dates_changed_handler=lambda e: None,
         booking_confirmed_handler=lambda e: None,
         booking_rejected_handler=lambda e: None,

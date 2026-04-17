@@ -5,11 +5,13 @@ from fastapi import APIRouter, Depends, Header, HTTPException, status
 from booking_orchestrator.application.admin_approve_reservation import AdminApproveReservationUseCase
 from booking_orchestrator.application.admin_confirm_reservation import AdminConfirmReservationUseCase
 from booking_orchestrator.application.admin_reject_reservation import AdminRejectReservationUseCase
+from booking_orchestrator.application.cancel_reservation import CancelReservationUseCase
 from booking_orchestrator.application.change_dates_reservation import ChangeDatesReservationUseCase
 from booking_orchestrator.application.commands import (
     AdminApproveReservationCommand,
     AdminConfirmReservationCommand,
     AdminRejectReservationCommand,
+    CancelReservationCommand,
     ChangeDatesReservationCommand,
     CreateReservationCommand,
     MakePaymentCommand,
@@ -20,6 +22,7 @@ from booking_orchestrator.bootstrap import (
     get_admin_approve_reservation_use_case,
     get_admin_confirm_reservation_use_case,
     get_admin_reject_reservation_use_case,
+    get_cancel_reservation_use_case,
     get_change_dates_reservation_use_case,
     get_create_reservation_use_case,
     get_make_payment_use_case,
@@ -53,6 +56,9 @@ AdminRejectUseCaseDep = Annotated[
 ]
 AdminApproveUseCaseDep = Annotated[
     AdminApproveReservationUseCase, Depends(get_admin_approve_reservation_use_case)
+]
+CancelUseCaseDep = Annotated[
+    CancelReservationUseCase, Depends(get_cancel_reservation_use_case)
 ]
 MakePaymentUseCaseDep = Annotated[
     MakePaymentUseCase, Depends(get_make_payment_use_case)
@@ -203,3 +209,24 @@ async def make_payment(
     except ReservationFailedError as exc:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=exc.reason)
     return updated
+
+
+@router.post("/reservations/{booking_id}/cancel", status_code=status.HTTP_200_OK)
+async def cancel_reservation(
+    booking_id: str,
+    use_case: CancelUseCaseDep,
+    x_user_id: str = Header(..., alias="X-User-Id"),
+    x_user_email: str = Header(..., alias="X-User-Email"),
+) -> dict:
+    command = CancelReservationCommand(
+        booking_id=booking_id,
+        user_id=x_user_id,
+        user_email=x_user_email,
+    )
+    try:
+        result = await use_case.execute(command)
+    except BookingNotFoundError:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Booking not found")
+    except ReservationFailedError as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=exc.reason)
+    return result

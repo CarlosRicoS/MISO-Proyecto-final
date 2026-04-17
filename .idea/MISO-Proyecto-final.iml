@@ -4,7 +4,6 @@
     <content url="file://$MODULE_DIR$">
       <sourceFolder url="file://$MODULE_DIR$/services/auth" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/services/auth/tests" isTestSource="true" />
-      <sourceFolder url="file://$MODULE_DIR$/services/hello_world" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/services/pms" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/services/pms/tests" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/services/booking" isTestSource="false" />
@@ -13,6 +12,8 @@
       <sourceFolder url="file://$MODULE_DIR$/services/notifications" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/services/notifications/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/services/notifications/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/services/booking/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/services/booking_orchestrator" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/services/auth/.venv" />
       <excludeFolder url="file://$MODULE_DIR$/services/pms/.venv" />
       <excludeFolder url="file://$MODULE_DIR$/services/booking/.venv" />
@@ -28,7 +29,7 @@
       <excludeFolder url="file://$MODULE_DIR$/terraform/stacks/monitoring/.terraform" />
       <excludeFolder url="file://$MODULE_DIR$/terraform/stacks/web_app/.terraform" />
     </content>
-    <orderEntry type="jdk" jdkName="uv (MISO-Proyecto-final) (2)" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="Python 3.13 (MISO-Proyecto-final) (3)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name=".claude" />
   </component>

@@ -79,6 +79,7 @@ class FakeBookingClient:
             "user_id": "user-xyz",
             "period_start": "2026-06-01",
             "period_end": "2026-06-05",
+            "guests": 2,
             "price": "250.00",
             "status": self.booking_status,
         }

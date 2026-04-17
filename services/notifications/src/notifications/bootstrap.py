@@ -2,6 +2,8 @@
 
 import boto3
 
+from notifications.application.handle_booking_approved import HandleBookingApproved
+from notifications.application.handle_booking_cancelled import HandleBookingCancelled
 from notifications.application.handle_booking_confirmed import HandleBookingConfirmed
 from notifications.application.handle_booking_created import HandleBookingCreated
 from notifications.application.handle_booking_dates_changed import HandleBookingDatesChanged
@@ -24,6 +26,8 @@ def build_consumer() -> SqsConsumer:
     )
     dispatcher = MessageDispatcher(
         booking_created_handler=HandleBookingCreated(email_sender),
+        booking_approved_handler=HandleBookingApproved(email_sender),
+        booking_cancelled_handler=HandleBookingCancelled(email_sender),
         booking_dates_changed_handler=HandleBookingDatesChanged(email_sender),
         booking_confirmed_handler=HandleBookingConfirmed(email_sender),
         booking_rejected_handler=HandleBookingRejected(email_sender),

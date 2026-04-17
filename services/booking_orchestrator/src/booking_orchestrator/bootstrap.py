@@ -13,6 +13,7 @@ from fastapi import Depends
 from booking_orchestrator.application.admin_approve_reservation import AdminApproveReservationUseCase
 from booking_orchestrator.application.admin_confirm_reservation import AdminConfirmReservationUseCase
 from booking_orchestrator.application.admin_reject_reservation import AdminRejectReservationUseCase
+from booking_orchestrator.application.cancel_reservation import CancelReservationUseCase
 from booking_orchestrator.application.change_dates_reservation import ChangeDatesReservationUseCase
 from booking_orchestrator.application.create_reservation import CreateReservationUseCase
 from booking_orchestrator.application.make_payment import MakePaymentUseCase
@@ -113,9 +114,21 @@ def get_admin_reject_reservation_use_case(
 
 def get_admin_approve_reservation_use_case(
     booking_client: BookingClientDep,
+    publisher: PublisherDep,
 ) -> AdminApproveReservationUseCase:
     return AdminApproveReservationUseCase(
         booking_client=booking_client,
+        publisher=publisher,
+    )
+
+
+def get_cancel_reservation_use_case(
+    booking_client: BookingClientDep,
+    publisher: PublisherDep,
+) -> CancelReservationUseCase:
+    return CancelReservationUseCase(
+        booking_client=booking_client,
+        publisher=publisher,
     )
 
 

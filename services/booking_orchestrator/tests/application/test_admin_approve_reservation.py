@@ -3,7 +3,7 @@ import pytest
 from booking_orchestrator.application.admin_approve_reservation import AdminApproveReservationUseCase
 from booking_orchestrator.application.commands import AdminApproveReservationCommand
 from booking_orchestrator.domain.exceptions import BookingNotFoundError, ReservationFailedError
-from tests.application.fakes import FakeBookingClient
+from tests.application.fakes import FakeBookingClient, FakePublisher
 
 
 def _make_command(**overrides) -> AdminApproveReservationCommand:
@@ -16,9 +16,10 @@ def _make_command(**overrides) -> AdminApproveReservationCommand:
     return AdminApproveReservationCommand(**defaults)
 
 
-def _make_use_case(booking: FakeBookingClient | None = None):
+def _make_use_case(booking: FakeBookingClient | None = None, publisher: FakePublisher | None = None):
     return AdminApproveReservationUseCase(
         booking_client=booking or FakeBookingClient(),
+        publisher=publisher or FakePublisher(),
     )
 
 

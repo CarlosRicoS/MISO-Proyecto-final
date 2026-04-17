@@ -8,6 +8,8 @@ from booking_orchestrator.application.commands import (
     CreateReservationCommand,
 )
 from booking_orchestrator.domain.events import (
+    BookingApprovedEvent,
+    BookingCancelledEvent,
     BookingConfirmedEvent,
     BookingCreatedEvent,
     BookingDatesChangedEvent,
@@ -100,6 +102,8 @@ class NotificationPublisher(Protocol):
         self,
         event: (
             BookingCreatedEvent
+            | BookingApprovedEvent
+            | BookingCancelledEvent
             | BookingDatesChangedEvent
             | BookingConfirmedEvent
             | BookingRejectedEvent

@@ -10,6 +10,8 @@ from typing import Any, Callable
 
 from notifications.domain.events import (
     SUPPORTED_SCHEMA_VERSION,
+    BookingApprovedEvent,
+    BookingCancelledEvent,
     BookingConfirmedEvent,
     BookingCreatedEvent,
     BookingDatesChangedEvent,
@@ -21,6 +23,8 @@ from notifications.domain.exceptions import UnsupportedSchemaError
 logger = logging.getLogger(__name__)
 
 BookingCreatedHandler = Callable[[BookingCreatedEvent], None]
+BookingApprovedHandler = Callable[[BookingApprovedEvent], None]
+BookingCancelledHandler = Callable[[BookingCancelledEvent], None]
 BookingDatesChangedHandler = Callable[[BookingDatesChangedEvent], None]
 BookingConfirmedHandler = Callable[[BookingConfirmedEvent], None]
 BookingRejectedHandler = Callable[[BookingRejectedEvent], None]
@@ -31,12 +35,16 @@ class MessageDispatcher:
     def __init__(
         self,
         booking_created_handler: BookingCreatedHandler,
+        booking_approved_handler: BookingApprovedHandler,
+        booking_cancelled_handler: BookingCancelledHandler,
         booking_dates_changed_handler: BookingDatesChangedHandler,
         booking_confirmed_handler: BookingConfirmedHandler,
         booking_rejected_handler: BookingRejectedHandler,
         payment_confirmed_handler: PaymentConfirmedHandler,
     ) -> None:
         self._booking_created = booking_created_handler
+        self._booking_approved = booking_approved_handler
+        self._booking_cancelled = booking_cancelled_handler
         self._booking_dates_changed = booking_dates_changed_handler
         self._booking_confirmed = booking_confirmed_handler
         self._booking_rejected = booking_rejected_handler
@@ -54,6 +62,16 @@ class MessageDispatcher:
         if msg_type == "BOOKING_CREATED":
             event = BookingCreatedEvent.from_message(message)
             self._booking_created(event)
+            return
+
+        if msg_type == "BOOKING_APPROVED":
+            event = BookingApprovedEvent.from_message(message)
+            self._booking_approved(event)
+            return
+
+        if msg_type == "BOOKING_CANCELLED":
+            event = BookingCancelledEvent.from_message(message)
+            self._booking_cancelled(event)
             return
 
         if msg_type == "BOOKING_DATES_CHANGED":

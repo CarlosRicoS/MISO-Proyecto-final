@@ -57,6 +57,15 @@ class AdminApproveReservationCommand:
 
 
 @dataclass(frozen=True)
+class CancelReservationCommand:
+    """Input to the cancel reservation saga."""
+
+    booking_id: str
+    user_id: str
+    user_email: str
+
+
+@dataclass(frozen=True)
 class MakePaymentCommand:
     """Input to the make-payment saga (APPROVED → CONFIRMED via Stripe)."""
 
