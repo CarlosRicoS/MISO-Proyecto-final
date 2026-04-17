@@ -239,6 +239,100 @@ A **negative** `price_difference` means the new dates are cheaper than the origi
 
 ---
 
+### Admin Approve Booking
+
+```
+POST /api/booking/{booking_id}/admin-approve
+```
+
+Approves a `PENDING` booking, transitioning it to `APPROVED`. This is the first step before the traveler can make a payment. No request body required.
+
+**Path Parameters**
+
+| Parameter  | Type | Description               |
+|------------|------|---------------------------|
+| booking_id | UUID | ID of the booking to approve |
+
+#### Example
+
+**Request**
+```bash
+curl -X POST https://{api-gateway-url}/booking/api/booking/a1b2c3d4-e5f6-7890-abcd-ef1234567890/admin-approve
+```
+
+**Response** `200 OK`
+```json
+{
+  "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "property_id": "660e8400-e29b-41d4-a716-446655440000",
+  "user_id": "550e8400-e29b-41d4-a716-446655440000",
+  "guests": 2,
+  "period_start": "2026-06-01",
+  "period_end": "2026-06-05",
+  "price": 250.00,
+  "status": "APPROVED",
+  "admin_group_id": "770e8400-e29b-41d4-a716-446655440000",
+  "payment_reference": null,
+  "created_at": "2026-03-27T12:00:00Z"
+}
+```
+
+---
+
+### Update Payment State
+
+```
+POST /api/booking/{booking_id}/update-payment-state
+```
+
+Confirms an `APPROVED` booking with a real payment reference (e.g., from Stripe), transitioning it to `CONFIRMED`.
+
+**Path Parameters**
+
+| Parameter  | Type | Description               |
+|------------|------|---------------------------|
+| booking_id | UUID | ID of the booking to confirm |
+
+**Headers**
+
+| Header       | Value            | Required |
+|--------------|------------------|----------|
+| Content-Type | application/json | Yes      |
+
+**Request Body**
+
+| Field             | Type   | Required | Description                                |
+|-------------------|--------|----------|--------------------------------------------|
+| payment_reference | string | Yes      | Payment reference from the payment gateway (1–200 chars) |
+
+#### Example
+
+**Request**
+```bash
+curl -X POST https://{api-gateway-url}/booking/api/booking/a1b2c3d4-e5f6-7890-abcd-ef1234567890/update-payment-state \
+  -H 'Content-Type: application/json' \
+  -d '{"payment_reference": "stripe-ref-abc123"}'
+```
+
+**Response** `200 OK`
+```json
+{
+  "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "property_id": "660e8400-e29b-41d4-a716-446655440000",
+  "user_id": "550e8400-e29b-41d4-a716-446655440000",
+  "guests": 2,
+  "period_start": "2026-06-01",
+  "period_end": "2026-06-05",
+  "price": 250.00,
+  "status": "CONFIRMED",
+  "admin_group_id": "770e8400-e29b-41d4-a716-446655440000",
+  "payment_reference": "stripe-ref-abc123",
+  "created_at": "2026-03-27T12:00:00Z"
+}
+```
+
+---
+
 ### Cancel Booking
 
 ```
@@ -310,13 +404,14 @@ PENDING ──→ APPROVED ──→ CONFIRMED ──→ COMPLETED
    └─────────────┴─────────────┴──→ CANCELED
 ```
 
-| Status      | Description                                      | Can transition to              |
-|-------------|--------------------------------------------------|--------------------------------|
-| `PENDING`   | Initial status after creation                    | `APPROVED`, `CANCELED`         |
-| `APPROVED`  | Booking approved by admin                        | `CONFIRMED`, `CANCELED`        |
-| `CONFIRMED` | Payment received                                 | `COMPLETED`, `CANCELED`        |
-| `COMPLETED` | Stay period finished                             | _(terminal — no transitions)_  |
-| `CANCELED`  | Booking cancelled                                | _(terminal — no transitions)_  |
+| Status      | Description                                      | Can transition to                    |
+|-------------|--------------------------------------------------|--------------------------------------|
+| `PENDING`   | Initial status after creation                    | `APPROVED`, `CANCELED`, `REJECTED`   |
+| `APPROVED`  | Booking approved by admin                        | `CONFIRMED`, `CANCELED`              |
+| `CONFIRMED` | Payment received                                 | `COMPLETED`, `CANCELED`              |
+| `COMPLETED` | Stay period finished                             | _(terminal — no transitions)_        |
+| `CANCELED`  | Booking cancelled                                | _(terminal — no transitions)_        |
+| `REJECTED`  | Booking rejected by admin                        | _(terminal — no transitions)_        |
 
 Only `PENDING`, `APPROVED`, and `CONFIRMED` bookings can be cancelled via the API.
 
@@ -417,12 +512,16 @@ src/booking/
 │   ├── value_objects.py # BookingPeriod, Money
 │   └── exceptions.py    # Domain errors
 ├── application/         # Use cases — depends only on domain
-│   ├── commands.py      # CreateBookingCommand, CancelBookingCommand, ChangeDatesCommand
+│   ├── commands.py      # CreateBookingCommand, CancelBookingCommand, ChangeDatesCommand, etc.
 │   ├── ports.py         # BookingRepository protocol (interface)
 │   ├── create_booking.py
 │   ├── get_booking.py
 │   ├── cancel_booking.py
-│   └── change_dates.py
+│   ├── change_dates.py
+│   ├── admin_approve_booking.py
+│   ├── admin_confirm_booking.py
+│   ├── admin_reject_booking.py
+│   └── update_payment_state.py
 ├── infrastructure/      # Adapters — implements domain ports
 │   ├── models.py        # SQLAlchemy ORM model
 │   ├── sqlalchemy_booking_repo.py

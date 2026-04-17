@@ -1,0 +1,32 @@
+$kind: http-request
+name: Make Payment
+url: "{{base_url}}/booking-orchestrator/api/reservations/{{booking_id}}/make-payment"
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{id_token}}
+body:
+  type: json
+  content: |-
+    {
+      "currency": "USD",
+      "payment_method_type": "CREDIT_CARD"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Returns 200 OK', function () {
+        pm.response.to.have.status(200);
+      });
+      pm.test('Booking status is CONFIRMED', function () {
+        const json = pm.response.json();
+        pm.expect(json.status).to.eql('CONFIRMED');
+      });
+      pm.test('Response has Stripe payment_reference', function () {
+        const json = pm.response.json();
+        pm.expect(json).to.have.property('payment_reference');
+        pm.expect(json.payment_reference).to.be.a('string');
+        pm.expect(json.payment_reference.length).to.be.greaterThan(0);
+      });
+    language: text/javascript
+order: 6000
