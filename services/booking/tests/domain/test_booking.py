@@ -128,10 +128,11 @@ class TestBookingStatusTransitions:
         with pytest.raises(InvalidBookingStatusTransitionError):
             booking.approve()
 
-    def test_cannot_confirm_pending(self):
+    def test_can_confirm_pending(self):
         booking = _make_booking()
-        with pytest.raises(InvalidBookingStatusTransitionError):
-            booking.confirm(payment_reference="PAY-123")
+        booking.confirm(payment_reference="PAY-123")
+        assert booking.status == BookingStatus.CONFIRMED
+        assert booking.payment_reference == "PAY-123"
 
 
 class TestChangeDates:

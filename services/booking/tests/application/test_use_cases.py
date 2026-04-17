@@ -383,16 +383,17 @@ class TestUpdatePaymentStateUseCase:
                 )
             )
 
-    async def test_raises_on_non_approved_booking(self):
+    async def test_confirms_pending_booking_directly(self):
         repo = InMemoryBookingRepository()
         create_uc = CreateBookingUseCase(booking_repository=repo)
         booking = await create_uc.execute(_make_create_command())
 
         uc = UpdatePaymentStateUseCase(booking_repository=repo)
-        with pytest.raises(InvalidBookingStatusTransitionError):
-            await uc.execute(
-                UpdatePaymentStateCommand(
-                    booking_id=str(booking.id),
-                    payment_reference="STRIPE-abc123",
-                )
+        result = await uc.execute(
+            UpdatePaymentStateCommand(
+                booking_id=str(booking.id),
+                payment_reference="STRIPE-abc123",
             )
+        )
+        assert result.status == BookingStatus.CONFIRMED
+        assert result.payment_reference == "STRIPE-abc123"

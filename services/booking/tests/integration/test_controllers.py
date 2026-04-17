@@ -467,13 +467,14 @@ class TestUpdatePaymentState:
         )
         assert response.status_code == 404
 
-    async def test_update_payment_state_not_approved_returns_409(self, client: AsyncClient):
+    async def test_update_payment_state_pending_confirms_directly(self, client: AsyncClient):
         booking = await _create_booking(client)
         response = await client.post(
             f"/api/booking/{booking['id']}/update-payment-state",
             json={"payment_reference": "STRIPE-abc"},
         )
-        assert response.status_code == 409
+        assert response.status_code == 200
+        assert response.json()["status"] == "CONFIRMED"
 
     async def test_update_payment_state_missing_body_returns_422(self, client: AsyncClient):
         booking = await _create_booking(client)
