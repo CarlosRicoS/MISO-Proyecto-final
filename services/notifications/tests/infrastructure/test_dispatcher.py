@@ -5,6 +5,7 @@ from notifications.domain.events import (
     BookingCreatedEvent,
     BookingDatesChangedEvent,
     BookingRejectedEvent,
+    PaymentConfirmedEvent,
 )
 from notifications.domain.exceptions import UnsupportedSchemaError
 from notifications.infrastructure.dispatcher import MessageDispatcher
@@ -16,6 +17,7 @@ def _make_dispatcher(**overrides):
         booking_dates_changed_handler=lambda e: None,
         booking_confirmed_handler=lambda e: None,
         booking_rejected_handler=lambda e: None,
+        payment_confirmed_handler=lambda e: None,
     )
     defaults.update(overrides)
     return MessageDispatcher(**defaults)
@@ -122,6 +124,32 @@ def test_dispatches_booking_rejected_to_handler():
     assert len(received) == 1
     assert received[0].booking_id == "b3"
     assert received[0].rejection_reason == "La propiedad no está disponible."
+
+
+def _payment_confirmed_message() -> dict:
+    return {
+        "schema_version": 1,
+        "type": "PAYMENT_CONFIRMED",
+        "booking": {
+            "id": "b4",
+            "property_id": "p4",
+            "period_start": "2026-09-01",
+            "period_end": "2026-09-05",
+            "guests": 2,
+            "price": "500.00",
+            "payment_reference": "stripe-ref-xyz789",
+        },
+        "recipient": {"user_id": "u4", "email": "payer@x.com"},
+    }
+
+
+def test_dispatches_payment_confirmed_to_handler():
+    received: list[PaymentConfirmedEvent] = []
+    dispatcher = _make_dispatcher(payment_confirmed_handler=received.append)
+    dispatcher.dispatch(_payment_confirmed_message())
+    assert len(received) == 1
+    assert received[0].booking_id == "b4"
+    assert received[0].payment_reference == "stripe-ref-xyz789"
 
 
 def test_rejects_unknown_schema_version():

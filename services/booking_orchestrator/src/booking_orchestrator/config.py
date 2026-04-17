@@ -16,13 +16,17 @@ class Settings(BaseSettings):
     # injected as env vars by the ecs_service module.
     BOOKING_SERVICE_URL: str = "http://localhost:8001"
     PROPERTIES_SERVICE_URL: str = "http://localhost:8002"
+    STRIPE_MOCK_SERVICE_URL: str = "http://localhost:8003"
 
     # Upstream HTTP timeout, in seconds. Kept tight so the saga completes under the 3s SLA.
     UPSTREAM_HTTP_TIMEOUT: float = 2.0
+    # Stripe mock has ~1s delay per operation; allow extra headroom.
+    STRIPE_HTTP_TIMEOUT: float = 2.5
 
     # AWS / SQS
     AWS_REGION: str = "us-east-1"
     NOTIFICATIONS_QUEUE_URL: str = ""
+    BILLING_QUEUE_URL: str = ""
 
 
 settings = Settings()

@@ -66,3 +66,33 @@ class NotificationPublishError(OrchestratorError):
 
     This is logged but not fatal — the booking is still persisted.
     """
+
+
+class StripePaymentError(OrchestratorError):
+    """Raised when a Stripe payment create or confirm operation fails."""
+
+    def __init__(self, detail: str) -> None:
+        super().__init__(f"stripe payment failed: {detail}")
+        self.detail = detail
+
+
+class BillingPublishError(OrchestratorError):
+    """Raised when publishing to the billing queue fails. Best-effort, not fatal."""
+
+
+class BookingApproveError(OrchestratorError):
+    """Raised when the booking service rejects the admin-approve request."""
+
+    def __init__(self, detail: str, status_code: int) -> None:
+        super().__init__(f"booking admin-approve failed ({status_code}): {detail}")
+        self.detail = detail
+        self.status_code = status_code
+
+
+class BookingUpdatePaymentError(OrchestratorError):
+    """Raised when the booking service rejects the update-payment-state request."""
+
+    def __init__(self, detail: str, status_code: int) -> None:
+        super().__init__(f"booking update-payment-state failed ({status_code}): {detail}")
+        self.detail = detail
+        self.status_code = status_code

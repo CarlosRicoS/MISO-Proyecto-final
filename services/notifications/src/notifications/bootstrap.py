@@ -6,6 +6,7 @@ from notifications.application.handle_booking_confirmed import HandleBookingConf
 from notifications.application.handle_booking_created import HandleBookingCreated
 from notifications.application.handle_booking_dates_changed import HandleBookingDatesChanged
 from notifications.application.handle_booking_rejected import HandleBookingRejected
+from notifications.application.handle_payment_confirmed import HandlePaymentConfirmed
 from notifications.config import settings
 from notifications.infrastructure.dispatcher import MessageDispatcher
 from notifications.infrastructure.smtp_email_sender import SmtpEmailSender
@@ -26,6 +27,7 @@ def build_consumer() -> SqsConsumer:
         booking_dates_changed_handler=HandleBookingDatesChanged(email_sender),
         booking_confirmed_handler=HandleBookingConfirmed(email_sender),
         booking_rejected_handler=HandleBookingRejected(email_sender),
+        payment_confirmed_handler=HandlePaymentConfirmed(email_sender),
     )
     sqs_client = boto3.client("sqs", region_name=settings.AWS_REGION)
     return SqsConsumer(

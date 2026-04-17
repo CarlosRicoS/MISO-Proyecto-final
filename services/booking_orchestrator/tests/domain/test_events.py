@@ -6,6 +6,7 @@ from booking_orchestrator.domain.events import (
     BookingCreatedEvent,
     BookingDatesChangedEvent,
     BookingRejectedEvent,
+    PaymentConfirmedEvent,
 )
 
 
@@ -93,5 +94,26 @@ def test_booking_rejected_event_serializes():
     assert msg["schema_version"] == SCHEMA_VERSION
     assert msg["type"] == "BOOKING_REJECTED"
     assert msg["booking"]["rejection_reason"] == "Double booking"
+    assert msg["recipient"]["email"] == "x@y.z"
+    assert "occurred_at" in msg
+
+
+def test_payment_confirmed_event_serializes():
+    event = PaymentConfirmedEvent(
+        booking_id="b1",
+        property_id="p1",
+        user_id="u1",
+        user_email="x@y.z",
+        period_start="2026-06-01",
+        period_end="2026-06-05",
+        guests=2,
+        price=Decimal("250.00"),
+        payment_reference="stripe-ref-abc123",
+    )
+    msg = event.to_message()
+    assert msg["schema_version"] == SCHEMA_VERSION
+    assert msg["type"] == "PAYMENT_CONFIRMED"
+    assert msg["booking"]["id"] == "b1"
+    assert msg["booking"]["payment_reference"] == "stripe-ref-abc123"
     assert msg["recipient"]["email"] == "x@y.z"
     assert "occurred_at" in msg

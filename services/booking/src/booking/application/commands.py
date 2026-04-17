@@ -47,3 +47,18 @@ class AdminRejectBookingCommand:
 
     booking_id: str
     reason: str
+
+
+@dataclass(frozen=True)
+class AdminApproveBookingCommand:
+    """Command for admin to approve a pending booking (PENDING → APPROVED)."""
+
+    booking_id: str
+
+
+@dataclass(frozen=True)
+class UpdatePaymentStateCommand:
+    """Command to update booking payment state (APPROVED → CONFIRMED) with a real payment reference."""
+
+    booking_id: str
+    payment_reference: str

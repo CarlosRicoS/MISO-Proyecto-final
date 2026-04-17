@@ -13,11 +13,13 @@ from booking_orchestrator.application.commands import (
     CreateReservationCommand,
 )
 from booking_orchestrator.domain.exceptions import (
+    BookingApproveError,
     BookingChangeDatesError,
     BookingConfirmError,
     BookingCreateError,
     BookingNotFoundError,
     BookingRejectError,
+    BookingUpdatePaymentError,
 )
 
 
@@ -116,5 +118,32 @@ class HttpxBookingClient:
         if response.status_code != 200:
             detail = response.json().get("detail", response.text) if response.content else response.text
             raise BookingRejectError(detail, response.status_code)
+
+        return response.json()
+
+    async def admin_approve(self, booking_id: str) -> dict[str, Any]:
+        try:
+            response = await self._client.post(f"/api/booking/{booking_id}/admin-approve")
+        except httpx.HTTPError as exc:
+            raise BookingApproveError(f"booking service unreachable: {exc}", 502) from exc
+
+        if response.status_code != 200:
+            detail = response.json().get("detail", response.text) if response.content else response.text
+            raise BookingApproveError(detail, response.status_code)
+
+        return response.json()
+
+    async def update_payment_state(self, booking_id: str, payment_reference: str) -> dict[str, Any]:
+        try:
+            response = await self._client.post(
+                f"/api/booking/{booking_id}/update-payment-state",
+                json={"payment_reference": payment_reference},
+            )
+        except httpx.HTTPError as exc:
+            raise BookingUpdatePaymentError(f"booking service unreachable: {exc}", 502) from exc
+
+        if response.status_code != 200:
+            detail = response.json().get("detail", response.text) if response.content else response.text
+            raise BookingUpdatePaymentError(detail, response.status_code)
 
         return response.json()

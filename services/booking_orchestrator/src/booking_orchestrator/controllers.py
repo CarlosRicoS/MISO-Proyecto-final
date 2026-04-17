@@ -2,21 +2,27 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Header, HTTPException, status
 
+from booking_orchestrator.application.admin_approve_reservation import AdminApproveReservationUseCase
 from booking_orchestrator.application.admin_confirm_reservation import AdminConfirmReservationUseCase
 from booking_orchestrator.application.admin_reject_reservation import AdminRejectReservationUseCase
 from booking_orchestrator.application.change_dates_reservation import ChangeDatesReservationUseCase
 from booking_orchestrator.application.commands import (
+    AdminApproveReservationCommand,
     AdminConfirmReservationCommand,
     AdminRejectReservationCommand,
     ChangeDatesReservationCommand,
     CreateReservationCommand,
+    MakePaymentCommand,
 )
 from booking_orchestrator.application.create_reservation import CreateReservationUseCase
+from booking_orchestrator.application.make_payment import MakePaymentUseCase
 from booking_orchestrator.bootstrap import (
+    get_admin_approve_reservation_use_case,
     get_admin_confirm_reservation_use_case,
     get_admin_reject_reservation_use_case,
     get_change_dates_reservation_use_case,
     get_create_reservation_use_case,
+    get_make_payment_use_case,
 )
 from booking_orchestrator.domain.exceptions import (
     BookingChangeDatesError,
@@ -25,10 +31,12 @@ from booking_orchestrator.domain.exceptions import (
     ReservationFailedError,
 )
 from booking_orchestrator.schemas import (
+    AdminApproveReservationRequest,
     AdminConfirmReservationRequest,
     AdminRejectReservationRequest,
     ChangeDatesReservationRequest,
     CreateReservationRequest,
+    MakePaymentRequest,
 )
 
 router = APIRouter(prefix="/api", tags=["reservations"])
@@ -42,6 +50,12 @@ AdminConfirmUseCaseDep = Annotated[
 ]
 AdminRejectUseCaseDep = Annotated[
     AdminRejectReservationUseCase, Depends(get_admin_reject_reservation_use_case)
+]
+AdminApproveUseCaseDep = Annotated[
+    AdminApproveReservationUseCase, Depends(get_admin_approve_reservation_use_case)
+]
+MakePaymentUseCaseDep = Annotated[
+    MakePaymentUseCase, Depends(get_make_payment_use_case)
 ]
 
 
@@ -136,6 +150,51 @@ async def admin_reject_reservation(
         user_id=x_user_id,
         user_email=request.traveler_email,
         reason=request.reason,
+    )
+    try:
+        updated = await use_case.execute(command)
+    except BookingNotFoundError:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Booking not found")
+    except ReservationFailedError as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=exc.reason)
+    return updated
+
+
+@router.post("/reservations/{booking_id}/admin-approve", status_code=status.HTTP_200_OK)
+async def admin_approve_reservation(
+    booking_id: str,
+    request: AdminApproveReservationRequest,
+    use_case: AdminApproveUseCaseDep,
+    x_user_id: str = Header(..., alias="X-User-Id"),
+) -> dict:
+    command = AdminApproveReservationCommand(
+        booking_id=booking_id,
+        user_id=x_user_id,
+        user_email=request.traveler_email,
+    )
+    try:
+        updated = await use_case.execute(command)
+    except BookingNotFoundError:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Booking not found")
+    except ReservationFailedError as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=exc.reason)
+    return updated
+
+
+@router.post("/reservations/{booking_id}/make-payment", status_code=status.HTTP_200_OK)
+async def make_payment(
+    booking_id: str,
+    request: MakePaymentRequest,
+    use_case: MakePaymentUseCaseDep,
+    x_user_id: str = Header(..., alias="X-User-Id"),
+    x_user_email: str = Header(..., alias="X-User-Email"),
+) -> dict:
+    command = MakePaymentCommand(
+        booking_id=booking_id,
+        user_id=x_user_id,
+        user_email=x_user_email,
+        currency=request.currency,
+        payment_method_type=request.payment_method_type,
     )
     try:
         updated = await use_case.execute(command)

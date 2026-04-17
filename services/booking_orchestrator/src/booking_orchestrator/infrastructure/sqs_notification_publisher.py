@@ -14,6 +14,7 @@ from booking_orchestrator.domain.events import (
     BookingCreatedEvent,
     BookingDatesChangedEvent,
     BookingRejectedEvent,
+    PaymentConfirmedEvent,
 )
 from booking_orchestrator.domain.exceptions import NotificationPublishError
 
@@ -25,7 +26,13 @@ class SqsNotificationPublisher:
 
     async def publish(
         self,
-        event: BookingCreatedEvent | BookingDatesChangedEvent | BookingConfirmedEvent | BookingRejectedEvent,
+        event: (
+            BookingCreatedEvent
+            | BookingDatesChangedEvent
+            | BookingConfirmedEvent
+            | BookingRejectedEvent
+            | PaymentConfirmedEvent
+        ),
     ) -> None:
         body = json.dumps(event.to_message())
         try:

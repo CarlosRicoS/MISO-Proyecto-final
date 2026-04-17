@@ -90,6 +90,35 @@ class BookingRejectedEvent:
 
 
 @dataclass(frozen=True)
+class PaymentConfirmedEvent:
+    booking_id: str
+    property_id: str
+    period_start: str
+    period_end: str
+    guests: int
+    price: str
+    payment_reference: str
+    user_id: str
+    user_email: str
+
+    @classmethod
+    def from_message(cls, message: dict[str, Any]) -> "PaymentConfirmedEvent":
+        booking = message["booking"]
+        recipient = message["recipient"]
+        return cls(
+            booking_id=booking["id"],
+            property_id=booking["property_id"],
+            period_start=booking["period_start"],
+            period_end=booking["period_end"],
+            guests=booking["guests"],
+            price=str(booking["price"]),
+            payment_reference=booking["payment_reference"],
+            user_id=recipient["user_id"],
+            user_email=recipient["email"],
+        )
+
+
+@dataclass(frozen=True)
 class BookingDatesChangedEvent:
     booking_id: str
     property_id: str

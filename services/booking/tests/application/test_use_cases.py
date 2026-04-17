@@ -3,19 +3,23 @@ from uuid import uuid4
 
 import pytest
 
+from booking.application.admin_approve_booking import AdminApproveBookingUseCase
 from booking.application.admin_confirm_booking import AdminConfirmBookingUseCase
 from booking.application.admin_reject_booking import AdminRejectBookingUseCase
 from booking.application.cancel_booking import CancelBookingUseCase
 from booking.application.change_dates import ChangeDatesUseCase
 from booking.application.commands import (
+    AdminApproveBookingCommand,
     AdminConfirmBookingCommand,
     AdminRejectBookingCommand,
     CancelBookingCommand,
     ChangeDatesCommand,
     CreateBookingCommand,
+    UpdatePaymentStateCommand,
 )
 from booking.application.create_booking import CreateBookingUseCase
 from booking.application.get_booking import GetBookingUseCase, ListUserBookingsUseCase
+from booking.application.update_payment_state import UpdatePaymentStateUseCase
 from booking.domain.booking import BookingStatus
 from booking.domain.exceptions import (
     BookingDateChangeNotAllowedError,
@@ -316,4 +320,79 @@ class TestAdminRejectBookingUseCase:
         with pytest.raises(BookingValidationError):
             await uc.execute(
                 AdminRejectBookingCommand(booking_id=str(booking.id), reason="")
+            )
+
+
+class TestAdminApproveBookingUseCase:
+    async def test_approves_pending_booking(self):
+        repo = InMemoryBookingRepository()
+        create_uc = CreateBookingUseCase(booking_repository=repo)
+        booking = await create_uc.execute(_make_create_command())
+
+        uc = AdminApproveBookingUseCase(booking_repository=repo)
+        result = await uc.execute(AdminApproveBookingCommand(booking_id=str(booking.id)))
+
+        assert result.status == BookingStatus.APPROVED
+        assert result.payment_reference is None
+
+    async def test_raises_not_found(self):
+        repo = InMemoryBookingRepository()
+        uc = AdminApproveBookingUseCase(booking_repository=repo)
+        with pytest.raises(BookingNotFoundError):
+            await uc.execute(AdminApproveBookingCommand(booking_id=str(uuid4())))
+
+    async def test_raises_on_non_pending_booking(self):
+        repo = InMemoryBookingRepository()
+        create_uc = CreateBookingUseCase(booking_repository=repo)
+        booking = await create_uc.execute(_make_create_command())
+        booking.approve()
+        await repo.save(booking)
+
+        uc = AdminApproveBookingUseCase(booking_repository=repo)
+        with pytest.raises(InvalidBookingStatusTransitionError):
+            await uc.execute(AdminApproveBookingCommand(booking_id=str(booking.id)))
+
+
+class TestUpdatePaymentStateUseCase:
+    async def test_confirms_approved_booking_with_payment_reference(self):
+        repo = InMemoryBookingRepository()
+        create_uc = CreateBookingUseCase(booking_repository=repo)
+        booking = await create_uc.execute(_make_create_command())
+        booking.approve()
+        await repo.save(booking)
+
+        uc = UpdatePaymentStateUseCase(booking_repository=repo)
+        result = await uc.execute(
+            UpdatePaymentStateCommand(
+                booking_id=str(booking.id),
+                payment_reference="STRIPE-abc123",
+            )
+        )
+
+        assert result.status == BookingStatus.CONFIRMED
+        assert result.payment_reference == "STRIPE-abc123"
+
+    async def test_raises_not_found(self):
+        repo = InMemoryBookingRepository()
+        uc = UpdatePaymentStateUseCase(booking_repository=repo)
+        with pytest.raises(BookingNotFoundError):
+            await uc.execute(
+                UpdatePaymentStateCommand(
+                    booking_id=str(uuid4()),
+                    payment_reference="STRIPE-abc123",
+                )
+            )
+
+    async def test_raises_on_non_approved_booking(self):
+        repo = InMemoryBookingRepository()
+        create_uc = CreateBookingUseCase(booking_repository=repo)
+        booking = await create_uc.execute(_make_create_command())
+
+        uc = UpdatePaymentStateUseCase(booking_repository=repo)
+        with pytest.raises(InvalidBookingStatusTransitionError):
+            await uc.execute(
+                UpdatePaymentStateCommand(
+                    booking_id=str(booking.id),
+                    payment_reference="STRIPE-abc123",
+                )
             )
