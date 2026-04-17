@@ -219,7 +219,7 @@ export class BookingListPage {
 
     try {
       const reservations = await firstValueFrom(
-        this.bookingService.listReservations(this.authSessionService.idToken),
+        this.bookingService.listReservations(this.authSessionService.idToken, this.authSessionService.userId),
       );
 
       this.reservations = reservations.map((reservation) => this.createReservationViewModel(reservation));
