@@ -52,6 +52,28 @@ async def test_booking_not_pending_raises():
     assert exc_info.value.reason == "booking_not_pending"
 
 
+async def test_happy_path_publishes_booking_approved_event():
+    booking = FakeBookingClient(booking_status="PENDING")
+    publisher = FakePublisher()
+    uc = _make_use_case(booking, publisher)
+
+    await uc.execute(_make_command())
+
+    assert len(publisher.published) == 1
+    event = publisher.published[0]
+    assert event.booking_id == "booking-xyz"
+    assert event.user_email == "traveler@example.com"
+
+
+async def test_notification_failure_does_not_block_approval():
+    booking = FakeBookingClient(booking_status="PENDING")
+    publisher = FakePublisher(fail_publish=True)
+    uc = _make_use_case(booking, publisher)
+
+    result = await uc.execute(_make_command())
+    assert result["status"] == "APPROVED"
+
+
 async def test_admin_approve_error_raises_reservation_failed():
     booking = FakeBookingClient(booking_status="PENDING", fail_admin_approve=True)
     uc = _make_use_case(booking)
