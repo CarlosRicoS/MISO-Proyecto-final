@@ -1,6 +1,6 @@
 # Booking Orchestrator Microservice
 
-Saga coordinator for the "create reservation" user story. Fronts the frontend with a single synchronous endpoint and fans out to `booking`, `poc_properties`, and the `notifications` SQS queue. Built with FastAPI and hexagonal architecture, targeting a < 3s end-to-end SLA.
+Saga coordinator for the booking lifecycle. Fronts the frontend with synchronous endpoints and fans out to `booking`, `poc_properties`, `stripe-mock`, and the `notifications` / `billing` SQS queues. Built with FastAPI and hexagonal architecture, targeting a < 3s end-to-end SLA.
 
 ## Base URL
 
@@ -68,25 +68,150 @@ In production `X-User-Id` / `X-User-Email` are injected automatically by the API
 
 The saga creates the booking **before** locking the property so that there is always an entity to cancel on failure (poc_properties has no `unlock` endpoint).
 
-## Notification schema (v1)
+### Admin Approve Reservation
 
-The orchestrator publishes one JSON message per successful reservation onto `notifications_queue`:
+```
+POST /api/reservations/{booking_id}/admin-approve
+```
 
+Approves a `PENDING` booking (PENDING → APPROVED) and enqueues a `BOOKING_APPROVED` notification.
+
+**Headers**
+
+| Header        | Value            | Required |
+|---------------|------------------|----------|
+| Content-Type  | application/json | Yes      |
+| Authorization | Bearer `<JWT>`   | Yes      |
+| X-User-Id     | `<admin UUID>`   | Yes      |
+
+**Request Body**
+
+| Field          | Type   | Required | Description           |
+|----------------|--------|----------|-----------------------|
+| traveler_email | string | Yes      | Traveler's email      |
+
+**Responses**
+
+| Status | Meaning                                           |
+|--------|---------------------------------------------------|
+| 200    | Booking approved. Body is the updated booking.    |
+| 404    | Booking not found.                                |
+| 409    | Booking is not in `PENDING` status.               |
+
+---
+
+### Make Payment
+
+```
+POST /api/reservations/{booking_id}/make-payment
+```
+
+Processes payment for a booking via Stripe, confirms it, records a billing entry, and sends a payment confirmation notification. The booking does not need to be in `APPROVED` status — payment can proceed from any non-terminal state (e.g., directly from `PENDING`).
+
+**Saga steps:**
+1. Fetch booking
+2. Stripe create payment → get `referencePaymentId`
+3. Stripe confirm payment
+4. Update booking payment state (→ CONFIRMED)
+5. Publish billing CREATE to `billing_queue` (best-effort)
+6. Publish `PAYMENT_CONFIRMED` to `notifications_queue` (best-effort)
+
+**Compensation:** If Stripe confirm or booking update fails, the Stripe payment is cancelled.
+
+**Headers**
+
+| Header        | Value            | Required |
+|---------------|------------------|----------|
+| Content-Type  | application/json | Yes      |
+| Authorization | Bearer `<JWT>`   | Yes      |
+| X-User-Id     | `<user UUID>`    | Yes      |
+| X-User-Email  | `<email>`        | Yes      |
+
+**Request Body**
+
+| Field              | Type   | Required | Default       | Description         |
+|--------------------|--------|----------|---------------|---------------------|
+| currency           | string | No       | `USD`         | 3-letter currency   |
+| payment_method_type| string | No       | `CREDIT_CARD` | Payment method type |
+
+**Responses**
+
+| Status | Meaning                                                                    |
+|--------|----------------------------------------------------------------------------|
+| 200    | Payment processed, booking is `CONFIRMED`. Body is the updated booking.   |
+| 404    | Booking not found.                                                         |
+| 409    | Stripe or booking update failed (with compensation).                       |
+
+---
+
+### Cancel Reservation
+
+```
+POST /api/reservations/{booking_id}/cancel
+```
+
+Cancels a booking in `PENDING`, `APPROVED`, or `CONFIRMED` status and enqueues a `BOOKING_CANCELLED` notification.
+
+**Headers**
+
+| Header        | Value            | Required |
+|---------------|------------------|----------|
+| Authorization | Bearer `<JWT>`   | Yes      |
+| X-User-Id     | `<user UUID>`    | Yes      |
+| X-User-Email  | `<email>`        | Yes      |
+
+**Responses**
+
+| Status | Meaning                                                          |
+|--------|------------------------------------------------------------------|
+| 200    | Booking cancelled. Body: `{"booking_id": "...", "status": "CANCELED"}` |
+| 404    | Booking not found.                                               |
+| 409    | Booking is not in a cancellable state.                           |
+
+---
+
+## Notification schemas (v1)
+
+The orchestrator publishes JSON messages onto `notifications_queue`:
+
+**BOOKING_CREATED** — on successful reservation:
 ```json
 {
   "schema_version": 1,
   "type": "BOOKING_CREATED",
   "occurred_at": "2026-04-08T12:34:56Z",
-  "booking": {
-    "id": "...",
-    "property_id": "...",
-    "period_start": "2026-06-01",
-    "period_end": "2026-06-05",
-    "guests": 2,
-    "price": "250.00",
-    "status": "PENDING"
-  },
+  "booking": { "id": "...", "property_id": "...", "period_start": "2026-06-01", "period_end": "2026-06-05", "guests": 2, "price": "250.00", "status": "PENDING" },
   "recipient": { "user_id": "...", "email": "traveler@example.com" }
+}
+```
+
+**PAYMENT_CONFIRMED** — after successful payment:
+```json
+{
+  "schema_version": 1,
+  "type": "PAYMENT_CONFIRMED",
+  "occurred_at": "2026-04-08T12:35:00Z",
+  "booking": { "id": "...", "property_id": "...", "period_start": "2026-06-01", "period_end": "2026-06-05", "guests": 2, "price": "250.00", "payment_reference": "stripe-ref-abc123" },
+  "recipient": { "user_id": "...", "email": "traveler@example.com" }
+}
+```
+
+Other event types: `BOOKING_APPROVED`, `BOOKING_CONFIRMED`, `BOOKING_REJECTED`, `BOOKING_CANCELLED`, `BOOKING_DATES_CHANGED`.
+
+## Billing schema
+
+On successful payment, the orchestrator publishes a billing command onto `billing_queue`:
+
+```json
+{
+  "operation": "CREATE",
+  "payload": {
+    "bookingId": "...",
+    "paymentReference": "stripe-ref-abc123",
+    "paymentDate": "2026-04-08T12:35:00Z",
+    "adminGroupId": "...",
+    "value": "250.00"
+  }
 }
 ```
 
@@ -96,11 +221,14 @@ The orchestrator publishes one JSON message per successful reservation onto `not
 |--------------------------|------------------------------------------------------|--------------------------|
 | BOOKING_SERVICE_URL      | Base URL of the booking microservice                 | `http://localhost:8001`  |
 | PROPERTIES_SERVICE_URL   | Base URL of poc_properties                           | `http://localhost:8002`  |
+| STRIPE_MOCK_SERVICE_URL  | Base URL of the Stripe mock service                  | `http://localhost:8003`  |
 | UPSTREAM_HTTP_TIMEOUT    | httpx timeout (seconds) for outbound calls           | `2.0`                    |
+| STRIPE_HTTP_TIMEOUT      | httpx timeout (seconds) for Stripe calls             | `2.5`                    |
 | AWS_REGION               | AWS region for SQS                                   | `us-east-1`              |
 | NOTIFICATIONS_QUEUE_URL  | URL of the notifications SQS queue                   | *(required in prod)*     |
+| BILLING_QUEUE_URL        | URL of the billing SQS queue                         | *(required in prod)*     |
 
-In `ecs_api` the three URLs come from SSM parameters via the existing `secrets` wiring; no hardcoded values.
+In `ecs_api` the URLs come from SSM parameters via the existing `secrets` wiring; no hardcoded values.
 
 ## Local development
 
@@ -125,16 +253,24 @@ Coverage gate: 80 %.
 ```
 src/booking_orchestrator/
 ├── domain/
-│   ├── events.py              # BookingCreatedEvent (schema v1)
+│   ├── events.py              # BookingCreatedEvent, BookingApprovedEvent, BookingCancelledEvent, PaymentConfirmedEvent, etc.
 │   └── exceptions.py
 ├── application/
 │   ├── commands.py
-│   ├── ports.py               # BookingClient / PropertyClient / NotificationPublisher
-│   └── create_reservation.py  # the saga
+│   ├── ports.py               # BookingClient / PropertyClient / StripeClient / BillingPublisher / NotificationPublisher
+│   ├── create_reservation.py
+│   ├── admin_approve_reservation.py
+│   ├── admin_confirm_reservation.py
+│   ├── admin_reject_reservation.py
+│   ├── cancel_reservation.py
+│   ├── change_dates_reservation.py
+│   └── make_payment.py        # payment saga (Stripe + billing + booking update)
 ├── infrastructure/
 │   ├── httpx_booking_client.py
 │   ├── httpx_property_client.py
-│   └── sqs_notification_publisher.py
+│   ├── httpx_stripe_client.py
+│   ├── sqs_notification_publisher.py
+│   └── sqs_billing_publisher.py
 ├── controllers.py
 ├── schemas.py
 ├── bootstrap.py               # DI wiring

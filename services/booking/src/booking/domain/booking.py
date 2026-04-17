@@ -24,7 +24,7 @@ class BookingStatus(StrEnum):
 
 # Valid status transitions: current_status -> set of allowed next statuses
 _VALID_TRANSITIONS: dict[BookingStatus, set[BookingStatus]] = {
-    BookingStatus.PENDING: {BookingStatus.APPROVED, BookingStatus.CANCELED, BookingStatus.REJECTED},
+    BookingStatus.PENDING: {BookingStatus.APPROVED, BookingStatus.CONFIRMED, BookingStatus.CANCELED, BookingStatus.REJECTED},
     BookingStatus.APPROVED: {BookingStatus.CONFIRMED, BookingStatus.CANCELED},
     BookingStatus.CONFIRMED: {BookingStatus.COMPLETED, BookingStatus.CANCELED},
     BookingStatus.COMPLETED: set(),

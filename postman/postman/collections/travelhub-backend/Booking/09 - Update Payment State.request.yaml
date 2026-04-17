@@ -1,0 +1,25 @@
+$kind: http-request
+name: Update Payment State
+url: "{{base_url}}/booking/api/booking/{{booking_id}}/update-payment-state"
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: "Bearer {{id_token}}"
+body:
+  type: json
+  content: |-
+    {
+      "payment_reference": "STRIPE-test-ref-001"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Returns 200 with CONFIRMED status', function () {
+        pm.response.to.have.status(200);
+        pm.expect(pm.response.json().status).to.equal('CONFIRMED');
+      });
+      pm.test('Response has the payment_reference we sent', function () {
+        pm.expect(pm.response.json().payment_reference).to.equal('STRIPE-test-ref-001');
+      });
+    language: text/javascript
+order: 9000

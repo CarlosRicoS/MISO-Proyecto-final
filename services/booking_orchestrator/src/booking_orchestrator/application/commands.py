@@ -45,3 +45,32 @@ class AdminRejectReservationCommand:
     user_id: str
     user_email: str  # traveler's email — supplied by admin in request body
     reason: str
+
+
+@dataclass(frozen=True)
+class AdminApproveReservationCommand:
+    """Input to the admin approve reservation saga (PENDING → APPROVED only)."""
+
+    booking_id: str
+    user_id: str
+    user_email: str  # traveler's email — supplied by admin in request body
+
+
+@dataclass(frozen=True)
+class CancelReservationCommand:
+    """Input to the cancel reservation saga."""
+
+    booking_id: str
+    user_id: str
+    user_email: str
+
+
+@dataclass(frozen=True)
+class MakePaymentCommand:
+    """Input to the make-payment saga (APPROVED → CONFIRMED via Stripe)."""
+
+    booking_id: str
+    user_id: str
+    user_email: str
+    currency: str
+    payment_method_type: str

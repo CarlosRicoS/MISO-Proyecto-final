@@ -3,20 +3,25 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, Header, HTTPException, status
 
+from booking.application.admin_approve_booking import AdminApproveBookingUseCase
 from booking.application.admin_confirm_booking import AdminConfirmBookingUseCase
 from booking.application.admin_reject_booking import AdminRejectBookingUseCase
 from booking.application.cancel_booking import CancelBookingUseCase
 from booking.application.change_dates import ChangeDatesUseCase
 from booking.application.commands import (
+    AdminApproveBookingCommand,
     AdminConfirmBookingCommand,
     AdminRejectBookingCommand,
     CancelBookingCommand,
     ChangeDatesCommand,
     CreateBookingCommand,
+    UpdatePaymentStateCommand,
 )
 from booking.application.create_booking import CreateBookingUseCase
 from booking.application.get_booking import GetBookingUseCase, ListUserBookingsUseCase
+from booking.application.update_payment_state import UpdatePaymentStateUseCase
 from booking.bootstrap import (
+    get_admin_approve_booking_use_case,
     get_admin_confirm_booking_use_case,
     get_admin_reject_booking_use_case,
     get_cancel_booking_use_case,
@@ -24,6 +29,7 @@ from booking.bootstrap import (
     get_create_booking_use_case,
     get_get_booking_use_case,
     get_list_user_bookings_use_case,
+    get_update_payment_state_use_case,
 )
 from booking.domain.exceptions import (
     BookingAlreadyCancelledError,
@@ -39,6 +45,7 @@ from booking.schemas import (
     ChangeDatesRequest,
     ChangeDatesResponse,
     CreateBookingRequest,
+    UpdatePaymentStateRequest,
 )
 
 router = APIRouter(prefix="/api/booking", tags=["bookings"])
@@ -51,6 +58,8 @@ CancelBookingDep = Annotated[CancelBookingUseCase, Depends(get_cancel_booking_us
 ChangeDatesDep = Annotated[ChangeDatesUseCase, Depends(get_change_dates_use_case)]
 AdminConfirmBookingDep = Annotated[AdminConfirmBookingUseCase, Depends(get_admin_confirm_booking_use_case)]
 AdminRejectBookingDep = Annotated[AdminRejectBookingUseCase, Depends(get_admin_reject_booking_use_case)]
+AdminApproveBookingDep = Annotated[AdminApproveBookingUseCase, Depends(get_admin_approve_booking_use_case)]
+UpdatePaymentStateDep = Annotated[UpdatePaymentStateUseCase, Depends(get_update_payment_state_use_case)]
 
 
 @router.post(
@@ -186,3 +195,39 @@ async def admin_reject_booking(
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e)) from e
     except InvalidBookingStatusTransitionError as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e)) from e
+
+
+@router.post("/{booking_id}/admin-approve", response_model=BookingResponse)
+async def admin_approve_booking(
+    booking_id: UUID,
+    use_case: AdminApproveBookingDep,
+) -> BookingResponse:
+    try:
+        command = AdminApproveBookingCommand(booking_id=str(booking_id))
+        booking = await use_case.execute(command)
+        return BookingResponse.from_domain(booking)
+    except BookingNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Booking not found") from e
+    except InvalidBookingStatusTransitionError as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e)) from e
+
+
+@router.post("/{booking_id}/update-payment-state", response_model=BookingResponse)
+async def update_payment_state(
+    booking_id: UUID,
+    request: UpdatePaymentStateRequest,
+    use_case: UpdatePaymentStateDep,
+) -> BookingResponse:
+    try:
+        command = UpdatePaymentStateCommand(
+            booking_id=str(booking_id),
+            payment_reference=request.payment_reference,
+        )
+        booking = await use_case.execute(command)
+        return BookingResponse.from_domain(booking)
+    except BookingNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Booking not found") from e
+    except InvalidBookingStatusTransitionError as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e)) from e
+    except BookingValidationError as e:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e)) from e

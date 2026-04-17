@@ -230,6 +230,14 @@ services = {
       {
         name      = "NOTIFICATIONS_QUEUE_URL"
         valueFrom = "/final-project-miso/notifications/queue_url"
+      },
+      {
+        name      = "STRIPE_MOCK_SERVICE_URL"
+        valueFrom = "/final-project-miso/stripe-mock/service_url"
+      },
+      {
+        name      = "BILLING_QUEUE_URL"
+        valueFrom = "/final-project-miso/billing/queue_url"
       }
     ]
   }

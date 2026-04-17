@@ -29,6 +29,15 @@ class AdminRejectReservationRequest(BaseModel):
     traveler_email: str
 
 
+class AdminApproveReservationRequest(BaseModel):
+    traveler_email: str
+
+
+class MakePaymentRequest(BaseModel):
+    currency: str = Field(default="USD", min_length=3, max_length=3)
+    payment_method_type: str = Field(default="CREDIT_CARD")
+
+
 class ReservationResponse(BaseModel):
     """Returns the booking payload as the booking service reported it."""
 

@@ -411,3 +411,74 @@ class TestAdminRejectBooking:
         booking = await _create_booking(client)
         response = await client.post(f"/api/booking/{booking['id']}/admin-reject")
         assert response.status_code == 422
+
+
+class TestAdminApproveBooking:
+    async def test_approve_pending_booking_success(self, client: AsyncClient):
+        booking = await _create_booking(client)
+        booking_id = booking["id"]
+
+        response = await client.post(f"/api/booking/{booking_id}/admin-approve")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == "APPROVED"
+        assert data["payment_reference"] is None
+
+    async def test_approve_nonexistent_booking(self, client: AsyncClient):
+        response = await client.post(f"/api/booking/{uuid4()}/admin-approve")
+        assert response.status_code == 404
+
+    async def test_approve_already_approved_booking_returns_409(self, client: AsyncClient, repo):
+        booking = await _create_booking(client)
+        booking_id = booking["id"]
+
+        from uuid import UUID as _UUID
+        stored = await repo.get_by_id(_UUID(booking_id))
+        stored.approve()
+        await repo.save(stored)
+
+        response = await client.post(f"/api/booking/{booking_id}/admin-approve")
+        assert response.status_code == 409
+
+
+class TestUpdatePaymentState:
+    async def test_update_payment_state_success(self, client: AsyncClient, repo):
+        booking = await _create_booking(client)
+        booking_id = booking["id"]
+
+        from uuid import UUID as _UUID
+        stored = await repo.get_by_id(_UUID(booking_id))
+        stored.approve()
+        await repo.save(stored)
+
+        response = await client.post(
+            f"/api/booking/{booking_id}/update-payment-state",
+            json={"payment_reference": "STRIPE-xyz789"},
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == "CONFIRMED"
+        assert data["payment_reference"] == "STRIPE-xyz789"
+
+    async def test_update_payment_state_not_found(self, client: AsyncClient):
+        response = await client.post(
+            f"/api/booking/{uuid4()}/update-payment-state",
+            json={"payment_reference": "STRIPE-abc"},
+        )
+        assert response.status_code == 404
+
+    async def test_update_payment_state_pending_confirms_directly(self, client: AsyncClient):
+        booking = await _create_booking(client)
+        response = await client.post(
+            f"/api/booking/{booking['id']}/update-payment-state",
+            json={"payment_reference": "STRIPE-abc"},
+        )
+        assert response.status_code == 200
+        assert response.json()["status"] == "CONFIRMED"
+
+    async def test_update_payment_state_missing_body_returns_422(self, client: AsyncClient):
+        booking = await _create_booking(client)
+        response = await client.post(
+            f"/api/booking/{booking['id']}/update-payment-state",
+        )
+        assert response.status_code == 422

@@ -1,0 +1,26 @@
+$kind: http-request
+name: 07 - Admin Approve Reservation
+url: "{{base_url}}/booking-orchestrator/api/reservations/{{booking_id}}/admin-approve"
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{id_token}}
+body:
+  type: json
+  content: |-
+    {
+      "traveler_email": "{{user_email}}"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Returns 200 OK', function () {
+        pm.response.to.have.status(200);
+      });
+      const json = pm.response.json();
+      pm.test('Booking is APPROVED', function () {
+        pm.expect(json.status).to.equal('APPROVED');
+      });
+      console.log('Reservation approved. booking_id:', json.id);
+    language: text/javascript
+order: 7000

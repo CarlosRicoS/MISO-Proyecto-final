@@ -26,6 +26,10 @@ class AdminRejectBookingRequest(BaseModel):
     reason: str = Field(..., min_length=1, max_length=500)
 
 
+class UpdatePaymentStateRequest(BaseModel):
+    payment_reference: str = Field(..., min_length=1, max_length=200)
+
+
 class BookingResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

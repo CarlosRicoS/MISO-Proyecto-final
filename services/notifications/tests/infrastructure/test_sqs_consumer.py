@@ -19,9 +19,12 @@ from notifications.infrastructure.sqs_consumer import SqsConsumer
 def _make_consumer(sqs, queue_url, received):
     dispatcher = MessageDispatcher(
         booking_created_handler=received.append,
+        booking_approved_handler=lambda e: None,
+        booking_cancelled_handler=lambda e: None,
         booking_dates_changed_handler=lambda e: None,
         booking_confirmed_handler=lambda e: None,
         booking_rejected_handler=lambda e: None,
+        payment_confirmed_handler=lambda e: None,
     )
     return SqsConsumer(
         sqs_client=sqs,
@@ -129,9 +132,12 @@ def test_consumer_does_not_delete_on_handler_exception():
 
         dispatcher = MessageDispatcher(
             booking_created_handler=boom,
+            booking_approved_handler=lambda e: None,
+            booking_cancelled_handler=lambda e: None,
             booking_dates_changed_handler=lambda e: None,
             booking_confirmed_handler=lambda e: None,
             booking_rejected_handler=lambda e: None,
+            payment_confirmed_handler=lambda e: None,
         )
         consumer = SqsConsumer(
             sqs_client=sqs, queue_url=queue_url, dispatcher=dispatcher, wait_time_seconds=0
