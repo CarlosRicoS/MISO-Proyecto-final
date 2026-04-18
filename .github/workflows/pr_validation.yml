@@ -85,6 +85,19 @@ jobs:
         with:
           context-path: user_interface
 
+  test_e2e_portal_hoteles:
+    name: E2E portal-hoteles (Playwright)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run Playwright E2E tests
+        uses: ./.github/actions/test-playwright
+        with:
+          context-path: user_interface
+          e2e-script: e2e:portal-hoteles:with-app
+
   build_and_push:
     runs-on: ubuntu-latest
     environment: develop
@@ -170,7 +183,7 @@ jobs:
   build_portal_hoteles_image:
     name: Build portal-hoteles
     runs-on: ubuntu-latest
-    needs: [ test_portal_hoteles ]
+    needs: [ test_portal_hoteles, test_e2e_portal_hoteles ]
     environment: develop
     steps:
       - name: Checkout repository

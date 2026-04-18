@@ -279,12 +279,26 @@ jobs:
           context-path: user_interface
           project: portal-hoteles
 
+  test_e2e_portal_hoteles:
+    name: E2E portal-hoteles (Playwright)
+    if: ${{ inputs.stack == 'web_app_portal_hoteles' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run Playwright E2E tests
+        uses: ./.github/actions/test-playwright
+        with:
+          context-path: user_interface
+          e2e-script: e2e:portal-hoteles:with-app
+
   build_portal_hoteles_image:
     name: Build and Push portal-hoteles
     if: ${{ inputs.stack == 'web_app_portal_hoteles' }}
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
-    needs: [test_portal_hoteles]
+    needs: [test_portal_hoteles, test_e2e_portal_hoteles]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -410,7 +424,7 @@ jobs:
     name: Deploy ${{ inputs.stack }} → ${{ inputs.environment }}
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
-    needs: [build_backend_images, test_web_app, test_e2e, build_web_image, redeploy_web_container, test_portal_hoteles, build_portal_hoteles_image, redeploy_portal_hoteles_container]
+    needs: [build_backend_images, test_web_app, test_e2e, build_web_image, redeploy_web_container, test_portal_hoteles, test_e2e_portal_hoteles, build_portal_hoteles_image, redeploy_portal_hoteles_container]
     if: ${{ always() && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') }}
     steps:
       - name: Checkout repository

@@ -127,6 +127,19 @@ jobs:
         with:
           context-path: user_interface
 
+  test_e2e_portal_hoteles:
+    name: E2E portal-hoteles (Playwright)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run Playwright E2E tests
+        uses: ./.github/actions/test-playwright
+        with:
+          context-path: user_interface
+          e2e-script: e2e:portal-hoteles:with-app
+
   build_web_image:
     name: Build and Push travelhub
     runs-on: ubuntu-latest
@@ -149,7 +162,7 @@ jobs:
     name: Build and Push portal-hoteles
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
-    needs: [test_portal_hoteles, deploy_container_registry_stack]
+    needs: [test_portal_hoteles, test_e2e_portal_hoteles, deploy_container_registry_stack]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
