@@ -14,7 +14,7 @@ data "aws_ami" "ubuntu" {
 }
 
 resource "aws_security_group" "web_app" {
-  name        = "${var.project_name}-web-app-sg"
+  name        = "${var.project_name}-${var.app_name}-sg"
   description = "Security group for the web app EC2 instance"
   vpc_id      = var.vpc_id
 
@@ -42,7 +42,7 @@ resource "aws_security_group" "web_app" {
   }
 
   tags = {
-    Name = "${var.project_name}-web-app-sg"
+    Name = "${var.project_name}-${var.app_name}-sg"
   }
 }
 
@@ -61,6 +61,7 @@ resource "aws_instance" "web_app" {
     ecr_repository_url   = var.ecr_repository_url
     image_tag            = var.image_tag
     api_gateway_ssm_path = var.api_gateway_ssm_path
+    container_name       = var.app_name
   }))
 
   root_block_device {
@@ -69,6 +70,6 @@ resource "aws_instance" "web_app" {
   }
 
   tags = {
-    Name = "${var.project_name}-web-app"
+    Name = "${var.project_name}-${var.app_name}"
   }
 }

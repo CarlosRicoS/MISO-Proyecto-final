@@ -27,6 +27,10 @@ inputs:
   context-path:
     description: 'Path to the Content to build the Docker image'
     required: true
+  dockerfile:
+    description: 'Dockerfile name (relative to context-path)'
+    required: false
+    default: 'Dockerfile'
 outputs:
   ecr-registry:
     description: 'URI of the ECR registry'
@@ -56,13 +60,14 @@ runs:
         REPOSITORY: ${{ inputs.ecr-repo }}
         IMAGE_TAG: ${{ inputs.image-tag }}
         CONTEXT_PATH: ${{ inputs.context-path }}
+        DOCKERFILE: ${{ inputs.dockerfile }}
       shell: bash
       run: |
         cd $CONTEXT_PATH
         IMAGE_URI=$REGISTRY/$REPOSITORY:$IMAGE_TAG
         LATEST_URI=$REGISTRY/$REPOSITORY:latest
         echo "Building image: $IMAGE_URI"
-        docker build -t $IMAGE_URI -t $LATEST_URI .
+        docker build -f $DOCKERFILE -t $IMAGE_URI -t $LATEST_URI .
         docker push $IMAGE_URI
         # Always push latest so terraform plan can resolve the ECR image digest
         docker push $LATEST_URI
