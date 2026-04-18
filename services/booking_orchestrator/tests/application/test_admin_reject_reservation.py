@@ -57,14 +57,25 @@ async def test_booking_not_found_raises():
         await uc.execute(_make_command())
 
 
-async def test_booking_not_pending_raises():
-    booking = FakeBookingClient(booking_status="CONFIRMED")
+async def test_booking_not_rejectable_raises():
+    booking = FakeBookingClient(booking_status="COMPLETED")
     uc = _make_use_case(booking)
 
     with pytest.raises(ReservationFailedError) as exc_info:
         await uc.execute(_make_command())
 
-    assert exc_info.value.reason == "booking_not_pending"
+    assert exc_info.value.reason == "booking_not_rejectable"
+
+
+async def test_happy_path_confirmed_booking():
+    booking = FakeBookingClient(booking_status="CONFIRMED")
+    pub = FakePublisher()
+    uc = _make_use_case(booking, pub)
+
+    result = await uc.execute(_make_command())
+
+    assert result["status"] == "REJECTED"
+    assert result["rejection_reason"] == "Double booking"
 
 
 async def test_admin_reject_error_raises_reservation_failed():

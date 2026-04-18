@@ -383,7 +383,7 @@ class TestAdminRejectBooking:
         )
         assert response.status_code == 404
 
-    async def test_reject_confirmed_booking_returns_409(self, client: AsyncClient, repo):
+    async def test_reject_confirmed_booking_success(self, client: AsyncClient, repo):
         booking = await _create_booking(client)
         booking_id = booking["id"]
 
@@ -397,7 +397,10 @@ class TestAdminRejectBooking:
             f"/api/booking/{booking_id}/admin-reject",
             json={"reason": "Changed mind"},
         )
-        assert response.status_code == 409
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == "REJECTED"
+        assert data["rejection_reason"] == "Changed mind"
 
     async def test_reject_with_empty_reason_returns_422(self, client: AsyncClient):
         booking = await _create_booking(client)

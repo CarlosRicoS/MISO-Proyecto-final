@@ -233,12 +233,13 @@ class TestAdminActions:
         with pytest.raises(InvalidBookingStatusTransitionError):
             booking.reject("Too late")
 
-    def test_cannot_reject_confirmed_booking(self):
+    def test_reject_confirmed_booking(self):
         booking = _make_booking()
         booking.approve()
         booking.confirm("PAY-X")
-        with pytest.raises(InvalidBookingStatusTransitionError):
-            booking.reject("Nope")
+        booking.reject("Nope")
+        assert booking.status == BookingStatus.REJECTED
+        assert booking.rejection_reason == "Nope"
 
     def test_cannot_reject_with_empty_reason(self):
         booking = _make_booking()

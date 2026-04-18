@@ -327,8 +327,8 @@ async def test_admin_reject_booking_not_found(client, app):
     assert response.status_code == 404
 
 
-async def test_admin_reject_booking_not_pending_returns_409(client, app):
-    booking = FakeBookingClient(booking_status="CONFIRMED")
+async def test_admin_reject_booking_not_rejectable_returns_409(client, app):
+    booking = FakeBookingClient(booking_status="COMPLETED")
     pub = FakePublisher()
     app.dependency_overrides[get_admin_reject_reservation_use_case] = (
         lambda: AdminRejectReservationUseCase(booking, pub)
