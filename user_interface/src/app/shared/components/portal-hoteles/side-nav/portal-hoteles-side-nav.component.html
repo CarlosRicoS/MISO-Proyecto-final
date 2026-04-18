@@ -1,0 +1,33 @@
+<aside class="portal-hoteles-side-nav">
+  <div class="portal-hoteles-side-nav__brand">
+    <div class="portal-hoteles-side-nav__brand-mark">
+      <ion-icon name="business-outline" aria-hidden="true"></ion-icon>
+    </div>
+    <div class="portal-hoteles-side-nav__brand-copy">
+      <span class="portal-hoteles-side-nav__brand-name">TravelHub</span>
+      <span class="portal-hoteles-side-nav__brand-subtitle">Partner Portal</span>
+    </div>
+  </div>
+
+  <nav class="portal-hoteles-side-nav__menu" aria-label="Primary navigation">
+    <p class="portal-hoteles-side-nav__section-label">Main Menu</p>
+
+    <a
+      *ngFor="let item of menuItems"
+      class="portal-hoteles-side-nav__item"
+      [routerLink]="item.route"
+      routerLinkActive="is-active"
+      [routerLinkActiveOptions]="{ exact: item.exact }"
+    >
+      <ion-icon [name]="item.icon" aria-hidden="true"></ion-icon>
+      <span>{{ item.label }}</span>
+    </a>
+  </nav>
+
+  <div class="portal-hoteles-side-nav__footer">
+    <button type="button" class="portal-hoteles-side-nav__logout" (click)="logoutClicked.emit()">
+      <ion-icon name="log-out-outline" aria-hidden="true"></ion-icon>
+      <span>Sign out</span>
+    </button>
+  </div>
+</aside>

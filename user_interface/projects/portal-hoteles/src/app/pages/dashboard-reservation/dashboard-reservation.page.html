@@ -1,0 +1,52 @@
+<ion-content class="portal-hoteles-dashboard-reservation-content">
+  @if (!isLoading && !errorMessage) {
+    <div class="portal-hoteles-dashboard-reservation">
+      <section class="portal-hoteles-dashboard-reservation__left">
+        <portal-hoteles-reservation-overview-card
+          [hotelName]="overview.hotelName"
+          [location]="overview.location"
+          [stayDateLabel]="overview.stayDateLabel"
+          [nightsLabel]="overview.nightsLabel"
+          [guestLabel]="overview.guestLabel"
+          [statusLabel]="overview.statusLabel"
+          [images]="overview.images"
+          [totalPhotos]="overview.totalPhotos"
+        ></portal-hoteles-reservation-overview-card>
+      </section>
+
+      <aside class="portal-hoteles-dashboard-reservation__right">
+        <th-payment-summary
+          variant="admin"
+          [title]="paymentSummary.title"
+          [subtitle]="paymentSummary.subtitle"
+          promoText=""
+          [checkInValue]="paymentSummary.checkInValue"
+          [checkOutValue]="paymentSummary.checkOutValue"
+          [guestsValue]="paymentSummary.guestsValue"
+          [roomTypeValue]="paymentSummary.roomTypeValue"
+          [items]="summaryItems"
+          totalLabel="Total"
+          [totalAmount]="paymentSummary.totalAmount"
+          [adminAcceptLabel]="'Accept'"
+          [adminRejectLabel]="'Reject'"
+          [adminActionsDisabled]="isLoading"
+          [adminAcceptDisabled]="isAcceptButtonDisabled"
+          [adminRejectDisabled]="isRejectButtonDisabled"
+          footnote=""
+          trustLeftLabel=""
+          trustRightLabel=""
+          (adminAcceptClick)="onAcceptReservation()"
+          (adminRejectClick)="onRejectReservation()"
+        ></th-payment-summary>
+      </aside>
+    </div>
+  }
+
+  @if (isLoading) {
+    <p class="portal-hoteles-dashboard-reservation__state">Loading reservation detail...</p>
+  }
+
+  @if (!isLoading && errorMessage) {
+    <p class="portal-hoteles-dashboard-reservation__state">{{ errorMessage }}</p>
+  }
+</ion-content>

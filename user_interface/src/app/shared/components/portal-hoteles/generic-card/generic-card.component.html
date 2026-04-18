@@ -1,0 +1,16 @@
+<article class="portal-hoteles-generic-card">
+  <header *ngIf="title || subtitle" class="portal-hoteles-generic-card__header">
+    <div>
+      <h3 *ngIf="title">{{ title }}</h3>
+      <p *ngIf="subtitle">{{ subtitle }}</p>
+    </div>
+  </header>
+
+  <div class="portal-hoteles-generic-card__body">
+    <ng-content></ng-content>
+  </div>
+
+  <div *ngIf="!title && !subtitle" class="portal-hoteles-generic-card__empty">
+    {{ emptyLabel }}
+  </div>
+</article>

@@ -1,0 +1,25 @@
+<header class="portal-hoteles-header-bar">
+  <button type="button" class="portal-hoteles-header-bar__property" aria-label="Select hotel">
+    <div class="portal-hoteles-header-bar__property-copy">
+      <span class="portal-hoteles-header-bar__hotel-name">{{ hotelName }}</span>
+      <span class="portal-hoteles-header-bar__location">{{ location }}</span>
+    </div>
+    <ion-icon name="chevron-down-outline" aria-hidden="true"></ion-icon>
+  </button>
+
+  <div class="portal-hoteles-header-bar__actions">
+    <button type="button" class="portal-hoteles-header-bar__notification" aria-label="Notifications">
+      <ion-icon name="notifications-outline" aria-hidden="true"></ion-icon>
+      <span *ngIf="notificationCount > 0" class="portal-hoteles-header-bar__badge">{{ notificationCount }}</span>
+    </button>
+
+    <button type="button" class="portal-hoteles-header-bar__profile" aria-label="User profile">
+      <span class="portal-hoteles-header-bar__avatar">{{ avatarInitials }}</span>
+      <span class="portal-hoteles-header-bar__user-meta">
+        <span class="portal-hoteles-header-bar__user-name">{{ userName }}</span>
+        <span class="portal-hoteles-header-bar__user-role">{{ userRole }}</span>
+      </span>
+      <ion-icon name="chevron-down-outline" aria-hidden="true"></ion-icon>
+    </button>
+  </div>
+</header>

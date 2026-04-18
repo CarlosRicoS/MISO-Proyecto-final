@@ -1,0 +1,37 @@
+.portal-hoteles-generic-card {
+  height: 100%;
+  min-height: 88px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: var(--th-color-neutral-0);
+  border: 1px dashed var(--th-color-primary-100);
+  border-radius: 14px;
+  padding: var(--th-space-4);
+}
+
+.portal-hoteles-generic-card__header h3,
+.portal-hoteles-generic-card__empty {
+  margin: 0;
+  font-size: var(--th-font-size-md);
+  color: var(--th-color-neutral-700);
+}
+
+.portal-hoteles-generic-card__header p {
+  margin: var(--th-space-1) 0 0;
+  color: var(--th-color-neutral-600);
+  font-size: var(--th-font-size-sm);
+}
+
+.portal-hoteles-generic-card__body {
+  min-height: 0;
+}
+
+.portal-hoteles-generic-card__empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: var(--th-font-weight-semibold);
+}

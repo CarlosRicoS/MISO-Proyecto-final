@@ -1,6 +1,6 @@
 ---
-description: "Always-on frontend guardrails for user_interface changes: Ionic-first UI, shared-component reuse, theme/global-style token reuse, and UI unit-test discipline."
-applyTo: "user_interface/src/**/*.{ts,html,scss}"
+description: "Always-on frontend guardrails for user_interface changes: Ionic-first UI, shared-component reuse, theme/global-style token reuse, UI unit-test discipline, and portal-hoteles/main-project reuse boundaries."
+applyTo: "user_interface/{src,projects/portal-hoteles/src}/**/*.{ts,html,scss}"
 ---
 
 You are working on frontend code in user_interface. Enforce these rules before proposing or applying edits.
@@ -45,6 +45,15 @@ Mandatory rules
 - Avoid monolithic components/services and avoid mixing unrelated concerns (UI rendering, API orchestration, state persistence) in one unit.
 - If a requested quick fix requires a temporary deviation from SOLID, explicitly call out the tradeoff and rationale.
 
+6. Portal-hoteles structure and reuse boundary (mandatory)
+- For any new portal-hoteles feature, reuse assets from the main project first: guards, services, shared components, models, and utilities.
+- The portal-hoteles project must keep feature code in pages only. Do not create or keep a local core or local shared structure under projects/portal-hoteles/src/app.
+- No shared components may exist inside portal-hoteles. If portal-hoteles needs a shared component, create it in user_interface/src/app/shared/components instead.
+- For portal-hoteles-specific shared UI, use a nested folder under the main shared path, for example user_interface/src/app/shared/components/portal-hoteles/**.
+- Import reusable logic from main-project paths (for example @travelhub/core/* and @travelhub/shared/*).
+- When new core elements are needed, create them only under user_interface/src/app/core.
+- When new shared components are needed, create them only under user_interface/src/app/shared/components.
+
 Allowed exceptions
 - clamp(...)
 - calc(...)
@@ -59,6 +68,7 @@ Required pre-edit checklist
 2. List Ionic component options considered.
 3. List theme tokens/global patterns to reuse.
 4. List any exception needed and rationale.
+5. For portal-hoteles work, confirm that no new local core/shared files are introduced under projects/portal-hoteles/src/app.
 
 Required response addendum for frontend changes
 1. Compliance summary
@@ -78,3 +88,5 @@ Required response addendum for frontend changes
 - Any SOLID tradeoff and rationale
 5. Exceptions
 - Any exception with rationale
+6. Portal-hoteles boundary compliance
+- Confirm the feature stays page-only in portal-hoteles and reuses main-project core/shared assets.

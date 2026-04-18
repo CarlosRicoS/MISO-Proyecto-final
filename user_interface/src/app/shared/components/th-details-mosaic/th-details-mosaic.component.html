@@ -1,4 +1,4 @@
-<section class="details-mosaic" aria-label="Hotel image gallery">
+<section class="details-mosaic" [class.details-mosaic--fit-parent]="fitParent" aria-label="Hotel image gallery">
   <div class="details-mosaic__desktop" *ngIf="images.length">
     <button
       *ngFor="let image of desktopImages; let i = index"
