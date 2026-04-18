@@ -28,6 +28,7 @@ class FakeBookingClient:
         self,
         fail_create: bool = False,
         fail_cancel: bool = False,
+        fail_delete: bool = False,
         fail_get: bool = False,
         fail_change_dates: bool = False,
         fail_admin_confirm: bool = False,
@@ -38,6 +39,7 @@ class FakeBookingClient:
     ) -> None:
         self.fail_create = fail_create
         self.fail_cancel = fail_cancel
+        self.fail_delete = fail_delete
         self.fail_get = fail_get
         self.fail_change_dates = fail_change_dates
         self.fail_admin_confirm = fail_admin_confirm
@@ -47,6 +49,7 @@ class FakeBookingClient:
         self.booking_status = booking_status
         self.created: list[CreateReservationCommand] = []
         self.cancelled: list[tuple[str, str]] = []
+        self.deleted: list[str] = []
         self.got: list[str] = []
         self.dates_changed: list[ChangeDatesReservationCommand] = []
         self.admin_confirmed: list[str] = []
@@ -68,6 +71,11 @@ class FakeBookingClient:
         if self.fail_cancel:
             raise RuntimeError("cancel boom")
         self.cancelled.append((booking_id, user_id))
+
+    async def delete(self, booking_id: str) -> None:
+        if self.fail_delete:
+            raise RuntimeError("delete boom")
+        self.deleted.append(booking_id)
 
     async def get(self, booking_id: str) -> dict[str, Any]:
         if self.fail_get:

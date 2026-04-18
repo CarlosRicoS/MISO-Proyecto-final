@@ -25,7 +25,7 @@ async def test_happy_path_returns_booking_and_publishes_event(sample_command):
     assert len(pub.published) == 1
     assert pub.published[0].booking_id == "booking-xyz"
     assert pub.published[0].user_email == "traveler@example.com"
-    assert booking.cancelled == []
+    assert booking.deleted == []
 
 
 @pytest.mark.asyncio
@@ -53,13 +53,13 @@ async def test_lock_failure_triggers_compensation_cancel(sample_command):
         await use_case.execute(sample_command)
 
     assert exc_info.value.reason == "property_unavailable"
-    assert booking.cancelled == [("booking-xyz", sample_command.user_id)]
+    assert booking.deleted == ["booking-xyz"]
     assert pub.published == []
 
 
 @pytest.mark.asyncio
-async def test_lock_failure_and_cancel_failure_still_raises(sample_command):
-    booking = FakeBookingClient(fail_cancel=True)
+async def test_lock_failure_and_delete_failure_still_raises(sample_command):
+    booking = FakeBookingClient(fail_delete=True)
     prop = FakePropertyClient(fail_lock=True)
     pub = FakePublisher()
     use_case = CreateReservationUseCase(booking, prop, pub)

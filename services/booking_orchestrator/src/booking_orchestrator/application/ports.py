@@ -29,6 +29,10 @@ class BookingClient(Protocol):
         """Cancel a booking. Used for saga compensation."""
         ...
 
+    async def delete(self, booking_id: str) -> None:
+        """Delete a PENDING booking. Used for saga compensation so it doesn't appear in the user's list."""
+        ...
+
     async def get(self, booking_id: str) -> dict[str, Any]:
         """Retrieve a booking by ID. Raises BookingNotFoundError on 404."""
         ...

@@ -110,7 +110,7 @@ async def test_create_reservation_returns_409_on_lock_failure(client, app):
     )
     assert response.status_code == 409
     assert response.json()["detail"] == "property_unavailable"
-    assert booking.cancelled == [("booking-xyz", "u")]
+    assert booking.deleted == ["booking-xyz"]
 
 
 async def test_missing_user_headers_returns_422(client):

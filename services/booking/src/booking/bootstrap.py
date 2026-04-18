@@ -9,6 +9,7 @@ from booking.application.admin_reject_booking import AdminRejectBookingUseCase
 from booking.application.cancel_booking import CancelBookingUseCase
 from booking.application.change_dates import ChangeDatesUseCase
 from booking.application.create_booking import CreateBookingUseCase
+from booking.application.delete_booking import DeleteBookingUseCase
 from booking.application.get_booking import GetBookingUseCase, ListUserBookingsUseCase
 from booking.application.update_payment_state import UpdatePaymentStateUseCase
 from booking.database import get_session
@@ -78,3 +79,9 @@ def get_update_payment_state_use_case(
     repo: RepoDep,
 ) -> UpdatePaymentStateUseCase:
     return UpdatePaymentStateUseCase(booking_repository=repo)
+
+
+def get_delete_booking_use_case(
+    repo: RepoDep,
+) -> DeleteBookingUseCase:
+    return DeleteBookingUseCase(booking_repository=repo)
