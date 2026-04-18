@@ -29,7 +29,9 @@
           [rating]="getReservationRating(reservation)"
           [imageUrl]="reservation.photoUrl"
           [ctaRouterLink]="null"
+          ctaLabel="See Details"
           [showFavorite]="false"
+          (ctaClick)="openBookingDetail(reservation)"
         >
           <span th-card-status class="booking-list-tag booking-list-tag--status" [ngClass]="getStatusClass(reservation.status)">
             {{ reservation.status }}

@@ -1,0 +1,216 @@
+.bookingdetail-content {
+  --padding-start: 0;
+  --padding-end: 0;
+  --padding-top: 0;
+  --padding-bottom: 0;
+  margin-top: 0;
+}
+
+.bookingdetail-main {
+  width: 100%;
+  background-color: var(--th-page-background);
+}
+
+.bookingdetail-main__inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 clamp(16px, 4vw, 40px) clamp(20px, 4vw, 32px);
+}
+
+.bookingdetail-main__left,
+.bookingdetail-main__right {
+  min-width: 0;
+}
+
+.bookingdetail-hero {
+  background: transparent;
+  padding: clamp(16px, 3vw, 28px) 0 clamp(20px, 4vw, 32px);
+}
+
+.bookingdetail-hero__inner,
+.bookingdetail-body__inner {
+  max-width: 100%;
+  margin: var(--th-space-0);
+  padding: var(--th-space-0);
+}
+
+.bookingdetail-hero__inner th-details-mosaic {
+  display: block;
+}
+
+.bookingdetail-summary__inner {
+  max-width: 100%;
+  margin: var(--th-space-0);
+}
+
+.bookingdetail-body {
+  padding: clamp(24px, 4vw, 56px) 0;
+}
+
+.bookingdetail-body__inner {
+  display: block;
+}
+
+.bookingdetail-body__details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--th-space-4);
+}
+
+.bookingdetail-body__title {
+  margin: var(--th-space-0);
+  font-size: var(--th-text-h2-size);
+  line-height: var(--th-text-h2-line-height);
+  font-weight: var(--th-font-weight-semibold);
+  color: var(--th-neutral-900);
+}
+
+.bookingdetail-body__copy {
+  margin: var(--th-space-0);
+  font-size: var(--th-text-body-md-size);
+  line-height: var(--th-text-body-md-line-height);
+  color: var(--th-neutral-700);
+}
+
+.bookingdetail-body__highlights {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--th-space-2);
+}
+
+.bookingdetail-body__summary {
+  width: 100%;
+}
+
+.bookingdetail-main__right th-payment-summary {
+  display: block;
+  width: 100%;
+}
+
+.bookingdetail-main__left ::ng-deep .th-amenities-summary,
+.bookingdetail-main__left ::ng-deep .th-property-description-summary,
+.bookingdetail-main__left ::ng-deep .th-property-review-summary,
+.bookingdetail-main__right ::ng-deep .th-payment-summary:not(.th-payment-summary--mobile-sticky) {
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+.bookingdetail-cancellation-card {
+  margin-top: 16px;
+  border: 0;
+  border-radius: var(--th-radius-lg);
+  background: linear-gradient(180deg, var(--th-blue-50), var(--th-white));
+  box-shadow: 0 4px 14px var(--th-overlay-slate-08);
+}
+
+.bookingdetail-cancellation-card__header {
+  display: flex;
+  align-items: center;
+  gap: var(--th-space-2);
+  margin-bottom: var(--th-space-2);
+}
+
+.bookingdetail-cancellation-card__header ion-icon {
+  color: var(--th-blue-650);
+  font-size: 20px;
+}
+
+.bookingdetail-cancellation-card__header h3 {
+  margin: 0;
+  font-size: var(--th-text-body-lg-size);
+  line-height: var(--th-text-body-lg-line-height);
+  font-weight: var(--th-font-weight-semibold);
+  color: var(--th-slate-800);
+}
+
+.bookingdetail-cancellation-card p {
+  margin: 0;
+  font-size: var(--th-text-body-sm-size);
+  line-height: var(--th-text-body-sm-line-height);
+  color: var(--th-slate-600);
+}
+
+.bookingdetail-empty {
+  margin: 0;
+  padding: 32px 16px;
+  text-align: center;
+  color: var(--th-slate-600);
+}
+
+@media (min-width: 721px) {
+  .bookingdetail-content {
+    --overflow: hidden;
+  }
+
+  .bookingdetail-main {
+    height: 100vh;
+  }
+
+  .bookingdetail-main__inner {
+    height: 100%;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(320px, 350px);
+    gap: clamp(18px, 2.5vw, 26px);
+    align-items: start;
+    overflow: hidden;
+  }
+
+  .bookingdetail-main__left {
+    height: 100%;
+    overflow-y: auto;
+    padding-right: 6px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .bookingdetail-main__left::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none;
+  }
+
+  .bookingdetail-main__right {
+    position: sticky;
+    top: 16px;
+    align-self: start;
+    overflow: hidden;
+  }
+}
+
+@media (max-width: 900px) {
+  .bookingdetail-body__inner {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .bookingdetail-content {
+    --padding-top: 0;
+  }
+
+  .bookingdetail-main__inner {
+    padding: 0 0 calc(164px + var(--ion-safe-area-bottom, 0px));
+  }
+
+  .bookingdetail-cancellation-card {
+    margin-bottom: calc(16px + var(--ion-safe-area-bottom, 0px));
+  }
+}
+
+:host-context(ion-app.app-has-navbar) {
+  .bookingdetail-content {
+    margin-top: calc(clamp(60px, 6vw, 72px) + 2px);
+  }
+
+  @media (min-width: 721px) {
+    .bookingdetail-main {
+      height: calc(100vh - (clamp(60px, 6vw, 72px) + 2px));
+    }
+  }
+
+  @media (max-width: 720px) {
+    .bookingdetail-content {
+      --padding-top: calc(clamp(60px, 6vw, 72px) + 2px + var(--ion-safe-area-top, 0px));
+    }
+  }
+}

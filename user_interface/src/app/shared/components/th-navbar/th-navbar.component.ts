@@ -46,4 +46,24 @@ export class ThNavbarComponent {
   get isPropertyDetail(): boolean {
     return this.router.url.startsWith('/propertydetail');
   }
+
+  get isBookingDetail(): boolean {
+    return this.router.url.startsWith('/booking-detail');
+  }
+
+  get isDetailRoute(): boolean {
+    return this.isPropertyDetail || this.isBookingDetail;
+  }
+
+  get detailBackLink(): string {
+    if (this.isBookingDetail) {
+      return '/booking-list';
+    }
+
+    return '/search-results';
+  }
+
+  get showDetailFavoriteAction(): boolean {
+    return !this.isBookingDetail;
+  }
 }

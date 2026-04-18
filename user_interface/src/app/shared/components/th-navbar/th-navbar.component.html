@@ -4,7 +4,7 @@
   [class.th-navbar--layout-mobile]="layout === 'mobile'"
   [class.th-navbar--mobile-search]="layout !== 'desktop' && isSearchResults"
   [class.th-navbar--mobile-booking]="layout !== 'desktop' && isBookingList"
-  [class.th-navbar--mobile-detail]="layout !== 'desktop' && isPropertyDetail"
+  [class.th-navbar--mobile-detail]="layout !== 'desktop' && isDetailRoute"
 >
   <ion-toolbar class="th-navbar__toolbar">
     <div class="th-navbar__inner th-navbar__inner--desktop" *ngIf="layout !== 'mobile'">
@@ -44,12 +44,17 @@
     </div>
 
     <div class="th-navbar__inner th-navbar__inner--mobile" *ngIf="layout !== 'desktop'">
-      <ng-container *ngIf="isPropertyDetail; else mobileSearchOrDefault">
-        <ion-button class="th-navbar__mobile-action th-navbar__mobile-action--detail" fill="clear" aria-label="Back" routerLink="/search-results">
+      <ng-container *ngIf="isDetailRoute; else mobileSearchOrDefault">
+        <ion-button class="th-navbar__mobile-action th-navbar__mobile-action--detail" fill="clear" aria-label="Back" [routerLink]="detailBackLink">
           <ion-icon name="arrow-back"></ion-icon>
         </ion-button>
         <div class="th-navbar__mobile-actions-right">
-          <ion-button class="th-navbar__mobile-action th-navbar__mobile-action--detail" fill="clear" aria-label="Favorite">
+          <ion-button
+            class="th-navbar__mobile-action th-navbar__mobile-action--detail"
+            fill="clear"
+            aria-label="Favorite"
+            *ngIf="showDetailFavoriteAction"
+          >
             <ion-icon name="heart-outline"></ion-icon>
           </ion-button>
           <ion-button class="th-navbar__mobile-action th-navbar__mobile-action--detail" fill="clear" aria-label="Share">

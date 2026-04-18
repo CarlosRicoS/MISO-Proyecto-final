@@ -28,4 +28,43 @@ describe('ThDetailSummaryComponent', () => {
 
     expect(component.starIcons).toEqual(['star', 'star', 'star']);
   });
+
+  it('returns false for booking metadata when both values are empty', () => {
+    TestBed.configureTestingModule({
+      imports: [ThDetailSummaryComponent],
+    });
+
+    const fixture = TestBed.createComponent(ThDetailSummaryComponent);
+    const component = fixture.componentInstance;
+
+    component.metaPrimary = '';
+    component.metaSecondary = '';
+
+    expect(component.hasBookingMeta).toBeFalse();
+  });
+
+  it('returns true for booking metadata when at least one value exists', () => {
+    TestBed.configureTestingModule({
+      imports: [ThDetailSummaryComponent],
+    });
+
+    const fixture = TestBed.createComponent(ThDetailSummaryComponent);
+    const component = fixture.componentInstance;
+
+    component.metaPrimary = 'Apr 26 - 29';
+    component.metaSecondary = '';
+
+    expect(component.hasBookingMeta).toBeTrue();
+  });
+
+  it('uses default status variant', () => {
+    TestBed.configureTestingModule({
+      imports: [ThDetailSummaryComponent],
+    });
+
+    const fixture = TestBed.createComponent(ThDetailSummaryComponent);
+    const component = fixture.componentInstance;
+
+    expect(component.statusVariant).toBe('default');
+  });
 });

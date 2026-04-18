@@ -6,21 +6,41 @@
         <ion-icon name="location" aria-hidden="true"></ion-icon>
         <span>{{ location }}</span>
       </p>
+      <p
+        class="th-detail-summary__status"
+        [ngClass]="'th-detail-summary__status--' + statusVariant"
+        *ngIf="statusText"
+      >
+        {{ statusText }}
+      </p>
     </div>
 
-    <div class="th-detail-summary__actions" *ngIf="showActions">
-      <ion-button size="small" fill="outline" color="medium">
+    <div class="th-detail-summary__actions" *ngIf="showActions || hasBookingMeta">
+      <div class="th-detail-summary__action-buttons" *ngIf="showActions">
+        <ion-button size="small" fill="outline" color="medium" *ngIf="showSaveAction">
         <ion-icon slot="start" name="heart-outline" aria-hidden="true"></ion-icon>
         Save
-      </ion-button>
-      <ion-button size="small" fill="outline" color="medium">
+        </ion-button>
+        <ion-button size="small" fill="outline" color="medium" *ngIf="showShareAction">
         <ion-icon slot="start" name="share-social-outline" aria-hidden="true"></ion-icon>
         Share
-      </ion-button>
+        </ion-button>
+      </div>
+
+      <div class="th-detail-summary__meta" *ngIf="hasBookingMeta">
+        <p class="th-detail-summary__meta-item" *ngIf="metaPrimary">
+          <ion-icon name="calendar-outline" aria-hidden="true"></ion-icon>
+          <span>{{ metaPrimary }}</span>
+        </p>
+        <p class="th-detail-summary__meta-item" *ngIf="metaSecondary">
+          <ion-icon name="moon" aria-hidden="true"></ion-icon>
+          <span>{{ metaSecondary }}</span>
+        </p>
+      </div>
     </div>
   </div>
 
-  <div class="th-detail-summary__rating-row">
+  <div class="th-detail-summary__rating-row" *ngIf="showRatingRow">
     <span class="th-detail-summary__score-pill" *ngIf="score">
       <ion-icon name="star" aria-hidden="true"></ion-icon>
       {{ score }}

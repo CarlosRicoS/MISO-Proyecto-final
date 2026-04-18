@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { Router } from '@angular/router';
 import { InfiniteScrollCustomEvent } from '@ionic/angular';
 import { firstValueFrom } from 'rxjs';
 import { AuthSessionService } from '../../core/services/auth-session.service';
@@ -39,6 +40,7 @@ export class BookingListPage {
     private bookingService: BookingService,
     private authSessionService: AuthSessionService,
     private propertyDetailService: PropertyDetailService,
+    private router: Router,
   ) {
     this.filterSummaryParams = {
       ...this.filterSummaryParams,
@@ -205,6 +207,51 @@ export class BookingListPage {
 
   isFilterActive(filter: BookingFilterKey): boolean {
     return this.selectedFilter === filter;
+  }
+
+  async openBookingDetail(reservation: BookingListReservation): Promise<void> {
+    await this.router.navigate(['/booking-detail'], {
+      queryParams: {
+        bookingId: reservation.id,
+      },
+      state: {
+        bookingId: reservation.id,
+        bookingStatus: this.getBookingStatusLabel(reservation.status),
+        reservation: {
+          id: reservation.id,
+          property_id: reservation.property_id,
+          user_id: reservation.user_id,
+          guests: reservation.guests,
+          period_start: reservation.period_start,
+          period_end: reservation.period_end,
+          price: reservation.price,
+          status: reservation.status,
+          admin_group_id: reservation.admin_group_id,
+          payment_reference: reservation.payment_reference,
+          created_at: reservation.created_at,
+        },
+      },
+    });
+  }
+
+  private getBookingStatusLabel(status: string): string {
+    const normalizedStatus = (status || '').trim().toUpperCase();
+
+    switch (normalizedStatus) {
+      case 'PENDING':
+        return 'Upcoming';
+      case 'CONFIRMED':
+        return 'Confirmed';
+      case 'COMPLETED':
+        return 'Completed';
+      case 'CANCELED':
+      case 'CANCELLED':
+        return 'Canceled';
+      default:
+        return normalizedStatus
+          ? normalizedStatus.charAt(0) + normalizedStatus.slice(1).toLowerCase()
+          : 'Upcoming';
+    }
   }
 
   async loadMoreReservations(event: InfiniteScrollCustomEvent): Promise<void> {
