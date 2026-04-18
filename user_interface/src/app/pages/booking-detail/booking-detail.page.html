@@ -1,0 +1,121 @@
+<ion-alert
+  [isOpen]="isCancelConfirmOpen"
+  header="Cancel booking?"
+  message="This reservation will be cancelled and the booking list will be updated."
+  [buttons]="cancelAlertButtons"
+  (didDismiss)="isCancelConfirmOpen = false"
+></ion-alert>
+
+<ion-alert
+  [isOpen]="isAlertOpen"
+  [header]="alertTitle"
+  [message]="alertMessage"
+  [buttons]="['OK']"
+  (didDismiss)="onAlertDismissed()"
+></ion-alert>
+
+<ion-content class="bookingdetail-content">
+  <section class="bookingdetail-main" *ngIf="!isLoading && !errorMessage">
+    <div class="bookingdetail-main__inner">
+      <div class="bookingdetail-main__left">
+        <section class="bookingdetail-hero">
+          <div class="bookingdetail-hero__inner">
+            <th-details-mosaic
+              [hotelName]="property.title"
+              [images]="property.images"
+              [totalPhotos]="property.totalPhotos"
+              [viewAllLabel]="'View all ' + property.totalPhotos + ' photos'"
+            ></th-details-mosaic>
+          </div>
+        </section>
+
+        <section class="bookingdetail-summary">
+          <div class="bookingdetail-summary__inner">
+            <th-detail-summary
+              [title]="property.title"
+              [location]="property.location"
+              [showSaveAction]="false"
+              [showShareAction]="true"
+              [showRatingRow]="false"
+              [statusText]="bookingStatus || 'Upcoming'"
+              [statusVariant]="bookingStatusVariant"
+              [metaPrimary]="bookingDateRange"
+              [metaSecondary]="bookingNights"
+            ></th-detail-summary>
+          </div>
+        </section>
+
+        <section class="bookingdetail-body">
+          <div class="bookingdetail-body__inner">
+            <div class="bookingdetail-body__details">
+              <th-amenities-summary
+                [amenities]="amenities"
+                [totalAmenities]="amenities.length"
+                viewAllLabel="View All Amenities"
+              ></th-amenities-summary>
+
+              <th-property-description-summary
+                title="About This Hotel"
+                [paragraphs]="descriptionParagraphs"
+                readMoreLabel="Read More"
+                readLessLabel="Read Less"
+              ></th-property-description-summary>
+
+              <th-property-review-summary
+                title="Guest Reviews"
+                desktopActionLabel="Write a review"
+                mobileActionLabel="See All"
+                loadMoreLabel="Load more reviews"
+                [categoryScores]="reviewCategoryScores"
+                [reviews]="guestReviews"
+              ></th-property-review-summary>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <aside class="bookingdetail-main__right">
+        <th-payment-summary
+          [title]="paymentSummary.title"
+          subtitle="per night"
+          [promoText]="paymentSummary.promoText"
+          [checkInValue]="paymentSummary.checkInValue"
+          [checkOutValue]="paymentSummary.checkOutValue"
+          [guestsValue]="paymentSummary.guestsValue"
+          [roomTypeValue]="paymentSummary.roomTypeValue"
+          [items]="summaryItems"
+          totalLabel="Total"
+          [totalAmount]="paymentSummary.totalAmount"
+          actionLabel="Cancel"
+          [actionDisabled]="isCancelling"
+          [isLoading]="isCancelling"
+          (actionClick)="onCancelBooking()"
+          footnote="Cancellation policies may apply"
+          trustLeftLabel="Secure booking"
+          trustRightLabel="Flexible cancellation"
+          [editable]="false"
+          [mobileSticky]="true"
+          [editorResetTrigger]="paymentSummaryResetVersion"
+          compactSuffix="/night"
+          compactNote="Taxes and fees included"
+        ></th-payment-summary>
+
+        <ion-card class="bookingdetail-cancellation-card">
+          <ion-card-content>
+            <div class="bookingdetail-cancellation-card__header">
+              <ion-icon name="information-circle" aria-hidden="true"></ion-icon>
+              <h3>Flexible Cancellation</h3>
+            </div>
+            <p>
+              Free cancellation until 24 hours before check-in. After that, cancellation fees may apply
+              based on the reservation policy.
+            </p>
+          </ion-card-content>
+        </ion-card>
+      </aside>
+    </div>
+  </section>
+
+  <p class="bookingdetail-empty" *ngIf="isLoading">Loading booking details...</p>
+  <p class="bookingdetail-empty" *ngIf="!isLoading && errorMessage">{{ errorMessage }}</p>
+</ion-content>

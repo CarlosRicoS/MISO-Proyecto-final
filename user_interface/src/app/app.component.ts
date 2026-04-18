@@ -61,6 +61,14 @@ export class AppComponent implements OnInit, OnDestroy {
     return this.router.url.startsWith('/propertydetail');
   }
 
+  get isBookingDetailRoute(): boolean {
+    return this.router.url.startsWith('/booking-detail');
+  }
+
+  get isDetailRoute(): boolean {
+    return this.isPropertyDetailRoute || this.isBookingDetailRoute;
+  }
+
   get isSearchResultsRoute(): boolean {
     return this.router.url.startsWith('/search-results');
   }
@@ -70,7 +78,7 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   get showMobileTopBar(): boolean {
-    return this.showNavbar || this.isSearchResultsRoute || this.isBookingListRoute || this.isPropertyDetailRoute;
+    return this.showNavbar || this.isSearchResultsRoute || this.isBookingListRoute || this.isDetailRoute;
   }
 
   get hasTopBar(): boolean {

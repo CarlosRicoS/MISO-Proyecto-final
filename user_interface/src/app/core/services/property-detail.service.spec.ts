@@ -94,6 +94,7 @@ describe('PropertyDetailService', () => {
     service.getPropertyDetail('prop-4').subscribe();
 
     const req = httpMock.expectOne('https://api.example.com/poc-properties/api/property/prop-4');
+    expect(req.request.url).toBe('https://api.example.com/poc-properties/api/property/prop-4');
     req.flush({});
   });
 
@@ -104,6 +105,7 @@ describe('PropertyDetailService', () => {
     service.getPropertyDetail('prop-5').subscribe();
 
     const req = httpMock.expectOne('/poc-properties/api/property/prop-5');
+    expect(req.request.url).toBe('/poc-properties/api/property/prop-5');
     req.flush({});
   });
 

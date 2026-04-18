@@ -35,6 +35,11 @@ const routes: Routes = [
     data: { hideNavbar: true },
     loadComponent: () => import('./pages/register/register.page').then( m => m.RegisterPage)
   },
+  {
+    path: 'booking-detail',
+    loadComponent: () => import('./pages/booking-detail/booking-detail.page').then( m => m.BookingDetailPage)
+  },
+
 
 
 ];

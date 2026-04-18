@@ -79,6 +79,7 @@ export class ThPaymentSummaryComponent implements OnChanges {
   @Input() trustRightLabel = 'Free cancellation';
   @Input() trustRightIcon = 'refresh-circle';
   @Input() mobileSticky = false;
+  @Input() editable = true;
   @Input() editorResetTrigger: number | string | null = null;
   @Input() compactSuffix = '/night';
   @Input() compactNote = 'Taxes and fees included';
@@ -116,7 +117,7 @@ export class ThPaymentSummaryComponent implements OnChanges {
       this.guestsValue = this.sanitizeGuestsValue(this.guestsValue);
     }
 
-    if (changes['mobileSticky'] && !this.mobileSticky) {
+    if ((changes['mobileSticky'] || changes['editable']) && (!this.mobileSticky || !this.editable)) {
       this.isMobileEditorOpen = false;
     }
 

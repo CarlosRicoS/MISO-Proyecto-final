@@ -107,23 +107,6 @@ gap: var(--th-space-2);
   cursor: pointer;
 }
 
-.th-payment-summary__field--interactive:focus-visible {
-  outline: 2px solid var(--th-primary-500);
-  outline-offset: 2px;
-border-radius: var(--th-radius-md);
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .th-payment-summary__field--interactive:hover .th-payment-summary__field-value {
-    border-color: var(--th-primary-300);
-    box-shadow: 0 1px 0 var(--th-overlay-primary-12);
-  }
-}
-
-.th-payment-summary__field--interactive:active .th-payment-summary__field-value {
-  transform: translateY(1px);
-}
-
 .th-payment-summary__field-label {
   font-size: var(--th-text-body-md-size);
   font-weight: var(--th-font-weight-semibold);

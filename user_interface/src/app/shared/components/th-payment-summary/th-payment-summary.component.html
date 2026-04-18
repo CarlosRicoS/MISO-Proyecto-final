@@ -41,6 +41,7 @@
     } @else {
       <div class="th-payment-summary__field-list">
         <button
+          *ngIf="editable"
           type="button"
           class="th-payment-summary__field th-payment-summary__field--interactive"
           (click)="onCheckInActivated()"
@@ -59,11 +60,19 @@
             <ion-icon [name]="checkInIcon" aria-hidden="true"></ion-icon>
           </div>
         </button>
-        <p class="th-payment-summary__field-helper th-payment-summary__field-helper--error" *ngIf="checkInError">
+        <div *ngIf="!editable" class="th-payment-summary__field th-payment-summary__field--static">
+          <span class="th-payment-summary__field-label">{{ checkInLabel }}</span>
+          <div class="th-payment-summary__field-value">
+            <span>{{ checkInValue || checkInPlaceholder }}</span>
+            <ion-icon [name]="checkInIcon" aria-hidden="true"></ion-icon>
+          </div>
+        </div>
+        <p class="th-payment-summary__field-helper th-payment-summary__field-helper--error" *ngIf="editable && checkInError">
           {{ checkInError }}
         </p>
 
         <button
+          *ngIf="editable"
           type="button"
           class="th-payment-summary__field th-payment-summary__field--interactive"
           (click)="onCheckOutActivated()"
@@ -82,11 +91,18 @@
             <ion-icon [name]="checkOutIcon" aria-hidden="true"></ion-icon>
           </div>
         </button>
-        <p class="th-payment-summary__field-helper th-payment-summary__field-helper--error" *ngIf="checkOutError">
+        <div *ngIf="!editable" class="th-payment-summary__field th-payment-summary__field--static">
+          <span class="th-payment-summary__field-label">{{ checkOutLabel }}</span>
+          <div class="th-payment-summary__field-value">
+            <span>{{ checkOutValue || checkOutPlaceholder }}</span>
+            <ion-icon [name]="checkOutIcon" aria-hidden="true"></ion-icon>
+          </div>
+        </div>
+        <p class="th-payment-summary__field-helper th-payment-summary__field-helper--error" *ngIf="editable && checkOutError">
           {{ checkOutError }}
         </p>
 
-        <div class="th-payment-summary__field th-payment-summary__field--input">
+        <div *ngIf="editable" class="th-payment-summary__field th-payment-summary__field--input">
           <span class="th-payment-summary__field-label">{{ guestsLabel }}</span>
           <div
             class="th-payment-summary__field-value th-payment-summary__field-value--input"
@@ -108,7 +124,18 @@
             ></ion-icon>
           </div>
         </div>
-        <p class="th-payment-summary__field-helper th-payment-summary__field-helper--error" *ngIf="guestsError">
+        <div *ngIf="!editable" class="th-payment-summary__field th-payment-summary__field--static">
+          <span class="th-payment-summary__field-label">{{ guestsLabel }}</span>
+          <div class="th-payment-summary__field-value">
+            <span>{{ guestsValue || guestsPlaceholder }}</span>
+            <ion-icon
+              name="people-outline"
+              class="th-payment-summary__field-icon"
+              aria-hidden="true"
+            ></ion-icon>
+          </div>
+        </div>
+        <p class="th-payment-summary__field-helper th-payment-summary__field-helper--error" *ngIf="editable && guestsError">
           {{ guestsError }}
         </p>
 
@@ -242,7 +269,7 @@
         (click)="toggleMobileEditor()"
       >
         <ion-icon [name]="isMobileEditorOpen ? 'chevron-up-outline' : 'create-outline'" aria-hidden="true"></ion-icon>
-        <span>{{ isMobileEditorOpen ? 'Hide details' : 'Edit details' }}</span>
+        <span>{{ isMobileEditorOpen ? 'Hide details' : (editable ? 'Edit details' : 'View details') }}</span>
       </button>
     </div>
 
@@ -270,6 +297,7 @@
 </ion-card>
 
 <th-datetime-modal
+  *ngIf="editable"
   [isOpen]="showCheckInModal"
   title="Select Check-in Date"
   [selectedDate]="tempDate"
@@ -281,6 +309,7 @@
 ></th-datetime-modal>
 
 <th-datetime-modal
+  *ngIf="editable"
   [isOpen]="showCheckOutModal"
   title="Select Check-out Date"
   [selectedDate]="tempDate"
