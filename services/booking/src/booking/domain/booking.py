@@ -26,7 +26,7 @@ class BookingStatus(StrEnum):
 _VALID_TRANSITIONS: dict[BookingStatus, set[BookingStatus]] = {
     BookingStatus.PENDING: {BookingStatus.APPROVED, BookingStatus.CONFIRMED, BookingStatus.CANCELED, BookingStatus.REJECTED},
     BookingStatus.APPROVED: {BookingStatus.CONFIRMED, BookingStatus.CANCELED},
-    BookingStatus.CONFIRMED: {BookingStatus.COMPLETED, BookingStatus.CANCELED},
+    BookingStatus.CONFIRMED: {BookingStatus.COMPLETED, BookingStatus.CANCELED, BookingStatus.REJECTED},
     BookingStatus.COMPLETED: set(),
     BookingStatus.CANCELED: set(),
     BookingStatus.REJECTED: set(),
@@ -84,7 +84,7 @@ class Booking:
         self._transition_to(BookingStatus.COMPLETED)
 
     def reject(self, reason: str) -> None:
-        """Reject a pending booking. A non-empty reason is required."""
+        """Reject a pending or confirmed booking. A non-empty reason is required."""
         if not reason or not reason.strip():
             raise BookingValidationError("Rejection reason cannot be empty")
         self._transition_to(BookingStatus.REJECTED)

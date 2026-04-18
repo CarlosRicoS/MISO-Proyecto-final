@@ -380,6 +380,33 @@ curl -X POST https://{api-gateway-url}/booking/api/booking/a1b2c3d4-e5f6-7890-ab
 
 ---
 
+### Delete Booking (saga compensation)
+
+```
+DELETE /api/booking/{booking_id}
+```
+
+Permanently deletes a `PENDING` booking. Used by the booking-orchestrator for saga compensation when a property lock fails, so the user does not see a spurious cancelled reservation in their list.
+
+**Path Parameters**
+
+| Parameter  | Type | Description              |
+|------------|------|--------------------------|
+| booking_id | UUID | ID of the booking to delete |
+
+#### Example
+
+**Request**
+```bash
+curl -X DELETE https://{api-gateway-url}/booking/api/booking/a1b2c3d4-e5f6-7890-abcd-ef1234567890
+```
+
+**Response** `204 No Content`
+
+Only `PENDING` bookings can be deleted. Attempting to delete a booking in any other status returns `409 Conflict`.
+
+---
+
 ### Error Responses
 
 | Status | Condition                                    | Example Response                                              |
@@ -387,6 +414,7 @@ curl -X POST https://{api-gateway-url}/booking/api/booking/a1b2c3d4-e5f6-7890-ab
 | 404    | Booking ID not found                         | `{"detail": "Booking not found"}`                             |
 | 409    | Booking is already cancelled                 | `{"detail": "Booking is already cancelled"}`                  |
 | 409    | Invalid status transition (e.g., cancel a completed booking) | `{"detail": "Cannot transition from COMPLETED to CANCELED"}` |
+| 409    | Delete a non-PENDING booking                 | `{"detail": "Cannot transition from CONFIRMED to DELETE"}`    |
 | 409    | Attempt to change dates on a non-CONFIRMED booking | `{"detail": "Booking <id> cannot have its dates changed in status PENDING. Only CONFIRMED bookings allow date changes."}` |
 | 422    | Invalid period (start date >= end date)      | `{"detail": "period_start must be before period_end"}`        |
 | 422    | Guests < 1, price < 0, or missing fields     | `{"detail": [{"msg": "...", "loc": [...]}]}`                  |
@@ -403,21 +431,23 @@ PENDING ──→ APPROVED ──→ CONFIRMED ──→ COMPLETED
    │    ╲        │             │
    │     ╲───────┼─────────────┤
    │             │             │
-   └─────────────┴─────────────┴──→ CANCELED
+   ├─────────────┴─────────────┴──→ CANCELED
+   │                           │
+   └───────────────────────────┴──→ REJECTED
 ```
 
 > `PENDING` can transition directly to `CONFIRMED` (payment without prior admin approval).
 
-| Status      | Description                                      | Can transition to                    |
-|-------------|--------------------------------------------------|--------------------------------------|
+| Status      | Description                                      | Can transition to                              |
+|-------------|--------------------------------------------------|------------------------------------------------|
 | `PENDING`   | Initial status after creation                    | `APPROVED`, `CONFIRMED`, `CANCELED`, `REJECTED` |
-| `APPROVED`  | Booking approved by admin                        | `CONFIRMED`, `CANCELED`              |
-| `CONFIRMED` | Payment received                                 | `COMPLETED`, `CANCELED`              |
-| `COMPLETED` | Stay period finished                             | _(terminal — no transitions)_        |
-| `CANCELED`  | Booking cancelled                                | _(terminal — no transitions)_        |
-| `REJECTED`  | Booking rejected by admin                        | _(terminal — no transitions)_        |
+| `APPROVED`  | Booking approved by admin                        | `CONFIRMED`, `CANCELED`                        |
+| `CONFIRMED` | Payment received                                 | `COMPLETED`, `CANCELED`, `REJECTED`            |
+| `COMPLETED` | Stay period finished                             | _(terminal — no transitions)_                  |
+| `CANCELED`  | Booking cancelled                                | _(terminal — no transitions)_                  |
+| `REJECTED`  | Booking rejected by admin                        | _(terminal — no transitions)_                  |
 
-Only `PENDING`, `APPROVED`, and `CONFIRMED` bookings can be cancelled via the API.
+Only `PENDING`, `APPROVED`, and `CONFIRMED` bookings can be cancelled via the API. Both `PENDING` and `CONFIRMED` bookings can be rejected by an admin.
 
 ---
 
@@ -521,6 +551,7 @@ src/booking/
 │   ├── create_booking.py
 │   ├── get_booking.py
 │   ├── cancel_booking.py
+│   ├── delete_booking.py
 │   ├── change_dates.py
 │   ├── admin_approve_booking.py
 │   ├── admin_confirm_booking.py

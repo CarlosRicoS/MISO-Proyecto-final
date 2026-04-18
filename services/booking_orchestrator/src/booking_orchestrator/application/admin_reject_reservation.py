@@ -1,8 +1,8 @@
 """Admin reject reservation saga.
 
 Steps:
-1. GET booking — verify it exists and is PENDING.
-2. POST admin-reject to booking service (PENDING → REJECTED with reason).
+1. GET booking — verify it exists and is PENDING or CONFIRMED.
+2. POST admin-reject to booking service (PENDING/CONFIRMED → REJECTED with reason).
 3. Publish BOOKING_REJECTED event — best-effort.
 
 Known limitation: property lock is NOT released after rejection because
@@ -41,8 +41,8 @@ class AdminRejectReservationUseCase:
         except BookingNotFoundError:
             raise
 
-        if booking.get("status") != "PENDING":
-            raise ReservationFailedError("booking_not_pending")
+        if booking.get("status") not in ("PENDING", "CONFIRMED"):
+            raise ReservationFailedError("booking_not_rejectable")
 
         # Step 2: admin-reject in booking service.
         try:

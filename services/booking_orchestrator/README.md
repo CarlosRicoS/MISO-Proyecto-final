@@ -49,7 +49,7 @@ In production `X-User-Id` / `X-User-Email` are injected automatically by the API
 | Status | Meaning                                                                 |
 |--------|-------------------------------------------------------------------------|
 | 201    | Booking created in `PENDING`. Body is the full booking payload.         |
-| 409    | Property could not be locked (`property_unavailable`) — booking was compensated (cancelled). |
+| 409    | Property could not be locked (`property_unavailable`) — booking was deleted (compensation). |
 | 502    | Upstream failure calling the booking service.                           |
 | 422    | Missing headers or invalid request body.                                |
 
@@ -59,14 +59,14 @@ In production `X-User-Id` / `X-User-Email` are injected automatically by the API
 1. POST booking /api/booking/           → PENDING booking created
 2. POST poc_properties /api/property/lock
      │
-     └── on failure ──▶ POST booking /api/booking/{id}/cancel  (compensation)
-                                         ├── returns 201 compensated → raise 409
-                                         └── returns error          → log, still 409
+     └── on failure ──▶ DELETE booking /api/booking/{id}  (compensation)
+                                         ├── 204 deleted  → raise 409
+                                         └── error        → log, still 409
 3. SQS SendMessage → notifications_queue  (best-effort; log on failure)
 4. return 201 with booking payload
 ```
 
-The saga creates the booking **before** locking the property so that there is always an entity to cancel on failure (poc_properties has no `unlock` endpoint).
+The saga creates the booking **before** locking the property so that there is always an entity to roll back on failure (poc_properties has no `unlock` endpoint). Compensation **deletes** the booking rather than cancelling it, so the user does not see a spurious cancelled reservation in their list.
 
 ### Admin Approve Reservation
 
@@ -141,6 +141,108 @@ Processes payment for a booking via Stripe, confirms it, records a billing entry
 | 200    | Payment processed, booking is `CONFIRMED`. Body is the updated booking.   |
 | 404    | Booking not found.                                                         |
 | 409    | Stripe or booking update failed (with compensation).                       |
+
+---
+
+### Admin Confirm Reservation
+
+```
+POST /api/reservations/{booking_id}/admin-confirm
+```
+
+Admin one-step confirmation: transitions a `PENDING` booking directly to `CONFIRMED` (internally approve + confirm with an auto-generated payment reference). Enqueues a `BOOKING_CONFIRMED` notification.
+
+**Headers**
+
+| Header        | Value            | Required |
+|---------------|------------------|----------|
+| Content-Type  | application/json | Yes      |
+| Authorization | Bearer `<JWT>`   | Yes      |
+| X-User-Id     | `<admin UUID>`   | Yes      |
+
+**Request Body**
+
+| Field          | Type   | Required | Description           |
+|----------------|--------|----------|-----------------------|
+| traveler_email | string | Yes      | Traveler's email      |
+
+**Responses**
+
+| Status | Meaning                                           |
+|--------|---------------------------------------------------|
+| 200    | Booking confirmed. Body is the updated booking.   |
+| 404    | Booking not found.                                |
+| 409    | Booking is not in `PENDING` status.               |
+
+---
+
+### Admin Reject Reservation
+
+```
+POST /api/reservations/{booking_id}/admin-reject
+```
+
+Rejects a `PENDING` or `CONFIRMED` booking with a mandatory reason. `REJECTED` is a terminal state. Enqueues a `BOOKING_REJECTED` notification.
+
+> **Note:** The property lock is NOT released after rejection because poc_properties has no unlock endpoint. This is logged as a warning.
+
+**Headers**
+
+| Header        | Value            | Required |
+|---------------|------------------|----------|
+| Content-Type  | application/json | Yes      |
+| Authorization | Bearer `<JWT>`   | Yes      |
+| X-User-Id     | `<admin UUID>`   | Yes      |
+
+**Request Body**
+
+| Field          | Type   | Required | Description                        |
+|----------------|--------|----------|------------------------------------|
+| reason         | string | Yes      | Rejection reason (1–500 chars)     |
+| traveler_email | string | Yes      | Traveler's email                   |
+
+**Responses**
+
+| Status | Meaning                                                            |
+|--------|--------------------------------------------------------------------|
+| 200    | Booking rejected. Body includes `rejection_reason`.                |
+| 404    | Booking not found.                                                 |
+| 409    | Booking is not in `PENDING` or `CONFIRMED` status.                |
+
+---
+
+### Change Reservation Dates
+
+```
+PATCH /api/reservations/{booking_id}/dates
+```
+
+Changes the dates and price of a `CONFIRMED` booking. Verifies availability with the property service before updating.
+
+**Headers**
+
+| Header        | Value            | Required |
+|---------------|------------------|----------|
+| Content-Type  | application/json | Yes      |
+| Authorization | Bearer `<JWT>`   | Yes      |
+| X-User-Id     | `<user UUID>`    | Yes      |
+| X-User-Email  | `<email>`        | Yes      |
+
+**Request Body**
+
+| Field            | Type    | Required | Description                        |
+|------------------|---------|----------|------------------------------------|
+| new_period_start | date    | Yes      | New check-in date (`YYYY-MM-DD`)   |
+| new_period_end   | date    | Yes      | New check-out date (`YYYY-MM-DD`)  |
+| new_price        | decimal | Yes      | New total price                    |
+
+**Responses**
+
+| Status | Meaning                                                              |
+|--------|----------------------------------------------------------------------|
+| 200    | Dates changed. Body includes `price_difference`.                     |
+| 404    | Booking not found.                                                   |
+| 409    | Booking is not `CONFIRMED` or property unavailable for new dates.    |
 
 ---
 

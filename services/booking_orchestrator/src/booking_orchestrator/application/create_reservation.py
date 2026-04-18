@@ -1,7 +1,7 @@
 """Create reservation saga — the heart of the booking orchestrator.
 
 Implements compensation option (c): create booking first (PENDING), then lock the property.
-If the lock fails, cancel the booking so state stays consistent.
+If the lock fails, delete the booking so it doesn't appear in the user's list.
 Notification publishing is best-effort — failure is logged but does not fail the request.
 """
 
@@ -58,12 +58,12 @@ class CreateReservationUseCase:
                 "property lock failed, compensating booking %s: %s", booking_id, exc.detail
             )
             try:
-                await self._booking.cancel(booking_id, command.user_id)
+                await self._booking.delete(booking_id)
             except Exception:
                 # Compensation failure is logged loudly; the booking remains PENDING.
-                # This is the "orphan PENDING" case — an operator can cancel it manually.
+                # This is the "orphan PENDING" case — an operator can delete it manually.
                 logger.exception(
-                    "compensation cancel failed for booking %s — manual cleanup required",
+                    "compensation delete failed for booking %s — manual cleanup required",
                     booking_id,
                 )
             raise ReservationFailedError("property_unavailable") from exc

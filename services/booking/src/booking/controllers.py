@@ -18,6 +18,7 @@ from booking.application.commands import (
     UpdatePaymentStateCommand,
 )
 from booking.application.create_booking import CreateBookingUseCase
+from booking.application.delete_booking import DeleteBookingUseCase
 from booking.application.get_booking import GetBookingUseCase, ListUserBookingsUseCase
 from booking.application.update_payment_state import UpdatePaymentStateUseCase
 from booking.bootstrap import (
@@ -27,6 +28,7 @@ from booking.bootstrap import (
     get_cancel_booking_use_case,
     get_change_dates_use_case,
     get_create_booking_use_case,
+    get_delete_booking_use_case,
     get_get_booking_use_case,
     get_list_user_bookings_use_case,
     get_update_payment_state_use_case,
@@ -59,6 +61,7 @@ ChangeDatesDep = Annotated[ChangeDatesUseCase, Depends(get_change_dates_use_case
 AdminConfirmBookingDep = Annotated[AdminConfirmBookingUseCase, Depends(get_admin_confirm_booking_use_case)]
 AdminRejectBookingDep = Annotated[AdminRejectBookingUseCase, Depends(get_admin_reject_booking_use_case)]
 AdminApproveBookingDep = Annotated[AdminApproveBookingUseCase, Depends(get_admin_approve_booking_use_case)]
+DeleteBookingDep = Annotated[DeleteBookingUseCase, Depends(get_delete_booking_use_case)]
 UpdatePaymentStateDep = Annotated[UpdatePaymentStateUseCase, Depends(get_update_payment_state_use_case)]
 
 
@@ -231,3 +234,16 @@ async def update_payment_state(
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e)) from e
     except BookingValidationError as e:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e)) from e
+
+
+@router.delete("/{booking_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_booking(
+    booking_id: UUID,
+    use_case: DeleteBookingDep,
+) -> None:
+    try:
+        await use_case.execute(str(booking_id))
+    except BookingNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Booking not found") from e
+    except InvalidBookingStatusTransitionError as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e)) from e

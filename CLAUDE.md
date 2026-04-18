@@ -11,8 +11,8 @@ This is a multi-microservice platform deployed on AWS ECS (EC2-backed) behind an
 - `services/poc_properties/` — Java 25 / Spring Boot 4. The core properties microservice with CQRS pattern (Commands/Queries), JPA/PostgreSQL, Prometheus metrics, and Logstash JSON logging.
 - `services/PricingEngine/` — .NET 8 / ASP.NET Core. Pricing service backed by PostgreSQL via Entity Framework Core (Npgsql).
 - `services/PricingOrchestator/` — .NET 8 / ASP.NET Core. Orchestrates pricing operations across the platform.
-- `services/booking/` — Python/FastAPI with hexagonal (ports & adapters) architecture. Manages booking lifecycle (PENDING → APPROVED → CONFIRMED → COMPLETED/CANCELED). PostgreSQL-backed with async SQLAlchemy.
-- `services/booking_orchestrator/` — Python/FastAPI hexagonal. Synchronous saga coordinator for the "create reservation" flow: creates a booking in `booking`, locks the property in `poc_properties`, and publishes a `BOOKING_CREATED` event onto the notifications SQS queue. Requires JWT (forwards `X-User-Id`). No database.
+- `services/booking/` — Python/FastAPI with hexagonal (ports & adapters) architecture. Manages booking lifecycle (PENDING → APPROVED → CONFIRMED → COMPLETED/CANCELED/REJECTED). PostgreSQL-backed with async SQLAlchemy. Admin actions: approve, confirm, reject (from PENDING or CONFIRMED). Delete endpoint for saga compensation.
+- `services/booking_orchestrator/` — Python/FastAPI hexagonal. Synchronous saga coordinator for the booking lifecycle: create reservation, admin approve/confirm/reject, cancel, change dates, and make payment. Creates a booking in `booking`, locks the property in `poc_properties`, and publishes domain events onto the notifications SQS queue. On lock failure, deletes the booking (not cancel) so the user doesn't see spurious cancelled reservations. Requires JWT (forwards `X-User-Id`). No database.
 - `services/notifications/` — Python/FastAPI hexagonal. Background SQS consumer for `notifications_queue` that sends transactional emails via the AWS SES SMTP relay. Not called by the frontend, no auth, no database.
 - `services/auth/` — Python/FastAPI + boto3. Authentication microservice for user registration via AWS Cognito. Public endpoint (no JWT required).
 
@@ -21,7 +21,7 @@ This is a multi-microservice platform deployed on AWS ECS (EC2-backed) behind an
 
 **Infrastructure (Terraform):**
 - `terraform/modules/` — Reusable modules: `vpc`, `ecs`, `ecs_service`, `ecr`, `rds`, `api_gateway`, `cognito`, `iam`, `monitoring`, `sqs`.
-- `terraform/stacks/` — Composable top-level stacks: `ecs_cluster`, `container_registry`, `database`, `cognito`, `messaging`, `ecs_api`, `api_gateway`, `monitoring`, `web_app`.
+- `terraform/stacks/` — Composable top-level stacks: `ecs_cluster`, `container_registry`, `database`, `cognito`, `messaging`, `ecs_api`, `api_gateway`, `monitoring`, `web_app`, `web_app_portal_hoteles` (symlink to `web_app`).
 - `terraform/environments/develop/` — Per-stack `terraform.tfvars` and `backend.tfvars` for the develop environment.
 
 **Load Tests:** `load-tests/` — JMeter test plan (`PropertySearchLoadTest.jmx`) with shell scripts.
@@ -62,7 +62,17 @@ make unittest-uv DIR=services/booking
 - `GET /api/booking/` — List all bookings for authenticated user
 - `GET /api/booking/{booking_id}` — Retrieve a single booking
 - `POST /api/booking/{booking_id}/cancel` — Cancel an existing booking
-- Status state machine: `PENDING` → `APPROVED` → `CONFIRMED` → `COMPLETED` (or `CANCELED` from any pre-terminal state)
+- `DELETE /api/booking/{booking_id}` — Delete a PENDING booking (saga compensation)
+- `POST /api/booking/{booking_id}/admin-approve` — Approve a PENDING booking
+- `POST /api/booking/{booking_id}/admin-confirm` — Confirm a PENDING booking (approve + confirm in one step)
+- `POST /api/booking/{booking_id}/admin-reject` — Reject a PENDING or CONFIRMED booking
+- `PATCH /api/booking/{booking_id}/dates` — Change dates of a CONFIRMED booking
+- `POST /api/booking/{booking_id}/update-payment-state` — Confirm with payment reference
+- Status state machine: `PENDING` → `APPROVED` → `CONFIRMED` → `COMPLETED` (or `CANCELED`/`REJECTED` — see transitions below)
+  - `PENDING` → `APPROVED`, `CONFIRMED`, `CANCELED`, `REJECTED`
+  - `APPROVED` → `CONFIRMED`, `CANCELED`
+  - `CONFIRMED` → `COMPLETED`, `CANCELED`, `REJECTED`
+  - `COMPLETED`, `CANCELED`, `REJECTED` — terminal states
 
 ### Auth Service — uses `uv`
 
@@ -134,7 +144,7 @@ make tf-apply STACK=ecs_cluster ENV=develop
 make tf-all STACK=ecs_cluster ENV=develop   # init + validate + plan + apply
 ```
 
-Available stacks: `ecs_cluster`, `container_registry`, `database`, `cognito`, `messaging`, `ecs_api`, `api_gateway`, `monitoring`, `web_app`.
+Available stacks: `ecs_cluster`, `container_registry`, `database`, `cognito`, `messaging`, `ecs_api`, `api_gateway`, `monitoring`, `web_app`, `web_app_portal_hoteles`.
 
 ### Docker / ECR
 
@@ -155,14 +165,21 @@ make ecr-login                      # Authenticate Docker with ECR
    - If Python: add to both `test` (with `language: python`) and `build_and_push` (with `language: python`) jobs
    - If Java/dotnet: add only to `build_and_push` with appropriate `language`
 
-## Deploying the Frontend
+## Deploying the Frontends
 
-The `user_interface` (Angular/Ionic) is deployed via the `web_app` Terraform stack:
+The `user_interface/` monorepo contains two Angular projects, each deployed independently:
 
-1. **Docker build:** Frontend is containerized with Node.js and Nginx
-2. **ECR push:** Published as `web_travelhub` to ECR (part of `build_and_push` matrix in `deploy_apps.yml`)
-3. **Terraform stack:** `terraform/stacks/web_app/` deploys to standalone EC2 instance with Docker + Nginx reverse proxy (as documented in `project_web_app_deployment.md` memory)
-4. **DNS:** Accessible via API Gateway custom domain or direct EC2 IP (configurable in tfvars)
+### TravelHub (`web_app` stack)
+1. **Docker build:** `Dockerfile` builds the default `app` project, containerized with Node.js and Nginx
+2. **ECR push:** Published as `web_travelhub` to ECR
+3. **Terraform stack:** `terraform/stacks/web_app/` deploys to standalone EC2 instance with Docker + Nginx
+4. **Accessible via:** API Gateway custom domain or direct EC2 IP
+
+### Portal Hoteles (`web_app_portal_hoteles` stack)
+1. **Docker build:** `Dockerfile.portal-hoteles` builds the `portal-hoteles` project
+2. **ECR push:** Published as `web_portal_hoteles` to ECR
+3. **Terraform stack:** `terraform/stacks/web_app_portal_hoteles/` (symlink to `web_app/`) with separate tfvars (`app_name = "web-app-portal-hoteles"`)
+4. **Accessible via:** Direct EC2 IP (separate instance from travelhub)
 
 ## CI/CD
 
@@ -230,7 +247,7 @@ The platform uses **AWS Cognito** for user authentication. The `cognito` Terrafo
 
 ## Service Communication
 
-- `booking-orchestrator` is the synchronous entry point for the "create reservation" user story. It forwards the gateway-injected `X-User-Id` header when calling `booking`, converts ISO dates to `dd/MM/yyyy` when calling `poc_properties /api/property/lock`, and publishes a versioned `BOOKING_CREATED` JSON event onto `notifications_queue` (best-effort). Compensation: creates booking first, then locks; on lock failure it cancels the booking and returns 409 `property_unavailable`.
+- `booking-orchestrator` is the synchronous entry point for the booking lifecycle. It forwards the gateway-injected `X-User-Id` header when calling `booking`, converts ISO dates to `dd/MM/yyyy` when calling `poc_properties /api/property/lock`, and publishes versioned domain events (`BOOKING_CREATED`, `BOOKING_APPROVED`, `BOOKING_CONFIRMED`, `BOOKING_REJECTED`, `BOOKING_CANCELLED`, `BOOKING_DATES_CHANGED`, `PAYMENT_CONFIRMED`) onto `notifications_queue` (best-effort). Create reservation saga: creates booking first, then locks; on lock failure it **deletes** the booking (not cancel) and returns 409 `property_unavailable`. Admin reject accepts both PENDING and CONFIRMED bookings.
 - `notifications` subscribes to `notifications_queue` via a lifespan-managed async SQS long-polling task and sends emails via `smtplib` against the AWS SES SMTP relay. Unknown schema versions or handler failures are *not* acked — SQS redrives them to `notifications_dlq` automatically.
 - `pms` gets the `poc-properties` service URL from SSM: `/final-project-miso/poc-properties/service_url` (injected as `PROPERTIES_SERVICE_URL` env var).
 - `poc-properties` reads DB credentials from SSM: `/final-project-miso/poc-properties/db_{host,name,username,password}`.
@@ -253,7 +270,7 @@ Uses a CQRS pattern with explicit `Command`/`Query` interfaces and handlers. Key
 
 Follows **hexagonal (ports & adapters)** architecture with strict layer boundaries enforced by tests:
 - `domain/` — Core business rules (booking aggregate, status state machine, value objects). No external dependencies.
-- `application/` — Use cases (commands/queries: CreateBooking, CancelBooking, GetBooking). Depends only on domain.
+- `application/` — Use cases (commands/queries: CreateBooking, CancelBooking, DeleteBooking, GetBooking, ChangeDates, AdminApprove, AdminConfirm, AdminReject, UpdatePaymentState). Depends only on domain.
 - `infrastructure/` — Persistence adapters (SQLAlchemy async ORM, in-memory repository for testing).
 - `controllers.py` — FastAPI HTTP adapter.
 - **State Machine:** Bookings transition through strict states; invalid transitions raise domain exceptions.

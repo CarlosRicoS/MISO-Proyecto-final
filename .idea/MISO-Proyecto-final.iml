@@ -28,6 +28,7 @@
       <excludeFolder url="file://$MODULE_DIR$/terraform/stacks/messaging/.terraform" />
       <excludeFolder url="file://$MODULE_DIR$/terraform/stacks/monitoring/.terraform" />
       <excludeFolder url="file://$MODULE_DIR$/terraform/stacks/web_app/.terraform" />
+      <excludeFolder url="file://$MODULE_DIR$/terraform/stacks/web_app_portal_hoteles/.terraform" />
     </content>
     <orderEntry type="jdk" jdkName="Python 3.13 (MISO-Proyecto-final) (3)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />

@@ -60,6 +60,11 @@ class HttpxBookingClient:
             # 409 already-cancelled is acceptable for compensation idempotency.
             response.raise_for_status()
 
+    async def delete(self, booking_id: str) -> None:
+        response = await self._client.delete(f"/api/booking/{booking_id}")
+        if response.status_code not in (204, 404):
+            response.raise_for_status()
+
     async def get(self, booking_id: str) -> dict[str, Any]:
         try:
             response = await self._client.get(f"/api/booking/{booking_id}")

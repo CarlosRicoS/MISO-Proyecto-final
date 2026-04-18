@@ -6,20 +6,24 @@ This repository contains the source code and infrastructure-as-code (Terraform) 
 
 ```
 services/
-  auth/               Python/FastAPI — User registration and auth via Cognito
-  booking/            Python/FastAPI — Reservation management (PostgreSQL)
-  pms/                Python/FastAPI — PMS latency simulator (proxy to Properties)
-  poc_properties/     Java 25/Spring Boot 4 — Core property service (CQRS, PostgreSQL)
-  PricingEngine/      .NET 8/ASP.NET Core — Price calculation (PostgreSQL)
-  PricingOrchestator/ .NET 8/ASP.NET Core — Service orchestrator
-user_interface/       Angular 19/Ionic — Multi-platform travel application
+  auth/                  Python/FastAPI — User registration and auth via Cognito
+  booking/               Python/FastAPI — Reservation management (PostgreSQL)
+  booking_orchestrator/  Python/FastAPI — Saga coordinator for booking lifecycle
+  notifications/         Python/FastAPI — SQS consumer for transactional emails (SES)
+  pms/                   Python/FastAPI — PMS latency simulator (proxy to Properties)
+  poc_properties/        Java 25/Spring Boot 4 — Core property service (CQRS, PostgreSQL)
+  billing/               Java 25/Spring Boot 4 — Billing record management (PostgreSQL)
+  stripe_mock/           Java 25/Spring Boot 4 — Mock Stripe payment gateway
+  PricingEngine/         .NET 8/ASP.NET Core — Price calculation (PostgreSQL)
+  PricingOrchestator/    .NET 8/ASP.NET Core — Service orchestrator
+user_interface/          Angular 20/Ionic — Multi-platform travel application (monorepo: travelhub + portal-hoteles)
 terraform/
-  modules/            Reusable infrastructure components (VPC, ECS, RDS, Cognito, etc.)
-  stacks/             Composable stacks for cluster, database, api_gateway, etc.
-  environments/       Configuration for develop/ environment
-db/seeds/             SQL seed scripts for database initialization
-load-tests/           JMeter plans and shell runners
-.github/workflows/    CI/CD pipelines for deployment and validation
+  modules/               Reusable infrastructure components (VPC, ECS, RDS, Cognito, SQS, etc.)
+  stacks/                Composable stacks for cluster, database, api_gateway, web_app, etc.
+  environments/          Configuration for develop/ environment
+db/seeds/                SQL seed scripts for database initialization
+load-tests/              JMeter plans and shell runners
+.github/workflows/       CI/CD pipelines for deployment and validation
 ```
 
 ---
@@ -33,9 +37,11 @@ load-tests/           JMeter plans and shell runners
 - **Details:** See [`services/auth/README.md`](services/auth/README.md).
 
 ### Booking (`services/booking/`)
-- **Stack:** Python/FastAPI + PostgreSQL (SQLAlchemy)
-- **Purpose:** Manages property reservations and user booking history.
-- **Key Endpoints:** `POST /api/booking/`, `GET /api/booking/{id}`, `POST /api/booking/{id}/cancel`.
+- **Stack:** Python/FastAPI + PostgreSQL (async SQLAlchemy), hexagonal architecture
+- **Purpose:** Manages the full booking lifecycle with a strict status state machine.
+- **Key Endpoints:** `POST /api/booking/`, `GET /api/booking/{id}`, `POST /api/booking/{id}/cancel`, `DELETE /api/booking/{id}` (saga compensation), `POST /api/booking/{id}/admin-approve`, `POST /api/booking/{id}/admin-confirm`, `POST /api/booking/{id}/admin-reject`, `PATCH /api/booking/{id}/dates`, `POST /api/booking/{id}/update-payment-state`.
+- **State Machine:** `PENDING` → `APPROVED` → `CONFIRMED` → `COMPLETED`. Both `PENDING` and `CONFIRMED` bookings can be cancelled or rejected by admin. `COMPLETED`, `CANCELED`, `REJECTED` are terminal states.
+- **Details:** See [`services/booking/README.md`](services/booking/README.md).
 
 ### Properties PoC (`services/poc_properties/`)
 - **Stack:** Java 25 / Spring Boot 4 + PostgreSQL
@@ -53,14 +59,40 @@ load-tests/           JMeter plans and shell runners
 - **Purpose:** Orchestrates calls between the Properties and Pricing services to provide a unified view.
 - **Key Endpoints:** `GET /api/Property`.
 
+### Booking Orchestrator (`services/booking_orchestrator/`)
+- **Stack:** Python/FastAPI, hexagonal architecture (no database)
+- **Purpose:** Saga coordinator for the booking lifecycle. Fronts the frontend with synchronous endpoints and fans out to `booking`, `poc_properties`, `stripe-mock`, and the `notifications` / `billing` SQS queues.
+- **Key Endpoints:** `POST /api/reservations` (create), `POST /api/reservations/{id}/admin-approve`, `POST /api/reservations/{id}/admin-confirm`, `POST /api/reservations/{id}/admin-reject`, `POST /api/reservations/{id}/cancel`, `POST /api/reservations/{id}/make-payment`, `PATCH /api/reservations/{id}/dates`.
+- **Saga Compensation:** On property lock failure during creation, **deletes** the booking (not cancel) so the user doesn't see spurious cancelled reservations.
+- **Details:** See [`services/booking_orchestrator/README.md`](services/booking_orchestrator/README.md).
+
+### Notifications (`services/notifications/`)
+- **Stack:** Python/FastAPI, hexagonal architecture (no database)
+- **Purpose:** Background SQS consumer that sends transactional emails via AWS SES SMTP relay. Not called by the frontend, no auth required.
+- **Supported Events:** `BOOKING_CREATED`, `BOOKING_APPROVED`, `BOOKING_CONFIRMED`, `BOOKING_REJECTED`, `BOOKING_CANCELLED`, `BOOKING_DATES_CHANGED`, `PAYMENT_CONFIRMED`.
+- **Details:** See [`services/notifications/README.md`](services/notifications/README.md).
+
+### Billing (`services/billing/`)
+- **Stack:** Java 25 / Spring Boot 4 + PostgreSQL
+- **Purpose:** Billing record management. Receives billing commands from the booking orchestrator via SQS.
+
+### Stripe Mock (`services/stripe_mock/`)
+- **Stack:** Java 25 / Spring Boot 4
+- **Purpose:** Mock payment gateway simulating Stripe APIs for payment creation, confirmation, and cancellation.
+
 ### PMS Proxy (`services/pms/`)
 - **Stack:** Python/FastAPI
 - **Purpose:** Simulates a Property Management System with artificial latency for lock operations.
 
 ### TravelHub Frontend (`user_interface/`)
-- **Stack:** Angular 19 + Ionic + Capacitor
-- **Purpose:** Multi-platform web and mobile application for travelers and hotel admins.
-- **Key Features:** Property search, booking management, and responsive design.
+- **Stack:** Angular 20 + Ionic 8 + Capacitor 8
+- **Purpose:** Multi-platform web and mobile application for travelers. Contains two Angular projects in a monorepo: `app` (travelhub traveler SPA) and `portal-hoteles` (hotel admin portal).
+- **Key Features:** Property search, booking management, responsive design, E2E testing via Playwright.
+
+### Portal Hoteles (`user_interface/projects/portal-hoteles/`)
+- **Stack:** Angular 20 + Ionic 8 (second project within `user_interface/` monorepo)
+- **Purpose:** Hotel operator/admin portal for managing reservations. Allows hotel admins to view, accept, and reject bookings.
+- **Key Pages:** `/login` (admin login), `/dashboard` (reservation list), `/dashboard/:id` (reservation detail with accept/reject).
 
 ---
 
@@ -159,40 +191,49 @@ Add the service to `test` and `build_and_push` matrices in both `.github/workflo
 Every PR to `main` runs the following jobs in parallel before merging is allowed:
 
 ```
-test          (auth · booking · poc-properties — parallel)
-test_frontend (travelhub)
+test                    (auth · booking · booking-orchestrator · notifications · poc-properties · billing · stripe_mock — parallel)
+test_frontend           (travelhub unit tests)
+test_portal_hoteles     (portal-hoteles unit tests)
+test_e2e                (travelhub Playwright E2E)
   │
-  ├── build_and_push   (auth · booking · poc_properties — parallel, needs: test)
-  └── build_web_image  (travelhub, needs: test_frontend)
+  ├── build_and_push              (all backend services — parallel, needs: test)
+  ├── build_web_image             (travelhub, needs: test_frontend + test_e2e)
+  └── build_portal_hoteles_image  (portal-hoteles, needs: test_portal_hoteles)
         │
-        └── terraform_plan  (all stacks in parallel, needs: test + build_and_push + build_web_image)
+        └── terraform_plan  (all stacks in parallel, needs: test + builds)
 ```
 
 **Test coverage thresholds enforced on every PR:**
 
 | Service | Framework | Coverage requirement |
 |---|---|---|
-| `auth`, `booking` | Python / pytest | 80% (configured in `pyproject.toml`) |
-| `poc_properties` | Java / JaCoCo | 80% line coverage |
-| `travelhub` | Angular / Karma + Jasmine | 85% statements, branches, functions, lines |
+| `auth`, `booking`, `booking_orchestrator`, `notifications` | Python / pytest | 80% (configured in `pyproject.toml`) |
+| `poc_properties`, `billing`, `stripe_mock` | Java / JaCoCo | 80% line coverage |
+| `travelhub`, `portal-hoteles` | Angular / Karma + Jasmine | 85% statements, branches, functions, lines |
 
 Docker images are pushed with two tags: `<commit-sha>` (immutable, for traceability) and `latest` (so `terraform plan` for `ecs_api` and `web_app` can resolve the ECR image digest).
 
 ### Full Deploy Pipeline (`deploy_apps.yml`)
 
 ```
-test
-  ├── deploy_ecs_cluster ──────────────────────────┐
-  ├── deploy_container_registry → build_and_push ──┤
-  ├── deploy_cognito ──────────────────────────────┼── deploy_ecs_api → deploy_api_gateway → seed_database
-  ├── deploy_database ─────────────────────────────┘                                      → deploy_web_app
-  └── deploy_monitoring
+test (backend)
+test_web_app (travelhub unit)
+test_portal_hoteles (portal-hoteles unit)
+test_e2e (travelhub Playwright)
+  ├── deploy_ecs_cluster ──────────────────────────────────┐
+  ├── deploy_container_registry → build_and_push ──────────┤
+  │                             → build_web_image ─────────┤
+  │                             → build_portal_hoteles ────┤
+  ├── deploy_cognito ──────────────────────────────────────┼── deploy_ecs_api → deploy_api_gateway → deploy_web_app
+  ├── deploy_database ─────────────────────────────────────┘                                      → deploy_web_app_portal_hoteles
+  └── deploy_messaging
 ```
 
 Key dependencies:
-- **`ecs_api`** depends on `cognito`, `database`, `ecs_cluster`, and `build_and_push`
+- **`ecs_api`** depends on `cognito`, `database`, `messaging`, `ecs_cluster`, and `build_and_push`
 - **`api_gateway`** depends on `ecs_api` and `cognito` (JWT authorizer needs issuer URL + client ID)
 - **`cognito`** deploys in parallel with `ecs_cluster` and `container_registry`
+- **`web_app_portal_hoteles`** deploys in parallel with `web_app`, both after `api_gateway`
 
 ### Single Stack Deploy (`deploy_stack.yml`)
 
@@ -208,7 +249,10 @@ stack = ecs_api
   build_backend_images (parallel) → terraform apply ecs_api
 
 stack = web_app
-  test_web_app → build_web_image → redeploy container on EC2 (SSM) → terraform apply web_app
+  test_web_app + test_e2e → build_web_image → redeploy container on EC2 (SSM) → terraform apply web_app
+
+stack = web_app_portal_hoteles
+  test_portal_hoteles → build_portal_hoteles_image → redeploy container on EC2 (SSM) → terraform apply web_app_portal_hoteles
 
 stack = anything else
   terraform apply <stack>  (no tests or image build)
@@ -218,21 +262,22 @@ stack = anything else
 
 | Language | Pre-build step | Services |
 |---|---|---|
-| Python | none | `auth`, `pms`, `booking` |
-| Java | `./mvnw clean install -DskipTests` | `poc_properties` |
+| Python | none | `auth`, `pms`, `booking`, `booking_orchestrator`, `notifications` |
+| Java | `./mvnw clean install -DskipTests` | `poc_properties`, `billing`, `stripe_mock` |
 | .NET | none (multi-stage Dockerfile) | `pricing_engine`, `pricing_orchestator` |
 
 > **Note:** Selecting `deploy_stack.yml` skips dependency checks. Ensure prerequisite stacks are already deployed before running a targeted deploy (e.g., run `cognito` and `database` before `ecs_api`).
 
 ### Web App Redeployment (frontend-only changes)
 
-When only the frontend (`user_interface/`) changes, run **Deploy Single Stack** with `stack = web_app`. The workflow:
+When only the frontend (`user_interface/`) changes, run **Deploy Single Stack** with `stack = web_app` or `stack = web_app_portal_hoteles`. The workflow:
 
-1. Builds and pushes a new `web_travelhub:latest` image to ECR
-2. Connects to the EC2 instance via **AWS SSM Run Command** (no SSH required)
-3. Pulls the new image and restarts the `travelhub` container with the current API Gateway URL
+1. Runs unit tests (and E2E for travelhub)
+2. Builds and pushes a new Docker image to ECR (`web_travelhub` or `web_portal_hoteles`)
+3. Connects to the EC2 instance via **AWS SSM Run Command** (no SSH required)
+4. Pulls the new image and restarts the container with the current API Gateway URL
 
-No manual SSH needed.
+Each web app runs on its own EC2 instance. No manual SSH needed.
 
 ### Triggering a Full Deploy
 1. Go to **Actions** tab in GitHub
@@ -248,7 +293,7 @@ make tf-apply STACK=ecs_cluster ENV=develop
 make tf-all   STACK=ecs_cluster ENV=develop   # init + validate + plan + apply
 ```
 
-Available stacks: `ecs_cluster`, `container_registry`, `database`, `cognito`, `ecs_api`, `api_gateway`, `monitoring`, `web_app`.
+Available stacks: `ecs_cluster`, `container_registry`, `database`, `cognito`, `messaging`, `ecs_api`, `api_gateway`, `monitoring`, `web_app`, `web_app_portal_hoteles`.
 
 ---
 
@@ -395,13 +440,18 @@ postman/
 
 ## Service Communication
 
-| Service    | Reads from SSM                                          | Injected As              |
-|------------|---------------------------------------------------------|--------------------------|
-| `pms`      | `/final-project-miso/poc-properties/service_url`        | `PROPERTIES_SERVICE_URL` |
-| `auth`     | `/final-project-miso/cognito/user_pool_id`              | `COGNITO_USER_POOL_ID`   |
-| `auth`     | `/final-project-miso/cognito/app_client_id`             | `COGNITO_CLIENT_ID`      |
+| Service                | Reads from SSM                                          | Injected As              |
+|------------------------|---------------------------------------------------------|--------------------------|
+| `pms`                  | `/final-project-miso/poc-properties/service_url`        | `PROPERTIES_SERVICE_URL` |
+| `auth`                 | `/final-project-miso/cognito/user_pool_id`              | `COGNITO_USER_POOL_ID`   |
+| `auth`                 | `/final-project-miso/cognito/app_client_id`             | `COGNITO_CLIENT_ID`      |
+| `booking`              | `/final-project-miso/booking/db_{host,name,username,password}` | `DB_*` env vars   |
+| `booking_orchestrator` | `/final-project-miso/booking/service_url`               | `BOOKING_SERVICE_URL`    |
+| `booking_orchestrator` | `/final-project-miso/poc-properties/service_url`        | `PROPERTIES_SERVICE_URL` |
+| `booking_orchestrator` | `/final-project-miso/stripe-mock/service_url`           | `STRIPE_MOCK_SERVICE_URL`|
+| `notifications`        | `/final-project-miso/notifications/smtp_*`              | `SMTP_*` env vars        |
 
-Services communicate internally within the VPC. The API Gateway fronts all external traffic.
+Services communicate internally within the VPC. The API Gateway fronts all external traffic. The `booking_orchestrator` publishes domain events to `notifications_queue` (SQS) and billing commands to `billing_queue` (SQS).
 
 ---
 
