@@ -21,6 +21,7 @@ export class ThDetailsMosaicComponent {
   @Input() images: ThDetailsMosaicImage[] = [];
   @Input() totalPhotos = 0;
   @Input() viewAllLabel = 'View all photos';
+  @Input() fitParent = false;
   @Output() viewAll = new EventEmitter<void>();
 
   selectedIndex = 0;

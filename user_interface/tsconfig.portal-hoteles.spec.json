@@ -1,0 +1,21 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./out-tsc/portal-hoteles-spec",
+    "types": [
+      "jasmine"
+    ]
+  },
+  "files": [
+    "projects/portal-hoteles/src/test.ts",
+    "projects/portal-hoteles/src/polyfills.ts"
+  ],
+  "include": [
+    "projects/portal-hoteles/src/**/*.spec.ts",
+    "projects/portal-hoteles/src/**/*.d.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "capacitor.config.ts"
+  ]
+}

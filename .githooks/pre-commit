@@ -29,6 +29,47 @@ log_warn() {
 	printf "%b\n" "${YELLOW}[pre-commit] WARN:${NC} $1"
 }
 
+print_coverage_summary_from_log() {
+	local project_title="$1"
+	local log_file="$2"
+
+	if [[ ! -f "$log_file" ]]; then
+		log_warn "No se encontró el log de cobertura para ${project_title}."
+		return
+	fi
+
+	printf "%b\n" "${BLUE}[pre-commit] COVERAGE (${project_title}):${NC}"
+	awk -v red="$RED" -v green="$GREEN" -v yellow="$YELLOW" -v blue="$BLUE" -v nc="$NC" '
+		/=============================== Coverage summary ===============================/ {
+			capture = 1
+		}
+		capture {
+			if ($0 ~ /^(Statements|Branches|Functions|Lines)[[:space:]]*:/) {
+				pct = -1
+				if (match($0, /: *([0-9]+(\.[0-9]+)?)%/, m)) {
+					pct = m[1] + 0
+				}
+
+				line_color = red
+				if (pct >= 85) {
+					line_color = green
+				} else if (pct >= 70) {
+					line_color = yellow
+				}
+
+				printf "%s%s%s\n", line_color, $0, nc
+			} else if ($0 ~ /^=+/) {
+				printf "%s%s%s\n", blue, $0, nc
+			} else {
+				print
+			}
+			if (/^================================================================================$/) {
+				exit
+			}
+		}
+	' "$log_file"
+}
+
 show_android_setup_help() {
 	printf "%b\n" "${YELLOW}Comandos sugeridos para preparar Android E2E:${NC}"
 	printf "%b\n" "  sdkmanager \"platform-tools\" \"emulator\" \"platforms;android-36\" \"system-images;android-36;google_apis;x86_64\""
@@ -73,11 +114,27 @@ if ! cd user_interface; then
 	exit 1
 fi
 
-log_step "Ejecutando pruebas unitarias (ng test)."
-if ! npx ng test --code-coverage --watch=false; then
-	log_fail "Fallaron las pruebas unitarias. No se creó el commit."
+APP_UNIT_LOG="$(mktemp)"
+PORTAL_UNIT_LOG="$(mktemp)"
+
+log_step "Ejecutando pruebas unitarias app (ng test app)."
+if ! npx ng test app --code-coverage --watch=false --browsers=ChromeHeadless 2>&1 | tee "$APP_UNIT_LOG"; then
+	log_fail "Fallaron las pruebas unitarias de app o su cobertura no cumple el umbral QA. No se creó el commit."
+	rm -f "$APP_UNIT_LOG" "$PORTAL_UNIT_LOG"
 	exit 1
 fi
+
+log_step "Ejecutando pruebas unitarias portal-hoteles (ng test portal-hoteles)."
+if ! npx ng test portal-hoteles --code-coverage --watch=false --browsers=ChromeHeadless 2>&1 | tee "$PORTAL_UNIT_LOG"; then
+	log_fail "Fallaron las pruebas unitarias de portal-hoteles o su cobertura no cumple el umbral QA. No se creó el commit."
+	rm -f "$APP_UNIT_LOG" "$PORTAL_UNIT_LOG"
+	exit 1
+fi
+
+print_coverage_summary_from_log "app" "$APP_UNIT_LOG"
+print_coverage_summary_from_log "portal-hoteles" "$PORTAL_UNIT_LOG"
+
+rm -f "$APP_UNIT_LOG" "$PORTAL_UNIT_LOG"
 
 log_ok "Pruebas unitarias completadas correctamente."
 

@@ -1,9 +1,29 @@
 :host {
   display: block;
+  min-height: 0;
 }
 
 .details-mosaic {
   width: 100%;
+}
+
+.details-mosaic--fit-parent {
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.details-mosaic--fit-parent .details-mosaic__desktop {
+  height: 100%;
+  min-height: 0;
+  grid-auto-rows: minmax(0, 1fr);
+}
+
+.details-mosaic--fit-parent .details-mosaic__tile,
+.details-mosaic--fit-parent .details-mosaic__view-all {
+  height: 100%;
+  min-height: 0;
+  aspect-ratio: auto;
 }
 
 .details-mosaic__desktop {

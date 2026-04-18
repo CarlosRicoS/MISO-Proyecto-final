@@ -1,0 +1,71 @@
+:host {
+  display: block;
+}
+
+.portal-hoteles-app {
+  min-height: 100vh;
+  background: var(--th-page-background);
+}
+
+.portal-hoteles-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--th-page-background);
+}
+
+.portal-hoteles-shell__header {
+  width: 100%;
+}
+
+.portal-hoteles-shell__body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.portal-hoteles-shell__sidebar {
+  flex: 0 0 264px;
+  min-height: 0;
+}
+
+.portal-hoteles-shell__content {
+  display: flex;
+  position: relative;
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.portal-hoteles-shell__content-inner {
+  display: flex;
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  min-height: 100%;
+  padding: 12px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.portal-hoteles-shell__content-inner ion-router-outlet {
+  width: 100%;
+  min-width: 0;
+}
+
+@media (max-width: 960px) {
+  .portal-hoteles-shell__body {
+    display: block;
+  }
+
+  .portal-hoteles-shell__sidebar {
+    display: none;
+  }
+
+  .portal-hoteles-shell__content-inner {
+    padding: 12px;
+  }
+}
