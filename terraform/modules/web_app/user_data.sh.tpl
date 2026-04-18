@@ -48,7 +48,7 @@ echo "API_BASE_URL=$API_BASE_URL"
 
 echo "Starting web app container..."
 docker run -d \
-  --name travelhub \
+  --name ${container_name} \
   --restart always \
   -p 80:80 \
   -e API_BASE_URL="$API_BASE_URL" \

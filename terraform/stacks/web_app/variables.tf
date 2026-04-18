@@ -9,6 +9,12 @@ variable "project_name" {
   default     = "final-project-miso"
 }
 
+variable "app_name" {
+  description = "Unique name for this web app deployment (used in resource names to avoid collisions)."
+  type        = string
+  default     = "web-app"
+}
+
 variable "vpc_cidr" {
   description = "VPC CIDR block."
   type        = string

@@ -279,5 +279,18 @@ services:
     ports:
       - "4200:80"
 
+  portal-hoteles:
+    build:
+      context: ../user_interface
+      dockerfile: Dockerfile.portal-hoteles
+    environment:
+      API_BASE_URL: http://localhost:8080
+      PROPERTY_API_PATH: /poc-properties/api/property
+      PROPERTY_API_TOKEN: ""
+      BOOKING_API_PATH: /booking-orchestrator/api/reservations
+      BOOKING_LIST_API_PATH: /booking/api/booking/
+    ports:
+      - "4201:80"
+
 volumes:
   pgdata:
