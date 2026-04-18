@@ -379,4 +379,150 @@ describe('ThPaymentSummaryComponent', () => {
     expect(component.convertDDMMYYYYToISO('2024-12-25')).toBeNull();
     expect(component.convertDDMMYYYYToISO('')).toBeNull();
   });
+
+  it('emits admin accept and reject events when admin variant buttons are clicked', () => {
+    // Arrange
+    TestBed.configureTestingModule({
+      imports: [ThPaymentSummaryComponent],
+      providers: [
+        {
+          provide: ActivatedRoute,
+          useValue: {},
+        },
+      ],
+    });
+
+    const fixture = TestBed.createComponent(ThPaymentSummaryComponent);
+    const component = fixture.componentInstance;
+    const acceptSpy = spyOn(component.adminAcceptClick, 'emit');
+    const rejectSpy = spyOn(component.adminRejectClick, 'emit');
+
+    component.variant = 'admin';
+
+    // Act
+    component.onAdminAcceptClicked();
+    component.onAdminRejectClicked();
+
+    // Assert
+    expect(acceptSpy).toHaveBeenCalled();
+    expect(rejectSpy).toHaveBeenCalled();
+  });
+
+  it('does not emit admin actions when disabled or loading', () => {
+    // Arrange
+    TestBed.configureTestingModule({
+      imports: [ThPaymentSummaryComponent],
+      providers: [
+        {
+          provide: ActivatedRoute,
+          useValue: {},
+        },
+      ],
+    });
+
+    const fixture = TestBed.createComponent(ThPaymentSummaryComponent);
+    const component = fixture.componentInstance;
+    const acceptSpy = spyOn(component.adminAcceptClick, 'emit');
+    const rejectSpy = spyOn(component.adminRejectClick, 'emit');
+
+    component.adminActionsDisabled = true;
+
+    // Act
+    component.onAdminAcceptClicked();
+    component.onAdminRejectClicked();
+
+    // Assert
+    expect(acceptSpy).not.toHaveBeenCalled();
+    expect(rejectSpy).not.toHaveBeenCalled();
+  });
+
+  it('disables only the accept admin action when adminAcceptDisabled is true', () => {
+    // Arrange
+    TestBed.configureTestingModule({
+      imports: [ThPaymentSummaryComponent],
+      providers: [
+        {
+          provide: ActivatedRoute,
+          useValue: {},
+        },
+      ],
+    });
+
+    const fixture = TestBed.createComponent(ThPaymentSummaryComponent);
+    const component = fixture.componentInstance;
+    const acceptSpy = spyOn(component.adminAcceptClick, 'emit');
+    const rejectSpy = spyOn(component.adminRejectClick, 'emit');
+
+    component.variant = 'admin';
+    component.adminAcceptDisabled = true;
+
+    // Act
+    component.onAdminAcceptClicked();
+    component.onAdminRejectClicked();
+
+    // Assert
+    expect(acceptSpy).not.toHaveBeenCalled();
+    expect(rejectSpy).toHaveBeenCalled();
+  });
+
+  it('disables only the reject admin action when adminRejectDisabled is true', () => {
+    // Arrange
+    TestBed.configureTestingModule({
+      imports: [ThPaymentSummaryComponent],
+      providers: [
+        {
+          provide: ActivatedRoute,
+          useValue: {},
+        },
+      ],
+    });
+
+    const fixture = TestBed.createComponent(ThPaymentSummaryComponent);
+    const component = fixture.componentInstance;
+    const acceptSpy = spyOn(component.adminAcceptClick, 'emit');
+    const rejectSpy = spyOn(component.adminRejectClick, 'emit');
+
+    component.variant = 'admin';
+    component.adminRejectDisabled = true;
+
+    // Act
+    component.onAdminAcceptClicked();
+    component.onAdminRejectClicked();
+
+    // Assert
+    expect(acceptSpy).toHaveBeenCalled();
+    expect(rejectSpy).not.toHaveBeenCalled();
+  });
+
+  it('treats admin variant fields as readonly by skipping field editing handlers', () => {
+    // Arrange
+    TestBed.configureTestingModule({
+      imports: [ThPaymentSummaryComponent],
+      providers: [
+        {
+          provide: ActivatedRoute,
+          useValue: {},
+        },
+      ],
+    });
+
+    const fixture = TestBed.createComponent(ThPaymentSummaryComponent);
+    const component = fixture.componentInstance;
+    const guestsSpy = spyOn(component.guestsValueChange, 'emit');
+
+    component.variant = 'admin';
+    component.checkInValue = '16/04/2026';
+    component.checkOutValue = '17/04/2026';
+
+    // Act
+    component.onCheckInActivated();
+    component.onCheckOutActivated();
+    component.onGuestsInput('4 guests');
+
+    // Assert
+    expect(component.isAdminVariant).toBeTrue();
+    expect(component.showCheckInModal).toBeFalse();
+    expect(component.showCheckOutModal).toBeFalse();
+    expect(guestsSpy).not.toHaveBeenCalled();
+  });
 });

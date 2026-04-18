@@ -3,6 +3,12 @@ variable "project_name" {
   type        = string
 }
 
+variable "app_name" {
+  description = "Unique name for this web app deployment (used in resource names)."
+  type        = string
+  default     = "web-app"
+}
+
 variable "vpc_id" {
   description = "VPC ID for the web app instance."
   type        = string

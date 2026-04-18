@@ -1,113 +1,153 @@
-<ion-card class="th-payment-summary" [class.th-payment-summary--mobile-sticky]="mobileSticky">
+<ion-card
+  class="th-payment-summary"
+  [class.th-payment-summary--mobile-sticky]="mobileSticky"
+  [class.th-payment-summary--admin]="isAdminVariant"
+>
   <ng-template #bookingFieldsTemplate>
-    <div class="th-payment-summary__field-list">
-      <button
-        *ngIf="editable"
-        type="button"
-        class="th-payment-summary__field th-payment-summary__field--interactive"
-        (click)="onCheckInActivated()"
-        (focus)="onCheckInActivated()"
-        (keydown.enter)="onCheckInActivated()"
-        (keydown.space)="$event.preventDefault(); onCheckInActivated()"
-        [attr.aria-label]="checkInLabel"
-        aria-haspopup="dialog"
-      >
-        <span class="th-payment-summary__field-label">{{ checkInLabel }}</span>
-        <div
-          class="th-payment-summary__field-value"
-          [class.th-payment-summary__field-value--error]="!!checkInError"
-        >
-          <span>{{ checkInValue || checkInPlaceholder }}</span>
-          <ion-icon [name]="checkInIcon" aria-hidden="true"></ion-icon>
+    @if (isAdminVariant) {
+      <div class="th-payment-summary__field-list th-payment-summary__field-list--readonly">
+        <div class="th-payment-summary__field">
+          <span class="th-payment-summary__field-label">{{ checkInLabel }}</span>
+          <div class="th-payment-summary__field-value">
+            <span>{{ checkInValue || checkInPlaceholder }}</span>
+            <ion-icon [name]="checkInIcon" aria-hidden="true"></ion-icon>
+          </div>
         </div>
-      </button>
-      <div *ngIf="!editable" class="th-payment-summary__field th-payment-summary__field--static">
-        <span class="th-payment-summary__field-label">{{ checkInLabel }}</span>
-        <div class="th-payment-summary__field-value">
-          <span>{{ checkInValue || checkInPlaceholder }}</span>
-          <ion-icon [name]="checkInIcon" aria-hidden="true"></ion-icon>
-        </div>
-      </div>
-      <p class="th-payment-summary__field-helper th-payment-summary__field-helper--error" *ngIf="editable && checkInError">
-        {{ checkInError }}
-      </p>
 
-      <button
-        *ngIf="editable"
-        type="button"
-        class="th-payment-summary__field th-payment-summary__field--interactive"
-        (click)="onCheckOutActivated()"
-        (focus)="onCheckOutActivated()"
-        (keydown.enter)="onCheckOutActivated()"
-        (keydown.space)="$event.preventDefault(); onCheckOutActivated()"
-        [attr.aria-label]="checkOutLabel"
-        aria-haspopup="dialog"
-      >
-        <span class="th-payment-summary__field-label">{{ checkOutLabel }}</span>
-        <div
-          class="th-payment-summary__field-value"
-          [class.th-payment-summary__field-value--error]="!!checkOutError"
-        >
-          <span>{{ checkOutValue || checkOutPlaceholder }}</span>
-          <ion-icon [name]="checkOutIcon" aria-hidden="true"></ion-icon>
+        <div class="th-payment-summary__field">
+          <span class="th-payment-summary__field-label">{{ checkOutLabel }}</span>
+          <div class="th-payment-summary__field-value">
+            <span>{{ checkOutValue || checkOutPlaceholder }}</span>
+            <ion-icon [name]="checkOutIcon" aria-hidden="true"></ion-icon>
+          </div>
         </div>
-      </button>
-      <div *ngIf="!editable" class="th-payment-summary__field th-payment-summary__field--static">
-        <span class="th-payment-summary__field-label">{{ checkOutLabel }}</span>
-        <div class="th-payment-summary__field-value">
-          <span>{{ checkOutValue || checkOutPlaceholder }}</span>
-          <ion-icon [name]="checkOutIcon" aria-hidden="true"></ion-icon>
-        </div>
-      </div>
-      <p class="th-payment-summary__field-helper th-payment-summary__field-helper--error" *ngIf="editable && checkOutError">
-        {{ checkOutError }}
-      </p>
 
-      <div *ngIf="editable" class="th-payment-summary__field th-payment-summary__field--input">
-        <span class="th-payment-summary__field-label">{{ guestsLabel }}</span>
-        <div
-          class="th-payment-summary__field-value th-payment-summary__field-value--input"
-          [class.th-payment-summary__field-value--error]="!!guestsError"
-        >
-          <ion-input
-            class="th-payment-summary__input"
-            type="number"
-            inputmode="numeric"
-            pattern="[0-9]*"
-            [placeholder]="guestsPlaceholder"
-            [value]="guestsValue"
-            (ionInput)="onGuestsInput($event.detail.value)"
-          ></ion-input>
-          <ion-icon
-            name="people-outline"
-            class="th-payment-summary__field-icon"
-            aria-hidden="true"
-          ></ion-icon>
+        <div class="th-payment-summary__field">
+          <span class="th-payment-summary__field-label">{{ guestsLabel }}</span>
+          <div class="th-payment-summary__field-value">
+            <span>{{ guestsValue || guestsPlaceholder }}</span>
+            <ion-icon name="people-outline" class="th-payment-summary__field-icon" aria-hidden="true"></ion-icon>
+          </div>
         </div>
-      </div>
-      <div *ngIf="!editable" class="th-payment-summary__field th-payment-summary__field--static">
-        <span class="th-payment-summary__field-label">{{ guestsLabel }}</span>
-        <div class="th-payment-summary__field-value">
-          <span>{{ guestsValue || guestsPlaceholder }}</span>
-          <ion-icon
-            name="people-outline"
-            class="th-payment-summary__field-icon"
-            aria-hidden="true"
-          ></ion-icon>
-        </div>
-      </div>
-      <p class="th-payment-summary__field-helper th-payment-summary__field-helper--error" *ngIf="editable && guestsError">
-        {{ guestsError }}
-      </p>
 
-      <div class="th-payment-summary__field">
-        <label class="th-payment-summary__field-label">{{ roomTypeLabel }}</label>
-        <div class="th-payment-summary__field-value">
-          <span>{{ roomTypeValue }}</span>
-          <ion-icon [name]="roomTypeIcon" aria-hidden="true"></ion-icon>
+        <div class="th-payment-summary__field">
+          <label class="th-payment-summary__field-label">{{ roomTypeLabel }}</label>
+          <div class="th-payment-summary__field-value">
+            <span>{{ roomTypeValue }}</span>
+            <ion-icon [name]="roomTypeIcon" aria-hidden="true"></ion-icon>
+          </div>
         </div>
       </div>
-    </div>
+    } @else {
+      <div class="th-payment-summary__field-list">
+        <button
+          *ngIf="editable"
+          type="button"
+          class="th-payment-summary__field th-payment-summary__field--interactive"
+          (click)="onCheckInActivated()"
+          (focus)="onCheckInActivated()"
+          (keydown.enter)="onCheckInActivated()"
+          (keydown.space)="$event.preventDefault(); onCheckInActivated()"
+          [attr.aria-label]="checkInLabel"
+          aria-haspopup="dialog"
+        >
+          <span class="th-payment-summary__field-label">{{ checkInLabel }}</span>
+          <div
+            class="th-payment-summary__field-value"
+            [class.th-payment-summary__field-value--error]="!!checkInError"
+          >
+            <span>{{ checkInValue || checkInPlaceholder }}</span>
+            <ion-icon [name]="checkInIcon" aria-hidden="true"></ion-icon>
+          </div>
+        </button>
+        <div *ngIf="!editable" class="th-payment-summary__field th-payment-summary__field--static">
+          <span class="th-payment-summary__field-label">{{ checkInLabel }}</span>
+          <div class="th-payment-summary__field-value">
+            <span>{{ checkInValue || checkInPlaceholder }}</span>
+            <ion-icon [name]="checkInIcon" aria-hidden="true"></ion-icon>
+          </div>
+        </div>
+        <p class="th-payment-summary__field-helper th-payment-summary__field-helper--error" *ngIf="editable && checkInError">
+          {{ checkInError }}
+        </p>
+
+        <button
+          *ngIf="editable"
+          type="button"
+          class="th-payment-summary__field th-payment-summary__field--interactive"
+          (click)="onCheckOutActivated()"
+          (focus)="onCheckOutActivated()"
+          (keydown.enter)="onCheckOutActivated()"
+          (keydown.space)="$event.preventDefault(); onCheckOutActivated()"
+          [attr.aria-label]="checkOutLabel"
+          aria-haspopup="dialog"
+        >
+          <span class="th-payment-summary__field-label">{{ checkOutLabel }}</span>
+          <div
+            class="th-payment-summary__field-value"
+            [class.th-payment-summary__field-value--error]="!!checkOutError"
+          >
+            <span>{{ checkOutValue || checkOutPlaceholder }}</span>
+            <ion-icon [name]="checkOutIcon" aria-hidden="true"></ion-icon>
+          </div>
+        </button>
+        <div *ngIf="!editable" class="th-payment-summary__field th-payment-summary__field--static">
+          <span class="th-payment-summary__field-label">{{ checkOutLabel }}</span>
+          <div class="th-payment-summary__field-value">
+            <span>{{ checkOutValue || checkOutPlaceholder }}</span>
+            <ion-icon [name]="checkOutIcon" aria-hidden="true"></ion-icon>
+          </div>
+        </div>
+        <p class="th-payment-summary__field-helper th-payment-summary__field-helper--error" *ngIf="editable && checkOutError">
+          {{ checkOutError }}
+        </p>
+
+        <div *ngIf="editable" class="th-payment-summary__field th-payment-summary__field--input">
+          <span class="th-payment-summary__field-label">{{ guestsLabel }}</span>
+          <div
+            class="th-payment-summary__field-value th-payment-summary__field-value--input"
+            [class.th-payment-summary__field-value--error]="!!guestsError"
+          >
+            <ion-input
+              class="th-payment-summary__input"
+              type="number"
+              inputmode="numeric"
+              pattern="[0-9]*"
+              [placeholder]="guestsPlaceholder"
+              [value]="guestsValue"
+              (ionInput)="onGuestsInput($event.detail.value)"
+            ></ion-input>
+            <ion-icon
+              name="people-outline"
+              class="th-payment-summary__field-icon"
+              aria-hidden="true"
+            ></ion-icon>
+          </div>
+        </div>
+        <div *ngIf="!editable" class="th-payment-summary__field th-payment-summary__field--static">
+          <span class="th-payment-summary__field-label">{{ guestsLabel }}</span>
+          <div class="th-payment-summary__field-value">
+            <span>{{ guestsValue || guestsPlaceholder }}</span>
+            <ion-icon
+              name="people-outline"
+              class="th-payment-summary__field-icon"
+              aria-hidden="true"
+            ></ion-icon>
+          </div>
+        </div>
+        <p class="th-payment-summary__field-helper th-payment-summary__field-helper--error" *ngIf="editable && guestsError">
+          {{ guestsError }}
+        </p>
+
+        <div class="th-payment-summary__field">
+          <label class="th-payment-summary__field-label">{{ roomTypeLabel }}</label>
+          <div class="th-payment-summary__field-value">
+            <span>{{ roomTypeValue }}</span>
+            <ion-icon [name]="roomTypeIcon" aria-hidden="true"></ion-icon>
+          </div>
+        </div>
+      </div>
+    }
   </ng-template>
 
   <ion-card-content class="th-payment-summary__content th-payment-summary__content--full">
@@ -147,24 +187,53 @@
       <span class="th-payment-summary__total-value">{{ totalAmount }}</span>
     </div>
 
-    <div class="th-payment-summary__action">
-      <th-button
-        variant="primary"
-        size="lg"
-        expand="block"
-        [disabled]="actionDisabled || isLoading"
-        (click)="onActionClicked()"
-      >
-        <span class="th-payment-summary__button-content">
-          <ion-spinner
-            *ngIf="isLoading"
-            name="crescent"
-            class="th-payment-summary__spinner"
-          ></ion-spinner>
-          <span>{{ actionLabel }}</span>
-        </span>
-      </th-button>
-    </div>
+    @if (variant === 'admin') {
+      <div class="th-payment-summary__admin-actions">
+        <th-button
+          variant="secondary"
+          size="lg"
+          [disabled]="adminActionsDisabled || adminRejectDisabled || isLoading"
+          (click)="onAdminRejectClicked()"
+        >
+          <span>{{ adminRejectLabel }}</span>
+        </th-button>
+
+        <th-button
+          variant="primary"
+          size="lg"
+          [disabled]="adminActionsDisabled || adminAcceptDisabled || isLoading"
+          (click)="onAdminAcceptClicked()"
+        >
+          <span class="th-payment-summary__button-content">
+            <ion-spinner
+              *ngIf="isLoading"
+              name="crescent"
+              class="th-payment-summary__spinner"
+            ></ion-spinner>
+            <span>{{ adminAcceptLabel }}</span>
+          </span>
+        </th-button>
+      </div>
+    } @else {
+      <div class="th-payment-summary__action">
+        <th-button
+          variant="primary"
+          size="lg"
+          expand="block"
+          [disabled]="actionDisabled || isLoading"
+          (click)="onActionClicked()"
+        >
+          <span class="th-payment-summary__button-content">
+            <ion-spinner
+              *ngIf="isLoading"
+              name="crescent"
+              class="th-payment-summary__spinner"
+            ></ion-spinner>
+            <span>{{ actionLabel }}</span>
+          </span>
+        </th-button>
+      </div>
+    }
 
     <p class="th-payment-summary__footnote" *ngIf="footnote">
       {{ footnote }}

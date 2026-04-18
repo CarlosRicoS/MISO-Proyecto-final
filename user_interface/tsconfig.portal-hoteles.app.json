@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./out-tsc/portal-hoteles",
+    "types": []
+  },
+  "files": [
+    "projects/portal-hoteles/src/main.ts",
+    "projects/portal-hoteles/src/polyfills.ts"
+  ],
+  "include": [
+    "projects/portal-hoteles/src/**/*.d.ts"
+  ]
+}

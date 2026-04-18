@@ -10,11 +10,41 @@
   margin: var(--th-space-0);
 }
 
+.th-payment-summary--admin {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.th-payment-summary--admin .th-payment-summary__title {
+  font-size: 48px;
+}
+
+.th-payment-summary--admin .th-payment-summary__subtitle {
+  font-size: var(--th-text-body-md-size);
+}
+
+.th-payment-summary--admin .th-payment-summary__total-label {
+  font-size: var(--th-text-h2-size);
+}
+
+.th-payment-summary--admin .th-payment-summary__total-value {
+  font-size: 54px;
+}
+
+.th-payment-summary--admin .th-payment-summary__price-header {
+  display: none;
+}
+
 .th-payment-summary__content {
 padding: var(--th-space-4);
   display: flex;
   flex-direction: column;
 gap: var(--th-space-3);
+}
+
+.th-payment-summary--admin .th-payment-summary__content--full {
+  flex: 1;
 }
 
 .th-payment-summary__price-header {
@@ -54,6 +84,10 @@ gap: var(--th-space-2);
   display: flex;
   flex-direction: column;
 gap: var(--th-space-2);
+}
+
+.th-payment-summary__field-list--readonly {
+  opacity: 1;
 }
 
 .th-payment-summary__field {
@@ -245,6 +279,50 @@ font-weight: var(--th-font-weight-bold);
   margin-top: 6px;
   display: flex;
   justify-content: center;
+}
+
+.th-payment-summary__admin-actions {
+  margin-top: auto;
+  padding-top: var(--th-space-2);
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--th-space-2);
+}
+
+.th-payment-summary__admin-actions th-button {
+  width: auto;
+}
+
+.th-payment-summary__admin-actions th-button ::ng-deep ion-button {
+  min-height: 42px;
+  --height: 42px;
+  --padding-start: 20px;
+  --padding-end: 20px;
+  --border-radius: var(--th-radius-md);
+  font-size: var(--th-text-body-md-size);
+  font-weight: var(--th-font-weight-semibold);
+  text-transform: none;
+}
+
+.th-payment-summary__admin-actions th-button ::ng-deep ion-button[disabled] {
+  opacity: 1;
+  --box-shadow: none;
+}
+
+.th-payment-summary__admin-actions th-button ::ng-deep ion-button.th-button--primary[disabled] {
+  --background: var(--th-blue-90-alt);
+  --color: var(--th-slate-500);
+  --border-style: solid;
+  --border-width: 1px;
+  --border-color: var(--th-indigo-200);
+}
+
+.th-payment-summary__admin-actions th-button ::ng-deep ion-button.th-button--secondary[disabled] {
+  --background: var(--th-white);
+  --color: var(--th-slate-500);
+  --border-style: solid;
+  --border-width: 1px;
+  --border-color: var(--th-border-muted-2);
 }
 
 .th-payment-summary__action th-button,

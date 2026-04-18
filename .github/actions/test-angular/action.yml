@@ -8,6 +8,10 @@ inputs:
     description: 'Node.js version to use'
     required: false
     default: '20'
+  project:
+    description: 'Angular project name to test (omit for default project)'
+    required: false
+    default: ''
 runs:
   using: "composite"
   steps:
@@ -35,10 +39,14 @@ runs:
       shell: bash
       run: |
         cd ${{ inputs.context-path }}
-        npm run lint:ci
+        if [ -n "${{ inputs.project }}" ]; then
+          npx ng lint ${{ inputs.project }}
+        else
+          npm run lint:ci
+        fi
 
     - name: Run tests and check coverage
       shell: bash
       run: |
         cd ${{ inputs.context-path }}
-        npx ng test --watch=false --browsers=ChromeHeadless --no-progress
+        npx ng test ${{ inputs.project }} --watch=false --browsers=ChromeHeadless --no-progress

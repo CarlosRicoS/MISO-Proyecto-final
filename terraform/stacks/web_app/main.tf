@@ -18,7 +18,7 @@ data "aws_ecr_repository" "web_app" {
 }
 
 resource "aws_iam_role" "web_app" {
-  name = "${var.project_name}-web-app-role"
+  name = "${var.project_name}-${var.app_name}-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -35,7 +35,7 @@ resource "aws_iam_role" "web_app" {
 }
 
 resource "aws_iam_role_policy" "web_app_ecr_ssm" {
-  name = "${var.project_name}-web-app-ecr-ssm"
+  name = "${var.project_name}-${var.app_name}-ecr-ssm"
   role = aws_iam_role.web_app.id
 
   policy = jsonencode({
@@ -68,7 +68,7 @@ resource "aws_iam_role_policy_attachment" "web_app_ssm_core" {
 }
 
 resource "aws_iam_instance_profile" "web_app" {
-  name = "${var.project_name}-web-app-profile"
+  name = "${var.project_name}-${var.app_name}-profile"
   role = aws_iam_role.web_app.name
 }
 
@@ -76,6 +76,7 @@ module "web_app" {
   source = "../../modules/web_app"
 
   project_name              = var.project_name
+  app_name                  = var.app_name
   vpc_id                    = data.aws_vpc.vpc.id
   vpc_cidr                  = var.vpc_cidr
   subnet_id                 = data.aws_subnets.public.ids[0]

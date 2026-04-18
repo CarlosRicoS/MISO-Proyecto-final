@@ -1,0 +1,163 @@
+.portal-hoteles-reservation-overview-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--th-space-6);
+  padding: var(--th-space-12);
+  background: var(--th-white);
+  border: 1px solid var(--th-overlay-border-75);
+  border-radius: var(--th-radius-2xl);
+  box-shadow: var(--th-shadow-2);
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.portal-hoteles-reservation-overview-card th-details-mosaic {
+  display: block;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.portal-hoteles-reservation-overview-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--th-space-6);
+}
+
+.portal-hoteles-reservation-overview-card__heading {
+  min-width: 0;
+}
+
+.portal-hoteles-reservation-overview-card__title {
+  margin: 0;
+  color: var(--th-neutral-900);
+  font-size: var(--th-text-h1-size);
+  line-height: var(--th-text-h1-line-height);
+  font-weight: var(--th-font-weight-bold);
+  letter-spacing: -0.02em;
+}
+
+.portal-hoteles-reservation-overview-card__location {
+  margin: var(--th-space-3) 0 0;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--th-space-2);
+  color: var(--th-neutral-700);
+  font-size: var(--th-text-body-lg-size);
+  line-height: var(--th-text-body-lg-line-height);
+}
+
+.portal-hoteles-reservation-overview-card__location ion-icon,
+.portal-hoteles-reservation-overview-card__meta-item ion-icon {
+  color: var(--th-primary-500);
+  font-size: 18px;
+}
+
+.portal-hoteles-reservation-overview-card__meta {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--th-space-3);
+  align-items: flex-end;
+  color: var(--th-neutral-700);
+  font-size: var(--th-text-body-sm-size);
+}
+
+.portal-hoteles-reservation-overview-card__meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--th-space-2);
+  justify-content: flex-end;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.portal-hoteles-reservation-overview-card__meta-item--guest {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--th-space-1);
+  flex-wrap: nowrap;
+  white-space: normal;
+}
+
+.portal-hoteles-reservation-overview-card__meta-guest-label-row {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--th-space-2);
+  justify-content: flex-end;
+  width: 100%;
+}
+
+.portal-hoteles-reservation-overview-card__meta-label {
+  color: var(--th-neutral-900);
+  font-size: var(--th-text-body-lg-size);
+  font-weight: var(--th-font-weight-bold);
+  line-height: var(--th-text-body-lg-line-height);
+}
+
+.portal-hoteles-reservation-overview-card__meta-value {
+  color: var(--th-neutral-900);
+  font-size: var(--th-text-body-lg-size);
+  font-weight: var(--th-font-weight-medium);
+  line-height: var(--th-text-body-lg-line-height);
+}
+
+.portal-hoteles-reservation-overview-card__meta-value--guest {
+  display: block;
+  width: 100%;
+  text-align: right;
+}
+
+.portal-hoteles-reservation-overview-card__status {
+  margin: 0;
+  font-size: var(--th-text-h1-size);
+  font-weight: var(--th-font-weight-bold);
+  line-height: var(--th-text-h1-line-height);
+  letter-spacing: -0.02em;
+}
+
+.portal-hoteles-reservation-overview-card__status--pending {
+  color: var(--th-primary-700);
+}
+
+.portal-hoteles-reservation-overview-card__status--confirmed {
+  color: var(--th-success-700);
+}
+
+.portal-hoteles-reservation-overview-card__status--rejected {
+  color: var(--th-error-700);
+}
+
+.portal-hoteles-reservation-overview-card__status--default {
+  color: var(--th-neutral-700);
+}
+
+@media (max-width: 960px) {
+  .portal-hoteles-reservation-overview-card {
+    padding: var(--th-space-5);
+  }
+
+  .portal-hoteles-reservation-overview-card__header {
+    flex-direction: column;
+    gap: var(--th-space-4);
+  }
+
+  .portal-hoteles-reservation-overview-card__meta {
+    width: 100%;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: var(--th-space-4) var(--th-space-5);
+    justify-content: flex-end;
+  }
+
+  .portal-hoteles-reservation-overview-card__meta-item--guest {
+    width: auto;
+  }
+
+  .portal-hoteles-reservation-overview-card__meta-guest-label-row {
+    width: auto;
+  }
+}

@@ -1,0 +1,271 @@
+.portal-hoteles-dashboard-content {
+  --background: transparent;
+  --color: var(--th-neutral-900);
+  color: var(--th-neutral-900);
+}
+
+.portal-hoteles-dashboard-hero {
+  padding: 0 0 var(--th-space-6);
+}
+
+.portal-hoteles-dashboard-hero__kicker {
+  margin: 0 0 var(--th-space-2);
+  color: var(--th-primary-700);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: var(--th-text-caption-size);
+  font-weight: var(--th-font-weight-semibold);
+}
+
+.portal-hoteles-dashboard-hero h1 {
+  margin: 0;
+  color: var(--th-neutral-900);
+  font-size: var(--th-text-h1-size);
+  line-height: 1.1;
+}
+
+.portal-hoteles-dashboard-hero p {
+  margin: var(--th-space-2) 0 0;
+  color: var(--th-neutral-700);
+}
+
+.portal-hoteles-dashboard-grid {
+  display: grid;
+  gap: var(--th-space-4);
+}
+
+.portal-hoteles-dashboard-grid--stats {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  padding: 0 0 var(--th-space-5);
+}
+
+.portal-hoteles-dashboard-grid--body {
+  grid-template-columns: minmax(0, 2fr) minmax(320px, 1fr);
+  padding: 0 0 var(--th-space-8);
+}
+
+.portal-hoteles-dashboard-card__label {
+  display: block;
+  margin-bottom: var(--th-space-2);
+  color: var(--th-neutral-700);
+  font-size: var(--th-text-body-sm-size);
+}
+
+.portal-hoteles-dashboard-card__value {
+  display: block;
+  color: var(--th-neutral-900);
+  font-size: var(--th-text-h1-size);
+  line-height: 1;
+}
+
+.portal-hoteles-dashboard-card__hint {
+  margin: var(--th-space-2) 0 0;
+  font-size: var(--th-text-body-sm-size);
+}
+
+.portal-hoteles-dashboard-card__hint--positive {
+  color: var(--th-success-700);
+}
+
+.portal-hoteles-dashboard-card__hint--info {
+  color: var(--th-primary-700);
+}
+
+.portal-hoteles-dashboard-card__hint--warning {
+  color: var(--th-warning-700);
+}
+
+.portal-hoteles-dashboard-table {
+  display: flex;
+  flex-direction: column;
+  gap: var(--th-space-3);
+  margin-top: var(--th-space-2);
+}
+
+.portal-hoteles-dashboard-table__header,
+.portal-hoteles-dashboard-table__row {
+  display: grid;
+  grid-template-columns: minmax(120px, 1.1fr) minmax(180px, 1.2fr) repeat(2, minmax(140px, 1fr)) minmax(120px, 0.8fr);
+  align-items: center;
+  gap: var(--th-space-3);
+  border: 1px solid var(--th-neutral-300);
+  border-radius: var(--th-radius-lg);
+  background: var(--th-white);
+}
+
+.portal-hoteles-dashboard-table__header {
+  min-height: 40px;
+  padding: 0 var(--th-space-4);
+  font-size: var(--th-text-overline-size);
+  font-weight: var(--th-font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--th-neutral-600);
+}
+
+.portal-hoteles-dashboard-table__row {
+  min-height: 72px;
+  padding: var(--th-space-3) var(--th-space-4);
+  color: var(--th-neutral-900);
+  font-size: var(--th-text-body-sm-size);
+}
+
+.portal-hoteles-dashboard-table__booking-link {
+  color: var(--th-primary-700);
+  font-weight: var(--th-font-weight-semibold);
+  text-decoration: none;
+}
+
+.portal-hoteles-dashboard-table__booking-link:hover {
+  text-decoration: underline;
+}
+
+.portal-hoteles-dashboard-table__guest {
+  display: flex;
+  flex-direction: column;
+}
+
+.portal-hoteles-dashboard-table__guest-name {
+  color: var(--th-neutral-900);
+  font-weight: var(--th-font-weight-medium);
+}
+
+.portal-hoteles-dashboard-table__guest-email {
+  color: var(--th-neutral-600);
+  font-size: var(--th-text-caption-size);
+}
+
+.portal-hoteles-dashboard-status {
+  display: inline-flex;
+  justify-content: center;
+  min-width: 90px;
+  border-radius: var(--th-radius-full);
+  padding: var(--th-space-1) var(--th-space-3);
+  font-size: var(--th-text-caption-size);
+  font-weight: var(--th-font-weight-medium);
+}
+
+.portal-hoteles-dashboard-status--confirmed {
+  color: var(--th-success-700);
+  background: var(--th-success-50);
+}
+
+.portal-hoteles-dashboard-status--pending {
+  color: var(--th-warning-700);
+  background: var(--th-warning-50);
+}
+
+.portal-hoteles-dashboard-status--approved,
+.portal-hoteles-dashboard-status--rejected {
+  color: var(--th-primary-700);
+  background: var(--th-primary-50);
+}
+
+.portal-hoteles-dashboard-status--canceled {
+  color: var(--th-error-700);
+  background: var(--th-error-50);
+}
+
+.portal-hoteles-dashboard-status--completed,
+.portal-hoteles-dashboard-status--default {
+  color: var(--th-neutral-700);
+  background: var(--th-neutral-100);
+}
+
+.portal-hoteles-dashboard-table__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--th-space-3);
+  color: var(--th-neutral-600);
+  font-size: var(--th-text-body-sm-size);
+}
+
+.portal-hoteles-dashboard-table__pagination {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--th-space-2);
+}
+
+.portal-hoteles-dashboard-table__pagination-button {
+  --border-color: var(--th-neutral-300);
+  --color: var(--th-neutral-700);
+  --padding-start: 12px;
+  --padding-end: 12px;
+  font-size: var(--th-text-body-sm-size);
+  text-transform: none;
+}
+
+.portal-hoteles-dashboard-table__pagination-label {
+  color: var(--th-neutral-700);
+  font-weight: var(--th-font-weight-medium);
+  min-width: 92px;
+  text-align: center;
+}
+
+.portal-hoteles-dashboard-table__message {
+  margin: var(--th-space-4) 0 0;
+  color: var(--th-neutral-600);
+  font-size: var(--th-text-body-md-size);
+}
+
+.portal-hoteles-dashboard-placeholder {
+  border-radius: 12px;
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.42) 50%, rgba(255, 255, 255, 0) 100%),
+    var(--th-primary-50);
+  border: 1px dashed var(--th-primary-100);
+}
+
+.portal-hoteles-dashboard-placeholder--toolbar {
+  height: 48px;
+  margin: var(--th-space-5) 0 var(--th-space-4);
+}
+
+.portal-hoteles-dashboard-placeholder--table {
+  height: 64px;
+  margin-bottom: var(--th-space-3);
+}
+
+.portal-hoteles-dashboard-placeholder--pagination {
+  height: 44px;
+  width: 260px;
+  margin-top: var(--th-space-2);
+  margin-left: auto;
+}
+
+.portal-hoteles-dashboard-placeholder--list {
+  height: 54px;
+  margin-bottom: var(--th-space-3);
+}
+
+.portal-hoteles-dashboard-placeholder--notice {
+  height: 128px;
+  margin-top: var(--th-space-3);
+}
+
+@media (max-width: 1200px) {
+  .portal-hoteles-dashboard-grid--stats,
+  .portal-hoteles-dashboard-grid--body {
+    grid-template-columns: 1fr;
+  }
+
+  .portal-hoteles-dashboard-table__header,
+  .portal-hoteles-dashboard-table__row {
+    grid-template-columns: 1fr;
+    gap: var(--th-space-2);
+  }
+
+  .portal-hoteles-dashboard-table__header {
+    display: none;
+  }
+
+  .portal-hoteles-dashboard-placeholder--pagination {
+    width: 100%;
+  }
+
+  .portal-hoteles-dashboard-table__footer {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

@@ -1,0 +1,41 @@
+<article class="portal-hoteles-reservation-overview-card">
+  <header class="portal-hoteles-reservation-overview-card__header">
+    <div class="portal-hoteles-reservation-overview-card__heading">
+      <h1 class="portal-hoteles-reservation-overview-card__title">{{ hotelName }}</h1>
+      <p class="portal-hoteles-reservation-overview-card__location">
+        <ion-icon name="location" aria-hidden="true"></ion-icon>
+        <span>{{ location }}</span>
+      </p>
+    </div>
+
+    <ul class="portal-hoteles-reservation-overview-card__meta" aria-label="Reservation summary">
+      <li class="portal-hoteles-reservation-overview-card__meta-item">
+        <ion-icon name="calendar-outline" aria-hidden="true"></ion-icon>
+        <span>{{ stayDateLabel }}</span>
+      </li>
+      <li class="portal-hoteles-reservation-overview-card__meta-item">
+        <ion-icon name="moon-outline" aria-hidden="true"></ion-icon>
+        <span>{{ nightsLabel }}</span>
+      </li>
+      <li class="portal-hoteles-reservation-overview-card__meta-item portal-hoteles-reservation-overview-card__meta-item--guest">
+        <div class="portal-hoteles-reservation-overview-card__meta-guest-label-row">
+          <ion-icon name="person" aria-hidden="true"></ion-icon>
+          <span class="portal-hoteles-reservation-overview-card__meta-label">Guest</span>
+        </div>
+        <span class="portal-hoteles-reservation-overview-card__meta-value portal-hoteles-reservation-overview-card__meta-value--guest">
+          {{ guestLabel }}
+        </span>
+      </li>
+    </ul>
+  </header>
+
+  <p [class]="statusClass">{{ statusLabel }}</p>
+
+  <th-details-mosaic
+    [hotelName]="hotelName"
+    [images]="images"
+    [totalPhotos]="totalPhotos"
+    [viewAllLabel]="'View all ' + totalPhotos + ' photos'"
+    [fitParent]="true"
+  ></th-details-mosaic>
+</article>

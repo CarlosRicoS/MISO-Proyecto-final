@@ -17,6 +17,8 @@ export interface ThPaymentSummaryBadge {
   icon?: string;
 }
 
+export type ThPaymentSummaryVariant = 'default' | 'admin';
+
 @Component({
   selector: 'th-payment-summary',
   templateUrl: './th-payment-summary.component.html',
@@ -25,6 +27,7 @@ export interface ThPaymentSummaryBadge {
   imports: [CommonModule, IonicModule, ThButtonComponent, ThDatetimeModalComponent],
 })
 export class ThPaymentSummaryComponent implements OnChanges {
+  @Input() variant: ThPaymentSummaryVariant = 'default';
   @Input() title = '$299';
   @Input() subtitle = 'per night';
   @Input() promoText = 'Save 15% with our winter special';
@@ -80,11 +83,18 @@ export class ThPaymentSummaryComponent implements OnChanges {
   @Input() editorResetTrigger: number | string | null = null;
   @Input() compactSuffix = '/night';
   @Input() compactNote = 'Taxes and fees included';
+  @Input() adminAcceptLabel = 'Accept';
+  @Input() adminRejectLabel = 'Reject';
+  @Input() adminActionsDisabled = false;
+  @Input() adminAcceptDisabled = false;
+  @Input() adminRejectDisabled = false;
 
   @Output() checkInValueChange = new EventEmitter<string>();
   @Output() checkOutValueChange = new EventEmitter<string>();
   @Output() guestsValueChange = new EventEmitter<string>();
   @Output() actionClick = new EventEmitter<void>();
+  @Output() adminAcceptClick = new EventEmitter<void>();
+  @Output() adminRejectClick = new EventEmitter<void>();
 
   @Input() checkInError = '';
   @Input() checkOutError = '';
@@ -97,6 +107,10 @@ export class ThPaymentSummaryComponent implements OnChanges {
   showCheckOutModal = false;
   tempDate: string | null = null;
   readonly checkInMinDate = this.getTodayIsoDate();
+
+  get isAdminVariant(): boolean {
+    return this.variant === 'admin';
+  }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['guestsValue']) {
@@ -124,11 +138,19 @@ export class ThPaymentSummaryComponent implements OnChanges {
   }
 
   onCheckInActivated(): void {
+    if (this.isAdminVariant) {
+      return;
+    }
+
     this.tempDate = this.convertDDMMYYYYToISO(this.checkInValue);
     this.showCheckInModal = true;
   }
 
   onCheckOutActivated(): void {
+    if (this.isAdminVariant) {
+      return;
+    }
+
     this.tempDate = this.convertDDMMYYYYToISO(this.checkOutValue);
     this.showCheckOutModal = true;
   }
@@ -166,6 +188,10 @@ export class ThPaymentSummaryComponent implements OnChanges {
   }
 
   onGuestsInput(value: string | null | undefined): void {
+    if (this.isAdminVariant) {
+      return;
+    }
+
     const sanitized = this.sanitizeGuestsValue(value ?? '');
     this.guestsValue = sanitized;
     this.guestsValueChange.emit(sanitized);
@@ -177,6 +203,22 @@ export class ThPaymentSummaryComponent implements OnChanges {
     }
 
     this.actionClick.emit();
+  }
+
+  onAdminAcceptClicked(): void {
+    if (this.adminActionsDisabled || this.adminAcceptDisabled || this.isLoading) {
+      return;
+    }
+
+    this.adminAcceptClick.emit();
+  }
+
+  onAdminRejectClicked(): void {
+    if (this.adminActionsDisabled || this.adminRejectDisabled || this.isLoading) {
+      return;
+    }
+
+    this.adminRejectClick.emit();
   }
 
   convertDDMMYYYYToISO(ddmmyyyy: string): string | null {

@@ -1,0 +1,25 @@
+<ion-app class="portal-hoteles-app" [class.portal-hoteles-app--login]="!showNavbar">
+  <ng-container *ngIf="showNavbar; else loginLayout">
+    <div class="portal-hoteles-shell">
+      <header class="portal-hoteles-shell__header">
+        <portal-hoteles-header-bar></portal-hoteles-header-bar>
+      </header>
+
+      <section class="portal-hoteles-shell__body">
+        <aside class="portal-hoteles-shell__sidebar">
+          <portal-hoteles-side-nav (logoutClicked)="onLogout()"></portal-hoteles-side-nav>
+        </aside>
+
+        <div class="portal-hoteles-shell__content-inner">
+          <main class="portal-hoteles-shell__content">
+            <ion-router-outlet></ion-router-outlet>
+          </main>
+        </div>
+      </section>
+    </div>
+  </ng-container>
+
+  <ng-template #loginLayout>
+    <ion-router-outlet></ion-router-outlet>
+  </ng-template>
+</ion-app>

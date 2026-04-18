@@ -162,4 +162,18 @@ describe('ThDetailsMosaicComponent', () => {
     component.totalPhotos = 6;
     expect(component.shouldShowDesktopViewAll).toBeTrue();
   });
+
+  it('keeps fitParent disabled by default and allows enabling it', () => {
+    TestBed.configureTestingModule({
+      imports: [ThDetailsMosaicComponent],
+    });
+
+    const fixture = TestBed.createComponent(ThDetailsMosaicComponent);
+    const component = fixture.componentInstance;
+
+    expect(component.fitParent).toBeFalse();
+
+    component.fitParent = true;
+    expect(component.fitParent).toBeTrue();
+  });
 });

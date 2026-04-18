@@ -1,0 +1,12 @@
+<article class="portal-hoteles-grid-card" [ngClass]="cardClass">
+  <header *ngIf="title || subtitle" class="portal-hoteles-grid-card__header">
+    <div>
+      <h2 *ngIf="title">{{ title }}</h2>
+      <p *ngIf="subtitle">{{ subtitle }}</p>
+    </div>
+  </header>
+
+  <div class="portal-hoteles-grid-card__body">
+    <ng-content></ng-content>
+  </div>
+</article>
