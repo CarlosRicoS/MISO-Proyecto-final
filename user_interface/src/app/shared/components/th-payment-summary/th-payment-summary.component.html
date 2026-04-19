@@ -255,8 +255,20 @@
 
   <ion-card-content
     class="th-payment-summary__content th-payment-summary__content--compact"
-    *ngIf="mobileSticky && !hideAfterTotal"
+    *ngIf="mobileSticky"
   >
+    <div class="th-payment-summary__compact-tabs" *ngIf="compactTabs.length > 1">
+      <button
+        type="button"
+        class="th-payment-summary__compact-tab"
+        *ngFor="let tab of compactTabs"
+        [class.th-payment-summary__compact-tab--active]="tab.id === compactActiveTabId"
+        (click)="onCompactTabSelected(tab.id)"
+      >
+        {{ tab.label }}
+      </button>
+    </div>
+
     <div class="th-payment-summary__compact-price">
       <div class="th-payment-summary__compact-main">
         <span class="th-payment-summary__compact-amount">{{ totalAmount }}</span>
@@ -275,7 +287,7 @@
       </button>
     </div>
 
-    <div class="th-payment-summary__compact-action">
+    <div class="th-payment-summary__compact-action" *ngIf="showAction">
       <th-button variant="primary" size="md" [disabled]="actionDisabled || isLoading" (click)="onActionClicked()">
         <span class="th-payment-summary__button-content">
           <ion-spinner
@@ -286,6 +298,21 @@
           <span>{{ actionLabel }}</span>
         </span>
       </th-button>
+
+      <button
+        type="button"
+        class="th-payment-summary__compact-secondary-action"
+        *ngIf="compactShowSecondaryAction"
+        [disabled]="compactSecondaryActionDisabled || compactSecondaryActionLoading"
+        (click)="onCompactSecondaryActionClicked()"
+      >
+        <ion-spinner
+          *ngIf="compactSecondaryActionLoading"
+          name="crescent"
+          class="th-payment-summary__spinner"
+        ></ion-spinner>
+        <span>{{ compactSecondaryActionLabel }}</span>
+      </button>
     </div>
 
     <section

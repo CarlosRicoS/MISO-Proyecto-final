@@ -253,6 +253,14 @@
   color: var(--th-slate-600);
 }
 
+.bookingdetail-mobile-summary {
+  display: none;
+}
+
+.bookingdetail-mobile-tabs {
+  display: none;
+}
+
 @media (min-width: 721px) {
   .bookingdetail-content {
     --overflow: hidden;
@@ -322,7 +330,15 @@
   }
 
   .bookingdetail-main__inner {
-    padding: 0 0 calc(164px + var(--ion-safe-area-bottom, 0px));
+    padding: 0 0 calc(214px + var(--ion-safe-area-bottom, 0px));
+  }
+
+  .bookingdetail-flat-cancel-summary {
+    display: none;
+  }
+
+  .bookingdetail-mobile-summary {
+    display: block;
   }
 
   .bookingdetail-cancellation-card {

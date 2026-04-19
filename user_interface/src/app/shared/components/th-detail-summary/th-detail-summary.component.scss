@@ -68,6 +68,10 @@ font-weight: var(--th-font-weight-bold);
   color: var(--th-neutral-700);
 }
 
+.th-detail-summary__status--rejected {
+  color: var(--th-neutral-700);
+}
+
 .th-detail-summary__actions {
   display: inline-flex;
   flex-direction: column;

@@ -17,6 +17,11 @@ export interface ThPaymentSummaryBadge {
   icon?: string;
 }
 
+export interface ThPaymentSummaryCompactTab {
+  id: string;
+  label: string;
+}
+
 export type ThPaymentSummaryVariant = 'default' | 'admin';
 
 @Component({
@@ -73,6 +78,12 @@ export class ThPaymentSummaryComponent implements OnChanges {
   @Input() totalAmount = '$610';
   @Input() actionLabel = 'Confirm and pay';
   @Input() showAction = true;
+  @Input() compactShowSecondaryAction = false;
+  @Input() compactSecondaryActionLabel = '';
+  @Input() compactSecondaryActionDisabled = false;
+  @Input() compactSecondaryActionLoading = false;
+  @Input() compactTabs: ThPaymentSummaryCompactTab[] = [];
+  @Input() compactActiveTabId = '';
   @Input() hideAfterTotal = false;
   @Input() actionDisabled = false;
   @Input() footnote = "You won't be charged yet";
@@ -95,6 +106,8 @@ export class ThPaymentSummaryComponent implements OnChanges {
   @Output() checkOutValueChange = new EventEmitter<string>();
   @Output() guestsValueChange = new EventEmitter<string>();
   @Output() actionClick = new EventEmitter<void>();
+  @Output() compactSecondaryActionClick = new EventEmitter<void>();
+  @Output() compactTabChange = new EventEmitter<string>();
   @Output() adminAcceptClick = new EventEmitter<void>();
   @Output() adminRejectClick = new EventEmitter<void>();
 
@@ -119,7 +132,7 @@ export class ThPaymentSummaryComponent implements OnChanges {
       this.guestsValue = this.sanitizeGuestsValue(this.guestsValue);
     }
 
-    if ((changes['mobileSticky'] || changes['editable']) && (!this.mobileSticky || !this.editable)) {
+    if (changes['mobileSticky'] && !this.mobileSticky) {
       this.isMobileEditorOpen = false;
     }
 
@@ -205,6 +218,22 @@ export class ThPaymentSummaryComponent implements OnChanges {
     }
 
     this.actionClick.emit();
+  }
+
+  onCompactSecondaryActionClicked(): void {
+    if (this.compactSecondaryActionDisabled || this.compactSecondaryActionLoading) {
+      return;
+    }
+
+    this.compactSecondaryActionClick.emit();
+  }
+
+  onCompactTabSelected(tabId: string): void {
+    if (!tabId || tabId === this.compactActiveTabId) {
+      return;
+    }
+
+    this.compactTabChange.emit(tabId);
   }
 
   onAdminAcceptClicked(): void {

@@ -1,6 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, HostListener, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { IonicModule } from '@ionic/angular';
 import { firstValueFrom } from 'rxjs';
@@ -11,7 +11,7 @@ import { BookingService, Reservation } from '../../core/services/booking.service
 import { PropertyDetailService } from '../../core/services/property-detail.service';
 import { ThAmenityItem } from '../../shared/components/th-amenities-summary/th-amenities-summary.component';
 import { ThDetailsMosaicImage } from '../../shared/components/th-details-mosaic/th-details-mosaic.component';
-import { ThPaymentSummaryItem } from '../../shared/components/th-payment-summary/th-payment-summary.component';
+import { ThPaymentSummaryCompactTab, ThPaymentSummaryItem } from '../../shared/components/th-payment-summary/th-payment-summary.component';
 import { ThGuestReviewItem, ThReviewCategoryScore } from '../../shared/components/th-property-review-summary/th-property-review-summary.component';
 import { ThAmenitiesSummaryComponent } from '../../shared/components/th-amenities-summary/th-amenities-summary.component';
 import { ThDetailSummaryComponent } from '../../shared/components/th-detail-summary/th-detail-summary.component';
@@ -93,12 +93,16 @@ export class BookingDetailPage implements OnInit {
 
   hasDateChanges = false;
   isRecalculating = false;
+  isMobileViewport = false;
+  mobileConfirmedTab: 'change-dates' | 'cancel' = 'cancel';
   
   // Accordion state
   isCancelAccordionOpen = true;
   isChangeDatesAccordionOpen = false;
 
   private currentReservation: Reservation | null = null;
+  private hasInitialized = false;
+  private isRefreshingPageData = false;
   readonly cancelAlertButtons = [
     {
       text: 'Keep booking',
@@ -122,12 +126,33 @@ export class BookingDetailPage implements OnInit {
   ) {}
 
   async ngOnInit(): Promise<void> {
+    this.hasInitialized = true;
+    await this.refreshPageData();
+  }
+
+  ionViewWillEnter(): void {
+    if (!this.hasInitialized) {
+      return;
+    }
+
+    void this.refreshPageData();
+  }
+
+  private async refreshPageData(): Promise<void> {
+    if (this.isRefreshingPageData) {
+      return;
+    }
+
+    this.isRefreshingPageData = true;
+    this.updateViewportFlags();
+
     if (!this.authSessionService.isLoggedIn) {
       await this.router.navigate(['/login'], {
         queryParams: {
           returnUrl: this.router.url,
         },
       });
+      this.isRefreshingPageData = false;
       return;
     }
 
@@ -169,6 +194,7 @@ export class BookingDetailPage implements OnInit {
       this.errorMessage = 'Unable to load booking details.';
     } finally {
       this.isLoading = false;
+      this.isRefreshingPageData = false;
     }
   }
 
@@ -209,6 +235,116 @@ export class BookingDetailPage implements OnInit {
   get isCancellationHiddenForStatus(): boolean {
     const normalizedStatus = (this.bookingStatus || '').trim().toUpperCase();
     return normalizedStatus === 'CANCELED' || normalizedStatus === 'CANCELLED' || normalizedStatus === 'COMPLETED';
+  }
+
+  get showMobileStickyPanel(): boolean {
+    return this.isMobileViewport;
+  }
+
+  get mobilePanelTabs(): ThPaymentSummaryCompactTab[] {
+    if (this.isAccordionLayout) {
+      return [
+        { id: 'cancel', label: 'Cancel Reservation' },
+        { id: 'change-dates', label: 'Change Dates' },
+      ];
+    }
+
+    return [];
+  }
+
+  get mobilePanelEditable(): boolean {
+    const normalizedStatus = (this.bookingStatus || '').trim().toUpperCase();
+    if (normalizedStatus === 'CONFIRMED') {
+      return this.mobileConfirmedTab === 'change-dates';
+    }
+
+    return normalizedStatus === 'REJECTED';
+  }
+
+  get mobilePanelHideAfterTotal(): boolean {
+    return this.isCancellationHiddenForStatus;
+  }
+
+  get mobilePanelShowAction(): boolean {
+    return !this.mobilePanelHideAfterTotal;
+  }
+
+  get mobilePanelActionLabel(): string {
+    const normalizedStatus = (this.bookingStatus || '').trim().toUpperCase();
+    if (normalizedStatus === 'UPCOMING') {
+      return 'Cancel Reservation';
+    }
+
+    if (normalizedStatus === 'CONFIRMED') {
+      return this.mobileConfirmedTab === 'change-dates' ? 'Recalculate Price' : 'Cancel Reservation';
+    }
+
+    if (normalizedStatus === 'REJECTED') {
+      return 'Recalculate Price';
+    }
+
+    return 'Cancel';
+  }
+
+  get mobilePanelActionDisabled(): boolean {
+    const normalizedStatus = (this.bookingStatus || '').trim().toUpperCase();
+    if (normalizedStatus === 'UPCOMING') {
+      return this.isCancelling;
+    }
+
+    if (normalizedStatus === 'CONFIRMED') {
+      return this.mobileConfirmedTab === 'change-dates'
+        ? this.isRecalculating || this.isCancelling
+        : this.isCancelling || this.isRecalculating;
+    }
+
+    if (normalizedStatus === 'REJECTED') {
+      return this.isRecalculating || this.isCancelling;
+    }
+
+    return true;
+  }
+
+  get mobilePanelIsLoading(): boolean {
+    const normalizedStatus = (this.bookingStatus || '').trim().toUpperCase();
+    if (normalizedStatus === 'UPCOMING') {
+      return this.isCancelling;
+    }
+
+    if (normalizedStatus === 'CONFIRMED') {
+      return this.mobileConfirmedTab === 'change-dates' ? this.isRecalculating : this.isCancelling;
+    }
+
+    if (normalizedStatus === 'REJECTED') {
+      return this.isRecalculating;
+    }
+
+    return false;
+  }
+
+  get mobilePanelPromoText(): string {
+    const normalizedStatus = (this.bookingStatus || '').trim().toUpperCase();
+    if (normalizedStatus === 'CONFIRMED') {
+      return this.mobileConfirmedTab === 'change-dates' ? 'Update Your Dates' : 'Reservation details';
+    }
+
+    return this.mobilePanelEditable ? 'Update Your Dates' : 'Reservation details';
+  }
+
+  get mobilePanelFootnote(): string {
+    if (this.mobilePanelHideAfterTotal) {
+      return '';
+    }
+
+    if (this.isAccordionLayout && this.mobileConfirmedTab === 'cancel') {
+      return 'Cancellation policies may apply';
+    }
+
+    if (this.mobilePanelEditable) {
+      return this.hasDateChanges ? '✓ Dates updated - ready to recalculate' : 'Select new dates to update';
+    }
+
+    return 'Cancellation policies may apply';
   }
 
   toggleCancelAccordion(): void {
@@ -292,6 +428,48 @@ export class BookingDetailPage implements OnInit {
 
   onCheckOutChanged(newDate: string): void {
     this.hasDateChanges = true;
+  }
+
+  onMobilePanelAction(): void {
+    const normalizedStatus = (this.bookingStatus || '').trim().toUpperCase();
+
+    if (normalizedStatus === 'UPCOMING') {
+      this.onCancelConfirmed();
+      return;
+    }
+
+    if (normalizedStatus === 'CONFIRMED') {
+      if (this.mobileConfirmedTab === 'cancel') {
+        void this.onCancelConfirmed();
+      } else {
+        this.onRecalculatePrice();
+      }
+      return;
+    }
+
+    if (normalizedStatus === 'REJECTED') {
+      this.onRecalculatePrice();
+    }
+  }
+
+  onMobileConfirmedTabSelected(tabId: string): void {
+    if (tabId === 'change-dates' || tabId === 'cancel') {
+      this.mobileConfirmedTab = tabId;
+    }
+  }
+
+  @HostListener('window:resize')
+  onWindowResize(): void {
+    this.updateViewportFlags();
+  }
+
+  private updateViewportFlags(): void {
+    if (typeof window === 'undefined') {
+      this.isMobileViewport = false;
+      return;
+    }
+
+    this.isMobileViewport = window.matchMedia('(max-width: 720px)').matches;
   }
 
   onAlertDismissed(): void {
@@ -409,6 +587,8 @@ export class BookingDetailPage implements OnInit {
       totalAmount: this.formatAmount(totalPrice, currency),
     };
 
+    this.mobileConfirmedTab = 'cancel';
+
     this.paymentSummaryResetVersion += 1;
     this.hasDateChanges = false;
   }
@@ -494,6 +674,8 @@ export class BookingDetailPage implements OnInit {
         return 'confirmed';
       case 'COMPLETED':
         return 'completed';
+      case 'REJECTED':
+        return 'rejected';
       case 'CANCELED':
       case 'CANCELLED':
         return 'canceled';

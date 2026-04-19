@@ -76,7 +76,7 @@
 
       <aside class="bookingdetail-main__right">
         <!-- Accordion for Confirmed/Upcoming -->
-        <div class="bookingdetail-accordion" *ngIf="isAccordionLayout">
+        <div class="bookingdetail-accordion" *ngIf="isAccordionLayout && !isMobileViewport">
           <!-- Item 1: Cancel Reservation -->
           <div class="bookingdetail-accordion__item" *ngIf="showCancelAccordion">
             <button
@@ -173,7 +173,8 @@
 
         <!-- Flat cancel-only summary for Upcoming status -->
         <th-payment-summary
-          *ngIf="isFlatCancelLayout"
+          *ngIf="isFlatCancelLayout && !isMobileViewport"
+          class="bookingdetail-flat-cancel-summary"
           [title]="paymentSummary.title"
           subtitle="per night"
           promoText="Reservation details"
@@ -197,7 +198,7 @@
 
         <!-- Flat editable summary for Rejected status -->
         <th-payment-summary
-          *ngIf="isFlatChangeDatesLayout"
+          *ngIf="isFlatChangeDatesLayout && !isMobileViewport"
           [title]="paymentSummary.title"
           subtitle="per night"
           promoText="Update Your Dates"
@@ -263,6 +264,40 @@
             </p>
           </ion-card-content>
         </ion-card>
+
+        <th-payment-summary
+          class="bookingdetail-mobile-summary"
+          *ngIf="showMobileStickyPanel"
+          [title]="paymentSummary.title"
+          subtitle="per night"
+          [promoText]="mobilePanelPromoText"
+          [checkInValue]="paymentSummary.checkInValue"
+          [checkOutValue]="paymentSummary.checkOutValue"
+          [guestsValue]="paymentSummary.guestsValue"
+          [roomTypeValue]="paymentSummary.roomTypeValue"
+          [items]="summaryItems"
+          totalLabel="Total"
+          [totalAmount]="paymentSummary.totalAmount"
+          [hideAfterTotal]="mobilePanelHideAfterTotal"
+          [showAction]="mobilePanelShowAction"
+          [actionLabel]="mobilePanelActionLabel"
+          [actionDisabled]="mobilePanelActionDisabled"
+          [isLoading]="mobilePanelIsLoading"
+          (actionClick)="onMobilePanelAction()"
+          [footnote]="mobilePanelFootnote"
+          trustLeftLabel="Secure booking"
+          trustRightLabel="Flexible cancellation"
+          [editable]="mobilePanelEditable"
+          [mobileSticky]="true"
+          [editorResetTrigger]="paymentSummaryResetVersion"
+          [compactTabs]="mobilePanelTabs"
+          [compactActiveTabId]="mobileConfirmedTab"
+          (compactTabChange)="onMobileConfirmedTabSelected($event)"
+          compactSuffix="/night"
+          compactNote="Taxes and fees included"
+          (checkInValueChange)="onCheckInChanged($event)"
+          (checkOutValueChange)="onCheckOutChanged($event)"
+        ></th-payment-summary>
       </aside>
     </div>
   </section>
