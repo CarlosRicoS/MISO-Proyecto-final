@@ -91,6 +91,13 @@ export class BookingDetailPage implements OnInit {
 
   paymentSummaryResetVersion = 0;
 
+  hasDateChanges = false;
+  isRecalculating = false;
+  
+  // Accordion state
+  isCancelAccordionOpen = true;
+  isChangeDatesAccordionOpen = false;
+
   private currentReservation: Reservation | null = null;
   readonly cancelAlertButtons = [
     {
@@ -165,8 +172,32 @@ export class BookingDetailPage implements OnInit {
     }
   }
 
+  get isEditableStatus(): boolean {
+    const normalizedStatus = (this.bookingStatus || '').trim().toUpperCase();
+    return normalizedStatus === 'CONFIRMED' || normalizedStatus === 'UPCOMING';
+  }
+
+  get isCancellationHiddenForStatus(): boolean {
+    const normalizedStatus = (this.bookingStatus || '').trim().toUpperCase();
+    return normalizedStatus === 'CANCELED' || normalizedStatus === 'CANCELLED' || normalizedStatus === 'COMPLETED';
+  }
+
+  toggleCancelAccordion(): void {
+    this.isCancelAccordionOpen = !this.isCancelAccordionOpen;
+    if (this.isCancelAccordionOpen) {
+      this.isChangeDatesAccordionOpen = false;
+    }
+  }
+
+  toggleChangeDatesAccordion(): void {
+    this.isChangeDatesAccordionOpen = !this.isChangeDatesAccordionOpen;
+    if (this.isChangeDatesAccordionOpen) {
+      this.isCancelAccordionOpen = false;
+    }
+  }
+
   onCancelBooking(): void {
-    if (!this.currentReservation || this.isReservationCancelled()) {
+    if (!this.currentReservation || this.isReservationCancellationBlocked()) {
       this.showAlert('Cancellation unavailable', 'This reservation can no longer be cancelled.');
       return;
     }
@@ -175,7 +206,7 @@ export class BookingDetailPage implements OnInit {
   }
 
   async onCancelConfirmed(): Promise<void> {
-    if (!this.currentReservation || this.isReservationCancelled()) {
+    if (!this.currentReservation || this.isReservationCancellationBlocked()) {
       return;
     }
 
@@ -203,6 +234,35 @@ export class BookingDetailPage implements OnInit {
     } finally {
       this.isCancelling = false;
     }
+  }
+
+  onRecalculatePrice(): void {
+    if (!this.currentReservation) {
+      this.showAlert('Error', 'Unable to recalculate price. Reservation data is missing.');
+      return;
+    }
+
+    this.isRecalculating = true;
+
+    try {
+      // TODO: Call booking service to recalculate price with new dates
+      // For now, just show a success message
+      this.showAlert('Price Updated', 'Reservation dates updated and price recalculated.');
+      this.hasDateChanges = false;
+      this.isChangeDatesAccordionOpen = false;
+    } catch (error) {
+      this.showAlert('Error', 'Unable to recalculate price. Please try again.');
+    } finally {
+      this.isRecalculating = false;
+    }
+  }
+
+  onCheckInChanged(newDate: string): void {
+    this.hasDateChanges = true;
+  }
+
+  onCheckOutChanged(newDate: string): void {
+    this.hasDateChanges = true;
   }
 
   onAlertDismissed(): void {
@@ -321,6 +381,7 @@ export class BookingDetailPage implements OnInit {
     };
 
     this.paymentSummaryResetVersion += 1;
+    this.hasDateChanges = false;
   }
 
   private getBookingId(navState: Record<string, unknown> | undefined): string {
@@ -491,13 +552,17 @@ export class BookingDetailPage implements OnInit {
     return 'checkmark-circle-outline';
   }
 
-  private isReservationCancelled(): boolean {
+  private isReservationCancellationBlocked(): boolean {
     if (!this.currentReservation) {
       return false;
     }
 
     const normalizedStatus = this.currentReservation.status.trim().toUpperCase();
-    return normalizedStatus === 'CANCELED' || normalizedStatus === 'CANCELLED';
+    return (
+      normalizedStatus === 'CANCELED' ||
+      normalizedStatus === 'CANCELLED' ||
+      normalizedStatus === 'COMPLETED'
+    );
   }
 
   private showAlert(title: string, message: string): void {

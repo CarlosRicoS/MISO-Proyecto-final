@@ -187,73 +187,75 @@
       <span class="th-payment-summary__total-value">{{ totalAmount }}</span>
     </div>
 
-    @if (variant === 'admin') {
-      <div class="th-payment-summary__admin-actions">
-        <th-button
-          variant="secondary"
-          size="lg"
-          [disabled]="adminActionsDisabled || adminRejectDisabled || isLoading"
-          (click)="onAdminRejectClicked()"
-        >
-          <span>{{ adminRejectLabel }}</span>
-        </th-button>
+    <ng-container *ngIf="!hideAfterTotal">
+      @if (variant === 'admin') {
+        <div class="th-payment-summary__admin-actions">
+          <th-button
+            variant="secondary"
+            size="lg"
+            [disabled]="adminActionsDisabled || adminRejectDisabled || isLoading"
+            (click)="onAdminRejectClicked()"
+          >
+            <span>{{ adminRejectLabel }}</span>
+          </th-button>
 
-        <th-button
-          variant="primary"
-          size="lg"
-          [disabled]="adminActionsDisabled || adminAcceptDisabled || isLoading"
-          (click)="onAdminAcceptClicked()"
-        >
-          <span class="th-payment-summary__button-content">
-            <ion-spinner
-              *ngIf="isLoading"
-              name="crescent"
-              class="th-payment-summary__spinner"
-            ></ion-spinner>
-            <span>{{ adminAcceptLabel }}</span>
-          </span>
-        </th-button>
+          <th-button
+            variant="primary"
+            size="lg"
+            [disabled]="adminActionsDisabled || adminAcceptDisabled || isLoading"
+            (click)="onAdminAcceptClicked()"
+          >
+            <span class="th-payment-summary__button-content">
+              <ion-spinner
+                *ngIf="isLoading"
+                name="crescent"
+                class="th-payment-summary__spinner"
+              ></ion-spinner>
+              <span>{{ adminAcceptLabel }}</span>
+            </span>
+          </th-button>
+        </div>
+      } @else {
+        <div class="th-payment-summary__action" *ngIf="showAction">
+          <th-button
+            variant="primary"
+            size="lg"
+            expand="block"
+            [disabled]="actionDisabled || isLoading"
+            (click)="onActionClicked()"
+          >
+            <span class="th-payment-summary__button-content">
+              <ion-spinner
+                *ngIf="isLoading"
+                name="crescent"
+                class="th-payment-summary__spinner"
+              ></ion-spinner>
+              <span>{{ actionLabel }}</span>
+            </span>
+          </th-button>
+        </div>
+      }
+
+      <p class="th-payment-summary__footnote" *ngIf="footnote">
+        {{ footnote }}
+      </p>
+
+      <div class="th-payment-summary__trust-row">
+        <span class="th-payment-summary__trust-item">
+          <ion-icon [name]="trustLeftIcon" aria-hidden="true"></ion-icon>
+          {{ trustLeftLabel }}
+        </span>
+        <span class="th-payment-summary__trust-item">
+          <ion-icon [name]="trustRightIcon" aria-hidden="true"></ion-icon>
+          {{ trustRightLabel }}
+        </span>
       </div>
-    } @else {
-      <div class="th-payment-summary__action">
-        <th-button
-          variant="primary"
-          size="lg"
-          expand="block"
-          [disabled]="actionDisabled || isLoading"
-          (click)="onActionClicked()"
-        >
-          <span class="th-payment-summary__button-content">
-            <ion-spinner
-              *ngIf="isLoading"
-              name="crescent"
-              class="th-payment-summary__spinner"
-            ></ion-spinner>
-            <span>{{ actionLabel }}</span>
-          </span>
-        </th-button>
-      </div>
-    }
-
-    <p class="th-payment-summary__footnote" *ngIf="footnote">
-      {{ footnote }}
-    </p>
-
-    <div class="th-payment-summary__trust-row">
-      <span class="th-payment-summary__trust-item">
-        <ion-icon [name]="trustLeftIcon" aria-hidden="true"></ion-icon>
-        {{ trustLeftLabel }}
-      </span>
-      <span class="th-payment-summary__trust-item">
-        <ion-icon [name]="trustRightIcon" aria-hidden="true"></ion-icon>
-        {{ trustRightLabel }}
-      </span>
-    </div>
+    </ng-container>
   </ion-card-content>
 
   <ion-card-content
     class="th-payment-summary__content th-payment-summary__content--compact"
-    *ngIf="mobileSticky"
+    *ngIf="mobileSticky && !hideAfterTotal"
   >
     <div class="th-payment-summary__compact-price">
       <div class="th-payment-summary__compact-main">

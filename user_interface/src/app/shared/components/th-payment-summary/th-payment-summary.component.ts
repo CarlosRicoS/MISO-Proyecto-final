@@ -72,6 +72,8 @@ export class ThPaymentSummaryComponent implements OnChanges {
   @Input() totalLabel = 'Total';
   @Input() totalAmount = '$610';
   @Input() actionLabel = 'Confirm and pay';
+  @Input() showAction = true;
+  @Input() hideAfterTotal = false;
   @Input() actionDisabled = false;
   @Input() footnote = "You won't be charged yet";
   @Input() trustLeftLabel = 'Secure booking';

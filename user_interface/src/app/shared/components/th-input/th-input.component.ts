@@ -26,6 +26,7 @@ export class ThInputComponent {
   @Input() disabled = false;
   @Output() valueChange = new EventEmitter<string>();
   @Output() endIconClick = new EventEmitter<void>();
+  @Output() enterPress = new EventEmitter<void>();
   isFocused = false;
 
   get stateClass(): string {
@@ -67,5 +68,13 @@ export class ThInputComponent {
       return;
     }
     this.endIconClick.emit();
+  }
+
+  onEnterKey(event: Event): void {
+    event.preventDefault();
+    if (this.isDisabled) {
+      return;
+    }
+    this.enterPress.emit();
   }
 }

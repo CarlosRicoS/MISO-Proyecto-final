@@ -36,6 +36,7 @@
                 [state]="emailState"
                 [helper]="emailHelper"
                 (valueChange)="onEmailChange($event)"
+                (enterPress)="onSignIn()"
               ></th-input>
               <th-input
                 label="Password"
@@ -49,6 +50,7 @@
                 [helper]="passwordHelper"
                 (valueChange)="onPasswordChange($event)"
                 (endIconClick)="onTogglePasswordVisibility()"
+                (enterPress)="onSignIn()"
               ></th-input>
             </div>
 

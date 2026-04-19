@@ -15,6 +15,7 @@
       (ionInput)="onInput($event)"
       (ionFocus)="onFocus()"
       (ionBlur)="onBlur()"
+      (keydown.enter)="onEnterKey($event)"
     ></ion-input>
     <button
       *ngIf="endIcon"
