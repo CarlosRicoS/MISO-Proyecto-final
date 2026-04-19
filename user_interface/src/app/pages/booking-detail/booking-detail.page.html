@@ -75,10 +75,10 @@
       </div>
 
       <aside class="bookingdetail-main__right">
-        <!-- Accordion for editable status (Confirmed/Upcoming) -->
-        <div class="bookingdetail-accordion" *ngIf="isEditableStatus">
+        <!-- Accordion for Confirmed/Upcoming -->
+        <div class="bookingdetail-accordion" *ngIf="isAccordionLayout">
           <!-- Item 1: Cancel Reservation -->
-          <div class="bookingdetail-accordion__item">
+          <div class="bookingdetail-accordion__item" *ngIf="showCancelAccordion">
             <button
               class="bookingdetail-accordion__header"
               (click)="toggleCancelAccordion()"
@@ -123,7 +123,7 @@
           </div>
 
           <!-- Item 2: Change Dates -->
-          <div class="bookingdetail-accordion__item">
+          <div class="bookingdetail-accordion__item" *ngIf="showChangeDatesAccordion">
             <button
               class="bookingdetail-accordion__header"
               (click)="toggleChangeDatesAccordion()"
@@ -171,7 +171,58 @@
           </div>
         </div>
 
-        <!-- Regular read-only mode (non-editable status) -->
+        <!-- Flat cancel-only summary for Upcoming status -->
+        <th-payment-summary
+          *ngIf="isFlatCancelLayout"
+          [title]="paymentSummary.title"
+          subtitle="per night"
+          promoText="Reservation details"
+          [checkInValue]="paymentSummary.checkInValue"
+          [checkOutValue]="paymentSummary.checkOutValue"
+          [guestsValue]="paymentSummary.guestsValue"
+          [roomTypeValue]="paymentSummary.roomTypeValue"
+          [items]="summaryItems"
+          totalLabel="Total"
+          [totalAmount]="paymentSummary.totalAmount"
+          actionLabel="Cancel Reservation"
+          [actionDisabled]="isCancelling"
+          [isLoading]="isCancelling"
+          (actionClick)="onCancelConfirmed()"
+          footnote="Cancellation policies may apply"
+          trustLeftLabel="Secure booking"
+          trustRightLabel="Flexible cancellation"
+          [editable]="false"
+          [mobileSticky]="false"
+        ></th-payment-summary>
+
+        <!-- Flat editable summary for Rejected status -->
+        <th-payment-summary
+          *ngIf="isFlatChangeDatesLayout"
+          [title]="paymentSummary.title"
+          subtitle="per night"
+          promoText="Update Your Dates"
+          [checkInValue]="paymentSummary.checkInValue"
+          [checkOutValue]="paymentSummary.checkOutValue"
+          [guestsValue]="paymentSummary.guestsValue"
+          [roomTypeValue]="paymentSummary.roomTypeValue"
+          [items]="summaryItems"
+          totalLabel="Total"
+          [totalAmount]="paymentSummary.totalAmount"
+          actionLabel="Recalculate Price"
+          [actionDisabled]="isRecalculating"
+          [isLoading]="isRecalculating"
+          (actionClick)="onRecalculatePrice()"
+          (checkInValueChange)="onCheckInChanged($event)"
+          (checkOutValueChange)="onCheckOutChanged($event)"
+          [footnote]="hasDateChanges ? '✓ Dates updated - ready to recalculate' : 'Select new dates to update'"
+          trustLeftLabel="Secure booking"
+          trustRightLabel="Flexible cancellation"
+          [editable]="true"
+          [mobileSticky]="false"
+          [editorResetTrigger]="paymentSummaryResetVersion"
+        ></th-payment-summary>
+
+        <!-- Regular read-only mode (Canceled/Completed) -->
         <th-payment-summary
           *ngIf="!isEditableStatus"
           [title]="paymentSummary.title"

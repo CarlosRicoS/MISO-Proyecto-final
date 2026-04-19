@@ -172,9 +172,38 @@ export class BookingDetailPage implements OnInit {
     }
   }
 
-  get isEditableStatus(): boolean {
+  get isAccordionLayout(): boolean {
     const normalizedStatus = (this.bookingStatus || '').trim().toUpperCase();
-    return normalizedStatus === 'CONFIRMED' || normalizedStatus === 'UPCOMING';
+    return normalizedStatus === 'CONFIRMED';
+  }
+
+  get isFlatEditableLayout(): boolean {
+    const normalizedStatus = (this.bookingStatus || '').trim().toUpperCase();
+    return normalizedStatus === 'UPCOMING' || normalizedStatus === 'REJECTED';
+  }
+
+  get isEditableStatus(): boolean {
+    return this.isAccordionLayout || this.isFlatEditableLayout;
+  }
+
+  get isFlatCancelLayout(): boolean {
+    const normalizedStatus = (this.bookingStatus || '').trim().toUpperCase();
+    return normalizedStatus === 'UPCOMING';
+  }
+
+  get isFlatChangeDatesLayout(): boolean {
+    const normalizedStatus = (this.bookingStatus || '').trim().toUpperCase();
+    return normalizedStatus === 'REJECTED';
+  }
+
+  get showCancelAccordion(): boolean {
+    const normalizedStatus = (this.bookingStatus || '').trim().toUpperCase();
+    return normalizedStatus === 'CONFIRMED';
+  }
+
+  get showChangeDatesAccordion(): boolean {
+    const normalizedStatus = (this.bookingStatus || '').trim().toUpperCase();
+    return normalizedStatus === 'CONFIRMED';
   }
 
   get isCancellationHiddenForStatus(): boolean {
