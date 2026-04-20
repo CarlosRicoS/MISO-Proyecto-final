@@ -401,32 +401,103 @@ export class BookingDetailPage implements OnInit {
     }
   }
 
-  onRecalculatePrice(): void {
+  async onRecalculatePrice(): Promise<void> {
     if (!this.currentReservation) {
       this.showAlert('Error', 'Unable to recalculate price. Reservation data is missing.');
+      return;
+    }
+
+    const newPeriodStart = this.normalizeDateForApi(this.paymentSummary.checkInValue);
+    const newPeriodEnd = this.normalizeDateForApi(this.paymentSummary.checkOutValue);
+
+    if (!newPeriodStart || !newPeriodEnd) {
+      this.showAlert('Invalid dates', 'Please select valid check-in and check-out dates.');
+      return;
+    }
+
+    if (newPeriodEnd <= newPeriodStart) {
+      this.showAlert('Invalid date range', 'Check-out date must be later than check-in date.');
+      return;
+    }
+
+    const updatedGuests = Number.parseInt(String(this.paymentSummary.guestsValue || '').trim(), 10);
+    if (!Number.isFinite(updatedGuests) || updatedGuests <= 0) {
+      this.showAlert('Invalid guests', 'Please enter a valid number of guests.');
+      return;
+    }
+
+    if (!this.hasReservationChanges(newPeriodStart, newPeriodEnd, updatedGuests)) {
+      this.showAlert(
+        'No changes detected',
+        'Please change check-in, check-out, or guests before updating the reservation.',
+      );
       return;
     }
 
     this.isRecalculating = true;
 
     try {
-      // TODO: Call booking service to recalculate price with new dates
-      // For now, just show a success message
-      this.showAlert('Price Updated', 'Reservation dates updated and price recalculated.');
+      const response = await firstValueFrom(
+        this.bookingService.updateOrchestratedReservationDates(
+          this.currentReservation.id,
+          {
+            new_period_start: newPeriodStart,
+            new_period_end: newPeriodEnd,
+            new_price: 0,
+          },
+          this.authSessionService.idToken,
+        ),
+      );
+
+      const parsedDifference = Number(response.price_difference);
+      const priceDifference = Number.isFinite(parsedDifference) ? parsedDifference : 0;
+
+      this.currentReservation = {
+        ...this.currentReservation,
+        period_start: response.period_start,
+        period_end: response.period_end,
+        guests: updatedGuests,
+        price: Number(response.price),
+        status: response.status,
+      };
+
+      this.shouldNavigateToBookingList = true;
+      this.showAlert(
+        'Dates Updated',
+        `Reservation dates updated successfully. Price difference: ${this.formatAmountWithDecimals(priceDifference, '$')}.`,
+      );
       this.hasDateChanges = false;
       this.isChangeDatesAccordionOpen = false;
-    } catch (error) {
-      this.showAlert('Error', 'Unable to recalculate price. Please try again.');
+    } catch (error: unknown) {
+      const httpError = error as HttpErrorResponse;
+      let message = 'Unable to recalculate price. Please try again.';
+
+      if (httpError.status === 409) {
+        message = 'The property is not available for the selected dates. Please choose different dates.';
+      } else if (typeof httpError.error?.message === 'string') {
+        message = httpError.error.message;
+      } else if (typeof httpError.error?.detail === 'string') {
+        message = httpError.error.detail;
+      }
+
+      this.showAlert('Error', message);
     } finally {
       this.isRecalculating = false;
     }
   }
 
   onCheckInChanged(newDate: string): void {
+    this.paymentSummary.checkInValue = newDate;
     this.hasDateChanges = true;
   }
 
   onCheckOutChanged(newDate: string): void {
+    this.paymentSummary.checkOutValue = newDate;
+    this.hasDateChanges = true;
+  }
+
+  onGuestsChanged(newGuests: string): void {
+    this.paymentSummary.guestsValue = this.sanitizeGuestsValue(newGuests);
     this.hasDateChanges = true;
   }
 
@@ -703,6 +774,55 @@ export class BookingDetailPage implements OnInit {
     }).format(safeValue);
 
     return `${currency}${formattedValue}`;
+  }
+
+  private formatAmountWithDecimals(value: number, currency: string): string {
+    const safeValue = Number.isFinite(value) ? value : 0;
+    const formattedValue = new Intl.NumberFormat('en-US', {
+      minimumFractionDigits: safeValue % 1 === 0 ? 0 : 2,
+      maximumFractionDigits: 2,
+    }).format(safeValue);
+
+    return `${currency}${formattedValue}`;
+  }
+
+  private normalizeDateForApi(value: string): string | null {
+    const trimmed = String(value || '').trim();
+    if (!trimmed) {
+      return null;
+    }
+
+    if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+      return trimmed;
+    }
+
+    const ddmmyyyy = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(trimmed);
+    if (!ddmmyyyy) {
+      return null;
+    }
+
+    const [, day, month, year] = ddmmyyyy;
+    return `${year}-${month}-${day}`;
+  }
+
+  private hasReservationChanges(newPeriodStart: string, newPeriodEnd: string, newGuests: number): boolean {
+    if (!this.currentReservation) {
+      return false;
+    }
+
+    const originalPeriodStart = this.normalizeDateForApi(this.currentReservation.period_start) || this.currentReservation.period_start;
+    const originalPeriodEnd = this.normalizeDateForApi(this.currentReservation.period_end) || this.currentReservation.period_end;
+    const originalGuests = Number(this.currentReservation.guests);
+
+    return (
+      originalPeriodStart !== newPeriodStart ||
+      originalPeriodEnd !== newPeriodEnd ||
+      originalGuests !== newGuests
+    );
+  }
+
+  private sanitizeGuestsValue(value: string): string {
+    return String(value || '').replace(/\D+/g, '');
   }
 
   private getScoreLabel(score: number): string {

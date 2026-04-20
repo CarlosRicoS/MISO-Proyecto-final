@@ -160,6 +160,7 @@
                 (actionClick)="onRecalculatePrice()"
                 (checkInValueChange)="onCheckInChanged($event)"
                 (checkOutValueChange)="onCheckOutChanged($event)"
+                (guestsValueChange)="onGuestsChanged($event)"
                 [footnote]="hasDateChanges ? '✓ Dates updated - ready to recalculate' : 'Select new dates to update'"
                 trustLeftLabel="Secure booking"
                 trustRightLabel="Flexible cancellation"
@@ -215,6 +216,7 @@
           (actionClick)="onRecalculatePrice()"
           (checkInValueChange)="onCheckInChanged($event)"
           (checkOutValueChange)="onCheckOutChanged($event)"
+          (guestsValueChange)="onGuestsChanged($event)"
           [footnote]="hasDateChanges ? '✓ Dates updated - ready to recalculate' : 'Select new dates to update'"
           trustLeftLabel="Secure booking"
           trustRightLabel="Flexible cancellation"
@@ -297,6 +299,7 @@
           compactNote="Taxes and fees included"
           (checkInValueChange)="onCheckInChanged($event)"
           (checkOutValueChange)="onCheckOutChanged($event)"
+          (guestsValueChange)="onGuestsChanged($event)"
         ></th-payment-summary>
       </aside>
     </div>

@@ -342,7 +342,7 @@
   [isOpen]="showCheckOutModal"
   title="Select Check-out Date"
   [selectedDate]="tempDate"
-  [minDate]="convertDDMMYYYYToISO(checkInValue)"
+  [minDate]="checkOutMinDate"
   confirmLabel="Confirm"
   cancelLabel="Cancel"
   (dateSelected)="onCheckOutConfirmed($event)"

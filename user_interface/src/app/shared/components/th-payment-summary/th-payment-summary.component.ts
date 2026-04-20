@@ -123,6 +123,21 @@ export class ThPaymentSummaryComponent implements OnChanges {
   tempDate: string | null = null;
   readonly checkInMinDate = this.getTodayIsoDate();
 
+  get checkOutMinDate(): string {
+    const todayIso = this.getTodayIsoDate();
+    const checkInIso = this.convertDDMMYYYYToISO(this.checkInValue) || this.checkInMinDate;
+    
+    // Parse both dates properly to avoid timezone issues
+    const today = this.parseIsoDateToLocal(todayIso);
+    const checkIn = this.parseIsoDateToLocal(checkInIso);
+    
+    // Get the later date and add 1 day
+    const laterDate = today > checkIn ? today : checkIn;
+    laterDate.setDate(laterDate.getDate() + 1);
+    
+    return this.convertDateToISO(laterDate);
+  }
+
   get isAdminVariant(): boolean {
     return this.variant === 'admin';
   }
@@ -171,13 +186,15 @@ export class ThPaymentSummaryComponent implements OnChanges {
   }
 
   onCheckInConfirmed(date: Date): void {
-    this.checkInValue = this.convertDateToDDMMYYYY(date);
+    this.checkInValue = this.convertDateToISO(date);
     this.checkInValueChange.emit(this.checkInValue);
 
-    if (!this.checkOutValue.trim()) {
+    const selectedCheckInIso = this.convertDateToISO(date);
+    const currentCheckOutIso = this.convertDDMMYYYYToISO(this.checkOutValue);
+    if (!currentCheckOutIso || currentCheckOutIso <= selectedCheckInIso) {
       const nextDay = new Date(date);
       nextDay.setDate(nextDay.getDate() + 1);
-      this.checkOutValue = this.convertDateToDDMMYYYY(nextDay);
+      this.checkOutValue = this.convertDateToISO(nextDay);
       this.checkOutValueChange.emit(this.checkOutValue);
     }
 
@@ -186,7 +203,7 @@ export class ThPaymentSummaryComponent implements OnChanges {
   }
 
   onCheckOutConfirmed(date: Date): void {
-    this.checkOutValue = this.convertDateToDDMMYYYY(date);
+    this.checkOutValue = this.convertDateToISO(date);
     this.checkOutValueChange.emit(this.checkOutValue);
     this.showCheckOutModal = false;
     this.tempDate = null;
@@ -253,7 +270,16 @@ export class ThPaymentSummaryComponent implements OnChanges {
   }
 
   convertDDMMYYYYToISO(ddmmyyyy: string): string | null {
-    const parts = ddmmyyyy.split('/');
+    const trimmedValue = String(ddmmyyyy || '').trim();
+    if (!trimmedValue) {
+      return null;
+    }
+
+    if (/^\d{4}-\d{2}-\d{2}$/.test(trimmedValue)) {
+      return trimmedValue;
+    }
+
+    const parts = trimmedValue.split('/');
     if (parts.length !== 3) {
       return null;
     }
@@ -270,11 +296,28 @@ export class ThPaymentSummaryComponent implements OnChanges {
     return `${year}-${month}-${day}`;
   }
 
-  private convertDateToDDMMYYYY(date: Date): string {
+  private convertDateToISO(date: Date): string {
     const day = String(date.getDate()).padStart(2, '0');
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const year = date.getFullYear();
-    return `${day}/${month}/${year}`;
+    return `${year}-${month}-${day}`;
+  }
+
+  private getNextDayIsoDate(isoDate: string): string {
+    const parsedDate = new Date(isoDate);
+    if (Number.isNaN(parsedDate.getTime())) {
+      const fallback = new Date();
+      fallback.setDate(fallback.getDate() + 1);
+      return this.convertDateToISO(fallback);
+    }
+
+    parsedDate.setDate(parsedDate.getDate() + 1);
+    return this.convertDateToISO(parsedDate);
+  }
+
+  private parseIsoDateToLocal(isoDate: string): Date {
+    const [year, month, day] = isoDate.split('-');
+    return new Date(Number(year), Number(month) - 1, Number(day));
   }
 
   private sanitizeGuestsValue(value: string): string {
