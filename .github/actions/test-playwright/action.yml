@@ -8,6 +8,10 @@ inputs:
     description: 'Node.js version to use'
     required: false
     default: '20'
+  e2e-script:
+    description: 'npm script to run E2E tests (must start dev server internally)'
+    required: false
+    default: 'e2e:web:with-app'
 runs:
   using: "composite"
   steps:
@@ -37,12 +41,12 @@ runs:
         START_SERVER_AND_TEST_HTTP_TIMEOUT: "120000"
       run: |
         cd ${{ inputs.context-path }}
-        npm run e2e:web:with-app
+        npm run ${{ inputs.e2e-script }}
 
     - name: Upload Playwright report on failure
       if: failure()
       uses: actions/upload-artifact@v4
       with:
-        name: playwright-report-${{ github.run_id }}
+        name: playwright-report-${{ inputs.e2e-script }}-${{ github.run_id }}
         path: ${{ inputs.context-path }}/playwright-report/
         retention-days: 7
