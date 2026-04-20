@@ -75,7 +75,159 @@
       </div>
 
       <aside class="bookingdetail-main__right">
+        <!-- Accordion for Confirmed/Upcoming -->
+        <div class="bookingdetail-accordion" *ngIf="isAccordionLayout && !isMobileViewport">
+          <!-- Item 1: Cancel Reservation -->
+          <div class="bookingdetail-accordion__item" *ngIf="showCancelAccordion">
+            <button
+              class="bookingdetail-accordion__header"
+              (click)="toggleCancelAccordion()"
+              [attr.aria-expanded]="isCancelAccordionOpen"
+            >
+              <span class="bookingdetail-accordion__title bookingdetail-accordion__title--danger">
+                <ion-icon name="close-circle-outline"></ion-icon>
+                Cancel Reservation
+              </span>
+              <ion-icon
+                name="chevron-down-outline"
+                [class.bookingdetail-accordion__chevron--open]="isCancelAccordionOpen"
+              ></ion-icon>
+            </button>
+
+            <div
+              class="bookingdetail-accordion__content bookingdetail-accordion__content--danger"
+              [class.bookingdetail-accordion__content--open]="isCancelAccordionOpen"
+            >
+              <th-payment-summary
+                [title]="paymentSummary.title"
+                subtitle="per night"
+                promoText="Reservation details"
+                [checkInValue]="paymentSummary.checkInValue"
+                [checkOutValue]="paymentSummary.checkOutValue"
+                [guestsValue]="paymentSummary.guestsValue"
+                [roomTypeValue]="paymentSummary.roomTypeValue"
+                [items]="summaryItems"
+                totalLabel="Total"
+                [totalAmount]="paymentSummary.totalAmount"
+                actionLabel="Cancel Reservation"
+                [actionDisabled]="isCancelling"
+                [isLoading]="isCancelling"
+                (actionClick)="onCancelConfirmed()"
+                footnote="Cancellation policies may apply"
+                trustLeftLabel="Secure booking"
+                trustRightLabel="Flexible cancellation"
+                [editable]="false"
+                [mobileSticky]="false"
+              ></th-payment-summary>
+            </div>
+          </div>
+
+          <!-- Item 2: Change Dates -->
+          <div class="bookingdetail-accordion__item" *ngIf="showChangeDatesAccordion">
+            <button
+              class="bookingdetail-accordion__header"
+              (click)="toggleChangeDatesAccordion()"
+              [attr.aria-expanded]="isChangeDatesAccordionOpen"
+            >
+              <span class="bookingdetail-accordion__title">
+                <ion-icon name="calendar-outline"></ion-icon>
+                Change Dates
+              </span>
+              <ion-icon
+                name="chevron-down-outline"
+                [class.bookingdetail-accordion__chevron--open]="isChangeDatesAccordionOpen"
+              ></ion-icon>
+            </button>
+
+            <div
+              class="bookingdetail-accordion__content"
+              [class.bookingdetail-accordion__content--open]="isChangeDatesAccordionOpen"
+            >
+              <th-payment-summary
+                [title]="paymentSummary.title"
+                subtitle="per night"
+                promoText="Update Your Dates"
+                [checkInValue]="paymentSummary.checkInValue"
+                [checkOutValue]="paymentSummary.checkOutValue"
+                [guestsValue]="paymentSummary.guestsValue"
+                [roomTypeValue]="paymentSummary.roomTypeValue"
+                [items]="summaryItems"
+                totalLabel="Total"
+                [totalAmount]="paymentSummary.totalAmount"
+                actionLabel="Recalculate Price"
+                [actionDisabled]="isRecalculating"
+                [isLoading]="isRecalculating"
+                (actionClick)="onRecalculatePrice()"
+                (checkInValueChange)="onCheckInChanged($event)"
+                (checkOutValueChange)="onCheckOutChanged($event)"
+                (guestsValueChange)="onGuestsChanged($event)"
+                [footnote]="hasDateChanges ? '✓ Dates updated - ready to recalculate' : 'Select new dates to update'"
+                trustLeftLabel="Secure booking"
+                trustRightLabel="Flexible cancellation"
+                [editable]="true"
+                [mobileSticky]="false"
+                [editorResetTrigger]="paymentSummaryResetVersion"
+              ></th-payment-summary>
+            </div>
+          </div>
+        </div>
+
+        <!-- Flat cancel-only summary for Upcoming status -->
         <th-payment-summary
+          *ngIf="isFlatCancelLayout && !isMobileViewport"
+          class="bookingdetail-flat-cancel-summary"
+          [title]="paymentSummary.title"
+          subtitle="per night"
+          promoText="Reservation details"
+          [checkInValue]="paymentSummary.checkInValue"
+          [checkOutValue]="paymentSummary.checkOutValue"
+          [guestsValue]="paymentSummary.guestsValue"
+          [roomTypeValue]="paymentSummary.roomTypeValue"
+          [items]="summaryItems"
+          totalLabel="Total"
+          [totalAmount]="paymentSummary.totalAmount"
+          actionLabel="Cancel Reservation"
+          [actionDisabled]="isCancelling"
+          [isLoading]="isCancelling"
+          (actionClick)="onCancelConfirmed()"
+          footnote="Cancellation policies may apply"
+          trustLeftLabel="Secure booking"
+          trustRightLabel="Flexible cancellation"
+          [editable]="false"
+          [mobileSticky]="false"
+        ></th-payment-summary>
+
+        <!-- Flat editable summary for Rejected status -->
+        <th-payment-summary
+          *ngIf="isFlatChangeDatesLayout && !isMobileViewport"
+          [title]="paymentSummary.title"
+          subtitle="per night"
+          promoText="Update Your Dates"
+          [checkInValue]="paymentSummary.checkInValue"
+          [checkOutValue]="paymentSummary.checkOutValue"
+          [guestsValue]="paymentSummary.guestsValue"
+          [roomTypeValue]="paymentSummary.roomTypeValue"
+          [items]="summaryItems"
+          totalLabel="Total"
+          [totalAmount]="paymentSummary.totalAmount"
+          actionLabel="Recalculate Price"
+          [actionDisabled]="isRecalculating"
+          [isLoading]="isRecalculating"
+          (actionClick)="onRecalculatePrice()"
+          (checkInValueChange)="onCheckInChanged($event)"
+          (checkOutValueChange)="onCheckOutChanged($event)"
+          (guestsValueChange)="onGuestsChanged($event)"
+          [footnote]="hasDateChanges ? '✓ Dates updated - ready to recalculate' : 'Select new dates to update'"
+          trustLeftLabel="Secure booking"
+          trustRightLabel="Flexible cancellation"
+          [editable]="true"
+          [mobileSticky]="false"
+          [editorResetTrigger]="paymentSummaryResetVersion"
+        ></th-payment-summary>
+
+        <!-- Regular read-only mode (Canceled/Completed) -->
+        <th-payment-summary
+          *ngIf="!isEditableStatus"
           [title]="paymentSummary.title"
           subtitle="per night"
           [promoText]="paymentSummary.promoText"
@@ -86,7 +238,9 @@
           [items]="summaryItems"
           totalLabel="Total"
           [totalAmount]="paymentSummary.totalAmount"
+          [hideAfterTotal]="isCancellationHiddenForStatus"
           actionLabel="Cancel"
+          [showAction]="!isCancellationHiddenForStatus"
           [actionDisabled]="isCancelling"
           [isLoading]="isCancelling"
           (actionClick)="onCancelBooking()"
@@ -100,7 +254,7 @@
           compactNote="Taxes and fees included"
         ></th-payment-summary>
 
-        <ion-card class="bookingdetail-cancellation-card">
+        <ion-card class="bookingdetail-cancellation-card" *ngIf="!isCancellationHiddenForStatus">
           <ion-card-content>
             <div class="bookingdetail-cancellation-card__header">
               <ion-icon name="information-circle" aria-hidden="true"></ion-icon>
@@ -112,6 +266,41 @@
             </p>
           </ion-card-content>
         </ion-card>
+
+        <th-payment-summary
+          class="bookingdetail-mobile-summary"
+          *ngIf="showMobileStickyPanel"
+          [title]="paymentSummary.title"
+          subtitle="per night"
+          [promoText]="mobilePanelPromoText"
+          [checkInValue]="paymentSummary.checkInValue"
+          [checkOutValue]="paymentSummary.checkOutValue"
+          [guestsValue]="paymentSummary.guestsValue"
+          [roomTypeValue]="paymentSummary.roomTypeValue"
+          [items]="summaryItems"
+          totalLabel="Total"
+          [totalAmount]="paymentSummary.totalAmount"
+          [hideAfterTotal]="mobilePanelHideAfterTotal"
+          [showAction]="mobilePanelShowAction"
+          [actionLabel]="mobilePanelActionLabel"
+          [actionDisabled]="mobilePanelActionDisabled"
+          [isLoading]="mobilePanelIsLoading"
+          (actionClick)="onMobilePanelAction()"
+          [footnote]="mobilePanelFootnote"
+          trustLeftLabel="Secure booking"
+          trustRightLabel="Flexible cancellation"
+          [editable]="mobilePanelEditable"
+          [mobileSticky]="true"
+          [editorResetTrigger]="paymentSummaryResetVersion"
+          [compactTabs]="mobilePanelTabs"
+          [compactActiveTabId]="mobileConfirmedTab"
+          (compactTabChange)="onMobileConfirmedTabSelected($event)"
+          compactSuffix="/night"
+          compactNote="Taxes and fees included"
+          (checkInValueChange)="onCheckInChanged($event)"
+          (checkOutValueChange)="onCheckOutChanged($event)"
+          (guestsValueChange)="onGuestsChanged($event)"
+        ></th-payment-summary>
       </aside>
     </div>
   </section>

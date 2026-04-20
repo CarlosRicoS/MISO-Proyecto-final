@@ -128,8 +128,8 @@ describe('ThPaymentSummaryComponent', () => {
 
     component.onCheckInConfirmed(new Date(2024, 11, 20));
 
-    expect(component.checkInValue).toBe('20/12/2024');
-    expect(checkInSpy).toHaveBeenCalledWith('20/12/2024');
+    expect(component.checkInValue).toBe('2024-12-20');
+    expect(checkInSpy).toHaveBeenCalledWith('2024-12-20');
     expect(component.showCheckInModal).toBeFalse();
   });
 
@@ -151,8 +151,8 @@ describe('ThPaymentSummaryComponent', () => {
     component.checkOutValue = '';
     component.onCheckInConfirmed(new Date(2024, 11, 20));
 
-    expect(component.checkOutValue).toBe('21/12/2024');
-    expect(checkOutSpy).toHaveBeenCalledWith('21/12/2024');
+    expect(component.checkOutValue).toBe('2024-12-21');
+    expect(checkOutSpy).toHaveBeenCalledWith('2024-12-21');
   });
 
   it('sanitizes guests input to digits only', () => {
@@ -328,8 +328,8 @@ describe('ThPaymentSummaryComponent', () => {
     const checkOutSpy = spyOn(component.checkOutValueChange, 'emit');
 
     component.onCheckOutConfirmed(new Date(2024, 11, 25));
-    expect(component.checkOutValue).toBe('25/12/2024');
-    expect(checkOutSpy).toHaveBeenCalledWith('25/12/2024');
+    expect(component.checkOutValue).toBe('2024-12-25');
+    expect(checkOutSpy).toHaveBeenCalledWith('2024-12-25');
 
     component.showCheckOutModal = true;
     component.tempDate = '2024-12-25';
@@ -362,7 +362,7 @@ describe('ThPaymentSummaryComponent', () => {
     expect(actionSpy).toHaveBeenCalled();
   });
 
-  it('returns null when converting malformed date strings', () => {
+  it('accepts ISO format dates and returns them unchanged', () => {
     TestBed.configureTestingModule({
       imports: [ThPaymentSummaryComponent],
       providers: [
@@ -376,7 +376,7 @@ describe('ThPaymentSummaryComponent', () => {
     const fixture = TestBed.createComponent(ThPaymentSummaryComponent);
     const component = fixture.componentInstance;
 
-    expect(component.convertDDMMYYYYToISO('2024-12-25')).toBeNull();
+    expect(component.convertDDMMYYYYToISO('2024-12-25')).toBe('2024-12-25');
     expect(component.convertDDMMYYYYToISO('')).toBeNull();
   });
 
@@ -524,5 +524,616 @@ describe('ThPaymentSummaryComponent', () => {
     expect(component.showCheckInModal).toBeFalse();
     expect(component.showCheckOutModal).toBeFalse();
     expect(guestsSpy).not.toHaveBeenCalled();
+  });
+
+  describe('checkOutMinDate calculation', () => {
+    it('returns tomorrow when no check-in date is set', () => {
+      TestBed.configureTestingModule({
+        imports: [ThPaymentSummaryComponent],
+        providers: [
+          {
+            provide: ActivatedRoute,
+            useValue: {},
+          },
+        ],
+      });
+
+      const fixture = TestBed.createComponent(ThPaymentSummaryComponent);
+      const component = fixture.componentInstance;
+
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const expectedIso = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(
+        tomorrow.getDate(),
+      ).padStart(2, '0')}`;
+
+      component.checkInValue = '';
+      expect(component.checkOutMinDate).toBe(expectedIso);
+    });
+
+    it('returns check-in + 1 day when check-in is in the future', () => {
+      TestBed.configureTestingModule({
+        imports: [ThPaymentSummaryComponent],
+        providers: [
+          {
+            provide: ActivatedRoute,
+            useValue: {},
+          },
+        ],
+      });
+
+      const fixture = TestBed.createComponent(ThPaymentSummaryComponent);
+      const component = fixture.componentInstance;
+
+      component.checkInValue = '2026-04-26';
+      const minDate = component.checkOutMinDate;
+
+      expect(minDate).toBe('2026-04-27');
+    });
+
+    it('returns greater of today+1 or check-in+1 when check-in is today', () => {
+      TestBed.configureTestingModule({
+        imports: [ThPaymentSummaryComponent],
+        providers: [
+          {
+            provide: ActivatedRoute,
+            useValue: {},
+          },
+        ],
+      });
+
+      const fixture = TestBed.createComponent(ThPaymentSummaryComponent);
+      const component = fixture.componentInstance;
+
+      const today = new Date();
+      const todayIso = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(
+        today.getDate(),
+      ).padStart(2, '0')}`;
+
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const tomorrowIso = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(
+        tomorrow.getDate(),
+      ).padStart(2, '0')}`;
+
+      component.checkInValue = todayIso;
+      expect(component.checkOutMinDate).toBe(tomorrowIso);
+    });
+
+    it('prevents same-day check-in and check-out', () => {
+      TestBed.configureTestingModule({
+        imports: [ThPaymentSummaryComponent],
+        providers: [
+          {
+            provide: ActivatedRoute,
+            useValue: {},
+          },
+        ],
+      });
+
+      const fixture = TestBed.createComponent(ThPaymentSummaryComponent);
+      const component = fixture.componentInstance;
+
+      component.checkInValue = '2026-04-26';
+      component.checkOutValue = '2026-04-26';
+
+      // When checkout is same as checkin, it should not pass validation
+      const minDate = component.checkOutMinDate;
+      expect(minDate).not.toBe('2026-04-26');
+      expect(minDate).toBe('2026-04-27');
+    });
+  });
+
+  describe('convertDDMMYYYYToISO', () => {
+    it('accepts and passes through yyyy-mm-dd format', () => {
+      TestBed.configureTestingModule({
+        imports: [ThPaymentSummaryComponent],
+        providers: [
+          {
+            provide: ActivatedRoute,
+            useValue: {},
+          },
+        ],
+      });
+
+      const fixture = TestBed.createComponent(ThPaymentSummaryComponent);
+      const component = fixture.componentInstance;
+
+      expect(component.convertDDMMYYYYToISO('2026-04-26')).toBe('2026-04-26');
+    });
+
+    it('converts dd/mm/yyyy to yyyy-mm-dd format', () => {
+      TestBed.configureTestingModule({
+        imports: [ThPaymentSummaryComponent],
+        providers: [
+          {
+            provide: ActivatedRoute,
+            useValue: {},
+          },
+        ],
+      });
+
+      const fixture = TestBed.createComponent(ThPaymentSummaryComponent);
+      const component = fixture.componentInstance;
+
+      expect(component.convertDDMMYYYYToISO('26/04/2026')).toBe('2026-04-26');
+    });
+
+    it('returns null for empty string', () => {
+      TestBed.configureTestingModule({
+        imports: [ThPaymentSummaryComponent],
+        providers: [
+          {
+            provide: ActivatedRoute,
+            useValue: {},
+          },
+        ],
+      });
+
+      const fixture = TestBed.createComponent(ThPaymentSummaryComponent);
+      const component = fixture.componentInstance;
+
+      expect(component.convertDDMMYYYYToISO('')).toBeNull();
+    });
+
+    it('returns null for invalid format', () => {
+      TestBed.configureTestingModule({
+        imports: [ThPaymentSummaryComponent],
+        providers: [
+          {
+            provide: ActivatedRoute,
+            useValue: {},
+          },
+        ],
+      });
+
+      const fixture = TestBed.createComponent(ThPaymentSummaryComponent);
+      const component = fixture.componentInstance;
+
+      expect(component.convertDDMMYYYYToISO('invalid')).toBeNull();
+      expect(component.convertDDMMYYYYToISO('12-34-5678')).toBeNull();
+    });
+  });
+
+  describe('date confirmation and adjustment', () => {
+    it('auto-adjusts checkout when it becomes earlier than check-in after check-in changes', () => {
+      TestBed.configureTestingModule({
+        imports: [ThPaymentSummaryComponent],
+        providers: [
+          {
+            provide: ActivatedRoute,
+            useValue: {},
+          },
+        ],
+      });
+
+      const fixture = TestBed.createComponent(ThPaymentSummaryComponent);
+      const component = fixture.componentInstance;
+      const checkOutSpy = spyOn(component.checkOutValueChange, 'emit');
+
+      component.checkOutValue = '2026-04-25';
+      component.onCheckInConfirmed(new Date(2026, 3, 26));
+
+      // Checkout should be auto-adjusted to 2026-04-27 (check-in + 1)
+      expect(component.checkOutValue).toBe('2026-04-27');
+      expect(checkOutSpy).toHaveBeenCalledWith('2026-04-27');
+    });
+
+    it('does not adjust checkout if it is already after check-in', () => {
+      TestBed.configureTestingModule({
+        imports: [ThPaymentSummaryComponent],
+        providers: [
+          {
+            provide: ActivatedRoute,
+            useValue: {},
+          },
+        ],
+      });
+
+      const fixture = TestBed.createComponent(ThPaymentSummaryComponent);
+      const component = fixture.componentInstance;
+      const checkOutSpy = spyOn(component.checkOutValueChange, 'emit');
+
+      component.checkOutValue = '2026-04-30';
+      component.onCheckInConfirmed(new Date(2026, 3, 26));
+
+      // Checkout should remain unchanged
+      expect(component.checkOutValue).toBe('2026-04-30');
+      expect(checkOutSpy).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('compact tabs', () => {
+    it('emits compactTabChange event when tab is selected', () => {
+      TestBed.configureTestingModule({
+        imports: [ThPaymentSummaryComponent],
+        providers: [
+          {
+            provide: ActivatedRoute,
+            useValue: {},
+          },
+        ],
+      });
+
+      const fixture = TestBed.createComponent(ThPaymentSummaryComponent);
+      const component = fixture.componentInstance;
+      const tabChangeSpy = spyOn(component.compactTabChange, 'emit');
+
+      component.compactTabs = [
+        { id: 'cancel', label: 'Cancel' },
+        { id: 'change', label: 'Change Dates' },
+      ];
+
+      component.onCompactTabSelected('change');
+
+      expect(tabChangeSpy).toHaveBeenCalledWith('change');
+    });
+
+    it('initializes compactActiveTabId to first tab when provided', () => {
+      TestBed.configureTestingModule({
+        imports: [ThPaymentSummaryComponent],
+        providers: [
+          {
+            provide: ActivatedRoute,
+            useValue: {},
+          },
+        ],
+      });
+
+      const fixture = TestBed.createComponent(ThPaymentSummaryComponent);
+      const component = fixture.componentInstance;
+
+      component.compactTabs = [
+        { id: 'cancel', label: 'Cancel' },
+        { id: 'change', label: 'Change Dates' },
+      ];
+      component.compactActiveTabId = 'cancel';
+
+      expect(component.compactActiveTabId).toBe('cancel');
+    });
+  });
+
+  describe('edge cases and error branches', () => {
+    it('handles null checkInValue when calculating checkOutMinDate', () => {
+      TestBed.configureTestingModule({
+        imports: [ThPaymentSummaryComponent],
+        providers: [
+          {
+            provide: ActivatedRoute,
+            useValue: {},
+          },
+        ],
+      });
+
+      const fixture = TestBed.createComponent(ThPaymentSummaryComponent);
+      const component = fixture.componentInstance;
+
+      component.checkInValue = null as unknown as string;
+      const minDate = component.checkOutMinDate;
+      
+      expect(minDate).toBeDefined();
+      expect(minDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    });
+
+    it('handles checkInValue with whitespace when calculating checkOutMinDate', () => {
+      TestBed.configureTestingModule({
+        imports: [ThPaymentSummaryComponent],
+        providers: [
+          {
+            provide: ActivatedRoute,
+            useValue: {},
+          },
+        ],
+      });
+
+      const fixture = TestBed.createComponent(ThPaymentSummaryComponent);
+      const component = fixture.componentInstance;
+
+      component.checkInValue = '   ';
+      const minDate = component.checkOutMinDate;
+      
+      expect(minDate).toBeDefined();
+      expect(minDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    });
+
+    it('sanitizes guests value with multiple non-numeric characters', () => {
+      TestBed.configureTestingModule({
+        imports: [ThPaymentSummaryComponent],
+        providers: [
+          {
+            provide: ActivatedRoute,
+            useValue: {},
+          },
+        ],
+      });
+
+      const fixture = TestBed.createComponent(ThPaymentSummaryComponent);
+      const component = fixture.componentInstance;
+      const guestsSpy = spyOn(component.guestsValueChange, 'emit');
+
+      component.onGuestsInput('2-adult_guests+with$symbols');
+
+      expect(component.guestsValue).toBe('2');
+      expect(guestsSpy).toHaveBeenCalledWith('2');
+    });
+
+    it('handles empty guests input', () => {
+      TestBed.configureTestingModule({
+        imports: [ThPaymentSummaryComponent],
+        providers: [
+          {
+            provide: ActivatedRoute,
+            useValue: {},
+          },
+        ],
+      });
+
+      const fixture = TestBed.createComponent(ThPaymentSummaryComponent);
+      const component = fixture.componentInstance;
+      const guestsSpy = spyOn(component.guestsValueChange, 'emit');
+
+      component.onGuestsInput('');
+
+      expect(component.guestsValue).toBe('');
+      expect(guestsSpy).toHaveBeenCalledWith('');
+    });
+
+    it('closes check-in modal when cancelled', () => {
+      TestBed.configureTestingModule({
+        imports: [ThPaymentSummaryComponent],
+        providers: [
+          {
+            provide: ActivatedRoute,
+            useValue: {},
+          },
+        ],
+      });
+
+      const fixture = TestBed.createComponent(ThPaymentSummaryComponent);
+      const component = fixture.componentInstance;
+
+      component.showCheckInModal = true;
+      component.tempDate = '2024-12-20';
+      component.onCheckInCancelled();
+
+      expect(component.showCheckInModal).toBeFalse();
+      expect(component.tempDate).toBeNull();
+    });
+
+    it('converts partial date components correctly', () => {
+      TestBed.configureTestingModule({
+        imports: [ThPaymentSummaryComponent],
+        providers: [
+          {
+            provide: ActivatedRoute,
+            useValue: {},
+          },
+        ],
+      });
+
+      const fixture = TestBed.createComponent(ThPaymentSummaryComponent);
+      const component = fixture.componentInstance;
+
+      expect(component.convertDDMMYYYYToISO('01/01/2024')).toBe('2024-01-01');
+      expect(component.convertDDMMYYYYToISO('31/12/2025')).toBe('2025-12-31');
+    });
+
+    it('does not auto-adjust checkout when it equals check-in', () => {
+      TestBed.configureTestingModule({
+        imports: [ThPaymentSummaryComponent],
+        providers: [
+          {
+            provide: ActivatedRoute,
+            useValue: {},
+          },
+        ],
+      });
+
+      const fixture = TestBed.createComponent(ThPaymentSummaryComponent);
+      const component = fixture.componentInstance;
+      const checkOutSpy = spyOn(component.checkOutValueChange, 'emit');
+
+      component.checkOutValue = '2024-12-20';
+      component.onCheckInConfirmed(new Date(2024, 11, 20));
+
+      expect(component.checkOutValue).toBe('2024-12-21');
+      expect(checkOutSpy).toHaveBeenCalled();
+    });
+
+    it('handles check-in modal with existing checkInValue', () => {
+      TestBed.configureTestingModule({
+        imports: [ThPaymentSummaryComponent],
+        providers: [
+          {
+            provide: ActivatedRoute,
+            useValue: {},
+          },
+        ],
+      });
+
+      const fixture = TestBed.createComponent(ThPaymentSummaryComponent);
+      const component = fixture.componentInstance;
+
+      component.checkInValue = '2024-12-20';
+      component.onCheckInActivated();
+
+      expect(component.showCheckInModal).toBeTrue();
+      expect(component.tempDate).toBe('2024-12-20');
+    });
+
+    it('handles check-out modal opening', () => {
+      TestBed.configureTestingModule({
+        imports: [ThPaymentSummaryComponent],
+        providers: [
+          {
+            provide: ActivatedRoute,
+            useValue: {},
+          },
+        ],
+      });
+
+      const fixture = TestBed.createComponent(ThPaymentSummaryComponent);
+      const component = fixture.componentInstance;
+
+      component.checkOutValue = '2024-12-25';
+      component.onCheckOutActivated();
+
+      expect(component.showCheckOutModal).toBeTrue();
+      expect(component.tempDate).toBe('2024-12-25');
+    });
+
+    it('handles ngOnChanges with multiple conditions', () => {
+      TestBed.configureTestingModule({
+        imports: [ThPaymentSummaryComponent],
+        providers: [
+          {
+            provide: ActivatedRoute,
+            useValue: {},
+          },
+        ],
+      });
+
+      const fixture = TestBed.createComponent(ThPaymentSummaryComponent);
+      const component = fixture.componentInstance;
+
+      component.mobileSticky = false;
+      component.isMobileEditorOpen = true;
+
+      component.ngOnChanges({
+        mobileSticky: {
+          currentValue: false,
+          previousValue: true,
+          firstChange: false,
+          isFirstChange: () => false,
+        },
+      });
+
+      expect(component.isMobileEditorOpen).toBeFalse();
+    });
+
+    it('does not open mobile editor if errors are empty in sticky mode', () => {
+      TestBed.configureTestingModule({
+        imports: [ThPaymentSummaryComponent],
+        providers: [
+          {
+            provide: ActivatedRoute,
+            useValue: {},
+          },
+        ],
+      });
+
+      const fixture = TestBed.createComponent(ThPaymentSummaryComponent);
+      const component = fixture.componentInstance;
+
+      component.mobileSticky = true;
+      component.isMobileEditorOpen = false;
+      component.checkInError = '';
+
+      component.ngOnChanges({
+        checkInError: {
+          currentValue: '',
+          previousValue: 'error',
+          firstChange: false,
+          isFirstChange: () => false,
+        },
+      });
+
+      expect(component.isMobileEditorOpen).toBeFalse();
+    });
+
+    it('handles date conversion with leading zeros', () => {
+      TestBed.configureTestingModule({
+        imports: [ThPaymentSummaryComponent],
+        providers: [
+          {
+            provide: ActivatedRoute,
+            useValue: {},
+          },
+        ],
+      });
+
+      const fixture = TestBed.createComponent(ThPaymentSummaryComponent);
+      const component = fixture.componentInstance;
+
+      expect(component.convertDDMMYYYYToISO('05/03/2024')).toBe('2024-03-05');
+      expect(component.convertDDMMYYYYToISO('30/06/2024')).toBe('2024-06-30');
+    });
+
+    it('rejects date conversion with mismatched separators', () => {
+      TestBed.configureTestingModule({
+        imports: [ThPaymentSummaryComponent],
+        providers: [
+          {
+            provide: ActivatedRoute,
+            useValue: {},
+          },
+        ],
+      });
+
+      const fixture = TestBed.createComponent(ThPaymentSummaryComponent);
+      const component = fixture.componentInstance;
+
+      expect(component.convertDDMMYYYYToISO('05-03/2024')).toBeNull();
+      expect(component.convertDDMMYYYYToISO('05.03.2024')).toBeNull();
+    });
+
+    it('handles checkOutMinDate when both dates are same', () => {
+      TestBed.configureTestingModule({
+        imports: [ThPaymentSummaryComponent],
+        providers: [
+          {
+            provide: ActivatedRoute,
+            useValue: {},
+          },
+        ],
+      });
+
+      const fixture = TestBed.createComponent(ThPaymentSummaryComponent);
+      const component = fixture.componentInstance;
+
+      const today = new Date();
+      const todayIso = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(
+        today.getDate(),
+      ).padStart(2, '0')}`;
+
+      component.checkInValue = todayIso;
+      const minDate = component.checkOutMinDate;
+
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const tomorrowIso = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(
+        tomorrow.getDate(),
+      ).padStart(2, '0')}`;
+
+      expect(minDate).toBe(tomorrowIso);
+    });
+
+    it('applies admin variant to all input fields simultaneously', () => {
+      TestBed.configureTestingModule({
+        imports: [ThPaymentSummaryComponent],
+        providers: [
+          {
+            provide: ActivatedRoute,
+            useValue: {},
+          },
+        ],
+      });
+
+      const fixture = TestBed.createComponent(ThPaymentSummaryComponent);
+      const component = fixture.componentInstance;
+      const checkInSpy = spyOn(component.checkInValueChange, 'emit');
+      const checkOutSpy = spyOn(component.checkOutValueChange, 'emit');
+      const guestsSpy = spyOn(component.guestsValueChange, 'emit');
+
+      component.variant = 'admin';
+
+      component.onCheckInActivated();
+      component.onCheckOutActivated();
+      component.onGuestsInput('5');
+
+      expect(checkInSpy).not.toHaveBeenCalled();
+      expect(checkOutSpy).not.toHaveBeenCalled();
+      expect(guestsSpy).not.toHaveBeenCalled();
+    });
   });
 });

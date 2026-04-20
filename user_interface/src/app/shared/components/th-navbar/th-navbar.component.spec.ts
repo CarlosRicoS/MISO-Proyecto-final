@@ -85,4 +85,50 @@ describe('ThNavbarComponent', () => {
     expect(component.detailBackLink).toBe('/search-results');
     expect(component.showDetailFavoriteAction).toBeTrue();
   });
+
+  it('detects booking list route', () => {
+    TestBed.configureTestingModule({
+      imports: [ThNavbarComponent],
+      providers: [
+        { provide: Router, useValue: { url: '/booking-list' } },
+        { provide: ActivatedRoute, useValue: {} },
+      ],
+    });
+
+    const fixture = TestBed.createComponent(ThNavbarComponent);
+    const component = fixture.componentInstance;
+
+    expect(component.isBookingList).toBeTrue();
+    expect(component.isSearchLikeRoute).toBeTrue();
+  });
+
+  it('returns My Reservations as mobile title for booking list', () => {
+    TestBed.configureTestingModule({
+      imports: [ThNavbarComponent],
+      providers: [
+        { provide: Router, useValue: { url: '/booking-list' } },
+        { provide: ActivatedRoute, useValue: {} },
+      ],
+    });
+
+    const fixture = TestBed.createComponent(ThNavbarComponent);
+    const component = fixture.componentInstance;
+
+    expect(component.mobileTitle).toBe('My Reservations');
+  });
+
+  it('returns Search Results as mobile title for search results route', () => {
+    TestBed.configureTestingModule({
+      imports: [ThNavbarComponent],
+      providers: [
+        { provide: Router, useValue: { url: '/search-results' } },
+        { provide: ActivatedRoute, useValue: {} },
+      ],
+    });
+
+    const fixture = TestBed.createComponent(ThNavbarComponent);
+    const component = fixture.componentInstance;
+
+    expect(component.mobileTitle).toBe('Search Results');
+  });
 });

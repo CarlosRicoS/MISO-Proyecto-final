@@ -1,6 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, HostListener, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { IonicModule } from '@ionic/angular';
 import { firstValueFrom } from 'rxjs';
@@ -11,7 +11,7 @@ import { BookingService, Reservation } from '../../core/services/booking.service
 import { PropertyDetailService } from '../../core/services/property-detail.service';
 import { ThAmenityItem } from '../../shared/components/th-amenities-summary/th-amenities-summary.component';
 import { ThDetailsMosaicImage } from '../../shared/components/th-details-mosaic/th-details-mosaic.component';
-import { ThPaymentSummaryItem } from '../../shared/components/th-payment-summary/th-payment-summary.component';
+import { ThPaymentSummaryCompactTab, ThPaymentSummaryItem } from '../../shared/components/th-payment-summary/th-payment-summary.component';
 import { ThGuestReviewItem, ThReviewCategoryScore } from '../../shared/components/th-property-review-summary/th-property-review-summary.component';
 import { ThAmenitiesSummaryComponent } from '../../shared/components/th-amenities-summary/th-amenities-summary.component';
 import { ThDetailSummaryComponent } from '../../shared/components/th-detail-summary/th-detail-summary.component';
@@ -91,7 +91,18 @@ export class BookingDetailPage implements OnInit {
 
   paymentSummaryResetVersion = 0;
 
+  hasDateChanges = false;
+  isRecalculating = false;
+  isMobileViewport = false;
+  mobileConfirmedTab: 'change-dates' | 'cancel' = 'cancel';
+  
+  // Accordion state
+  isCancelAccordionOpen = true;
+  isChangeDatesAccordionOpen = false;
+
   private currentReservation: Reservation | null = null;
+  private hasInitialized = false;
+  private isRefreshingPageData = false;
   readonly cancelAlertButtons = [
     {
       text: 'Keep booking',
@@ -115,12 +126,33 @@ export class BookingDetailPage implements OnInit {
   ) {}
 
   async ngOnInit(): Promise<void> {
+    this.hasInitialized = true;
+    await this.refreshPageData();
+  }
+
+  ionViewWillEnter(): void {
+    if (!this.hasInitialized) {
+      return;
+    }
+
+    void this.refreshPageData();
+  }
+
+  private async refreshPageData(): Promise<void> {
+    if (this.isRefreshingPageData) {
+      return;
+    }
+
+    this.isRefreshingPageData = true;
+    this.updateViewportFlags();
+
     if (!this.authSessionService.isLoggedIn) {
       await this.router.navigate(['/login'], {
         queryParams: {
           returnUrl: this.router.url,
         },
       });
+      this.isRefreshingPageData = false;
       return;
     }
 
@@ -162,11 +194,175 @@ export class BookingDetailPage implements OnInit {
       this.errorMessage = 'Unable to load booking details.';
     } finally {
       this.isLoading = false;
+      this.isRefreshingPageData = false;
+    }
+  }
+
+  get isAccordionLayout(): boolean {
+    const normalizedStatus = (this.bookingStatus || '').trim().toUpperCase();
+    return normalizedStatus === 'CONFIRMED';
+  }
+
+  get isFlatEditableLayout(): boolean {
+    const normalizedStatus = (this.bookingStatus || '').trim().toUpperCase();
+    return normalizedStatus === 'UPCOMING' || normalizedStatus === 'REJECTED';
+  }
+
+  get isEditableStatus(): boolean {
+    return this.isAccordionLayout || this.isFlatEditableLayout;
+  }
+
+  get isFlatCancelLayout(): boolean {
+    const normalizedStatus = (this.bookingStatus || '').trim().toUpperCase();
+    return normalizedStatus === 'UPCOMING';
+  }
+
+  get isFlatChangeDatesLayout(): boolean {
+    const normalizedStatus = (this.bookingStatus || '').trim().toUpperCase();
+    return normalizedStatus === 'REJECTED';
+  }
+
+  get showCancelAccordion(): boolean {
+    const normalizedStatus = (this.bookingStatus || '').trim().toUpperCase();
+    return normalizedStatus === 'CONFIRMED';
+  }
+
+  get showChangeDatesAccordion(): boolean {
+    const normalizedStatus = (this.bookingStatus || '').trim().toUpperCase();
+    return normalizedStatus === 'CONFIRMED';
+  }
+
+  get isCancellationHiddenForStatus(): boolean {
+    const normalizedStatus = (this.bookingStatus || '').trim().toUpperCase();
+    return normalizedStatus === 'CANCELED' || normalizedStatus === 'CANCELLED' || normalizedStatus === 'COMPLETED';
+  }
+
+  get showMobileStickyPanel(): boolean {
+    return this.isMobileViewport;
+  }
+
+  get mobilePanelTabs(): ThPaymentSummaryCompactTab[] {
+    if (this.isAccordionLayout) {
+      return [
+        { id: 'cancel', label: 'Cancel Reservation' },
+        { id: 'change-dates', label: 'Change Dates' },
+      ];
+    }
+
+    return [];
+  }
+
+  get mobilePanelEditable(): boolean {
+    const normalizedStatus = (this.bookingStatus || '').trim().toUpperCase();
+    if (normalizedStatus === 'CONFIRMED') {
+      return this.mobileConfirmedTab === 'change-dates';
+    }
+
+    return normalizedStatus === 'REJECTED';
+  }
+
+  get mobilePanelHideAfterTotal(): boolean {
+    return this.isCancellationHiddenForStatus;
+  }
+
+  get mobilePanelShowAction(): boolean {
+    return !this.mobilePanelHideAfterTotal;
+  }
+
+  get mobilePanelActionLabel(): string {
+    const normalizedStatus = (this.bookingStatus || '').trim().toUpperCase();
+    if (normalizedStatus === 'UPCOMING') {
+      return 'Cancel Reservation';
+    }
+
+    if (normalizedStatus === 'CONFIRMED') {
+      return this.mobileConfirmedTab === 'change-dates' ? 'Recalculate Price' : 'Cancel Reservation';
+    }
+
+    if (normalizedStatus === 'REJECTED') {
+      return 'Recalculate Price';
+    }
+
+    return 'Cancel';
+  }
+
+  get mobilePanelActionDisabled(): boolean {
+    const normalizedStatus = (this.bookingStatus || '').trim().toUpperCase();
+    if (normalizedStatus === 'UPCOMING') {
+      return this.isCancelling;
+    }
+
+    if (normalizedStatus === 'CONFIRMED') {
+      return this.mobileConfirmedTab === 'change-dates'
+        ? this.isRecalculating || this.isCancelling
+        : this.isCancelling || this.isRecalculating;
+    }
+
+    if (normalizedStatus === 'REJECTED') {
+      return this.isRecalculating || this.isCancelling;
+    }
+
+    return true;
+  }
+
+  get mobilePanelIsLoading(): boolean {
+    const normalizedStatus = (this.bookingStatus || '').trim().toUpperCase();
+    if (normalizedStatus === 'UPCOMING') {
+      return this.isCancelling;
+    }
+
+    if (normalizedStatus === 'CONFIRMED') {
+      return this.mobileConfirmedTab === 'change-dates' ? this.isRecalculating : this.isCancelling;
+    }
+
+    if (normalizedStatus === 'REJECTED') {
+      return this.isRecalculating;
+    }
+
+    return false;
+  }
+
+  get mobilePanelPromoText(): string {
+    const normalizedStatus = (this.bookingStatus || '').trim().toUpperCase();
+    if (normalizedStatus === 'CONFIRMED') {
+      return this.mobileConfirmedTab === 'change-dates' ? 'Update Your Dates' : 'Reservation details';
+    }
+
+    return this.mobilePanelEditable ? 'Update Your Dates' : 'Reservation details';
+  }
+
+  get mobilePanelFootnote(): string {
+    if (this.mobilePanelHideAfterTotal) {
+      return '';
+    }
+
+    if (this.isAccordionLayout && this.mobileConfirmedTab === 'cancel') {
+      return 'Cancellation policies may apply';
+    }
+
+    if (this.mobilePanelEditable) {
+      return this.hasDateChanges ? '✓ Dates updated - ready to recalculate' : 'Select new dates to update';
+    }
+
+    return 'Cancellation policies may apply';
+  }
+
+  toggleCancelAccordion(): void {
+    this.isCancelAccordionOpen = !this.isCancelAccordionOpen;
+    if (this.isCancelAccordionOpen) {
+      this.isChangeDatesAccordionOpen = false;
+    }
+  }
+
+  toggleChangeDatesAccordion(): void {
+    this.isChangeDatesAccordionOpen = !this.isChangeDatesAccordionOpen;
+    if (this.isChangeDatesAccordionOpen) {
+      this.isCancelAccordionOpen = false;
     }
   }
 
   onCancelBooking(): void {
-    if (!this.currentReservation || this.isReservationCancelled()) {
+    if (!this.currentReservation || this.isReservationCancellationBlocked()) {
       this.showAlert('Cancellation unavailable', 'This reservation can no longer be cancelled.');
       return;
     }
@@ -175,7 +371,7 @@ export class BookingDetailPage implements OnInit {
   }
 
   async onCancelConfirmed(): Promise<void> {
-    if (!this.currentReservation || this.isReservationCancelled()) {
+    if (!this.currentReservation || this.isReservationCancellationBlocked()) {
       return;
     }
 
@@ -203,6 +399,148 @@ export class BookingDetailPage implements OnInit {
     } finally {
       this.isCancelling = false;
     }
+  }
+
+  async onRecalculatePrice(): Promise<void> {
+    if (!this.currentReservation) {
+      this.showAlert('Error', 'Unable to recalculate price. Reservation data is missing.');
+      return;
+    }
+
+    const newPeriodStart = this.normalizeDateForApi(this.paymentSummary.checkInValue);
+    const newPeriodEnd = this.normalizeDateForApi(this.paymentSummary.checkOutValue);
+
+    if (!newPeriodStart || !newPeriodEnd) {
+      this.showAlert('Invalid dates', 'Please select valid check-in and check-out dates.');
+      return;
+    }
+
+    if (newPeriodEnd <= newPeriodStart) {
+      this.showAlert('Invalid date range', 'Check-out date must be later than check-in date.');
+      return;
+    }
+
+    const updatedGuests = Number.parseInt(String(this.paymentSummary.guestsValue || '').trim(), 10);
+    if (!Number.isFinite(updatedGuests) || updatedGuests <= 0) {
+      this.showAlert('Invalid guests', 'Please enter a valid number of guests.');
+      return;
+    }
+
+    if (!this.hasReservationChanges(newPeriodStart, newPeriodEnd, updatedGuests)) {
+      this.showAlert(
+        'No changes detected',
+        'Please change check-in, check-out, or guests before updating the reservation.',
+      );
+      return;
+    }
+
+    this.isRecalculating = true;
+
+    try {
+      const response = await firstValueFrom(
+        this.bookingService.updateOrchestratedReservationDates(
+          this.currentReservation.id,
+          {
+            new_period_start: newPeriodStart,
+            new_period_end: newPeriodEnd,
+            new_price: 0,
+          },
+          this.authSessionService.idToken,
+        ),
+      );
+
+      const parsedDifference = Number(response.price_difference);
+      const priceDifference = Number.isFinite(parsedDifference) ? parsedDifference : 0;
+
+      this.currentReservation = {
+        ...this.currentReservation,
+        period_start: response.period_start,
+        period_end: response.period_end,
+        guests: updatedGuests,
+        price: Number(response.price),
+        status: response.status,
+      };
+
+      this.shouldNavigateToBookingList = true;
+      this.showAlert(
+        'Dates Updated',
+        `Reservation dates updated successfully. Price difference: ${this.formatAmountWithDecimals(priceDifference, '$')}.`,
+      );
+      this.hasDateChanges = false;
+      this.isChangeDatesAccordionOpen = false;
+    } catch (error: unknown) {
+      const httpError = error as HttpErrorResponse;
+      let message = 'Unable to recalculate price. Please try again.';
+
+      if (httpError.status === 409) {
+        message = 'The property is not available for the selected dates. Please choose different dates.';
+      } else if (typeof httpError.error?.message === 'string') {
+        message = httpError.error.message;
+      } else if (typeof httpError.error?.detail === 'string') {
+        message = httpError.error.detail;
+      }
+
+      this.showAlert('Error', message);
+    } finally {
+      this.isRecalculating = false;
+    }
+  }
+
+  onCheckInChanged(newDate: string): void {
+    this.paymentSummary.checkInValue = newDate;
+    this.hasDateChanges = true;
+  }
+
+  onCheckOutChanged(newDate: string): void {
+    this.paymentSummary.checkOutValue = newDate;
+    this.hasDateChanges = true;
+  }
+
+  onGuestsChanged(newGuests: string): void {
+    this.paymentSummary.guestsValue = this.sanitizeGuestsValue(newGuests);
+    this.hasDateChanges = true;
+  }
+
+  onMobilePanelAction(): void {
+    const normalizedStatus = (this.bookingStatus || '').trim().toUpperCase();
+
+    if (normalizedStatus === 'UPCOMING') {
+      this.onCancelConfirmed();
+      return;
+    }
+
+    if (normalizedStatus === 'CONFIRMED') {
+      if (this.mobileConfirmedTab === 'cancel') {
+        void this.onCancelConfirmed();
+      } else {
+        this.onRecalculatePrice();
+      }
+      return;
+    }
+
+    if (normalizedStatus === 'REJECTED') {
+      this.onRecalculatePrice();
+    }
+  }
+
+  onMobileConfirmedTabSelected(tabId: string): void {
+    if (tabId === 'change-dates' || tabId === 'cancel') {
+      this.mobileConfirmedTab = tabId;
+    }
+  }
+
+  @HostListener('window:resize')
+  onWindowResize(): void {
+    this.updateViewportFlags();
+  }
+
+  private updateViewportFlags(): void {
+    if (typeof window === 'undefined') {
+      this.isMobileViewport = false;
+      return;
+    }
+
+    this.isMobileViewport = window.matchMedia('(max-width: 720px)').matches;
   }
 
   onAlertDismissed(): void {
@@ -320,7 +658,10 @@ export class BookingDetailPage implements OnInit {
       totalAmount: this.formatAmount(totalPrice, currency),
     };
 
+    this.mobileConfirmedTab = 'cancel';
+
     this.paymentSummaryResetVersion += 1;
+    this.hasDateChanges = false;
   }
 
   private getBookingId(navState: Record<string, unknown> | undefined): string {
@@ -404,6 +745,8 @@ export class BookingDetailPage implements OnInit {
         return 'confirmed';
       case 'COMPLETED':
         return 'completed';
+      case 'REJECTED':
+        return 'rejected';
       case 'CANCELED':
       case 'CANCELLED':
         return 'canceled';
@@ -431,6 +774,55 @@ export class BookingDetailPage implements OnInit {
     }).format(safeValue);
 
     return `${currency}${formattedValue}`;
+  }
+
+  private formatAmountWithDecimals(value: number, currency: string): string {
+    const safeValue = Number.isFinite(value) ? value : 0;
+    const formattedValue = new Intl.NumberFormat('en-US', {
+      minimumFractionDigits: safeValue % 1 === 0 ? 0 : 2,
+      maximumFractionDigits: 2,
+    }).format(safeValue);
+
+    return `${currency}${formattedValue}`;
+  }
+
+  private normalizeDateForApi(value: string): string | null {
+    const trimmed = String(value || '').trim();
+    if (!trimmed) {
+      return null;
+    }
+
+    if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+      return trimmed;
+    }
+
+    const ddmmyyyy = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(trimmed);
+    if (!ddmmyyyy) {
+      return null;
+    }
+
+    const [, day, month, year] = ddmmyyyy;
+    return `${year}-${month}-${day}`;
+  }
+
+  private hasReservationChanges(newPeriodStart: string, newPeriodEnd: string, newGuests: number): boolean {
+    if (!this.currentReservation) {
+      return false;
+    }
+
+    const originalPeriodStart = this.normalizeDateForApi(this.currentReservation.period_start) || this.currentReservation.period_start;
+    const originalPeriodEnd = this.normalizeDateForApi(this.currentReservation.period_end) || this.currentReservation.period_end;
+    const originalGuests = Number(this.currentReservation.guests);
+
+    return (
+      originalPeriodStart !== newPeriodStart ||
+      originalPeriodEnd !== newPeriodEnd ||
+      originalGuests !== newGuests
+    );
+  }
+
+  private sanitizeGuestsValue(value: string): string {
+    return String(value || '').replace(/\D+/g, '');
   }
 
   private getScoreLabel(score: number): string {
@@ -491,13 +883,17 @@ export class BookingDetailPage implements OnInit {
     return 'checkmark-circle-outline';
   }
 
-  private isReservationCancelled(): boolean {
+  private isReservationCancellationBlocked(): boolean {
     if (!this.currentReservation) {
       return false;
     }
 
     const normalizedStatus = this.currentReservation.status.trim().toUpperCase();
-    return normalizedStatus === 'CANCELED' || normalizedStatus === 'CANCELLED';
+    return (
+      normalizedStatus === 'CANCELED' ||
+      normalizedStatus === 'CANCELLED' ||
+      normalizedStatus === 'COMPLETED'
+    );
   }
 
   private showAlert(title: string, message: string): void {

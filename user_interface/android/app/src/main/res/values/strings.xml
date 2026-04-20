@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">travelhub</string>
-    <string name="title_activity_main">travelhub</string>
+    <string name="app_name">TravelHub</string>
+    <string name="title_activity_main">TravelHub</string>
     <string name="package_name">com.uniandes.travelhub.app</string>
     <string name="custom_url_scheme">com.uniandes.travelhub.app</string>
 </resources>

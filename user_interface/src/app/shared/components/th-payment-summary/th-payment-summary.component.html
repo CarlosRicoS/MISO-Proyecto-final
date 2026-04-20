@@ -187,74 +187,88 @@
       <span class="th-payment-summary__total-value">{{ totalAmount }}</span>
     </div>
 
-    @if (variant === 'admin') {
-      <div class="th-payment-summary__admin-actions">
-        <th-button
-          variant="secondary"
-          size="lg"
-          [disabled]="adminActionsDisabled || adminRejectDisabled || isLoading"
-          (click)="onAdminRejectClicked()"
-        >
-          <span>{{ adminRejectLabel }}</span>
-        </th-button>
+    <ng-container *ngIf="!hideAfterTotal">
+      @if (variant === 'admin') {
+        <div class="th-payment-summary__admin-actions">
+          <th-button
+            variant="secondary"
+            size="lg"
+            [disabled]="adminActionsDisabled || adminRejectDisabled || isLoading"
+            (click)="onAdminRejectClicked()"
+          >
+            <span>{{ adminRejectLabel }}</span>
+          </th-button>
 
-        <th-button
-          variant="primary"
-          size="lg"
-          [disabled]="adminActionsDisabled || adminAcceptDisabled || isLoading"
-          (click)="onAdminAcceptClicked()"
-        >
-          <span class="th-payment-summary__button-content">
-            <ion-spinner
-              *ngIf="isLoading"
-              name="crescent"
-              class="th-payment-summary__spinner"
-            ></ion-spinner>
-            <span>{{ adminAcceptLabel }}</span>
-          </span>
-        </th-button>
+          <th-button
+            variant="primary"
+            size="lg"
+            [disabled]="adminActionsDisabled || adminAcceptDisabled || isLoading"
+            (click)="onAdminAcceptClicked()"
+          >
+            <span class="th-payment-summary__button-content">
+              <ion-spinner
+                *ngIf="isLoading"
+                name="crescent"
+                class="th-payment-summary__spinner"
+              ></ion-spinner>
+              <span>{{ adminAcceptLabel }}</span>
+            </span>
+          </th-button>
+        </div>
+      } @else {
+        <div class="th-payment-summary__action" *ngIf="showAction">
+          <th-button
+            variant="primary"
+            size="lg"
+            expand="block"
+            [disabled]="actionDisabled || isLoading"
+            (click)="onActionClicked()"
+          >
+            <span class="th-payment-summary__button-content">
+              <ion-spinner
+                *ngIf="isLoading"
+                name="crescent"
+                class="th-payment-summary__spinner"
+              ></ion-spinner>
+              <span>{{ actionLabel }}</span>
+            </span>
+          </th-button>
+        </div>
+      }
+
+      <p class="th-payment-summary__footnote" *ngIf="footnote">
+        {{ footnote }}
+      </p>
+
+      <div class="th-payment-summary__trust-row">
+        <span class="th-payment-summary__trust-item">
+          <ion-icon [name]="trustLeftIcon" aria-hidden="true"></ion-icon>
+          {{ trustLeftLabel }}
+        </span>
+        <span class="th-payment-summary__trust-item">
+          <ion-icon [name]="trustRightIcon" aria-hidden="true"></ion-icon>
+          {{ trustRightLabel }}
+        </span>
       </div>
-    } @else {
-      <div class="th-payment-summary__action">
-        <th-button
-          variant="primary"
-          size="lg"
-          expand="block"
-          [disabled]="actionDisabled || isLoading"
-          (click)="onActionClicked()"
-        >
-          <span class="th-payment-summary__button-content">
-            <ion-spinner
-              *ngIf="isLoading"
-              name="crescent"
-              class="th-payment-summary__spinner"
-            ></ion-spinner>
-            <span>{{ actionLabel }}</span>
-          </span>
-        </th-button>
-      </div>
-    }
-
-    <p class="th-payment-summary__footnote" *ngIf="footnote">
-      {{ footnote }}
-    </p>
-
-    <div class="th-payment-summary__trust-row">
-      <span class="th-payment-summary__trust-item">
-        <ion-icon [name]="trustLeftIcon" aria-hidden="true"></ion-icon>
-        {{ trustLeftLabel }}
-      </span>
-      <span class="th-payment-summary__trust-item">
-        <ion-icon [name]="trustRightIcon" aria-hidden="true"></ion-icon>
-        {{ trustRightLabel }}
-      </span>
-    </div>
+    </ng-container>
   </ion-card-content>
 
   <ion-card-content
     class="th-payment-summary__content th-payment-summary__content--compact"
     *ngIf="mobileSticky"
   >
+    <div class="th-payment-summary__compact-tabs" *ngIf="compactTabs.length > 1">
+      <button
+        type="button"
+        class="th-payment-summary__compact-tab"
+        *ngFor="let tab of compactTabs"
+        [class.th-payment-summary__compact-tab--active]="tab.id === compactActiveTabId"
+        (click)="onCompactTabSelected(tab.id)"
+      >
+        {{ tab.label }}
+      </button>
+    </div>
+
     <div class="th-payment-summary__compact-price">
       <div class="th-payment-summary__compact-main">
         <span class="th-payment-summary__compact-amount">{{ totalAmount }}</span>
@@ -273,7 +287,7 @@
       </button>
     </div>
 
-    <div class="th-payment-summary__compact-action">
+    <div class="th-payment-summary__compact-action" *ngIf="showAction">
       <th-button variant="primary" size="md" [disabled]="actionDisabled || isLoading" (click)="onActionClicked()">
         <span class="th-payment-summary__button-content">
           <ion-spinner
@@ -284,6 +298,21 @@
           <span>{{ actionLabel }}</span>
         </span>
       </th-button>
+
+      <button
+        type="button"
+        class="th-payment-summary__compact-secondary-action"
+        *ngIf="compactShowSecondaryAction"
+        [disabled]="compactSecondaryActionDisabled || compactSecondaryActionLoading"
+        (click)="onCompactSecondaryActionClicked()"
+      >
+        <ion-spinner
+          *ngIf="compactSecondaryActionLoading"
+          name="crescent"
+          class="th-payment-summary__spinner"
+        ></ion-spinner>
+        <span>{{ compactSecondaryActionLabel }}</span>
+      </button>
     </div>
 
     <section
@@ -313,7 +342,7 @@
   [isOpen]="showCheckOutModal"
   title="Select Check-out Date"
   [selectedDate]="tempDate"
-  [minDate]="convertDDMMYYYYToISO(checkInValue)"
+  [minDate]="checkOutMinDate"
   confirmLabel="Confirm"
   cancelLabel="Cancel"
   (dateSelected)="onCheckOutConfirmed($event)"

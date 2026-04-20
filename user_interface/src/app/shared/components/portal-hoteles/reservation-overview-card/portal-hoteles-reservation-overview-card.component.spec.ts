@@ -41,4 +41,34 @@ describe('PortalHotelesReservationOverviewCardComponent', () => {
     // Assert
     expect(cssClass).toContain('portal-hoteles-reservation-overview-card__status--rejected');
   });
+
+  it('maps confirmed status into confirmed visual class', () => {
+    component.statusLabel = 'Confirmed';
+    const cssClass = component.statusClass;
+    expect(cssClass).toContain('portal-hoteles-reservation-overview-card__status--confirmed');
+  });
+
+  it('maps pending status into pending visual class', () => {
+    component.statusLabel = 'Pending';
+    const cssClass = component.statusClass;
+    expect(cssClass).toContain('portal-hoteles-reservation-overview-card__status--pending');
+  });
+
+  it('maps cancelled status into rejected visual class', () => {
+    component.statusLabel = 'Cancelled';
+    const cssClass = component.statusClass;
+    expect(cssClass).toContain('portal-hoteles-reservation-overview-card__status--rejected');
+  });
+
+  it('maps unknown status into default visual class', () => {
+    component.statusLabel = 'Unknown';
+    const cssClass = component.statusClass;
+    expect(cssClass).toContain('portal-hoteles-reservation-overview-card__status--default');
+  });
+
+  it('handles status with leading/trailing whitespace', () => {
+    component.statusLabel = '  Confirmed  ';
+    const cssClass = component.statusClass;
+    expect(cssClass).toContain('portal-hoteles-reservation-overview-card__status--confirmed');
+  });
 });
