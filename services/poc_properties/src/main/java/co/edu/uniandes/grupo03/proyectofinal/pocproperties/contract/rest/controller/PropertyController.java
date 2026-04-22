@@ -3,6 +3,7 @@ package co.edu.uniandes.grupo03.proyectofinal.pocproperties.contract.rest.contro
 import co.edu.uniandes.grupo03.proyectofinal.pocproperties.business.command.CommandHandler;
 import co.edu.uniandes.grupo03.proyectofinal.pocproperties.business.command.EmptyCommandResponse;
 import co.edu.uniandes.grupo03.proyectofinal.pocproperties.business.command.propertydetail.LockPropertyCommand;
+import co.edu.uniandes.grupo03.proyectofinal.pocproperties.business.command.propertydetail.UnlockPropertyCommand;
 import co.edu.uniandes.grupo03.proyectofinal.pocproperties.business.query.PageableQueryHandler;
 import co.edu.uniandes.grupo03.proyectofinal.pocproperties.business.query.QueryHandler;
 import co.edu.uniandes.grupo03.proyectofinal.pocproperties.business.query.propertydetail.SearchPropertiesQuery;
@@ -29,6 +30,8 @@ public class PropertyController {
 
     private final CommandHandler<LockPropertyCommand, EmptyCommandResponse> lockPropertyCommandHandler;
 
+    private final CommandHandler<UnlockPropertyCommand, EmptyCommandResponse> unlockPropertyCommandHandler;
+
     @GetMapping
     public ResponseEntity<List<SearchPropertiesQueryResponse.PropertyResult>> searchProperties(SearchPropertiesQuery query,
                                                                                                @PageableDefault(page = 0, size = 10) Pageable pageable) {
@@ -46,6 +49,13 @@ public class PropertyController {
     public ResponseEntity<Void> lockProperty(@RequestBody LockPropertyCommand command) {
 
         lockPropertyCommandHandler.handle(command);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/unlock")
+    public ResponseEntity<Void> unlockProperty(@RequestBody UnlockPropertyCommand command) {
+
+        unlockPropertyCommandHandler.handle(command);
         return ResponseEntity.noContent().build();
     }
 }

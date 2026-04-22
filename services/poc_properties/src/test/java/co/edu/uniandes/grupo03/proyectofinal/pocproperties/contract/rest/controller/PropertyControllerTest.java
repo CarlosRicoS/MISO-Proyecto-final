@@ -3,6 +3,7 @@ package co.edu.uniandes.grupo03.proyectofinal.pocproperties.contract.rest.contro
 import co.edu.uniandes.grupo03.proyectofinal.pocproperties.business.command.CommandHandler;
 import co.edu.uniandes.grupo03.proyectofinal.pocproperties.business.command.EmptyCommandResponse;
 import co.edu.uniandes.grupo03.proyectofinal.pocproperties.business.command.propertydetail.LockPropertyCommand;
+import co.edu.uniandes.grupo03.proyectofinal.pocproperties.business.command.propertydetail.UnlockPropertyCommand;
 import co.edu.uniandes.grupo03.proyectofinal.pocproperties.business.exception.ResourceAlreadyExistsException;
 import co.edu.uniandes.grupo03.proyectofinal.pocproperties.business.exception.ResourceNotFoundException;
 import co.edu.uniandes.grupo03.proyectofinal.pocproperties.business.query.PageableQueryHandler;
@@ -41,6 +42,9 @@ class PropertyControllerTest {
     @Mock
     private CommandHandler<LockPropertyCommand, EmptyCommandResponse> lockPropertyCommandHandler;
 
+    @Mock
+    private CommandHandler<UnlockPropertyCommand, EmptyCommandResponse> unlockPropertyCommandHandler;
+
     private PropertyController controller;
 
     @BeforeEach
@@ -48,7 +52,8 @@ class PropertyControllerTest {
         controller = new PropertyController(
                 searchPropertiesQueryHandler,
                 searchPropertyByIdQueryHandler,
-                lockPropertyCommandHandler
+                lockPropertyCommandHandler,
+                unlockPropertyCommandHandler
         );
     }
 
@@ -259,5 +264,63 @@ class PropertyControllerTest {
                 LocalTime.of(11, 0),
                 "admin-group-1"
         );
+    }
+
+    @Test
+    void unlockProperty_shouldReturnNoContentOnSuccess() {
+        // Given
+        LocalDate startDate = LocalDate.of(2024, 1, 1);
+        LocalDate endDate = LocalDate.of(2024, 1, 10);
+        String propertyId = "property-123";
+        UnlockPropertyCommand command = new UnlockPropertyCommand(startDate, endDate, propertyId);
+
+        when(unlockPropertyCommandHandler.handle(command)).thenReturn(EmptyCommandResponse.VALUE);
+
+        // When
+        ResponseEntity<Void> responseEntity = controller.unlockProperty(command);
+
+        // Then
+        assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+        assertThat(responseEntity.getBody()).isNull();
+
+        verify(unlockPropertyCommandHandler).handle(command);
+    }
+
+    @Test
+    void unlockProperty_shouldThrowResourceNotFoundExceptionWhenPropertyDoesNotExist() {
+        // Given
+        LocalDate startDate = LocalDate.of(2024, 1, 1);
+        LocalDate endDate = LocalDate.of(2024, 1, 10);
+        String propertyId = "non-existent-id";
+        UnlockPropertyCommand command = new UnlockPropertyCommand(startDate, endDate, propertyId);
+
+        when(unlockPropertyCommandHandler.handle(command))
+                .thenThrow(new ResourceNotFoundException("The property detail with the id " + propertyId + " does not exist."));
+
+        // When / Then
+        assertThatThrownBy(() -> controller.unlockProperty(command))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("The property detail with the id " + propertyId + " does not exist");
+
+        verify(unlockPropertyCommandHandler).handle(command);
+    }
+
+    @Test
+    void unlockProperty_shouldThrowResourceNotFoundExceptionWhenLockedPropertyDoesNotExist() {
+        // Given
+        LocalDate startDate = LocalDate.of(2024, 1, 1);
+        LocalDate endDate = LocalDate.of(2024, 1, 10);
+        String propertyId = "property-123";
+        UnlockPropertyCommand command = new UnlockPropertyCommand(startDate, endDate, propertyId);
+
+        when(unlockPropertyCommandHandler.handle(command))
+                .thenThrow(new ResourceNotFoundException("No locked property found with the given dates and property detail id."));
+
+        // When / Then
+        assertThatThrownBy(() -> controller.unlockProperty(command))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("No locked property found with the given dates and property detail id");
+
+        verify(unlockPropertyCommandHandler).handle(command);
     }
 }
