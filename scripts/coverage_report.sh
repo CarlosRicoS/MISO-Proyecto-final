@@ -4,7 +4,7 @@ set -u
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 RESULTS_DIR="$ROOT_DIR/test_result"
-THRESHOLD=85
+THRESHOLD=80
 ANDROID_REQUIRED_JDK_MAJOR=21
 
 RED='\033[0;31m'

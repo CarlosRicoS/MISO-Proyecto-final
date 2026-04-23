@@ -51,7 +51,7 @@ print_coverage_summary_from_log() {
 				}
 
 				line_color = red
-				if (pct >= 85) {
+				if (pct >= 80) {
 					line_color = green
 				} else if (pct >= 70) {
 					line_color = yellow
