@@ -17,6 +17,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 @RunWith(AndroidJUnit4.class)
@@ -37,11 +39,9 @@ public class TravelHubEspressoTest {
                 .withElement(findElement(XPATH, "//*[contains(text(),'Find Your Perfect Stay')]"))
                 .check(webMatches(getText(), Matchers.containsString("Find Your Perfect Stay")));
 
-        // Wait for the recommended hotels section to be rendered
+        // On some emulator/WebView versions, getText() can return an empty string even when
+        // XPath has already matched visible text. Presence check via XPath is more stable here.
         waitForElement("//*[contains(text(),'Recommended Hotels')]");
-        onWebView()
-                .withElement(findElement(XPATH, "//*[contains(text(),'Recommended Hotels')]"))
-                .check(webMatches(getText(), Matchers.containsString("Recommended Hotels")));
     }
 
     @Test
@@ -124,9 +124,7 @@ public class TravelHubEspressoTest {
 
     @Test
     public void bookingListRouteRedirectsToLoginForAnonymousSession() {
-        onWebView().forceJavascriptEnabled();
-
-        onWebView().perform(script("sessionStorage.clear(); window.location.href='/booking-list';"));
+        executeJavascript("sessionStorage.clear(); window.location.href='/booking-list';");
 
         waitForUrlContains("/login");
         assertCurrentUrlContains("returnUrl=%2Fbooking-list");
@@ -135,10 +133,8 @@ public class TravelHubEspressoTest {
 
     @Test
     public void bookingListRouteAllowsAuthenticatedSession() {
-        onWebView().forceJavascriptEnabled();
-
         injectAuthenticatedSession();
-        onWebView().perform(script("window.location.href='/booking-list';"));
+        executeJavascript("window.location.href='/booking-list';");
 
         waitForUrlContains("/booking-list");
         assertCurrentUrlContains("/booking-list");
@@ -154,9 +150,48 @@ public class TravelHubEspressoTest {
                         + "\\\"token_type\\\":\\\"Bearer\\\""
                         + "}";
 
-        onWebView().perform(script(
-                "sessionStorage.setItem('th_auth_session', '" + loginResponse + "');"
-        ));
+        executeJavascript("sessionStorage.setItem('th_auth_session', '" + loginResponse + "');");
+    }
+
+    private void executeJavascript(String jsCode) {
+        CountDownLatch latch = new CountDownLatch(1);
+        AtomicReference<Throwable> errorRef = new AtomicReference<>();
+
+        activityScenarioRule
+                .getScenario()
+                .onActivity(
+                        activity -> {
+                            if (activity.getBridge() == null || activity.getBridge().getWebView() == null) {
+                                errorRef.set(new IllegalStateException("WebView bridge is not ready"));
+                                latch.countDown();
+                                return;
+                            }
+
+                            activity
+                                    .getBridge()
+                                    .getWebView()
+                                    .post(
+                                            () ->
+                                                    activity
+                                                            .getBridge()
+                                                            .getWebView()
+                                                            .evaluateJavascript(
+                                                                    jsCode,
+                                                                    value -> latch.countDown()));
+                        });
+
+        try {
+            if (!latch.await(10, TimeUnit.SECONDS)) {
+                throw new AssertionError("Timed out executing JavaScript in WebView");
+            }
+        } catch (InterruptedException interruptedException) {
+            Thread.currentThread().interrupt();
+            throw new AssertionError("Interrupted while executing JavaScript", interruptedException);
+        }
+
+        if (errorRef.get() != null) {
+            throw new AssertionError("Failed to execute JavaScript", errorRef.get());
+        }
     }
 
     private void waitForElement(String xpath) {
