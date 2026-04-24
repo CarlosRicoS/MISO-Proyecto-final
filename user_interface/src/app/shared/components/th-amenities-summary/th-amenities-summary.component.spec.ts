@@ -104,4 +104,15 @@ describe('ThAmenitiesSummaryComponent', () => {
 
     expect(component.mobileAmenities.length).toBe(0);
   });
+
+  // ----- Accessibility: heading hierarchy (AC-24) -----
+
+  it('renders title as <h2> not <h3>', () => {
+    fixture.detectChanges();
+
+    const h2: HTMLElement | null = fixture.nativeElement.querySelector('h2');
+    const h3: HTMLElement | null = fixture.nativeElement.querySelector('h3');
+    expect(h2).not.toBeNull();
+    expect(h3).toBeNull();
+  });
 });

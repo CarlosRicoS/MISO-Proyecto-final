@@ -29,7 +29,7 @@
     </ul>
   </header>
 
-  <p [class]="statusClass">{{ statusLabel }}</p>
+  <p [class]="statusClass" role="status" aria-live="polite" aria-atomic="true">{{ statusLabel }}</p>
 
   <th-details-mosaic
     [hotelName]="hotelName"

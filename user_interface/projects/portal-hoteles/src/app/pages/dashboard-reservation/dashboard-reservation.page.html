@@ -43,10 +43,10 @@
   }
 
   @if (isLoading) {
-    <p class="portal-hoteles-dashboard-reservation__state">Loading reservation detail...</p>
+    <p class="portal-hoteles-dashboard-reservation__state" aria-live="polite" aria-atomic="true">Loading reservation detail...</p>
   }
 
   @if (!isLoading && errorMessage) {
-    <p class="portal-hoteles-dashboard-reservation__state">{{ errorMessage }}</p>
+    <p class="portal-hoteles-dashboard-reservation__state" role="alert" aria-live="assertive">{{ errorMessage }}</p>
   }
 </ion-content>

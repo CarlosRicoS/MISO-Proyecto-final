@@ -1,17 +1,18 @@
 <div class="th-filter">
   <div class="th-filter__grid">
     <div class="th-filter__group th-filter__group--location">
-      <span class="th-filter__label">{{ locationLabel }}</span>
+      <span class="th-filter__label" id="th-filter-location-label">{{ locationLabel }}</span>
       <ion-item
         class="th-filter__field th-filter__field--input"
         lines="none"
         detail="false"
       >
-        <ion-icon name="location-outline" class="th-filter__icon" slot="start"></ion-icon>
+        <ion-icon name="location-outline" class="th-filter__icon" slot="start" aria-hidden="true"></ion-icon>
         <ion-input
           class="th-filter__input"
           [placeholder]="locationPlaceholder"
           [value]="locationValue"
+          aria-labelledby="th-filter-location-label"
           (ionInput)="locationValueChange.emit($event.detail.value ?? '')"
         ></ion-input>
       </ion-item>
@@ -26,7 +27,7 @@
         detail="false"
         (click)="checkInClicked.emit()"
       >
-        <ion-icon name="calendar-outline" class="th-filter__icon" slot="start"></ion-icon>
+        <ion-icon name="calendar-outline" class="th-filter__icon" slot="start" aria-hidden="true"></ion-icon>
         <ion-label class="th-filter__text">
           <span
             class="th-filter__value"
@@ -47,7 +48,7 @@
         detail="false"
         (click)="checkOutClicked.emit()"
       >
-        <ion-icon name="calendar-outline" class="th-filter__icon" slot="start"></ion-icon>
+        <ion-icon name="calendar-outline" class="th-filter__icon" slot="start" aria-hidden="true"></ion-icon>
         <ion-label class="th-filter__text">
           <span
             class="th-filter__value"
@@ -60,13 +61,13 @@
     </div>
 
     <div class="th-filter__group th-filter__group--guests">
-      <span class="th-filter__label">{{ guestsLabel }}</span>
+      <span class="th-filter__label" id="th-filter-guests-label">{{ guestsLabel }}</span>
       <ion-item
         class="th-filter__field th-filter__field--input"
         lines="none"
         detail="false"
       >
-        <ion-icon name="people-outline" class="th-filter__icon" slot="start"></ion-icon>
+        <ion-icon name="people-outline" class="th-filter__icon" slot="start" aria-hidden="true"></ion-icon>
         <ion-input
           class="th-filter__input"
           type="number"
@@ -74,6 +75,7 @@
           pattern="[0-9]*"
           [placeholder]="guestsPlaceholder"
           [value]="guestsValue"
+          aria-labelledby="th-filter-guests-label"
           (ionInput)="onGuestsInput($event.detail.value)"
         ></ion-input>
       </ion-item>
@@ -85,7 +87,7 @@
       expand="block"
       (click)="action.emit()"
     >
-      <ion-icon name="search-outline" slot="start"></ion-icon>
+      <ion-icon name="search-outline" slot="start" aria-hidden="true"></ion-icon>
       <span>{{ actionLabel }}</span>
     </ion-button>
   </div>

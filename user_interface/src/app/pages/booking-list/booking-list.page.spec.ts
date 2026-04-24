@@ -433,4 +433,42 @@ describe('BookingListPage', () => {
     expect((component as any).formatPropertyLocation({ city: 'Bogota', country: '' })).toBe('Bogota');
     expect((component as any).formatPropertyLocation({ city: 'Bogota', country: 'Colombia' })).toBe('Bogota, Colombia');
   });
+
+  describe('Accessibility: heading, tablist, tabpanel (AC-25, AC-27)', () => {
+    it('has a visible or sr-only <h1> with text "My Reservations"', () => {
+      const h1: HTMLElement | null = fixture.nativeElement.querySelector('h1');
+      expect(h1).not.toBeNull();
+      expect(h1!.textContent!.trim()).toBe('My Reservations');
+    });
+
+    it('filter buttons have role="tab"', () => {
+      const buttons: NodeListOf<HTMLElement> = fixture.nativeElement.querySelectorAll(
+        '.booking-filters__button',
+      );
+      expect(buttons.length).toBeGreaterThan(0);
+      buttons.forEach((btn) => {
+        expect(btn.getAttribute('role')).toBe('tab');
+      });
+    });
+
+    it('active filter button has tabindex="0", inactive buttons have tabindex="-1"', () => {
+      const buttons: NodeListOf<HTMLElement> = fixture.nativeElement.querySelectorAll(
+        '.booking-filters__button',
+      );
+      let activeCount = 0;
+      let inactiveCount = 0;
+      buttons.forEach((btn) => {
+        const tabindex = btn.getAttribute('tabindex');
+        if (tabindex === '0') activeCount++;
+        if (tabindex === '-1') inactiveCount++;
+      });
+      expect(activeCount).toBe(1);
+      expect(inactiveCount).toBe(buttons.length - 1);
+    });
+
+    it('content panel has role="tabpanel"', () => {
+      const tabpanel: HTMLElement | null = fixture.nativeElement.querySelector('[role="tabpanel"]');
+      expect(tabpanel).not.toBeNull();
+    });
+  });
 });

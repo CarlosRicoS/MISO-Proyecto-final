@@ -37,7 +37,7 @@
   min-height: 430px;
   margin: 15px 0;
   border-radius: var(--th-radius-lg);
-  background: var(--th-neutral-100);
+  background: var(--th-white);
   box-shadow: var(--th-shadow-3);
 }
 
@@ -118,7 +118,7 @@
   gap: var(--th-space-1);
   font-size: var(--th-text-body-lg-size);
   line-height: var(--th-text-body-lg-line-height);
-  color: var(--th-neutral-600);
+  color: var(--th-neutral-700);
 }
 
 .login-card__link-inline {

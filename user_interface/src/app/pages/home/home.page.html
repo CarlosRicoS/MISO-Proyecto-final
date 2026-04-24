@@ -80,9 +80,9 @@
 						[ctaRouterLink]="['/propertydetail', hotel.id]"
 					></th-hotel-card>
 				</ng-container>
-				<p class="home-empty" *ngIf="isLoading">Loading hotels...</p>
-				<p class="home-empty" *ngIf="!isLoading && errorMessage">{{ errorMessage }}</p>
-				<p class="home-empty" *ngIf="!isLoading && !errorMessage && !hotels.length">No hotels available.</p>
+				<p class="home-empty" *ngIf="isLoading" aria-live="polite" aria-atomic="true">Loading hotels...</p>
+				<p class="home-empty" *ngIf="!isLoading && errorMessage" role="alert" aria-live="assertive">{{ errorMessage }}</p>
+				<p class="home-empty" *ngIf="!isLoading && !errorMessage && !hotels.length" aria-live="polite" aria-atomic="true">No hotels available.</p>
 			</div>
 		</div>
 	</section>

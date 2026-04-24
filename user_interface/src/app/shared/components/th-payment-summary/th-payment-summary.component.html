@@ -103,7 +103,7 @@
         </p>
 
         <div *ngIf="editable" class="th-payment-summary__field th-payment-summary__field--input">
-          <span class="th-payment-summary__field-label">{{ guestsLabel }}</span>
+          <span class="th-payment-summary__field-label" id="th-ps-guests-label">{{ guestsLabel }}</span>
           <div
             class="th-payment-summary__field-value th-payment-summary__field-value--input"
             [class.th-payment-summary__field-value--error]="!!guestsError"
@@ -115,6 +115,7 @@
               pattern="[0-9]*"
               [placeholder]="guestsPlaceholder"
               [value]="guestsValue"
+              aria-labelledby="th-ps-guests-label"
               (ionInput)="onGuestsInput($event.detail.value)"
             ></ion-input>
             <ion-icon
@@ -210,6 +211,7 @@
                 *ngIf="isLoading"
                 name="crescent"
                 class="th-payment-summary__spinner"
+                aria-label="Loading, please wait"
               ></ion-spinner>
               <span>{{ adminAcceptLabel }}</span>
             </span>
@@ -229,6 +231,7 @@
                 *ngIf="isLoading"
                 name="crescent"
                 class="th-payment-summary__spinner"
+                aria-label="Loading, please wait"
               ></ion-spinner>
               <span>{{ actionLabel }}</span>
             </span>
@@ -294,6 +297,7 @@
             *ngIf="isLoading"
             name="crescent"
             class="th-payment-summary__spinner"
+            aria-label="Loading, please wait"
           ></ion-spinner>
           <span>{{ actionLabel }}</span>
         </span>
@@ -310,6 +314,7 @@
           *ngIf="compactSecondaryActionLoading"
           name="crescent"
           class="th-payment-summary__spinner"
+          aria-label="Loading, please wait"
         ></ion-spinner>
         <span>{{ compactSecondaryActionLabel }}</span>
       </button>

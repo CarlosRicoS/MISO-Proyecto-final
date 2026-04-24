@@ -13,7 +13,7 @@
       </jdbc-additional-properties>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
-    <data-source source="LOCAL" name="travelhub@localhost" uuid="ed3390f0-2b6c-4c80-8259-061c30fb604c">
+    <data-source source="LOCAL" name="booking@localhost" uuid="ed3390f0-2b6c-4c80-8259-061c30fb604c">
       <driver-ref>postgresql</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>org.postgresql.Driver</jdbc-driver>

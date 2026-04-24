@@ -101,6 +101,6 @@
       </aside>
     </div>
   </section>
-  <p class="propertydetail-empty" *ngIf="isLoading">Loading property details...</p>
-  <p class="propertydetail-empty" *ngIf="!isLoading && errorMessage">{{ errorMessage }}</p>
+  <p class="propertydetail-empty" *ngIf="isLoading" aria-live="polite" aria-atomic="true">Loading property details...</p>
+  <p class="propertydetail-empty" *ngIf="!isLoading && errorMessage" role="alert" aria-live="assertive">{{ errorMessage }}</p>
 </ion-content>
