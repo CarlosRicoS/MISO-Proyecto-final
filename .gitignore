@@ -265,3 +265,6 @@ load-tests/results/
 .pers
 
 .idea/
+
+# Spec-driven dev artifacts (feature specs tracked per-branch, not on main)
+specs/*/
