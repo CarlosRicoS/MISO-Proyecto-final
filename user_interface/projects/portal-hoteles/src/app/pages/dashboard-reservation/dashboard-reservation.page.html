@@ -47,6 +47,6 @@
   }
 
   @if (!isLoading && errorMessage) {
-    <p class="portal-hoteles-dashboard-reservation__state" role="alert">{{ errorMessage }}</p>
+    <p class="portal-hoteles-dashboard-reservation__state" role="alert" aria-live="assertive">{{ errorMessage }}</p>
   }
 </ion-content>

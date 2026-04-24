@@ -156,6 +156,14 @@ fi
 
 log_ok "Pruebas E2E web completadas correctamente."
 
+log_step "Ejecutando pruebas E2E web portal-hoteles (levanta servidor automáticamente)."
+if ! npm run e2e:portal-hoteles:with-app; then
+	log_fail "Fallaron las pruebas E2E web de portal-hoteles. No se creó el commit."
+	exit 1
+fi
+
+log_ok "Pruebas E2E web de portal-hoteles completadas correctamente."
+
 log_step "Ejecutando pruebas E2E Android (Espresso)."
 ANDROID_E2E_LOG="$(mktemp)"
 if ! npm run e2e:android:espresso:script:auto-emulator 2>&1 | tee "$ANDROID_E2E_LOG"; then

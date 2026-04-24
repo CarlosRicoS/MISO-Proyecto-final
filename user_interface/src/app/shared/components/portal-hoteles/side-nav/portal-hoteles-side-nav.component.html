@@ -1,4 +1,4 @@
-<aside class="portal-hoteles-side-nav">
+<nav class="portal-hoteles-side-nav" aria-label="Primary navigation">
   <div class="portal-hoteles-side-nav__brand">
     <div class="portal-hoteles-side-nav__brand-mark">
       <ion-icon name="business-outline" aria-hidden="true"></ion-icon>
@@ -9,7 +9,7 @@
     </div>
   </div>
 
-  <nav class="portal-hoteles-side-nav__menu" aria-label="Primary navigation">
+  <div class="portal-hoteles-side-nav__menu">
     <p class="portal-hoteles-side-nav__section-label">Main Menu</p>
 
     <a
@@ -22,7 +22,7 @@
       <ion-icon [name]="item.icon" aria-hidden="true"></ion-icon>
       <span>{{ item.label }}</span>
     </a>
-  </nav>
+  </div>
 
   <div class="portal-hoteles-side-nav__footer">
     <button type="button" class="portal-hoteles-side-nav__logout" (click)="logoutClicked.emit()">
@@ -30,4 +30,4 @@
       <span>Sign out</span>
     </button>
   </div>
-</aside>
+</nav>

@@ -108,13 +108,13 @@
       <div class="portal-hoteles-dashboard-placeholder portal-hoteles-dashboard-placeholder--list"></div>
       <div class="portal-hoteles-dashboard-placeholder portal-hoteles-dashboard-placeholder--list"></div>
       <div class="portal-hoteles-dashboard-placeholder portal-hoteles-dashboard-placeholder--list"></div>
-      <portal-hoteles-generic-card emptyLabel="Today's highlights"></portal-hoteles-generic-card>
+      <portal-hoteles-generic-card emptyLabel="Today's highlights" aria-live="polite" aria-atomic="true"></portal-hoteles-generic-card>
     </portal-hoteles-grid-card>
   </section>
 
   <ng-template #reservationsFallback>
     <p class="portal-hoteles-dashboard-table__message" *ngIf="isLoadingReservations" aria-live="polite" aria-atomic="true">Loading reservations...</p>
-    <p class="portal-hoteles-dashboard-table__message" *ngIf="!isLoadingReservations && reservationsErrorMessage" role="alert">
+    <p class="portal-hoteles-dashboard-table__message" *ngIf="!isLoadingReservations && reservationsErrorMessage" role="alert" aria-live="assertive">
       {{ reservationsErrorMessage }}
     </p>
     <p class="portal-hoteles-dashboard-table__message" *ngIf="!isLoadingReservations && !reservationsErrorMessage && !hasReservations" aria-live="polite" aria-atomic="true">
