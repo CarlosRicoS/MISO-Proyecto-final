@@ -62,8 +62,48 @@ const propertyDetails = {
   },
 };
 
+const reservations = [
+  {
+    id: 'res-001',
+    property_id: 'hotel-1',
+    user_id: 'user-123',
+    guests: 2,
+    period_start: '2026-08-10',
+    period_end: '2026-08-14',
+    price: 620,
+    status: 'PENDING',
+    admin_group_id: 'hotel-admins',
+    payment_reference: null,
+    created_at: '2026-07-01T10:00:00Z',
+  },
+  {
+    id: 'res-002',
+    property_id: 'hotel-2',
+    user_id: 'user-123',
+    guests: 1,
+    period_start: '2026-09-03',
+    period_end: '2026-09-05',
+    price: 280,
+    status: 'CONFIRMED',
+    admin_group_id: 'hotel-admins',
+    payment_reference: 'pay-001',
+    created_at: '2026-07-02T14:30:00Z',
+  },
+];
+
+function getCorsHeaders() {
+  return {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET,POST,PATCH,PUT,DELETE,OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-User-Id, X-User-Email',
+  };
+}
+
 function sendJson(res, statusCode, payload) {
-  res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+  res.writeHead(statusCode, {
+    ...getCorsHeaders(),
+    'Content-Type': 'application/json',
+  });
   res.end(JSON.stringify(payload));
 }
 
@@ -75,6 +115,12 @@ const server = http.createServer((req, res) => {
 
   const url = new URL(req.url, `http://localhost:${port}`);
   const pathname = url.pathname;
+
+  if (req.method === 'OPTIONS') {
+    res.writeHead(204, getCorsHeaders());
+    res.end();
+    return;
+  }
 
   if (pathname === '/health') {
     sendJson(res, 200, { status: 'ok' });
@@ -110,6 +156,11 @@ const server = http.createServer((req, res) => {
     }
 
     sendJson(res, 200, detail);
+    return;
+  }
+
+  if (pathname === '/booking/api/booking' || pathname === '/booking/api/booking/') {
+    sendJson(res, 200, reservations);
     return;
   }
 

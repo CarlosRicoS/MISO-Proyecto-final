@@ -318,7 +318,6 @@ while [[ $# -gt 0 ]]; do
       CI_MODE=true
       START_EMULATOR=true
       HEADLESS=true
-      USE_WIREMOCK=true
       shift
       ;;
     --boot-timeout-sec)
@@ -382,7 +381,7 @@ fi
 ensure_compatible_device
 optimize_device_for_e2e
 
-if [[ "$CI_MODE" == "true" ]]; then
+if [[ "$CI_MODE" == "true" && "$USE_WIREMOCK" == "true" ]]; then
   start_mock_api_if_needed
 fi
 

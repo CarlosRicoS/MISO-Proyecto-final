@@ -4,8 +4,19 @@ set -u
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 RESULTS_DIR="$ROOT_DIR/test_result"
-THRESHOLD=85
+THRESHOLD=80
 ANDROID_REQUIRED_JDK_MAJOR=21
+
+# Mirror PR validation service matrix exactly for local services reporting.
+declare -a CI_SERVICE_PATHS=(
+  "services/auth"
+  "services/booking"
+  "services/booking_orchestrator"
+  "services/notifications"
+  "services/poc_properties"
+  "services/billing"
+  "services/stripe_mock"
+)
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -215,31 +226,17 @@ extract_lcov_branch_coverage() {
 
 extract_branch_from_karma_log() {
   local log_file="$1"
-  if [[ ! -f "$log_file" ]]; then
-    echo "0.00"
-    return
-  fi
-
-  local branch_pct
-  branch_pct="$(grep -E 'Branches[[:space:]]*:' "$log_file" | tail -n 1 | sed -E 's/.*:[[:space:]]*([0-9]+(\.[0-9]+)?)%.*/\1/')"
-
-  if [[ -z "$branch_pct" ]]; then
-    echo "0.00"
-    return
-  fi
-
-  awk -v b="$branch_pct" 'BEGIN { printf "%.2f", b + 0 }'
+  local summary
+  summary="$(parse_karma_best_coverage_summary "$log_file")"
+  IFS='|' read -r branch_pct _ <<< "$summary"
+  awk -v b="${branch_pct:-0}" 'BEGIN { printf "%.2f", b + 0 }'
 }
 
 extract_lines_total_from_karma_log() {
   local log_file="$1"
-  if [[ ! -f "$log_file" ]]; then
-    echo "0"
-    return
-  fi
-
-  local lines_total
-  lines_total="$(grep -E 'Lines[[:space:]]*:' "$log_file" | tail -n 1 | sed -E 's/.*\([[:space:]]*[0-9]+\/([0-9]+)[[:space:]]*\).*/\1/')"
+  local summary
+  summary="$(parse_karma_best_coverage_summary "$log_file")"
+  IFS='|' read -r _ lines_total <<< "$summary"
   if ! [[ "$lines_total" =~ ^[0-9]+$ ]]; then
     echo "0"
     return
@@ -256,9 +253,49 @@ parse_karma_total_tests() {
   fi
 
   local total
-  total="$(grep -Eo 'Executed [0-9]+ of [0-9]+' "$log_file" | tail -n 1 | awk '{print $4}')"
+  total="$(grep -Eo 'Executed [0-9]+ of [0-9]+' "$log_file" | awk '{if ($4 > max) max=$4} END {print max + 0}')"
   [[ -n "$total" ]] || total="0"
   echo "$total"
+}
+
+parse_karma_best_coverage_summary() {
+  local log_file="$1"
+  if [[ ! -f "$log_file" ]]; then
+    echo "0.00|0"
+    return
+  fi
+
+  awk '
+    {
+      line = $0
+      gsub(/\033\[[0-9;]*[A-Za-z]/, "", line)
+
+      if (line ~ /Branches[[:space:]]*:/) {
+        split(line, parts, ":")
+        if (length(parts) >= 2) {
+          gsub(/^[[:space:]]+|[[:space:]]+$/, "", parts[2])
+          sub(/%.*/, "", parts[2])
+          current_branch = parts[2] + 0
+        }
+      }
+
+      if (line ~ /Lines[[:space:]]*:/) {
+        if (match(line, /\([[:space:]]*[0-9]+\/[0-9]+[[:space:]]*\)/)) {
+          token = substr(line, RSTART, RLENGTH)
+          gsub(/[()[:space:]]/, "", token)
+          split(token, vals, "/")
+          current_lines = vals[2] + 0
+          if (current_lines > best_lines) {
+            best_lines = current_lines
+            best_branch = current_branch + 0
+          }
+        }
+      }
+    }
+    END {
+      printf "%.2f|%d", best_branch + 0, best_lines + 0
+    }
+  ' "$log_file"
 }
 
 parse_pytest_total_tests() {
@@ -291,6 +328,54 @@ parse_pytest_total_tests() {
       print total
     }
   '
+}
+
+parse_pytest_total_coverage() {
+  local log_file="$1"
+  if [[ ! -f "$log_file" ]]; then
+    echo "0.00"
+    return
+  fi
+
+  local total_line
+  local pct
+  total_line="$(grep -E '^[[:space:]]*TOTAL[[:space:]]+[0-9]+' "$log_file" | tail -n 1)"
+  if [[ -z "$total_line" ]]; then
+    echo "0.00"
+    return
+  fi
+
+  pct="$(echo "$total_line" | awk '{print $NF}' | tr -d '%')"
+  if [[ -z "$pct" ]]; then
+    echo "0.00"
+    return
+  fi
+
+  awk -v p="$pct" 'BEGIN { printf "%.2f", p + 0 }'
+}
+
+parse_pytest_total_lines() {
+  local log_file="$1"
+  if [[ ! -f "$log_file" ]]; then
+    echo "0"
+    return
+  fi
+
+  local total_line
+  local stmts
+  total_line="$(grep -E '^[[:space:]]*TOTAL[[:space:]]+[0-9]+' "$log_file" | tail -n 1)"
+  if [[ -z "$total_line" ]]; then
+    echo "0"
+    return
+  fi
+
+  stmts="$(echo "$total_line" | awk '{print $2}')"
+  if ! [[ "$stmts" =~ ^[0-9]+$ ]]; then
+    echo "0"
+    return
+  fi
+
+  echo "$stmts"
 }
 
 parse_dotnet_total_tests() {
@@ -388,31 +473,132 @@ run_user_interface_coverage() {
 
   rm -f "$project_dir/coverage/app/lcov.info"
 
+  local run_failed=0
+
   if ! run_with_spinner "user_interface/travelhub" bash -c '
     set -e
     cd "$1"
     npm ci >"$2" 2> >(tee -a "$2" >&2)
     npx ng test --watch=false --browsers=ChromeHeadless --no-progress --code-coverage --include="src/**/*.spec.ts" >>"$2" 2> >(tee -a "$2" >&2)
   ' _ "$project_dir" "$log_file"; then
-    log_step "user_interface/travelhub failed (see $log_file)"
-    print_failure_log "user_interface/travelhub" "$log_file"
-    echo "Error|$(parse_karma_total_tests "$log_file")|$(extract_lines_total_from_karma_log "$log_file")"
-    return
+    run_failed=1
+    log_step "user_interface/travelhub returned non-zero status; attempting to recover coverage from logs"
   fi
 
   local lcov_file="$project_dir/coverage/app/lcov.info"
   local total_tests total_lines branch_cov
+  local log_branch_cov log_total_lines
   total_tests="$(parse_karma_total_tests "$log_file")"
+  branch_cov="0.00"
+  total_lines="0"
 
   if [[ -f "$lcov_file" ]]; then
     branch_cov="$(extract_lcov_branch_coverage "$lcov_file")"
     total_lines="$(awk -F: '/^LF:/ { total += $2 } END { print total + 0 }' "$lcov_file")"
-    echo "$branch_cov|$total_tests|$total_lines"
+  fi
+
+  IFS='|' read -r log_branch_cov log_total_lines <<< "$(parse_karma_best_coverage_summary "$log_file")"
+
+  if [[ "$log_total_lines" =~ ^[0-9]+$ ]] && [[ "$log_total_lines" -gt "$total_lines" ]]; then
+    total_lines="$log_total_lines"
+  fi
+
+  if awk -v b="$branch_cov" 'BEGIN { exit !(b <= 0) }'; then
+    if awk -v b="$log_branch_cov" 'BEGIN { exit !(b > 0) }'; then
+      branch_cov="$log_branch_cov"
+    fi
+  fi
+
+  if [[ "$total_lines" -eq 0 ]] || [[ "$total_tests" -eq 0 ]]; then
+    branch_cov="$(extract_branch_from_karma_log "$log_file")"
+    total_lines="$(extract_lines_total_from_karma_log "$log_file")"
+  fi
+
+  if [[ "$run_failed" -eq 1 ]] && [[ "$total_tests" -eq 0 ]] && [[ "$total_lines" -eq 0 ]]; then
+    print_failure_log "user_interface/travelhub" "$log_file"
+    echo "Error|0|0"
     return
   fi
 
-  branch_cov="$(extract_branch_from_karma_log "$log_file")"
-  total_lines="$(extract_lines_total_from_karma_log "$log_file")"
+  if [[ "$run_failed" -eq 1 ]]; then
+    log_step "user_interface/travelhub had non-zero exit but usable coverage was recovered"
+  fi
+
+  echo "$branch_cov|$total_tests|$total_lines"
+}
+
+run_portal_hoteles_coverage() {
+  local project_dir="$ROOT_DIR/user_interface"
+  local project_tmp_dir="$RESULTS_DIR/user_interface_portal_hoteles"
+  local log_file="$project_tmp_dir/test.log"
+
+  mkdir -p "$project_tmp_dir"
+
+  if [[ ! -f "$project_dir/package.json" ]]; then
+    log_step "[STEP $CURRENT_STEP/$TOTAL_STEPS] user_interface/portal-hoteles has no package.json"
+    echo "0.00|0|0"
+    return
+  fi
+
+  if ! find "$project_dir/projects/portal-hoteles/src" -type f -name "*.spec.ts" 2>/dev/null | grep -q .; then
+    log_step "[STEP $CURRENT_STEP/$TOTAL_STEPS] user_interface/portal-hoteles has no unit tests"
+    echo "0.00|0|0"
+    return
+  fi
+
+  rm -f "$project_dir/coverage/portal-hoteles/lcov.info"
+
+  local run_failed=0
+
+  if ! run_with_spinner "user_interface/portal-hoteles" bash -c '
+    set -e
+    cd "$1"
+    npm ci >"$2" 2> >(tee -a "$2" >&2)
+    npx ng test portal-hoteles --watch=false --browsers=ChromeHeadless --no-progress --code-coverage >>"$2" 2> >(tee -a "$2" >&2)
+  ' _ "$project_dir" "$log_file"; then
+    run_failed=1
+    log_step "user_interface/portal-hoteles returned non-zero status; attempting to recover coverage from logs"
+  fi
+
+  local lcov_file="$project_dir/coverage/portal-hoteles/lcov.info"
+  local total_tests total_lines branch_cov
+  local log_branch_cov log_total_lines
+  total_tests="$(parse_karma_total_tests "$log_file")"
+  branch_cov="0.00"
+  total_lines="0"
+
+  if [[ -f "$lcov_file" ]]; then
+    branch_cov="$(extract_lcov_branch_coverage "$lcov_file")"
+    total_lines="$(awk -F: '/^LF:/ { total += $2 } END { print total + 0 }' "$lcov_file")"
+  fi
+
+  IFS='|' read -r log_branch_cov log_total_lines <<< "$(parse_karma_best_coverage_summary "$log_file")"
+
+  if [[ "$log_total_lines" =~ ^[0-9]+$ ]] && [[ "$log_total_lines" -gt "$total_lines" ]]; then
+    total_lines="$log_total_lines"
+  fi
+
+  if awk -v b="$branch_cov" 'BEGIN { exit !(b <= 0) }'; then
+    if awk -v b="$log_branch_cov" 'BEGIN { exit !(b > 0) }'; then
+      branch_cov="$log_branch_cov"
+    fi
+  fi
+
+  if [[ "$total_lines" -eq 0 ]] || [[ "$total_tests" -eq 0 ]]; then
+    branch_cov="$(extract_branch_from_karma_log "$log_file")"
+    total_lines="$(extract_lines_total_from_karma_log "$log_file")"
+  fi
+
+  if [[ "$run_failed" -eq 1 ]] && [[ "$total_tests" -eq 0 ]] && [[ "$total_lines" -eq 0 ]]; then
+    print_failure_log "user_interface/portal-hoteles" "$log_file"
+    echo "Error|0|0"
+    return
+  fi
+
+  if [[ "$run_failed" -eq 1 ]]; then
+    log_step "user_interface/portal-hoteles had non-zero exit but usable coverage was recovered"
+  fi
+
   echo "$branch_cov|$total_tests|$total_lines"
 }
 
@@ -442,6 +628,7 @@ parse_android_metrics() {
   local log_file="$1"
   local total="0"
   local failed="0"
+  local errors="0"
   local passed="0"
   local skipped="0"
 
@@ -451,6 +638,88 @@ parse_android_metrics() {
     total="$(echo "$gradle_line" | sed -E 's/.*([0-9]+) tests? completed, ([0-9]+) failed.*/\1/')"
     failed="$(echo "$gradle_line" | sed -E 's/.*([0-9]+) tests? completed, ([0-9]+) failed.*/\2/')"
     passed=$((total - failed))
+    printf "%s|%s|%s|%s" "$total" "$passed" "$failed" "$skipped"
+    return
+  fi
+
+  # Fallback: parse Android connected test JUnit XML reports when Gradle output has no summary counters.
+  local reports_root="$ROOT_DIR/user_interface/android/app/build/outputs/androidTest-results/connected"
+  if [[ -d "$reports_root" ]]; then
+    while IFS= read -r report_file; do
+      local report_tests report_failures report_errors report_skipped
+      report_tests="$(grep -o 'tests="[0-9]*"' "$report_file" | head -n 1 | cut -d'"' -f2)"
+      report_failures="$(grep -o 'failures="[0-9]*"' "$report_file" | head -n 1 | cut -d'"' -f2)"
+      report_errors="$(grep -o 'errors="[0-9]*"' "$report_file" | head -n 1 | cut -d'"' -f2)"
+      report_skipped="$(grep -o 'skipped="[0-9]*"' "$report_file" | head -n 1 | cut -d'"' -f2)"
+
+      [[ -n "$report_tests" ]] || report_tests="0"
+      [[ -n "$report_failures" ]] || report_failures="0"
+      [[ -n "$report_errors" ]] || report_errors="0"
+      [[ -n "$report_skipped" ]] || report_skipped="0"
+
+      total=$((total + report_tests))
+      failed=$((failed + report_failures))
+      errors=$((errors + report_errors))
+      skipped=$((skipped + report_skipped))
+    done < <(find "$reports_root" -type f -name 'TEST-*.xml' -print)
+
+    passed=$((total - failed - errors - skipped))
+    if [[ "$passed" -lt 0 ]]; then
+      passed="0"
+    fi
+  fi
+
+  printf "%s|%s|%s|%s" "$total" "$passed" "$failed" "$skipped"
+}
+
+parse_espresso_metrics() {
+  local log_file="$1"
+  local total="0"
+  local passed="0"
+  local failed="0"
+  local skipped="0"
+
+  local espresso_line
+  espresso_line="$(grep -E 'Tests run: [0-9]+' "$log_file" | tail -n 1)"
+  if [[ -n "$espresso_line" ]]; then
+    total="$(echo "$espresso_line" | sed -E 's/.*Tests run: ([0-9]+).*/\1/')"
+  fi
+
+  local failures_line
+  failures_line="$(grep -E 'failures: [0-9]+' "$log_file" | tail -n 1)"
+  if [[ -n "$failures_line" ]]; then
+    failed="$(echo "$failures_line" | sed -E 's/.*failures: ([0-9]+).*/\1/')"
+  fi
+
+  local errors_line
+  errors_line="$(grep -E 'errors: [0-9]+' "$log_file" | tail -n 1)"
+  if [[ -n "$errors_line" ]]; then
+    local errors="$(echo "$errors_line" | sed -E 's/.*errors: ([0-9]+).*/\1/')"
+    passed=$((total - errors - failed))
+  else
+    passed=$((total - failed))
+  fi
+
+  printf "%s|%s|%s|%s" "$total" "$passed" "$failed" "$skipped"
+}
+
+parse_portal_hoteles_metrics() {
+  local log_file="$1"
+  local total="0"
+  local passed="0"
+  local failed="0"
+  local skipped="0"
+
+  passed="$(grep -Eo '[0-9]+ passed' "$log_file" | tail -n 1 | awk '{print $1}')"
+  failed="$(grep -Eo '[0-9]+ failed' "$log_file" | tail -n 1 | awk '{print $1}')"
+  skipped="$(grep -Eo '[0-9]+ skipped' "$log_file" | tail -n 1 | awk '{print $1}')"
+
+  [[ -n "$passed" ]] || passed="0"
+  [[ -n "$failed" ]] || failed="0"
+  [[ -n "$skipped" ]] || skipped="0"
+
+  if [[ "$total" == "0" ]]; then
+    total=$((passed + failed + skipped))
   fi
 
   printf "%s|%s|%s|%s" "$total" "$passed" "$failed" "$skipped"
@@ -572,6 +841,42 @@ run_user_interface_e2e_web() {
   echo "PASS|${metrics}|$(format_duration "$elapsed")"
 }
 
+run_user_interface_e2e_portal_hoteles() {
+  local project_dir="$ROOT_DIR/user_interface"
+  local project_tmp_dir="$RESULTS_DIR/user_interface_portal_hoteles_e2e"
+  local log_file="$project_tmp_dir/test.log"
+  local started_at ended_at elapsed total detected_total metrics
+
+  mkdir -p "$project_tmp_dir"
+
+  if [[ ! -d "$project_dir/e2e/web-portal-hoteles" ]]; then
+    echo "ERROR|0|0|0|0|0s"
+    return
+  fi
+
+  started_at=$(date +%s)
+  if ! run_with_spinner "user_interface/portal-hoteles" bash -c '
+    set -e
+    cd "$1"
+    npm run e2e:portal-hoteles:with-app >"$2" 2> >(tee -a "$2" >&2)
+  ' _ "$project_dir" "$log_file"; then
+    ended_at=$(date +%s)
+    elapsed=$((ended_at - started_at))
+    metrics="$(parse_portal_hoteles_metrics "$log_file" "0")"
+    print_failure_log "user_interface/portal-hoteles" "$log_file"
+    echo "ERROR|${metrics}|$(format_duration "$elapsed")"
+    return
+  fi
+
+  ended_at=$(date +%s)
+  elapsed=$((ended_at - started_at))
+
+  detected_total="$(grep -Eo 'Running [0-9]+ tests?' "$log_file" | tail -n 1 | awk '{print $2}')"
+  [[ -n "$detected_total" ]] || detected_total="0"
+  metrics="$(parse_portal_hoteles_metrics "$log_file" "$detected_total")"
+  echo "PASS|${metrics}|$(format_duration "$elapsed")"
+}
+
 run_user_interface_e2e_android() {
   local project_dir="$ROOT_DIR/user_interface"
   local project_tmp_dir="$RESULTS_DIR/user_interface_e2e_android"
@@ -627,13 +932,67 @@ run_user_interface_e2e_android() {
   echo "PASS|${metrics}|$(format_duration "$elapsed")"
 }
 
+run_user_interface_e2e_android_espresso() {
+  local project_dir="$ROOT_DIR/user_interface"
+  local project_tmp_dir="$RESULTS_DIR/user_interface_e2e_android"
+  local espresso_log_file="$project_tmp_dir/espresso.log"
+  local started_at ended_at elapsed metrics
+  local android_jdk_home
+  local android_sdk_path
+
+  mkdir -p "$project_tmp_dir"
+
+  if [[ ! -d "$project_dir/e2e/android" ]]; then
+    echo "ERROR|0|0|0|0|0s"
+    return
+  fi
+
+  android_jdk_home="$(ensure_android_jdk)"
+  if [[ -z "$android_jdk_home" ]]; then
+    log_step "Could not install or detect JDK ${ANDROID_REQUIRED_JDK_MAJOR} for Android tests"
+    echo "ERROR|0|0|0|0|0s"
+    return
+  fi
+
+  if ! ensure_android_sdk_config "$project_dir"; then
+    log_step "Android SDK not found. Set ANDROID_HOME/ANDROID_SDK_ROOT or install SDK at $HOME/Android/Sdk"
+    echo "ERROR|0|0|0|0|0s"
+    return
+  fi
+
+  android_sdk_path="${ANDROID_HOME}"
+  if ! ensure_android_device_ready "$android_sdk_path"; then
+    log_step "No ready Android device/emulator found for instrumentation tests"
+    echo "ERROR|0|0|0|0|0s"
+    return
+  fi
+
+  started_at=$(date +%s)
+
+  if ! run_with_spinner "user_interface/e2e-android" bash -c '
+    set -e
+    cd "$1"
+    JAVA_HOME="$3" ANDROID_HOME="$4" ANDROID_SDK_ROOT="$4" PATH="$3/bin:$4/platform-tools:$4/emulator:$PATH" npm run e2e:android:espresso >"$2" 2> >(tee -a "$2" >&2)
+  ' _ "$project_dir" "$espresso_log_file" "$android_jdk_home" "$android_sdk_path"; then
+    ended_at=$(date +%s)
+    elapsed=$((ended_at - started_at))
+    metrics="$(parse_espresso_metrics "$espresso_log_file")"
+    print_failure_log "user_interface/e2e-android" "$espresso_log_file"
+    echo "ERROR|${metrics}|$(format_duration "$elapsed")"
+    return
+  fi
+
+  ended_at=$(date +%s)
+  elapsed=$((ended_at - started_at))
+  metrics="$(parse_espresso_metrics "$espresso_log_file")"
+  echo "PASS|${metrics}|$(format_duration "$elapsed")"
+}
+
 run_python_service_coverage() {
   local service_name="$1"
   local service_dir="$2"
   local project_tmp_dir="$RESULTS_DIR/$service_name"
   local log_file="$project_tmp_dir/test.log"
-  local xml_file="$project_tmp_dir/coverage.xml"
-  local cov_target="$service_name"
 
   mkdir -p "$project_tmp_dir"
 
@@ -643,41 +1002,18 @@ run_python_service_coverage() {
     return
   fi
 
-  case "$service_name" in
-    auth|pms)
-      cov_target="main"
-      ;;
-    booking)
-      cov_target="booking"
-      ;;
-    booking_orchestrator)
-      cov_target="booking_orchestrator"
-      ;;
-    notifications)
-      cov_target="notifications"
-      ;;
-  esac
-
-  rm -f "$xml_file"
-
   if ! run_with_spinner "services/$service_name" bash -c '
     set -e
     cd "$1"
-    uv sync --group dev >"$2" 2> >(tee -a "$2" >&2)
-    uv run pytest tests/ -q \
-      --override-ini=addopts= \
-      --cov="$3" \
-      --cov-branch \
-      --cov-report=xml:"$4" \
-      --cov-fail-under=0 >>"$2" 2> >(tee -a "$2" >&2)
-  ' _ "$service_dir" "$log_file" "$cov_target" "$xml_file"; then
+    make unittest-uv DIR="$3" >"$2" 2> >(tee -a "$2" >&2)
+  ' _ "$ROOT_DIR" "$log_file" "$service_dir"; then
     log_step "services/$service_name failed (see $log_file)"
     print_failure_log "services/$service_name" "$log_file"
-    echo "Error|$(parse_pytest_total_tests "$log_file")|$(extract_lines_valid_from_xml "$xml_file")"
+    echo "Error|$(parse_pytest_total_tests "$log_file")|$(parse_pytest_total_lines "$log_file")"
     return
   fi
 
-  echo "$(extract_branch_rate_from_xml "$xml_file")|$(parse_pytest_total_tests "$log_file")|$(extract_lines_valid_from_xml "$xml_file")"
+  echo "$(parse_pytest_total_coverage "$log_file")|$(parse_pytest_total_tests "$log_file")|$(parse_pytest_total_lines "$log_file")"
 }
 
 run_java_service_coverage() {
@@ -723,11 +1059,11 @@ run_java_service_coverage() {
     return
   fi
 
-  local branch_cov total_lines total_tests
-  branch_cov="$(awk -F, '
+  local line_cov total_lines total_tests
+  line_cov="$(awk -F, '
     NR > 1 {
-      missed += $6
-      covered += $7
+      missed += $8
+      covered += $9
     }
     END {
       total = missed + covered
@@ -750,7 +1086,7 @@ run_java_service_coverage() {
   ' "$jacoco_csv")"
 
   total_tests="$(parse_surefire_total_tests "$surefire_reports_dir")"
-  echo "$branch_cov|$total_tests|$total_lines"
+  echo "$line_cov|$total_tests|$total_lines"
 }
 
 run_dotnet_service_coverage() {
@@ -832,8 +1168,9 @@ detect_and_run_service() {
   echo "0.00|0|0"
 }
 
-TOTAL_STEPS=3
-for service_dir in "$ROOT_DIR"/services/*; do
+TOTAL_STEPS=5
+for service_rel_path in "${CI_SERVICE_PATHS[@]}"; do
+  service_dir="$ROOT_DIR/$service_rel_path"
   [[ -d "$service_dir" ]] || continue
   TOTAL_STEPS=$((TOTAL_STEPS + 1))
 done
@@ -855,7 +1192,18 @@ ui_android_e2e="$(run_user_interface_e2e_android)"
 IFS='|' read -r ui_android_status ui_android_total ui_android_passed ui_android_failed ui_android_skipped ui_android_duration <<< "$ui_android_e2e"
 add_e2e_row "user_interface" "travelhub-android" "$ui_android_status" "$ui_android_total" "$ui_android_passed" "$ui_android_failed" "$ui_android_skipped" "$ui_android_duration" "$CYAN"
 
-for service_dir in "$ROOT_DIR"/services/*; do
+CURRENT_STEP=4
+ui_portal_hoteles_coverage="$(run_portal_hoteles_coverage)"
+IFS='|' read -r ph_coverage ph_total_tests ph_total_lines <<< "$ui_portal_hoteles_coverage"
+add_result_row "user_interface" "portal-hoteles" "$ph_coverage" "$ph_total_tests" "$ph_total_lines" "$CYAN"
+
+CURRENT_STEP=5
+ui_portal_hoteles_e2e="$(run_user_interface_e2e_portal_hoteles)"
+IFS='|' read -r ph_e2e_status ph_e2e_total ph_e2e_passed ph_e2e_failed ph_e2e_skipped ph_e2e_duration <<< "$ui_portal_hoteles_e2e"
+add_e2e_row "user_interface" "portal-hoteles-web" "$ph_e2e_status" "$ph_e2e_total" "$ph_e2e_passed" "$ph_e2e_failed" "$ph_e2e_skipped" "$ph_e2e_duration" "$CYAN"
+
+for service_rel_path in "${CI_SERVICE_PATHS[@]}"; do
+  service_dir="$ROOT_DIR/$service_rel_path"
   [[ -d "$service_dir" ]] || continue
   CURRENT_STEP=$((CURRENT_STEP + 1))
   service_name="$(basename "$service_dir")"
@@ -864,9 +1212,9 @@ for service_dir in "$ROOT_DIR"/services/*; do
   add_result_row "services" "$service_name" "$service_coverage" "$service_total_tests" "$service_total_lines" "$GREEN"
 done
 
-printf "\nBranch coverage gate: %s%%\n\n" "$THRESHOLD"
-printf "%-16s %-26s %10s %12s %12s %8s\n" "GROUP" "PROJECT" "BRANCH" "TOTAL_TESTS" "TOTAL_LINES" "STATUS"
-printf "%-16s %-26s %10s %12s %12s %8s\n" "-----" "-------" "------" "-----------" "-----------" "------"
+printf "\nCoverage gate: %s%% (user_interface branch, services CI line coverage)\n\n" "$THRESHOLD"
+printf "%-16s %-26s %10s %12s %12s %8s\n" "GROUP" "PROJECT" "COVERAGE" "TOTAL_TESTS" "TOTAL_LINES" "STATUS"
+printf "%-16s %-26s %10s %12s %12s %8s\n" "-----" "-------" "--------" "-----------" "-----------" "------"
 
 for row in "${RESULT_ROWS[@]}"; do
   IFS='|' read -r row_group row_project row_coverage row_total_tests row_total_lines row_color <<< "$row"

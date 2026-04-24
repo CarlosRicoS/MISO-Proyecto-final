@@ -1,12 +1,12 @@
 package com.uniandes.travelhub.app;
 
 import static androidx.test.espresso.web.assertion.WebViewAssertions.webMatches;
-import static androidx.test.espresso.web.model.Atoms.getCurrentUrl;
 import static androidx.test.espresso.web.model.Atoms.script;
 import static androidx.test.espresso.web.webdriver.DriverAtoms.getText;
 import static androidx.test.espresso.web.sugar.Web.onWebView;
 import static androidx.test.espresso.web.webdriver.DriverAtoms.findElement;
 import static androidx.test.espresso.web.webdriver.Locator.XPATH;
+import static org.junit.Assert.assertThat;
 
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
@@ -16,6 +16,10 @@ import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 @RunWith(AndroidJUnit4.class)
 @LargeTest
@@ -35,11 +39,9 @@ public class TravelHubEspressoTest {
                 .withElement(findElement(XPATH, "//*[contains(text(),'Find Your Perfect Stay')]"))
                 .check(webMatches(getText(), Matchers.containsString("Find Your Perfect Stay")));
 
-        // Wait for the recommended hotels section to be rendered
+        // On some emulator/WebView versions, getText() can return an empty string even when
+        // XPath has already matched visible text. Presence check via XPath is more stable here.
         waitForElement("//*[contains(text(),'Recommended Hotels')]");
-        onWebView()
-                .withElement(findElement(XPATH, "//*[contains(text(),'Recommended Hotels')]"))
-                .check(webMatches(getText(), Matchers.containsString("Recommended Hotels")));
     }
 
     @Test
@@ -49,9 +51,9 @@ public class TravelHubEspressoTest {
         onWebView().perform(script("window.location.href='/search-results?city=Bogota&capacity=2';"));
 
         waitForUrlContains("search-results");
-        onWebView().check(webMatches(getCurrentUrl(), Matchers.containsString("search-results")));
-        onWebView().check(webMatches(getCurrentUrl(), Matchers.containsString("city=Bogota")));
-        onWebView().check(webMatches(getCurrentUrl(), Matchers.containsString("capacity=2")));
+        assertCurrentUrlContains("search-results");
+        assertCurrentUrlContains("city=Bogota");
+        assertCurrentUrlContains("capacity=2");
     }
 
     @Test
@@ -61,7 +63,7 @@ public class TravelHubEspressoTest {
         onWebView().perform(script("window.location.href='/propertydetail/hotel-1';"));
 
         waitForUrlContains("propertydetail");
-        onWebView().check(webMatches(getCurrentUrl(), Matchers.containsString("propertydetail/hotel-1")));
+        assertCurrentUrlContains("propertydetail/hotel-1");
     }
 
     @Test
@@ -71,7 +73,7 @@ public class TravelHubEspressoTest {
         onWebView().perform(script("window.location.href='/search-results?city=Bogota&capacity=2';"));
 
         waitForUrlContains("search-results");
-        onWebView().check(webMatches(getCurrentUrl(), Matchers.containsString("city=Bogota")));
+        assertCurrentUrlContains("city=Bogota");
     }
 
     @Test
@@ -81,7 +83,7 @@ public class TravelHubEspressoTest {
         onWebView().perform(script("window.location.href='/search-results?city=Bogota&capacity=2';"));
 
         waitForUrlContains("search-results");
-        onWebView().check(webMatches(getCurrentUrl(), Matchers.containsString("search-results")));
+        assertCurrentUrlContains("search-results");
     }
 
     @Test
@@ -91,8 +93,8 @@ public class TravelHubEspressoTest {
         onWebView().perform(script("window.location.href='/search-results?city=Bogota&capacity=2';"));
 
         waitForUrlContains("search-results");
-        onWebView().check(webMatches(getCurrentUrl(), Matchers.containsString("city=Bogota")));
-        onWebView().check(webMatches(getCurrentUrl(), Matchers.containsString("capacity=2")));
+        assertCurrentUrlContains("city=Bogota");
+        assertCurrentUrlContains("capacity=2");
     }
 
     @Test
@@ -107,7 +109,7 @@ public class TravelHubEspressoTest {
         onWebView().perform(script("window.history.back();"));
         waitForUrlContains("search-results");
 
-        onWebView().check(webMatches(getCurrentUrl(), Matchers.containsString("search-results")));
+        assertCurrentUrlContains("search-results");
     }
 
     @Test
@@ -117,29 +119,25 @@ public class TravelHubEspressoTest {
         onWebView().perform(script("window.location.href='/search-results?city=Bogota&capacity=2';"));
 
         waitForUrlContains("search-results");
-        onWebView().check(webMatches(getCurrentUrl(), Matchers.containsString("capacity=2")));
+        assertCurrentUrlContains("capacity=2");
     }
 
     @Test
     public void bookingListRouteRedirectsToLoginForAnonymousSession() {
-        onWebView().forceJavascriptEnabled();
-
-        onWebView().perform(script("sessionStorage.clear(); window.location.href='/booking-list';"));
+        executeJavascript("sessionStorage.clear(); window.location.href='/booking-list';");
 
         waitForUrlContains("/login");
-        onWebView().check(webMatches(getCurrentUrl(), Matchers.containsString("returnUrl=%2Fbooking-list")));
+        assertCurrentUrlContains("returnUrl=%2Fbooking-list");
         waitForElement("//*[contains(text(),'Welcome Back')]");
     }
 
     @Test
     public void bookingListRouteAllowsAuthenticatedSession() {
-        onWebView().forceJavascriptEnabled();
-
         injectAuthenticatedSession();
-        onWebView().perform(script("window.location.href='/booking-list';"));
+        executeJavascript("window.location.href='/booking-list';");
 
         waitForUrlContains("/booking-list");
-        onWebView().check(webMatches(getCurrentUrl(), Matchers.containsString("/booking-list")));
+        assertCurrentUrlContains("/booking-list");
     }
 
     private void injectAuthenticatedSession() {
@@ -152,9 +150,48 @@ public class TravelHubEspressoTest {
                         + "\\\"token_type\\\":\\\"Bearer\\\""
                         + "}";
 
-        onWebView().perform(script(
-                "sessionStorage.setItem('th_auth_session', '" + loginResponse + "');"
-        ));
+        executeJavascript("sessionStorage.setItem('th_auth_session', '" + loginResponse + "');");
+    }
+
+    private void executeJavascript(String jsCode) {
+        CountDownLatch latch = new CountDownLatch(1);
+        AtomicReference<Throwable> errorRef = new AtomicReference<>();
+
+        activityScenarioRule
+                .getScenario()
+                .onActivity(
+                        activity -> {
+                            if (activity.getBridge() == null || activity.getBridge().getWebView() == null) {
+                                errorRef.set(new IllegalStateException("WebView bridge is not ready"));
+                                latch.countDown();
+                                return;
+                            }
+
+                            activity
+                                    .getBridge()
+                                    .getWebView()
+                                    .post(
+                                            () ->
+                                                    activity
+                                                            .getBridge()
+                                                            .getWebView()
+                                                            .evaluateJavascript(
+                                                                    jsCode,
+                                                                    value -> latch.countDown()));
+                        });
+
+        try {
+            if (!latch.await(10, TimeUnit.SECONDS)) {
+                throw new AssertionError("Timed out executing JavaScript in WebView");
+            }
+        } catch (InterruptedException interruptedException) {
+            Thread.currentThread().interrupt();
+            throw new AssertionError("Interrupted while executing JavaScript", interruptedException);
+        }
+
+        if (errorRef.get() != null) {
+            throw new AssertionError("Failed to execute JavaScript", errorRef.get());
+        }
     }
 
     private void waitForElement(String xpath) {
@@ -188,26 +225,46 @@ public class TravelHubEspressoTest {
     private void waitForUrlContains(String expectedFragment) {
         long start = System.currentTimeMillis();
         long timeoutMs = 15000;
-        AssertionError lastError = null;
+        String lastObservedUrl = "";
 
         while (System.currentTimeMillis() - start < timeoutMs) {
-            try {
-                onWebView().check(webMatches(getCurrentUrl(), Matchers.containsString(expectedFragment)));
+            lastObservedUrl = readCurrentUrl();
+            if (lastObservedUrl.contains(expectedFragment)) {
                 return;
-            } catch (AssertionError error) {
-                lastError = error;
-                try {
-                    Thread.sleep(300);
-                } catch (InterruptedException interruptedException) {
-                    Thread.currentThread().interrupt();
-                    throw new AssertionError("Interrupted while waiting for URL", interruptedException);
-                }
+            }
+
+            try {
+                Thread.sleep(300);
+            } catch (InterruptedException interruptedException) {
+                Thread.currentThread().interrupt();
+                throw new AssertionError("Interrupted while waiting for URL", interruptedException);
             }
         }
 
-        if (lastError != null) {
-            throw lastError;
-        }
-        throw new AssertionError("URL did not contain expected fragment: " + expectedFragment);
+        throw new AssertionError(
+                "URL did not contain expected fragment: "
+                        + expectedFragment
+                        + ". Last observed URL: "
+                        + lastObservedUrl);
+    }
+
+    private void assertCurrentUrlContains(String expectedFragment) {
+        assertThat(readCurrentUrl(), Matchers.containsString(expectedFragment));
+    }
+
+    private String readCurrentUrl() {
+        AtomicReference<String> currentUrl = new AtomicReference<>("");
+
+        activityScenarioRule
+                .getScenario()
+                .onActivity(
+                        activity -> {
+                            if (activity.getBridge() != null && activity.getBridge().getWebView() != null) {
+                                String url = activity.getBridge().getWebView().getUrl();
+                                currentUrl.set(url == null ? "" : url);
+                            }
+                        });
+
+        return currentUrl.get();
     }
 }
