@@ -8,7 +8,7 @@ services = {
   "auth" = {
     ecr_repository_name       = "api_auth"
     container_name            = "api_auth"
-    ecs_task_size             = { cpu = 256, memory = 512 }
+    ecs_task_size             = { cpu = 128, memory = 256 }
     create_database           = false
     desired_count_tasks       = 1
     placement_constraint_type = ""
@@ -30,7 +30,7 @@ services = {
   "pms" = {
     ecr_repository_name       = "api_pms"
     container_name            = "api_pms"
-    ecs_task_size             = { cpu = 256, memory = 512 }
+    ecs_task_size             = { cpu = 128, memory = 256 }
     create_database           = false
     desired_count_tasks       = 0
     placement_constraint_type = ""
@@ -54,7 +54,7 @@ services = {
   "poc-properties" = {
     ecr_repository_name       = "api_poc_properties"
     container_name            = "api_poc_properties"
-    ecs_task_size             = { cpu = 512, memory = 921 }
+    ecs_task_size             = { cpu = 256, memory = 448 }
     create_database           = true
     container_port            = 8080
     desired_count_tasks       = 1
@@ -104,7 +104,7 @@ services = {
   "pricing-engine" = {
     ecr_repository_name       = "api_pricing_engine"
     container_name            = "api_pricing_engine"
-    ecs_task_size             = { cpu = 256, memory = 512 }
+    ecs_task_size             = { cpu = 128, memory = 256 }
     create_database           = true
     container_port            = 8080
     desired_count_tasks       = 1
@@ -140,7 +140,7 @@ services = {
   "pricing-orchestator" = {
     ecr_repository_name       = "api_pricing_orchestator"
     container_name            = "api_pricing_orchestator"
-    ecs_task_size             = { cpu = 256, memory = 512 }
+    ecs_task_size             = { cpu = 256, memory = 448 }
     create_database           = false
     container_port            = 8080
     desired_count_tasks       = 0
@@ -168,7 +168,7 @@ services = {
   "booking" = {
     ecr_repository_name       = "api_booking"
     container_name            = "api_booking"
-    ecs_task_size             = { cpu = 256, memory = 512 }
+    ecs_task_size             = { cpu = 256, memory = 448 }
     create_database           = true
     container_port            = 80
     desired_count_tasks       = 1
@@ -204,7 +204,7 @@ services = {
   "booking-orchestrator" = {
     ecr_repository_name       = "api_booking_orchestrator"
     container_name            = "api_booking_orchestrator"
-    ecs_task_size             = { cpu = 256, memory = 512 }
+    ecs_task_size             = { cpu = 256, memory = 448 }
     create_database           = false
     container_port            = 80
     desired_count_tasks       = 1
@@ -244,7 +244,7 @@ services = {
   "billing" = {
     ecr_repository_name       = "api_billing"
     container_name            = "api_billing"
-    ecs_task_size             = { cpu = 512, memory = 921 }
+    ecs_task_size             = { cpu = 256, memory = 448 }
     create_database           = true
     container_port            = 8080
     desired_count_tasks       = 1
@@ -302,7 +302,7 @@ services = {
   "stripe-mock" = {
     ecr_repository_name       = "api_stripe_mock"
     container_name            = "api_stripe_mock"
-    ecs_task_size             = { cpu = 256, memory = 512 }
+    ecs_task_size             = { cpu = 128, memory = 256 }
     create_database           = false
     container_port            = 8080
     desired_count_tasks       = 1
@@ -320,7 +320,7 @@ services = {
   "notifications" = {
     ecr_repository_name       = "api_notifications"
     container_name            = "api_notifications"
-    ecs_task_size             = { cpu = 256, memory = 512 }
+    ecs_task_size             = { cpu = 128, memory = 256 }
     create_database           = false
     container_port            = 80
     desired_count_tasks       = 1
