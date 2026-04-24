@@ -2,6 +2,7 @@ from decimal import Decimal
 
 from booking_orchestrator.domain.events import (
     SCHEMA_VERSION,
+    BookingCancelledEvent,
     BookingConfirmedEvent,
     BookingCreatedEvent,
     BookingDatesChangedEvent,
@@ -117,3 +118,43 @@ def test_payment_confirmed_event_serializes():
     assert msg["booking"]["payment_reference"] == "stripe-ref-abc123"
     assert msg["recipient"]["email"] == "x@y.z"
     assert "occurred_at" in msg
+
+
+def test_booking_cancelled_event_serializes_with_refund_fields():
+    event = BookingCancelledEvent(
+        booking_id="b1",
+        property_id="p1",
+        user_id="u1",
+        user_email="x@y.z",
+        period_start="2026-06-01",
+        period_end="2026-06-05",
+        cancelled_from_status="CONFIRMED",
+        refund_amount=Decimal("150.00"),
+        penalty_amount=Decimal("150.00"),
+    )
+    msg = event.to_message()
+    assert msg["schema_version"] == SCHEMA_VERSION
+    assert msg["type"] == "BOOKING_CANCELLED"
+    assert msg["booking"]["id"] == "b1"
+    assert msg["booking"]["refund_amount"] == "150.00"
+    assert msg["booking"]["penalty_amount"] == "150.00"
+    assert msg["booking"]["cancelled_from_status"] == "CONFIRMED"
+    assert msg["recipient"]["email"] == "x@y.z"
+    assert "occurred_at" in msg
+
+
+def test_booking_cancelled_event_serializes_zero_refund():
+    event = BookingCancelledEvent(
+        booking_id="b2",
+        property_id="p2",
+        user_id="u2",
+        user_email="t@x.com",
+        period_start="2026-06-01",
+        period_end="2026-06-05",
+        cancelled_from_status="PENDING",
+        refund_amount=Decimal("0.00"),
+        penalty_amount=Decimal("0.00"),
+    )
+    msg = event.to_message()
+    assert msg["booking"]["refund_amount"] == "0.00"
+    assert msg["booking"]["penalty_amount"] == "0.00"

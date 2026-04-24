@@ -34,3 +34,19 @@ class HttpxPropertyClient:
             raise PropertyLockError(
                 f"properties service returned {response.status_code}: {response.text}"
             )
+
+    async def unlock(self, property_id: str, period_start: str, period_end: str) -> None:
+        payload = {
+            "propertyDetailId": property_id,
+            "startDate": _to_ddmmyyyy(period_start),
+            "endDate": _to_ddmmyyyy(period_end),
+        }
+        try:
+            response = await self._client.post("/api/property/unlock", json=payload)
+        except httpx.HTTPError as exc:
+            raise PropertyLockError(f"properties service unreachable: {exc}") from exc
+
+        if response.status_code not in {200, 204}:
+            raise PropertyLockError(
+                f"properties service returned {response.status_code}: {response.text}"
+            )

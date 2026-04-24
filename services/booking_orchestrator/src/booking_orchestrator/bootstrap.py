@@ -16,6 +16,7 @@ from booking_orchestrator.application.admin_reject_reservation import AdminRejec
 from booking_orchestrator.application.cancel_reservation import CancelReservationUseCase
 from booking_orchestrator.application.change_dates_reservation import ChangeDatesReservationUseCase
 from booking_orchestrator.application.create_reservation import CreateReservationUseCase
+from booking_orchestrator.application.get_cancellation_policy import GetCancellationPolicyUseCase
 from booking_orchestrator.application.make_payment import MakePaymentUseCase
 from booking_orchestrator.config import settings
 from booking_orchestrator.infrastructure.httpx_booking_client import HttpxBookingClient
@@ -125,10 +126,22 @@ def get_admin_approve_reservation_use_case(
 def get_cancel_reservation_use_case(
     booking_client: BookingClientDep,
     publisher: PublisherDep,
+    property_client: PropertyClientDep,
+    billing_publisher: BillingPublisherDep,
 ) -> CancelReservationUseCase:
     return CancelReservationUseCase(
         booking_client=booking_client,
         publisher=publisher,
+        property_client=property_client,
+        billing_publisher=billing_publisher,
+    )
+
+
+def get_get_cancellation_policy_use_case(
+    booking_client: BookingClientDep,
+) -> GetCancellationPolicyUseCase:
+    return GetCancellationPolicyUseCase(
+        booking_client=booking_client,
     )
 
 

@@ -1,4 +1,5 @@
 from notifications.domain.events import (
+    BookingCancelledEvent,
     BookingConfirmedEvent,
     BookingCreatedEvent,
     BookingRejectedEvent,
@@ -92,3 +93,71 @@ def test_payment_confirmed_event_from_message():
     assert event.payment_reference == "stripe-ref-abc123"
     assert event.user_email == "payer@x.com"
     assert event.guests == 2
+
+
+def test_booking_cancelled_event_from_message_with_refund_fields():
+    message = {
+        "schema_version": 1,
+        "type": "BOOKING_CANCELLED",
+        "occurred_at": "2026-04-24T12:00:00Z",
+        "booking": {
+            "id": "b5",
+            "property_id": "p5",
+            "period_start": "2026-06-01",
+            "period_end": "2026-06-05",
+            "cancelled_from_status": "CONFIRMED",
+            "refund_amount": "150.00",
+            "penalty_amount": "150.00",
+        },
+        "recipient": {"user_id": "u5", "email": "cancelled@x.com"},
+    }
+    event = BookingCancelledEvent.from_message(message)
+    assert event.booking_id == "b5"
+    assert event.cancelled_from_status == "CONFIRMED"
+    assert event.refund_amount == "150.00"
+    assert event.penalty_amount == "150.00"
+    assert event.user_email == "cancelled@x.com"
+
+
+def test_booking_cancelled_event_from_message_without_refund_fields():
+    """Backward compatibility: old messages without refund_amount/penalty_amount default to 0.00."""
+    message = {
+        "schema_version": 1,
+        "type": "BOOKING_CANCELLED",
+        "occurred_at": "2026-04-24T12:00:00Z",
+        "booking": {
+            "id": "b6",
+            "property_id": "p6",
+            "period_start": "2026-06-01",
+            "period_end": "2026-06-05",
+            "cancelled_from_status": "PENDING",
+        },
+        "recipient": {"user_id": "u6", "email": "old@x.com"},
+    }
+    event = BookingCancelledEvent.from_message(message)
+    assert event.booking_id == "b6"
+    assert event.refund_amount == "0.00"
+    assert event.penalty_amount == "0.00"
+    assert event.user_email == "old@x.com"
+
+
+def test_booking_cancelled_event_from_message_zero_amounts():
+    """No payment case: both amounts are "0.00" strings."""
+    message = {
+        "schema_version": 1,
+        "type": "BOOKING_CANCELLED",
+        "occurred_at": "2026-04-24T12:00:00Z",
+        "booking": {
+            "id": "b7",
+            "property_id": "p7",
+            "period_start": "2026-06-01",
+            "period_end": "2026-06-05",
+            "cancelled_from_status": "PENDING",
+            "refund_amount": "0.00",
+            "penalty_amount": "0.00",
+        },
+        "recipient": {"user_id": "u7", "email": "zero@x.com"},
+    }
+    event = BookingCancelledEvent.from_message(message)
+    assert event.refund_amount == "0.00"
+    assert event.penalty_amount == "0.00"

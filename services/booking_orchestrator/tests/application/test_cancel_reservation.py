@@ -3,7 +3,12 @@ import pytest
 from booking_orchestrator.application.cancel_reservation import CancelReservationUseCase
 from booking_orchestrator.application.commands import CancelReservationCommand
 from booking_orchestrator.domain.exceptions import BookingNotFoundError, ReservationFailedError
-from tests.application.fakes import FakeBookingClient, FakePublisher
+from tests.application.fakes import (
+    FakeBillingPublisher,
+    FakeBookingClient,
+    FakePropertyClient,
+    FakePublisher,
+)
 
 
 def _make_command(**overrides) -> CancelReservationCommand:
@@ -16,10 +21,12 @@ def _make_command(**overrides) -> CancelReservationCommand:
     return CancelReservationCommand(**defaults)
 
 
-def _make_use_case(booking=None, publisher=None):
+def _make_use_case(booking=None, publisher=None, property_client=None, billing_publisher=None):
     return CancelReservationUseCase(
         booking_client=booking or FakeBookingClient(),
         publisher=publisher or FakePublisher(),
+        property_client=property_client or FakePropertyClient(),
+        billing_publisher=billing_publisher or FakeBillingPublisher(),
     )
 
 

@@ -1,0 +1,26 @@
+$kind: http-request
+name: Get Cancellation Policy
+url: "{{base_url}}/booking-orchestrator/api/reservations/{{booking_id}}/cancellation-policy"
+method: GET
+headers:
+  Authorization: "Bearer {{id_token}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Returns 200 OK', function () {
+        pm.response.to.have.status(200);
+      });
+      pm.test('Response has cancellation policy fields', function () {
+        const json = pm.response.json();
+        pm.expect(json).to.have.property('booking_id');
+        pm.expect(json).to.have.property('is_free_cancellation');
+        pm.expect(json).to.have.property('refund_amount');
+        pm.expect(json).to.have.property('penalty_amount');
+        pm.expect(json).to.have.property('cancellation_deadline');
+      });
+      pm.test('is_free_cancellation is a boolean', function () {
+        const json = pm.response.json();
+        pm.expect(json.is_free_cancellation).to.be.a('boolean');
+      });
+    language: text/javascript
+order: 7000

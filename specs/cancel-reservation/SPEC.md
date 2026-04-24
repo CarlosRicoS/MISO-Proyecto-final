@@ -1,7 +1,8 @@
 # Feature: Cancel Reservation with Policy-Based Refund
 
-**Status:** Draft  
+**Status:** Implemented  
 **Created:** 2026-04-24  
+**Implemented:** 2026-04-24  
 **Author:** Angel Henao  
 **Slug:** `cancel-reservation`
 
@@ -25,17 +26,17 @@ The existing cancel endpoint (`POST /api/reservations/{booking_id}/cancel`) only
 
 ## Acceptance Criteria
 
-1. [ ] `GET /api/reservations/{booking_id}/cancellation-policy` returns `is_free_cancellation`, `refund_amount`, `penalty_amount`, and `cancellation_deadline` for a booking owned by the authenticated user.
-2. [ ] If the current time is ≥ 24 hours before `period_start`: `is_free_cancellation = true`, `refund_amount = price`, `penalty_amount = 0.00`.
-3. [ ] If the current time is < 24 hours before `period_start`: `is_free_cancellation = false`, `refund_amount = price * 0.5`, `penalty_amount = price * 0.5`.
-4. [ ] If `payment_reference` is `null` (no payment made): `refund_amount = 0.00`, `penalty_amount = 0.00` regardless of timing.
-5. [ ] `POST /api/reservations/{booking_id}/cancel` cancels the booking in the `booking` service (unchanged behavior).
-6. [ ] On cancellation, the orchestrator calls `POST /api/property/unlock` in `poc_properties` with the booking's `property_id`, `period_start`, and `period_end` (best-effort — failure is logged, not raised).
-7. [ ] On cancellation, if `payment_reference` is present, the orchestrator publishes a `CANCEL` command onto `billing_queue` with `bookingId` and `reason = "user_cancellation"` (best-effort).
-8. [ ] The `BOOKING_CANCELLED` SQS event includes `refund_amount` and `penalty_amount` fields so the notification email can show the refund to the traveler.
-9. [ ] The cancellation email sent by `notifications` includes the refund amount and the penalty amount.
-10. [ ] The policy endpoint returns `404` if the booking does not exist.
-11. [ ] The cancel endpoint returns `409` if the booking is already in a terminal state (CANCELED, COMPLETED, REJECTED).
+1. [x] `GET /api/reservations/{booking_id}/cancellation-policy` returns `is_free_cancellation`, `refund_amount`, `penalty_amount`, and `cancellation_deadline` for a booking owned by the authenticated user.
+2. [x] If the current time is ≥ 24 hours before `period_start`: `is_free_cancellation = true`, `refund_amount = price`, `penalty_amount = 0.00`.
+3. [x] If the current time is < 24 hours before `period_start`: `is_free_cancellation = false`, `refund_amount = price * 0.5`, `penalty_amount = price * 0.5`.
+4. [x] If `payment_reference` is `null` (no payment made): `refund_amount = 0.00`, `penalty_amount = 0.00` regardless of timing.
+5. [x] `POST /api/reservations/{booking_id}/cancel` cancels the booking in the `booking` service (unchanged behavior).
+6. [x] On cancellation, the orchestrator calls `POST /api/property/unlock` in `poc_properties` with the booking's `property_id`, `period_start`, and `period_end` (best-effort — failure is logged, not raised).
+7. [x] On cancellation, if `payment_reference` is present, the orchestrator publishes a `CANCEL` command onto `billing_queue` with `bookingId` and `reason = "user_cancellation"` (best-effort).
+8. [x] The `BOOKING_CANCELLED` SQS event includes `refund_amount` and `penalty_amount` fields so the notification email can show the refund to the traveler.
+9. [x] The cancellation email sent by `notifications` includes the refund amount and the penalty amount.
+10. [x] The policy endpoint returns `404` if the booking does not exist.
+11. [x] The cancel endpoint returns `409` if the booking is already in a terminal state (CANCELED, COMPLETED, REJECTED).
 
 ---
 
@@ -158,8 +159,8 @@ sequenceDiagram
 
 | # | Question | Resolution |
 |---|---|---|
-| 1 | Should the policy endpoint be scoped to the booking owner only, or visible to any authenticated user? | Pending — for now, no ownership check (booking service does not expose user_id in a way that's easily cross-checked at orchestrator level without extra work) |
-| 2 | Should unlock failure during cancellation roll back the booking cancel? | Pending — current proposal: best-effort (unlock failure is logged, booking stays CANCELED) |
+| 1 | Should the policy endpoint be scoped to the booking owner only, or visible to any authenticated user? | No ownership check implemented. The orchestrator does not cross-check X-User-Id against the booking owner — it relies on the booking service's existing auth model. |
+| 2 | Should unlock failure during cancellation roll back the booking cancel? | Best-effort confirmed. Unlock failure is logged but does not roll back the booking cancellation. |
 
 ---
 

@@ -38,6 +38,16 @@ class MakePaymentRequest(BaseModel):
     payment_method_type: str = Field(default="CREDIT_CARD")
 
 
+class CancellationPolicyResponse(BaseModel):
+    """Cancellation policy evaluation for a specific booking."""
+
+    booking_id: str
+    is_free_cancellation: bool
+    refund_amount: str
+    penalty_amount: str
+    cancellation_deadline: str
+
+
 class ReservationResponse(BaseModel):
     """Returns the booking payload as the booking service reported it."""
 

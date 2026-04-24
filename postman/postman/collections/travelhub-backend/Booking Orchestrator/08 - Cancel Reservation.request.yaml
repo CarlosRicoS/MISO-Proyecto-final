@@ -1,0 +1,22 @@
+$kind: http-request
+name: Cancel Reservation
+url: "{{base_url}}/booking-orchestrator/api/reservations/{{booking_id}}/cancel"
+method: POST
+headers:
+  Authorization: "Bearer {{id_token}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Returns 200 OK', function () {
+        pm.response.to.have.status(200);
+      });
+      pm.test('Booking status is CANCELED', function () {
+        const json = pm.response.json();
+        pm.expect(json.status).to.eql('CANCELED');
+      });
+      pm.test('Response has booking_id', function () {
+        const json = pm.response.json();
+        pm.expect(json).to.have.property('booking_id');
+      });
+    language: text/javascript
+order: 8000

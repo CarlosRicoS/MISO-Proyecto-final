@@ -14,9 +14,11 @@ from booking_orchestrator.application.commands import (
     CancelReservationCommand,
     ChangeDatesReservationCommand,
     CreateReservationCommand,
+    GetCancellationPolicyCommand,
     MakePaymentCommand,
 )
 from booking_orchestrator.application.create_reservation import CreateReservationUseCase
+from booking_orchestrator.application.get_cancellation_policy import GetCancellationPolicyUseCase
 from booking_orchestrator.application.make_payment import MakePaymentUseCase
 from booking_orchestrator.bootstrap import (
     get_admin_approve_reservation_use_case,
@@ -25,6 +27,7 @@ from booking_orchestrator.bootstrap import (
     get_cancel_reservation_use_case,
     get_change_dates_reservation_use_case,
     get_create_reservation_use_case,
+    get_get_cancellation_policy_use_case,
     get_make_payment_use_case,
 )
 from booking_orchestrator.domain.exceptions import (
@@ -37,6 +40,7 @@ from booking_orchestrator.schemas import (
     AdminApproveReservationRequest,
     AdminConfirmReservationRequest,
     AdminRejectReservationRequest,
+    CancellationPolicyResponse,
     ChangeDatesReservationRequest,
     CreateReservationRequest,
     MakePaymentRequest,
@@ -62,6 +66,9 @@ CancelUseCaseDep = Annotated[
 ]
 MakePaymentUseCaseDep = Annotated[
     MakePaymentUseCase, Depends(get_make_payment_use_case)
+]
+GetCancellationPolicyUseCaseDep = Annotated[
+    GetCancellationPolicyUseCase, Depends(get_get_cancellation_policy_use_case)
 ]
 
 
@@ -209,6 +216,41 @@ async def make_payment(
     except ReservationFailedError as exc:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=exc.reason)
     return updated
+
+
+@router.get(
+    "/reservations/{booking_id}/cancellation-policy",
+    status_code=status.HTTP_200_OK,
+    response_model=CancellationPolicyResponse,
+)
+async def get_cancellation_policy(
+    booking_id: str,
+    use_case: GetCancellationPolicyUseCaseDep,
+    x_user_id: str = Header(..., alias="X-User-Id"),
+) -> dict:
+    """Return the cancellation policy for a booking.
+
+    Computes refund/penalty amounts based on time-to-checkin and payment status.
+    Free cancellation (100% refund) if >= 24h before check-in; 50% penalty otherwise.
+    If no payment was made, refund and penalty are both 0.00.
+
+    Args:
+        booking_id: UUID of the booking to evaluate.
+        x_user_id: Injected by API Gateway from the JWT sub claim.
+
+    Returns:
+        CancellationPolicyResponse with is_free_cancellation, refund_amount,
+        penalty_amount, and cancellation_deadline.
+
+    Raises:
+        HTTPException 404: Booking not found.
+    """
+    command = GetCancellationPolicyCommand(booking_id=booking_id)
+    try:
+        result = await use_case.execute(command)
+    except BookingNotFoundError:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Booking not found")
+    return result
 
 
 @router.post("/reservations/{booking_id}/cancel", status_code=status.HTTP_200_OK)

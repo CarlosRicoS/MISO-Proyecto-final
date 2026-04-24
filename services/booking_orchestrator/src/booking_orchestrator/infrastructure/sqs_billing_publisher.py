@@ -49,3 +49,21 @@ class SqsBillingPublisher:
             )
         except Exception as exc:
             raise BillingPublishError(str(exc)) from exc
+
+    async def publish_cancel(self, booking_id: str, reason: str) -> None:
+        """Publish a CANCEL billing command to the billing SQS queue."""
+        body = json.dumps({
+            "operation": "CANCEL",
+            "payload": {
+                "bookingId": booking_id,
+                "reason": reason,
+            },
+        })
+        try:
+            await asyncio.to_thread(
+                self._client.send_message,
+                QueueUrl=self._queue_url,
+                MessageBody=body,
+            )
+        except Exception as exc:
+            raise BillingPublishError(str(exc)) from exc

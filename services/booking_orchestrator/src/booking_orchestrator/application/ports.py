@@ -65,6 +65,10 @@ class PropertyClient(Protocol):
         """Lock a property for the given ISO period. Raises PropertyLockError on failure."""
         ...
 
+    async def unlock(self, property_id: str, period_start: str, period_end: str) -> None:
+        """Unlock a property for the given ISO period. Raises PropertyLockError on failure."""
+        ...
+
 
 class StripeClient(Protocol):
     """Port for calling the Stripe mock payment gateway."""
@@ -96,6 +100,10 @@ class BillingPublisher(Protocol):
         value: Decimal,
     ) -> None:
         """Publish a CREATE billing command. Best-effort."""
+        ...
+
+    async def publish_cancel(self, booking_id: str, reason: str) -> None:
+        """Publish a CANCEL billing command. Best-effort."""
         ...
 
 
