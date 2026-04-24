@@ -266,5 +266,3 @@ load-tests/results/
 
 .idea/
 
-# Spec-driven dev artifacts (feature specs tracked per-branch, not on main)
-specs/*/
