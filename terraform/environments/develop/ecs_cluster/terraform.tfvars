@@ -8,7 +8,7 @@ public_subnets  = ["172.16.1.0/24", "172.16.2.0/24", "172.16.3.0/24"]
 ec2_instance_type = "t3.small"
 ssh_key_name      = "remote-ssh-key-pair"
 asg_capacity = {
-  "desired_capacity" = 3
+  "desired_capacity" = 4
   "max_size"         = 4
   "min_size"         = 3
 }
