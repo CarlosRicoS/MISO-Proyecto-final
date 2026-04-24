@@ -149,10 +149,10 @@ describe('BookingService', () => {
     } as Reservation);
   });
 
-  it('posts cancel reservation to booking endpoint with token', () => {
+  it('posts cancel reservation to orchestrator endpoint with token', () => {
     service.cancelReservation('res-1', 'token-cancel').subscribe();
 
-    const req = httpMock.expectOne('https://api.example.com/booking/api/booking/res-1/cancel');
+    const req = httpMock.expectOne('https://api.example.com/booking-orchestrator/api/reservations/res-1/cancel');
     expect(req.request.method).toBe('POST');
     expect(req.request.body).toEqual({});
     expect(req.request.headers.get('Authorization')).toBe('Bearer token-cancel');
@@ -162,7 +162,7 @@ describe('BookingService', () => {
   it('posts cancel reservation without Authorization when token is not provided', () => {
     service.cancelReservation('res-1').subscribe();
 
-    const req = httpMock.expectOne('https://api.example.com/booking/api/booking/res-1/cancel');
+    const req = httpMock.expectOne('https://api.example.com/booking-orchestrator/api/reservations/res-1/cancel');
     expect(req.request.method).toBe('POST');
     expect(req.request.headers.has('Authorization')).toBeFalse();
     req.flush({ id: 'res-1' });
@@ -411,7 +411,7 @@ describe('BookingService', () => {
     } as Reservation);
 
     service.cancelReservation('res-1').subscribe();
-    const cancelReq = httpMock.expectOne('/booking/api/booking/res-1/cancel');
+    const cancelReq = httpMock.expectOne('/booking-orchestrator/api/reservations/res-1/cancel');
     expect(cancelReq.request.method).toBe('POST');
     cancelReq.flush({ id: 'res-1' });
 

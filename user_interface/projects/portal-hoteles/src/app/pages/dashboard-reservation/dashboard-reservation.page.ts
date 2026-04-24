@@ -5,7 +5,7 @@ import { IonicModule } from '@ionic/angular';
 import { firstValueFrom } from 'rxjs';
 import { PropertyDetailService } from '@travelhub/core/services/property-detail.service';
 import { AuthSessionService } from '@travelhub/core/services/auth-session.service';
-import { BookingService, Reservation } from '@travelhub/core/services/booking.service';
+import { BookingService, Reservation, ReservationAdminActionRequest, ReservationAdminRejectRequest } from '@travelhub/core/services/booking.service';
 import { ThDetailsMosaicImage } from '@travelhub/shared/components/th-details-mosaic/th-details-mosaic.component';
 import {
   ThPaymentSummaryComponent,
@@ -95,8 +95,11 @@ export class PortalHotelesDashboardReservationPage {
     }
 
     try {
+      const payload: ReservationAdminActionRequest = {
+        traveler_email: this.authSession.userEmail || '',
+      };
       await firstValueFrom(
-        this.bookingService.adminConfirmBooking(this.reservationId, this.authSession.idToken),
+        this.bookingService.adminConfirmReservation(this.reservationId, payload, this.authSession.idToken),
       );
       await this.router.navigate(['/dashboard']);
     } catch {
@@ -110,8 +113,12 @@ export class PortalHotelesDashboardReservationPage {
     }
 
     try {
+      const payload: ReservationAdminRejectRequest = {
+        traveler_email: this.authSession.userEmail || '',
+        reason: 'Rejected from dashboard',
+      };
       await firstValueFrom(
-        this.bookingService.adminRejectBooking(this.reservationId, 'Rejected from dashboard', this.authSession.idToken),
+        this.bookingService.adminRejectReservation(this.reservationId, payload, this.authSession.idToken),
       );
       await this.router.navigate(['/dashboard']);
     } catch {

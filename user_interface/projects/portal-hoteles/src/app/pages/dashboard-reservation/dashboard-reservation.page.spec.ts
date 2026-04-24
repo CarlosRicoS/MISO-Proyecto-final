@@ -21,8 +21,8 @@ type RouterStub = {
 
 type BookingServiceStub = {
   getReservation: jasmine.Spy;
-  adminConfirmBooking: jasmine.Spy;
-  adminRejectBooking: jasmine.Spy;
+  adminConfirmReservation: jasmine.Spy;
+  adminRejectReservation: jasmine.Spy;
 };
 
 type PropertyDetailServiceStub = {
@@ -68,8 +68,8 @@ describe('PortalHotelesDashboardReservationPage', () => {
           created_at: '2024-12-01T00:00:00Z',
         }),
       ),
-      adminConfirmBooking: jasmine.createSpy('adminConfirmBooking').and.returnValue(of({})),
-      adminRejectBooking: jasmine.createSpy('adminRejectBooking').and.returnValue(of({})),
+      adminConfirmReservation: jasmine.createSpy('adminConfirmReservation').and.returnValue(of({})),
+      adminRejectReservation: jasmine.createSpy('adminRejectReservation').and.returnValue(of({})),
     };
   }
 
@@ -175,7 +175,11 @@ describe('PortalHotelesDashboardReservationPage', () => {
     await component.onAcceptReservation();
 
     // Assert
-    expect(bookingServiceStub.adminConfirmBooking).toHaveBeenCalledWith('BK-2047', 'id-token');
+    expect(bookingServiceStub.adminConfirmReservation).toHaveBeenCalledWith(
+      'BK-2047',
+      { traveler_email: 'sarah.johnson@email.com' },
+      'id-token',
+    );
     expect(routerStub.navigate).toHaveBeenCalledWith(['/dashboard']);
   });
 
@@ -201,9 +205,9 @@ describe('PortalHotelesDashboardReservationPage', () => {
     await component.onRejectReservation();
 
     // Assert
-    expect(bookingServiceStub.adminRejectBooking).toHaveBeenCalledWith(
+    expect(bookingServiceStub.adminRejectReservation).toHaveBeenCalledWith(
       'BK-2047',
-      'Rejected from dashboard',
+      { traveler_email: 'sarah.johnson@email.com', reason: 'Rejected from dashboard' },
       'id-token',
     );
     expect(routerStub.navigate).toHaveBeenCalledWith(['/dashboard']);
@@ -286,7 +290,7 @@ describe('PortalHotelesDashboardReservationPage', () => {
     await component.onAcceptReservation();
 
     // Assert
-    expect(bookingServiceStub.adminConfirmBooking).not.toHaveBeenCalled();
+    expect(bookingServiceStub.adminConfirmReservation).not.toHaveBeenCalled();
     expect(routerStub.navigate).not.toHaveBeenCalled();
   });
 
@@ -313,7 +317,7 @@ describe('PortalHotelesDashboardReservationPage', () => {
     await component.onRejectReservation();
 
     // Assert
-    expect(bookingServiceStub.adminRejectBooking).not.toHaveBeenCalled();
+    expect(bookingServiceStub.adminRejectReservation).not.toHaveBeenCalled();
     expect(routerStub.navigate).not.toHaveBeenCalled();
   });
 
@@ -402,8 +406,8 @@ describe('PortalHotelesDashboardReservationPage', () => {
     await component.onRejectReservation();
 
     // Assert
-    expect(bookingServiceStub.adminConfirmBooking).not.toHaveBeenCalled();
-    expect(bookingServiceStub.adminRejectBooking).not.toHaveBeenCalled();
+    expect(bookingServiceStub.adminConfirmReservation).not.toHaveBeenCalled();
+    expect(bookingServiceStub.adminRejectReservation).not.toHaveBeenCalled();
     expect(routerStub.navigate).not.toHaveBeenCalled();
   });
 
@@ -413,8 +417,8 @@ describe('PortalHotelesDashboardReservationPage', () => {
     const authSessionStub = createAuthSessionStub();
     const routerStub = createRouterStub();
     const bookingServiceStub = createBookingServiceStub();
-    bookingServiceStub.adminConfirmBooking.and.returnValue(throwError(() => new Error('confirm fail')));
-    bookingServiceStub.adminRejectBooking.and.returnValue(throwError(() => new Error('reject fail')));
+    bookingServiceStub.adminConfirmReservation.and.returnValue(throwError(() => new Error('confirm fail')));
+    bookingServiceStub.adminRejectReservation.and.returnValue(throwError(() => new Error('reject fail')));
     const propertyServiceStub = createPropertyServiceStub();
     const component = new PortalHotelesDashboardReservationPage(
       routeStub as never,

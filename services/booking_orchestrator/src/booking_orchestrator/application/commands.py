@@ -74,3 +74,10 @@ class MakePaymentCommand:
     user_email: str
     currency: str
     payment_method_type: str
+
+
+@dataclass(frozen=True)
+class GetCancellationPolicyCommand:
+    """Input for fetching the cancellation policy of a booking."""
+
+    booking_id: str

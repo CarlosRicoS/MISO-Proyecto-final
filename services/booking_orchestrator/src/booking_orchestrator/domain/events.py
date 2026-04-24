@@ -181,6 +181,8 @@ class BookingCancelledEvent:
     period_start: str
     period_end: str
     cancelled_from_status: str
+    refund_amount: Decimal
+    penalty_amount: Decimal
 
     def to_message(self) -> dict[str, Any]:
         """Serialize to the versioned JSON schema consumed by the notifications service."""
@@ -194,6 +196,8 @@ class BookingCancelledEvent:
                 "period_start": self.period_start,
                 "period_end": self.period_end,
                 "cancelled_from_status": self.cancelled_from_status,
+                "refund_amount": str(self.refund_amount),
+                "penalty_amount": str(self.penalty_amount),
             },
             "recipient": {
                 "user_id": self.user_id,

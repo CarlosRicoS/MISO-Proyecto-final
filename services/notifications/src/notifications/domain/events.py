@@ -154,6 +154,8 @@ class BookingCancelledEvent:
     cancelled_from_status: str
     user_id: str
     user_email: str
+    refund_amount: str
+    penalty_amount: str
 
     @classmethod
     def from_message(cls, message: dict[str, Any]) -> "BookingCancelledEvent":
@@ -167,6 +169,8 @@ class BookingCancelledEvent:
             cancelled_from_status=booking["cancelled_from_status"],
             user_id=recipient["user_id"],
             user_email=recipient["email"],
+            refund_amount=str(booking.get("refund_amount", "0.00")),
+            penalty_amount=str(booking.get("penalty_amount", "0.00")),
         )
 
 

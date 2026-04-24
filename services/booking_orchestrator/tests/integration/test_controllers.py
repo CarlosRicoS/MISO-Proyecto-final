@@ -10,17 +10,26 @@ from httpx import ASGITransport, AsyncClient
 
 from booking_orchestrator.application.admin_confirm_reservation import AdminConfirmReservationUseCase
 from booking_orchestrator.application.admin_reject_reservation import AdminRejectReservationUseCase
+from booking_orchestrator.application.cancel_reservation import CancelReservationUseCase
 from booking_orchestrator.application.change_dates_reservation import ChangeDatesReservationUseCase
 from booking_orchestrator.application.create_reservation import CreateReservationUseCase
+from booking_orchestrator.application.get_cancellation_policy import GetCancellationPolicyUseCase
 from booking_orchestrator.bootstrap import (
     get_admin_confirm_reservation_use_case,
     get_admin_reject_reservation_use_case,
+    get_cancel_reservation_use_case,
     get_change_dates_reservation_use_case,
     get_create_reservation_use_case,
+    get_get_cancellation_policy_use_case,
 )
 from booking_orchestrator.main import create_app
 
-from ..application.fakes import FakeBookingClient, FakePropertyClient, FakePublisher
+from ..application.fakes import (
+    FakeBillingPublisher,
+    FakeBookingClient,
+    FakePropertyClient,
+    FakePublisher,
+)
 
 
 @pytest.fixture
@@ -348,5 +357,113 @@ async def test_admin_reject_missing_reason_returns_422(client):
         "/api/reservations/booking-xyz/admin-reject",
         headers={"X-User-Id": "admin-uuid"},
         json={"traveler_email": "t@x.com"},
+    )
+    assert response.status_code == 422
+
+
+# ---- Cancellation policy endpoint -------------------------------------------
+
+async def test_get_cancellation_policy_happy_path(client, app):
+    booking = FakeBookingClient(booking_status="CONFIRMED")
+    app.dependency_overrides[get_get_cancellation_policy_use_case] = (
+        lambda: GetCancellationPolicyUseCase(booking)
+    )
+
+    response = await client.get(
+        "/api/reservations/booking-xyz/cancellation-policy",
+        headers={"X-User-Id": "user-uuid"},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["booking_id"] == "booking-xyz"
+    assert "is_free_cancellation" in body
+    assert "refund_amount" in body
+    assert "penalty_amount" in body
+    assert "cancellation_deadline" in body
+
+
+async def test_get_cancellation_policy_booking_not_found(client, app):
+    booking = FakeBookingClient(fail_get=True)
+    app.dependency_overrides[get_get_cancellation_policy_use_case] = (
+        lambda: GetCancellationPolicyUseCase(booking)
+    )
+
+    response = await client.get(
+        "/api/reservations/missing-id/cancellation-policy",
+        headers={"X-User-Id": "user-uuid"},
+    )
+
+    assert response.status_code == 404
+
+
+async def test_get_cancellation_policy_missing_header_returns_422(client):
+    response = await client.get(
+        "/api/reservations/booking-xyz/cancellation-policy",
+    )
+    assert response.status_code == 422
+
+
+# ---- Cancel endpoint (enhanced saga) ----------------------------------------
+
+async def test_cancel_reservation_happy_path(client, app):
+    booking = FakeBookingClient(booking_status="CONFIRMED")
+    pub = FakePublisher()
+    prop = FakePropertyClient()
+    billing = FakeBillingPublisher()
+    app.dependency_overrides[get_cancel_reservation_use_case] = (
+        lambda: CancelReservationUseCase(booking, pub, prop, billing)
+    )
+
+    response = await client.post(
+        "/api/reservations/booking-xyz/cancel",
+        headers={"X-User-Id": "user-uuid", "X-User-Email": "t@x.com"},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["booking_id"] == "booking-xyz"
+    assert body["status"] == "CANCELED"
+    assert len(prop.unlocked) == 1
+
+
+async def test_cancel_reservation_booking_not_found(client, app):
+    booking = FakeBookingClient(fail_get=True)
+    pub = FakePublisher()
+    prop = FakePropertyClient()
+    billing = FakeBillingPublisher()
+    app.dependency_overrides[get_cancel_reservation_use_case] = (
+        lambda: CancelReservationUseCase(booking, pub, prop, billing)
+    )
+
+    response = await client.post(
+        "/api/reservations/missing-id/cancel",
+        headers={"X-User-Id": "u", "X-User-Email": "u@x.com"},
+    )
+
+    assert response.status_code == 404
+
+
+async def test_cancel_reservation_terminal_state_returns_409(client, app):
+    booking = FakeBookingClient(booking_status="COMPLETED")
+    pub = FakePublisher()
+    prop = FakePropertyClient()
+    billing = FakeBillingPublisher()
+    app.dependency_overrides[get_cancel_reservation_use_case] = (
+        lambda: CancelReservationUseCase(booking, pub, prop, billing)
+    )
+
+    response = await client.post(
+        "/api/reservations/booking-xyz/cancel",
+        headers={"X-User-Id": "u", "X-User-Email": "u@x.com"},
+    )
+
+    assert response.status_code == 409
+    assert response.json()["detail"] == "booking_not_cancellable"
+
+
+async def test_cancel_reservation_missing_headers_returns_422(client):
+    response = await client.post(
+        "/api/reservations/booking-xyz/cancel",
     )
     assert response.status_code == 422

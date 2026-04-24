@@ -207,6 +207,7 @@ class FakeBillingPublisher:
     def __init__(self, fail_publish: bool = False) -> None:
         self.fail_publish = fail_publish
         self.published: list[dict[str, Any]] = []
+        self.cancelled: list[dict[str, str]] = []
 
     async def publish_create(
         self,
@@ -226,16 +227,31 @@ class FakeBillingPublisher:
             "value": value,
         })
 
+    async def publish_cancel(self, booking_id: str, reason: str) -> None:
+        if self.fail_publish:
+            raise BillingPublishError("billing sqs down")
+        self.cancelled.append({
+            "booking_id": booking_id,
+            "reason": reason,
+        })
+
 
 class FakePropertyClient:
-    def __init__(self, fail_lock: bool = False) -> None:
+    def __init__(self, fail_lock: bool = False, fail_unlock: bool = False) -> None:
         self.fail_lock = fail_lock
+        self.fail_unlock = fail_unlock
         self.locked: list[tuple[str, str, str]] = []
+        self.unlocked: list[tuple[str, str, str]] = []
 
     async def lock(self, property_id: str, period_start: str, period_end: str) -> None:
         if self.fail_lock:
             raise PropertyLockError("unavailable")
         self.locked.append((property_id, period_start, period_end))
+
+    async def unlock(self, property_id: str, period_start: str, period_end: str) -> None:
+        if self.fail_unlock:
+            raise PropertyLockError("unlock unavailable")
+        self.unlocked.append((property_id, period_start, period_end))
 
 
 class FakePublisher:

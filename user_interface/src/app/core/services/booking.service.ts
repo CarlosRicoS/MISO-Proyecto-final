@@ -140,10 +140,10 @@ export class BookingService {
 
   cancelReservation(bookingId: string, accessToken?: string): Observable<Reservation> {
     const baseUrl = this.config.apiBaseUrl?.replace(/\/$/, '');
-    const bookingListPath = this.config.bookingListApiPath?.replace(/^\//, '') || 'booking/api/booking';
+    const bookingPath = this.config.bookingApiPath?.replace(/^\//, '') || 'booking-orchestrator/api/reservations';
     const url = baseUrl
-      ? `${baseUrl}/${bookingListPath}/${bookingId}/cancel`
-      : `/${bookingListPath}/${bookingId}/cancel`;
+      ? `${baseUrl}/${bookingPath}/${bookingId}/cancel`
+      : `/${bookingPath}/${bookingId}/cancel`;
 
     const headersConfig: Record<string, string> = {
       'Content-Type': 'application/json',

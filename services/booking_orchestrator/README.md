@@ -66,7 +66,7 @@ In production `X-User-Id` / `X-User-Email` are injected automatically by the API
 4. return 201 with booking payload
 ```
 
-The saga creates the booking **before** locking the property so that there is always an entity to roll back on failure (poc_properties has no `unlock` endpoint). Compensation **deletes** the booking rather than cancelling it, so the user does not see a spurious cancelled reservation in their list.
+The saga creates the booking **before** locking the property so that there is always an entity to roll back on failure. Compensation **deletes** the booking rather than cancelling it, so the user does not see a spurious cancelled reservation in their list.
 
 ### Admin Approve Reservation
 
@@ -184,7 +184,7 @@ POST /api/reservations/{booking_id}/admin-reject
 
 Rejects a `PENDING` or `CONFIRMED` booking with a mandatory reason. `REJECTED` is a terminal state. Enqueues a `BOOKING_REJECTED` notification.
 
-> **Note:** The property lock is NOT released after rejection because poc_properties has no unlock endpoint. This is logged as a warning.
+> **Note:** The property lock is NOT released after rejection. An unlock endpoint exists in poc_properties but is not called during the reject flow (only during cancellation).
 
 **Headers**
 
@@ -246,13 +246,54 @@ Changes the dates and price of a `CONFIRMED` booking. Verifies availability with
 
 ---
 
+### Get Cancellation Policy
+
+```
+GET /api/reservations/{booking_id}/cancellation-policy
+```
+
+Returns the cancellation policy evaluation for a booking, computed at the moment of the request. Lets travelers preview the refund/penalty before confirming cancellation.
+
+**Policy rules (applied in order):**
+1. If `payment_reference` is `null`: `refund_amount = 0.00`, `penalty_amount = 0.00`, `is_free_cancellation = true`.
+2. If current time is >= 24 hours before `period_start`: free cancellation (full refund).
+3. Otherwise: 50% penalty (50% refund).
+
+**Headers**
+
+| Header        | Value            | Required |
+|---------------|------------------|----------|
+| Authorization | Bearer `<JWT>`   | Yes      |
+| X-User-Id     | `<user UUID>`    | Yes      |
+
+**Response (200):**
+
+```json
+{
+  "booking_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "is_free_cancellation": true,
+  "refund_amount": "150.00",
+  "penalty_amount": "0.00",
+  "cancellation_deadline": "2026-04-25T10:00:00+00:00"
+}
+```
+
+**Responses**
+
+| Status | Meaning                                                          |
+|--------|------------------------------------------------------------------|
+| 200    | Policy computed. Body includes refund/penalty amounts.           |
+| 404    | Booking not found.                                               |
+
+---
+
 ### Cancel Reservation
 
 ```
 POST /api/reservations/{booking_id}/cancel
 ```
 
-Cancels a booking in `PENDING`, `APPROVED`, or `CONFIRMED` status and enqueues a `BOOKING_CANCELLED` notification.
+Cancels a booking in `PENDING`, `APPROVED`, or `CONFIRMED` status. The saga now executes additional compensation steps: unlocks the property in `poc_properties` (best-effort), publishes a `CANCEL` command to `billing_queue` if payment was made (best-effort), and includes `refund_amount`/`penalty_amount` in the `BOOKING_CANCELLED` notification event.
 
 **Headers**
 
@@ -302,7 +343,7 @@ Other event types: `BOOKING_APPROVED`, `BOOKING_CONFIRMED`, `BOOKING_REJECTED`, 
 
 ## Billing schema
 
-On successful payment, the orchestrator publishes a billing command onto `billing_queue`:
+On successful payment, the orchestrator publishes a billing CREATE command onto `billing_queue`:
 
 ```json
 {
@@ -313,6 +354,18 @@ On successful payment, the orchestrator publishes a billing command onto `billin
     "paymentDate": "2026-04-08T12:35:00Z",
     "adminGroupId": "...",
     "value": "250.00"
+  }
+}
+```
+
+On cancellation of a paid booking, the orchestrator publishes a billing CANCEL command (best-effort):
+
+```json
+{
+  "operation": "CANCEL",
+  "payload": {
+    "bookingId": "...",
+    "reason": "user_cancellation"
   }
 }
 ```
@@ -355,6 +408,7 @@ Coverage gate: 80 %.
 ```
 src/booking_orchestrator/
 ├── domain/
+│   ├── cancellation_policy.py # Pure function: compute refund/penalty based on time-to-checkin
 │   ├── events.py              # BookingCreatedEvent, BookingApprovedEvent, BookingCancelledEvent, PaymentConfirmedEvent, etc.
 │   └── exceptions.py
 ├── application/
@@ -364,8 +418,9 @@ src/booking_orchestrator/
 │   ├── admin_approve_reservation.py
 │   ├── admin_confirm_reservation.py
 │   ├── admin_reject_reservation.py
-│   ├── cancel_reservation.py
+│   ├── cancel_reservation.py  # Enhanced saga: unlock + billing cancel + refund info
 │   ├── change_dates_reservation.py
+│   ├── get_cancellation_policy.py  # Preview refund/penalty before cancelling
 │   └── make_payment.py        # payment saga (Stripe + billing + booking update)
 ├── infrastructure/
 │   ├── httpx_booking_client.py

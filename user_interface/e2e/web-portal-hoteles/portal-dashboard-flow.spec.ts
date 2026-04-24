@@ -157,7 +157,7 @@ async function mockPropertyDetailApi(page: Page): Promise<void> {
 }
 
 async function mockAdminConfirmApi(page: Page): Promise<void> {
-  await page.route(/\/booking\/api\/booking\/[^/]+\/admin-confirm$/, async (route) => {
+  await page.route(/\/booking-orchestrator\/api\/reservations\/[^/]+\/admin-confirm$/, async (route) => {
     const url = new URL(route.request().url());
     const parts = url.pathname.split('/');
     const bookingId = parts[parts.length - 2];
@@ -172,7 +172,7 @@ async function mockAdminConfirmApi(page: Page): Promise<void> {
 }
 
 async function mockAdminRejectApi(page: Page): Promise<void> {
-  await page.route(/\/booking\/api\/booking\/[^/]+\/admin-reject$/, async (route) => {
+  await page.route(/\/booking-orchestrator\/api\/reservations\/[^/]+\/admin-reject$/, async (route) => {
     const url = new URL(route.request().url());
     const parts = url.pathname.split('/');
     const bookingId = parts[parts.length - 2];

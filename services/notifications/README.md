@@ -30,7 +30,7 @@ Messages on `notifications_queue` are JSON with a versioned envelope:
 |-------------------------|-----------------------------|----------------------------------------------|
 | `BOOKING_CREATED`       | `HandleBookingCreated`      | Tu reserva {id} fue creada                   |
 | `BOOKING_APPROVED`      | `HandleBookingApproved`     | Tu reserva {id} fue aprobada                 |
-| `BOOKING_CANCELLED`     | `HandleBookingCancelled`    | Tu reserva {id} fue cancelada                |
+| `BOOKING_CANCELLED`     | `HandleBookingCancelled`    | Tu reserva {id} fue cancelada (includes refund/penalty amounts) |
 | `BOOKING_CONFIRMED`     | `HandleBookingConfirmed`    | Tu reserva {id} fue confirmada               |
 | `BOOKING_REJECTED`      | `HandleBookingRejected`     | Tu reserva {id} fue rechazada                |
 | `BOOKING_DATES_CHANGED` | `HandleBookingDatesChanged` | Tu reserva {id} fue modificada               |
