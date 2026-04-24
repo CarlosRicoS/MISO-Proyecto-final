@@ -54,7 +54,7 @@ services = {
   "poc-properties" = {
     ecr_repository_name       = "api_poc_properties"
     container_name            = "api_poc_properties"
-    ecs_task_size             = { cpu = 256, memory = 448 }
+    ecs_task_size             = { cpu = 512, memory = 768 }
     create_database           = true
     container_port            = 8080
     desired_count_tasks       = 1
@@ -244,7 +244,7 @@ services = {
   "billing" = {
     ecr_repository_name       = "api_billing"
     container_name            = "api_billing"
-    ecs_task_size             = { cpu = 256, memory = 448 }
+    ecs_task_size             = { cpu = 256, memory = 768 }
     create_database           = true
     container_port            = 8080
     desired_count_tasks       = 1
@@ -302,7 +302,7 @@ services = {
   "stripe-mock" = {
     ecr_repository_name       = "api_stripe_mock"
     container_name            = "api_stripe_mock"
-    ecs_task_size             = { cpu = 128, memory = 256 }
+    ecs_task_size             = { cpu = 256, memory = 768 }
     create_database           = false
     container_port            = 8080
     desired_count_tasks       = 1
