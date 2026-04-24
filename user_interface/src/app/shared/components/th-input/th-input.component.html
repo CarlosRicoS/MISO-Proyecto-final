@@ -1,5 +1,5 @@
 <div class="th-input" [ngClass]="stateClass">
-  <label class="th-input__label" *ngIf="label">{{ label }}</label>
+  <label class="th-input__label" *ngIf="label" [for]="inputId">{{ label }}</label>
   <ion-item class="th-input__item" lines="none">
     <ion-icon
       *ngIf="startIcon"
@@ -8,10 +8,12 @@
       aria-hidden="true"
     ></ion-icon>
     <ion-input
+      [id]="inputId"
       [type]="type"
       [placeholder]="placeholder"
       [value]="value"
       [disabled]="isDisabled"
+      [attr.aria-labelledby]="label ? labelId : null"
       (ionInput)="onInput($event)"
       (ionFocus)="onFocus()"
       (ionBlur)="onBlur()"

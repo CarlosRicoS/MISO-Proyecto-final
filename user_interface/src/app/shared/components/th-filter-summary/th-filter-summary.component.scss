@@ -6,8 +6,8 @@
   width: 100%;
   border-radius: var(--th-space-0);
   overflow: hidden;
-  --background: var(--th-blue-600-alt);
-  --color: var(--th-slate-900);
+  background: var(--th-blue-600-alt);
+  color: var(--th-slate-900);
   border: none;
   min-height: 80px;
   margin: var(--th-space-0);
@@ -100,7 +100,7 @@ gap: var(--th-space-1);
 
 .th-filter-summary__top-subtitle {
   font-size: var(--th-text-overline-size);
-  color: var(--th-slate-500);
+  color: #000000;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -152,7 +152,7 @@ gap: var(--th-space-1);
 
 @media (max-width: 720px) {
   .th-filter-summary {
-    --background: var(--th-blue-620);
+    background: var(--th-blue-620);
   }
 
   .th-filter-summary__content {

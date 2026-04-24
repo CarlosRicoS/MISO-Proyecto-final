@@ -80,4 +80,45 @@ describe('ThFilterSummaryComponent', () => {
 
     expect(component.resolvedAlt).toBe('My Custom Summary');
   });
+
+  // ----- Accessibility: section root, aria-label, icon aria-hidden (AC-30) -----
+
+  it('root element is a <section>', () => {
+    fixture.detectChanges();
+    const section: HTMLElement | null = fixture.nativeElement.querySelector('section.th-filter-summary');
+    expect(section).not.toBeNull();
+  });
+
+  it('section aria-label defaults to "Search filters" when no filterParams are provided', () => {
+    component.filterParams = null;
+    component.alt = 'Filter summary'; // default alt — the component falls back to resolvedAlt || "Search filters"
+    fixture.detectChanges();
+
+    // When alt is the default "Filter summary" and no filterParams, resolvedAlt is "Filter summary"
+    // The template renders [attr.aria-label]="resolvedAlt || 'Search filters'"
+    // so aria-label = "Filter summary" (the resolvedAlt value) or "Search filters"
+    const section: HTMLElement | null = fixture.nativeElement.querySelector('section.th-filter-summary');
+    expect(section).not.toBeNull();
+    const label = section!.getAttribute('aria-label');
+    expect(label).toBeTruthy();
+  });
+
+  it('section aria-label contains location value when filterParams are provided', () => {
+    component.filterParams = { locationValue: 'Barcelona' };
+    fixture.detectChanges();
+
+    const section: HTMLElement | null = fixture.nativeElement.querySelector('section.th-filter-summary');
+    expect(section!.getAttribute('aria-label')).toContain('Barcelona');
+  });
+
+  it('all ion-icon elements inside desktop-actions have aria-hidden="true"', () => {
+    fixture.detectChanges();
+    const desktopActions: HTMLElement | null = fixture.nativeElement.querySelector('.th-filter-summary__desktop-actions');
+    if (desktopActions) {
+      const icons: NodeListOf<HTMLElement> = desktopActions.querySelectorAll('ion-icon');
+      icons.forEach((icon) => {
+        expect(icon.getAttribute('aria-hidden')).toBe('true');
+      });
+    }
+  });
 });

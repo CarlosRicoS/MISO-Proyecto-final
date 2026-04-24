@@ -17,14 +17,14 @@
         size-xl="4"
         class="login-col"
       >
-        <ion-card class="login-card" aria-label="Login card">
+        <ion-card class="login-card">
           <ion-card-content class="login-card__content">
-            <header class="login-card__header">
+            <div class="login-card__header">
               <h1 class="login-card__title">Welcome Back</h1>
               <p class="login-card__subtitle">
                 Sign in to your TravelHub account
               </p>
-            </header>
+            </div>
 
             <div class="login-card__fields">
               <th-input
@@ -61,6 +61,7 @@
                     *ngIf="isLoading"
                     name="crescent"
                     class="login-card__spinner"
+                    aria-label="Signing in, please wait"
                   ></ion-spinner>
                   <span>Sign In</span>
                 </span>

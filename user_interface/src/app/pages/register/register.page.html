@@ -10,7 +10,7 @@
   <ion-grid class="register-shell">
     <ion-row class="register-row">
       <ion-col size="12" size-xl="10" class="register-col">
-        <ion-card class="register-card" aria-label="Register card">
+        <ion-card class="register-card">
           <ion-card-content class="register-card__content">
             <div class="register-mobile-bar">
               <ion-button
@@ -26,7 +26,7 @@
 
             <div class="register-layout">
               <section class="register-form" aria-label="Create account form">
-                <header class="register-form__header">
+                <div class="register-form__header">
                   <span class="register-form__logo" aria-hidden="true">
                     <ion-icon name="airplane-outline"></ion-icon>
                   </span>
@@ -34,7 +34,7 @@
                   <p class="register-form__subtitle">
                     Create your account to start booking amazing hotels worldwide
                   </p>
-                </header>
+                </div>
 
                 <div class="register-form__fields">
                   <th-input
@@ -110,6 +110,7 @@
                         *ngIf="isLoading"
                         name="crescent"
                         class="register-form__spinner"
+                        aria-label="Creating account, please wait"
                       ></ion-spinner>
                       <span>Create Account</span>
                     </span>
@@ -124,11 +125,11 @@
               <aside class="register-social" aria-label="Social sign up options">
                 <div class="register-social__buttons">
                   <ion-button fill="outline" class="register-social__button">
-                    <ion-icon name="logo-google" slot="start"></ion-icon>
+                    <ion-icon name="logo-google" slot="start" aria-label=""></ion-icon>
                     Google
                   </ion-button>
                   <ion-button fill="outline" class="register-social__button">
-                    <ion-icon name="logo-facebook" slot="start"></ion-icon>
+                    <ion-icon name="logo-facebook" slot="start" aria-label=""></ion-icon>
                     Facebook
                   </ion-button>
                 </div>

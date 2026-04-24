@@ -85,12 +85,13 @@
               [attr.aria-expanded]="isCancelAccordionOpen"
             >
               <span class="bookingdetail-accordion__title bookingdetail-accordion__title--danger">
-                <ion-icon name="close-circle-outline"></ion-icon>
+                <ion-icon name="close-circle-outline" aria-hidden="true"></ion-icon>
                 Cancel Reservation
               </span>
               <ion-icon
                 name="chevron-down-outline"
                 [class.bookingdetail-accordion__chevron--open]="isCancelAccordionOpen"
+                aria-hidden="true"
               ></ion-icon>
             </button>
 
@@ -130,12 +131,13 @@
               [attr.aria-expanded]="isChangeDatesAccordionOpen"
             >
               <span class="bookingdetail-accordion__title">
-                <ion-icon name="calendar-outline"></ion-icon>
+                <ion-icon name="calendar-outline" aria-hidden="true"></ion-icon>
                 Change Dates
               </span>
               <ion-icon
                 name="chevron-down-outline"
                 [class.bookingdetail-accordion__chevron--open]="isChangeDatesAccordionOpen"
+                aria-hidden="true"
               ></ion-icon>
             </button>
 
@@ -305,6 +307,6 @@
     </div>
   </section>
 
-  <p class="bookingdetail-empty" *ngIf="isLoading">Loading booking details...</p>
-  <p class="bookingdetail-empty" *ngIf="!isLoading && errorMessage">{{ errorMessage }}</p>
+  <p class="bookingdetail-empty" *ngIf="isLoading" aria-live="polite" aria-atomic="true">Loading booking details...</p>
+  <p class="bookingdetail-empty" *ngIf="!isLoading && errorMessage" role="alert" aria-live="assertive">{{ errorMessage }}</p>
 </ion-content>

@@ -5,6 +5,8 @@ import { IonicModule } from '@ionic/angular';
 export type ThInputState = 'default' | 'focus' | 'error' | 'disabled';
 export type ThInputType = 'text' | 'password' | 'email' | 'number' | 'tel' | 'url' | 'search';
 
+let nextId = 0;
+
 @Component({
   selector: 'th-input',
   templateUrl: './th-input.component.html',
@@ -13,6 +15,8 @@ export type ThInputType = 'text' | 'password' | 'email' | 'number' | 'tel' | 'ur
   imports: [CommonModule, IonicModule]
 })
 export class ThInputComponent {
+  readonly inputId = `th-input-${nextId}`;
+  readonly labelId = `th-input-label-${nextId++}`;
   @Input() label = '';
   @Input() placeholder = '';
   @Input() value = '';

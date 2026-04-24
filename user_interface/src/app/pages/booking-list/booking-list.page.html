@@ -1,4 +1,5 @@
 <ion-content class="booking-list-content">
+  <h1 class="sr-only">My Reservations</h1>
   <section class="booking-list">
     <div class="booking-list__inner">
       <div class="booking-filters" role="tablist" aria-label="Reservation filters">
@@ -9,13 +10,15 @@
           [class.booking-filters__button--active]="isFilterActive(filter.key)"
           (click)="setFilter(filter.key)"
           [attr.aria-selected]="isFilterActive(filter.key)"
+          role="tab"
+          [attr.tabindex]="isFilterActive(filter.key) ? 0 : -1"
         >
           {{ filter.label }} ({{ filter.count }})
         </button>
       </div>
     </div>
 
-    <div class="booking-list__inner">
+    <div class="booking-list__inner" role="tabpanel" aria-label="Filtered reservations">
       <div class="booking-list__cards" *ngIf="!isLoading && visibleReservations.length">
         <th-hotel-card
           *ngFor="let reservation of visibleReservations"
@@ -61,9 +64,9 @@
         ></ion-infinite-scroll-content>
       </ion-infinite-scroll>
 
-      <p class="booking-list-empty" *ngIf="isLoading">Loading reservations...</p>
-      <p class="booking-list-empty" *ngIf="!isLoading && errorMessage">{{ errorMessage }}</p>
-      <p class="booking-list-empty" *ngIf="!isLoading && !errorMessage && !visibleReservations.length">{{ emptyLabel }}</p>
+      <p class="booking-list-empty" *ngIf="isLoading" aria-live="polite" aria-atomic="true">Loading reservations...</p>
+      <p class="booking-list-empty" *ngIf="!isLoading && errorMessage" role="alert" aria-live="assertive">{{ errorMessage }}</p>
+      <p class="booking-list-empty" *ngIf="!isLoading && !errorMessage && !visibleReservations.length" aria-live="polite" aria-atomic="true">{{ emptyLabel }}</p>
     </div>
   </section>
 </ion-content>

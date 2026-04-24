@@ -39,65 +39,65 @@
       title="Reservations"
       subtitle="Manage and track all your hotel bookings"
     >
-      <div class="portal-hoteles-dashboard-table" *ngIf="!isLoadingReservations && hasReservations; else reservationsFallback">
-        <div class="portal-hoteles-dashboard-table__header" role="row">
-          <span>Booking ID</span>
-          <span>Guest Name</span>
-          <span>Check-in</span>
-          <span>Check-out</span>
-          <span>Status</span>
-        </div>
-
-        <article class="portal-hoteles-dashboard-table__row" *ngFor="let reservation of visibleReservations">
-          <div class="portal-hoteles-dashboard-table__booking">
-            <a
-              class="portal-hoteles-dashboard-table__booking-link"
-              [routerLink]="reservation.bookingRoute"
-              [attr.aria-label]="'Open booking ' + reservation.bookingId"
-            >
-              #{{ reservation.bookingId }}
-            </a>
-          </div>
-
-          <div class="portal-hoteles-dashboard-table__guest">
-            <span class="portal-hoteles-dashboard-table__guest-name">{{ reservation.guestName }}</span>
-            <span class="portal-hoteles-dashboard-table__guest-email">{{ reservation.guestEmail }}</span>
-          </div>
-
-          <span>{{ reservation.checkInLabel }}</span>
-          <span>{{ reservation.checkOutLabel }}</span>
-
-          <span [class]="getStatusClass(reservation.statusLabel)">{{ reservation.statusLabel }}</span>
-        </article>
-
-        <footer class="portal-hoteles-dashboard-table__footer">
-          <span>{{ visibleRangeLabel }}</span>
-
-          <div class="portal-hoteles-dashboard-table__pagination" *ngIf="shouldShowPagination">
-            <ion-button
-              fill="outline"
-              size="small"
-              class="portal-hoteles-dashboard-table__pagination-button"
-              [disabled]="!canGoToPreviousPage"
-              (click)="onPreviousPage()"
-            >
-              Previous
-            </ion-button>
-
-            <span class="portal-hoteles-dashboard-table__pagination-label">{{ paginationLabel }}</span>
-
-            <ion-button
-              fill="outline"
-              size="small"
-              class="portal-hoteles-dashboard-table__pagination-button"
-              [disabled]="!canGoToNextPage"
-              (click)="onNextPage()"
-            >
-              Next
-            </ion-button>
-          </div>
-        </footer>
-      </div>
+      <table class="portal-hoteles-dashboard-table" *ngIf="!isLoadingReservations && hasReservations; else reservationsFallback">
+        <thead>
+          <tr class="portal-hoteles-dashboard-table__header">
+            <th scope="col">Booking ID</th>
+            <th scope="col">Guest Name</th>
+            <th scope="col">Check-in</th>
+            <th scope="col">Check-out</th>
+            <th scope="col">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="portal-hoteles-dashboard-table__row" *ngFor="let reservation of visibleReservations">
+            <td class="portal-hoteles-dashboard-table__booking">
+              <a
+                class="portal-hoteles-dashboard-table__booking-link"
+                [routerLink]="reservation.bookingRoute"
+                [attr.aria-label]="'Open booking ' + reservation.bookingId"
+              >
+                #{{ reservation.bookingId }}
+              </a>
+            </td>
+            <td class="portal-hoteles-dashboard-table__guest">
+              <span class="portal-hoteles-dashboard-table__guest-name">{{ reservation.guestName }}</span>
+              <span class="portal-hoteles-dashboard-table__guest-email">{{ reservation.guestEmail }}</span>
+            </td>
+            <td>{{ reservation.checkInLabel }}</td>
+            <td>{{ reservation.checkOutLabel }}</td>
+            <td [class]="getStatusClass(reservation.statusLabel)">{{ reservation.statusLabel }}</td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="5" class="portal-hoteles-dashboard-table__footer">
+              <span>{{ visibleRangeLabel }}</span>
+              <div class="portal-hoteles-dashboard-table__pagination" *ngIf="shouldShowPagination">
+                <ion-button
+                  fill="outline"
+                  size="small"
+                  class="portal-hoteles-dashboard-table__pagination-button"
+                  [disabled]="!canGoToPreviousPage"
+                  (click)="onPreviousPage()"
+                >
+                  Previous
+                </ion-button>
+                <span class="portal-hoteles-dashboard-table__pagination-label">{{ paginationLabel }}</span>
+                <ion-button
+                  fill="outline"
+                  size="small"
+                  class="portal-hoteles-dashboard-table__pagination-button"
+                  [disabled]="!canGoToNextPage"
+                  (click)="onNextPage()"
+                >
+                  Next
+                </ion-button>
+              </div>
+            </td>
+          </tr>
+        </tfoot>
+      </table>
     </portal-hoteles-grid-card>
 
     <portal-hoteles-grid-card
@@ -113,11 +113,11 @@
   </section>
 
   <ng-template #reservationsFallback>
-    <p class="portal-hoteles-dashboard-table__message" *ngIf="isLoadingReservations">Loading reservations...</p>
-    <p class="portal-hoteles-dashboard-table__message" *ngIf="!isLoadingReservations && reservationsErrorMessage">
+    <p class="portal-hoteles-dashboard-table__message" *ngIf="isLoadingReservations" aria-live="polite" aria-atomic="true">Loading reservations...</p>
+    <p class="portal-hoteles-dashboard-table__message" *ngIf="!isLoadingReservations && reservationsErrorMessage" role="alert">
       {{ reservationsErrorMessage }}
     </p>
-    <p class="portal-hoteles-dashboard-table__message" *ngIf="!isLoadingReservations && !reservationsErrorMessage && !hasReservations">
+    <p class="portal-hoteles-dashboard-table__message" *ngIf="!isLoadingReservations && !reservationsErrorMessage && !hasReservations" aria-live="polite" aria-atomic="true">
       No reservations available.
     </p>
   </ng-template>

@@ -3,6 +3,81 @@ import { ActivatedRoute } from '@angular/router';
 import { ThPaymentSummaryComponent } from './th-payment-summary.component';
 
 describe('ThPaymentSummaryComponent', () => {
+  // ----- Accessibility: spinners have aria-label (AC-15) -----
+
+  it('ion-spinner inside the primary action button has aria-label="Loading, please wait"', () => {
+    TestBed.configureTestingModule({
+      imports: [ThPaymentSummaryComponent],
+      providers: [{ provide: ActivatedRoute, useValue: {} }],
+    });
+
+    const fixture = TestBed.createComponent(ThPaymentSummaryComponent);
+    const component = fixture.componentInstance;
+    component.showAction = true;
+    component.isLoading = true;
+    fixture.detectChanges();
+
+    const spinners: NodeListOf<HTMLElement> = fixture.nativeElement.querySelectorAll('ion-spinner');
+    expect(spinners.length).toBeGreaterThan(0);
+    spinners.forEach((spinner) => {
+      expect(spinner.getAttribute('aria-label')).toBe('Loading, please wait');
+    });
+  });
+
+  it('ion-spinner inside the admin accept button has aria-label="Loading, please wait"', () => {
+    TestBed.configureTestingModule({
+      imports: [ThPaymentSummaryComponent],
+      providers: [{ provide: ActivatedRoute, useValue: {} }],
+    });
+
+    const fixture = TestBed.createComponent(ThPaymentSummaryComponent);
+    const component = fixture.componentInstance;
+    component.variant = 'admin';
+    component.isLoading = true;
+    fixture.detectChanges();
+
+    const spinners: NodeListOf<HTMLElement> = fixture.nativeElement.querySelectorAll('ion-spinner');
+    expect(spinners.length).toBeGreaterThan(0);
+    spinners.forEach((spinner) => {
+      expect(spinner.getAttribute('aria-label')).toBe('Loading, please wait');
+    });
+  });
+
+  // ----- Accessibility: guests label and aria-labelledby (AC-10) -----
+
+  it('guests label span has id="th-ps-guests-label" in editable mode', () => {
+    TestBed.configureTestingModule({
+      imports: [ThPaymentSummaryComponent],
+      providers: [{ provide: ActivatedRoute, useValue: {} }],
+    });
+
+    const fixture = TestBed.createComponent(ThPaymentSummaryComponent);
+    const component = fixture.componentInstance;
+    component.editable = true;
+    fixture.detectChanges();
+
+    const guestsLabel: HTMLElement | null = fixture.nativeElement.querySelector('#th-ps-guests-label');
+    expect(guestsLabel).not.toBeNull();
+  });
+
+  it('guests ion-input has aria-labelledby="th-ps-guests-label" in editable mode', () => {
+    TestBed.configureTestingModule({
+      imports: [ThPaymentSummaryComponent],
+      providers: [{ provide: ActivatedRoute, useValue: {} }],
+    });
+
+    const fixture = TestBed.createComponent(ThPaymentSummaryComponent);
+    const component = fixture.componentInstance;
+    component.editable = true;
+    fixture.detectChanges();
+
+    const ionInputs: NodeListOf<HTMLElement> = fixture.nativeElement.querySelectorAll('ion-input');
+    const guestsInput = Array.from(ionInputs).find(
+      (el) => el.getAttribute('aria-labelledby') === 'th-ps-guests-label',
+    );
+    expect(guestsInput).not.toBeUndefined();
+  });
+
   it('renders defaults', () => {
     TestBed.configureTestingModule({
       imports: [ThPaymentSummaryComponent],

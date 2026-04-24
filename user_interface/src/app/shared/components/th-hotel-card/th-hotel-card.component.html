@@ -4,7 +4,7 @@
 
     <!-- Favorite Button -->
     <ion-button class="th-hotel-card__favorite" *ngIf="showFavorite" aria-label="Favorite" fill="solid">
-      <ion-icon name="heart-outline"></ion-icon>
+      <ion-icon name="heart-outline" aria-hidden="true"></ion-icon>
     </ion-button>
     
     <!-- Rating Badge -->
@@ -18,7 +18,7 @@
       <div class="th-hotel-card__header">
         <h3 class="th-hotel-card__title">{{ title }}</h3>
         <p class="th-hotel-card__location">
-          <ion-icon name="location-outline"></ion-icon>
+          <ion-icon name="location-outline" aria-hidden="true"></ion-icon>
           {{ location }}
         </p>
       </div>
@@ -36,7 +36,7 @@
       <div class="th-hotel-card__header">
         <h3 class="th-hotel-card__title">{{ title }}</h3>
         <p class="th-hotel-card__location">
-          <ion-icon name="location-outline"></ion-icon>
+          <ion-icon name="location-outline" aria-hidden="true"></ion-icon>
           {{ location }}
         </p>
       </div>
@@ -48,9 +48,12 @@
 
     <div class="th-hotel-card__booking-meta" *ngIf="variant === 'booking'">
       <div class="th-hotel-card__booking-price">
-        <span class="th-hotel-card__price-label">{{ pricePrefix }}</span>
-        <span class="th-hotel-card__price-value">{{ price }}</span>
-        <span class="th-hotel-card__price-suffix">{{ priceSuffix }}</span>
+        <span aria-hidden="true">
+          <span class="th-hotel-card__price-label">{{ pricePrefix }}</span>
+          <span class="th-hotel-card__price-value">{{ price }}</span>
+          <span class="th-hotel-card__price-suffix">{{ priceSuffix }}</span>
+        </span>
+        <span class="sr-only">{{ pricePrefix }}{{ price }}{{ priceSuffix }}</span>
       </div>
       <div class="th-hotel-card__booking-cta">
         <th-button
@@ -67,9 +70,12 @@
     <!-- Price & CTA Footer -->
     <div class="th-hotel-card__footer" *ngIf="variant !== 'booking'">
       <div class="th-hotel-card__price">
-        <span class="th-hotel-card__price-label">{{ pricePrefix }}</span>
-        <span class="th-hotel-card__price-value">{{ price }}</span>
-        <span class="th-hotel-card__price-suffix">{{ priceSuffix }}</span>
+        <span aria-hidden="true">
+          <span class="th-hotel-card__price-label">{{ pricePrefix }}</span>
+          <span class="th-hotel-card__price-value">{{ price }}</span>
+          <span class="th-hotel-card__price-suffix">{{ priceSuffix }}</span>
+        </span>
+        <span class="sr-only">{{ pricePrefix }}{{ price }}{{ priceSuffix }}</span>
       </div>
       <div class="th-hotel-card__cta">
         <th-button

@@ -426,4 +426,36 @@ describe('HomePage', () => {
       expect(component.isSearchDisabled).toBe(false);
     });
   });
+
+  describe('Accessibility: live regions (AC-11)', () => {
+    it('loading paragraph has aria-live="polite" and aria-atomic="true"', () => {
+      component.isLoading = true;
+      fixture.detectChanges();
+
+      const loadingP: HTMLElement | null = fixture.nativeElement.querySelector('p.home-empty[aria-live="polite"]');
+      expect(loadingP).not.toBeNull();
+      expect(loadingP!.getAttribute('aria-atomic')).toBe('true');
+    });
+
+    it('error paragraph has role="alert" and aria-live="assertive" when not loading and errorMessage is set', () => {
+      component.isLoading = false;
+      component.errorMessage = 'Unable to load hotels.';
+      fixture.detectChanges();
+
+      const errorP: HTMLElement | null = fixture.nativeElement.querySelector('p.home-empty[role="alert"]');
+      expect(errorP).not.toBeNull();
+      expect(errorP!.getAttribute('aria-live')).toBe('assertive');
+    });
+
+    it('empty-state paragraph has aria-live="polite" when not loading, no error and no hotels', () => {
+      component.isLoading = false;
+      component.errorMessage = '';
+      component.hotels = [];
+      fixture.detectChanges();
+
+      const emptyPs: NodeListOf<HTMLElement> = fixture.nativeElement.querySelectorAll('p.home-empty[aria-live="polite"]');
+      // The empty-state p is the one without aria-atomic or with aria-atomic="true"
+      expect(emptyPs.length).toBeGreaterThan(0);
+    });
+  });
 });

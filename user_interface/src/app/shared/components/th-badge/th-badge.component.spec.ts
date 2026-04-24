@@ -62,4 +62,23 @@ describe('ThBadgeComponent', () => {
     expect(component.icon).toBe('checkmark-circle');
     expect(component.badgeClasses).toContain('th-badge--success');
   });
+
+  // ----- Accessibility: decorative icon aria-hidden (AC-5) -----
+
+  it('rendered ion-icon has aria-hidden="true" when icon input is set', () => {
+    component.icon = 'star';
+    fixture.detectChanges();
+
+    const ionIcon: HTMLElement | null = fixture.nativeElement.querySelector('ion-icon');
+    expect(ionIcon).not.toBeNull();
+    expect(ionIcon!.getAttribute('aria-hidden')).toBe('true');
+  });
+
+  it('does not render an ion-icon when icon input is empty', () => {
+    component.icon = '';
+    fixture.detectChanges();
+
+    const ionIcon: HTMLElement | null = fixture.nativeElement.querySelector('ion-icon');
+    expect(ionIcon).toBeNull();
+  });
 });

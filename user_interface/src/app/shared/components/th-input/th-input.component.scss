@@ -65,6 +65,12 @@
   cursor: not-allowed;
 }
 
+.th-input__icon-button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--th-primary-500);
+  border-radius: var(--th-radius-sm);
+}
+
 .th-input__badge {
   font-size: var(--th-text-caption-size);
   font-weight: var(--th-font-weight-semibold);

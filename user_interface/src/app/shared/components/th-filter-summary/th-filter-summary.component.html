@@ -1,5 +1,5 @@
-<ion-card class="th-filter-summary" role="img" [attr.aria-label]="resolvedAlt">
-  <ion-card-content class="th-filter-summary__content">
+<section class="th-filter-summary" [attr.aria-label]="resolvedAlt || 'Search filters'">
+  <div class="th-filter-summary__content">
     <div class="th-filter-summary__top-bar">
       <span class="th-filter-summary__icon-box" aria-hidden="true">
         <ion-icon name="location" class="th-filter-summary__icon"></ion-icon>
@@ -18,24 +18,24 @@
 
     <div class="th-filter-summary__desktop-actions" aria-label="Desktop quick filters">
       <button class="th-filter-summary__desktop-pill" type="button">
-        <ion-icon name="options-outline" class="th-filter-summary__desktop-pill-icon"></ion-icon>
+        <ion-icon name="options-outline" class="th-filter-summary__desktop-pill-icon" aria-hidden="true"></ion-icon>
         <span>Filter</span>
       </button>
       <button class="th-filter-summary__desktop-pill" type="button">
-        <ion-icon name="swap-vertical-outline" class="th-filter-summary__desktop-pill-icon"></ion-icon>
+        <ion-icon name="swap-vertical-outline" class="th-filter-summary__desktop-pill-icon" aria-hidden="true"></ion-icon>
         <span>Sort</span>
       </button>
     </div>
 
-  </ion-card-content>
-</ion-card>
+  </div>
+</section>
 <div class="th-filter-summary__mobile-actions" aria-label="Quick filters">
   <button class="th-filter-summary__pill th-filter-summary__pill-active" type="button">
-    <ion-icon name="options-outline" class="th-filter-summary__pill-icon"></ion-icon>
+    <ion-icon name="options-outline" class="th-filter-summary__pill-icon" aria-hidden="true"></ion-icon>
     <span>Filters</span>
   </button>
   <button class="th-filter-summary__pill" type="button">
-    <ion-icon name="swap-vertical-outline" class="th-filter-summary__pill-icon"></ion-icon>
+    <ion-icon name="swap-vertical-outline" class="th-filter-summary__pill-icon" aria-hidden="true"></ion-icon>
     <span>Sort</span>
   </button>
   <button class="th-filter-summary__pill" type="button">

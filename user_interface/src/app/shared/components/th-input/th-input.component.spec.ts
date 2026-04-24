@@ -2,6 +2,82 @@ import { TestBed } from '@angular/core/testing';
 import { ThInputComponent } from './th-input.component';
 
 describe('ThInputComponent', () => {
+  // ----- Accessibility: label/id association (AC-8) -----
+
+  it('generates an inputId that starts with "th-input-"', () => {
+    TestBed.configureTestingModule({ imports: [ThInputComponent] });
+    const fixture = TestBed.createComponent(ThInputComponent);
+    const component = fixture.componentInstance;
+    expect(component.inputId).toMatch(/^th-input-\d+$/);
+  });
+
+  it('generates a labelId that starts with "th-input-label-"', () => {
+    TestBed.configureTestingModule({ imports: [ThInputComponent] });
+    const fixture = TestBed.createComponent(ThInputComponent);
+    const component = fixture.componentInstance;
+    expect(component.labelId).toMatch(/^th-input-label-\d+$/);
+  });
+
+  it('renders <label for> matching the ion-input id when label is provided', () => {
+    TestBed.configureTestingModule({ imports: [ThInputComponent] });
+    const fixture = TestBed.createComponent(ThInputComponent);
+    const component = fixture.componentInstance;
+    component.label = 'Email';
+    fixture.detectChanges();
+
+    const label: HTMLLabelElement | null = fixture.nativeElement.querySelector('label');
+    expect(label).not.toBeNull();
+    expect(label!.getAttribute('for')).toBe(component.inputId);
+  });
+
+  it('renders ion-input with the correct id attribute when label is provided', () => {
+    TestBed.configureTestingModule({ imports: [ThInputComponent] });
+    const fixture = TestBed.createComponent(ThInputComponent);
+    const component = fixture.componentInstance;
+    component.label = 'Email';
+    fixture.detectChanges();
+
+    const ionInput: HTMLElement | null = fixture.nativeElement.querySelector('ion-input');
+    expect(ionInput).not.toBeNull();
+    expect(ionInput!.getAttribute('id')).toBe(component.inputId);
+  });
+
+  it('sets aria-labelledby on ion-input when label is provided', () => {
+    TestBed.configureTestingModule({ imports: [ThInputComponent] });
+    const fixture = TestBed.createComponent(ThInputComponent);
+    const component = fixture.componentInstance;
+    component.label = 'Email';
+    fixture.detectChanges();
+
+    const ionInput: HTMLElement | null = fixture.nativeElement.querySelector('ion-input');
+    expect(ionInput!.getAttribute('aria-labelledby')).toBe(component.labelId);
+  });
+
+  it('does not set aria-labelledby on ion-input when label is absent', () => {
+    TestBed.configureTestingModule({ imports: [ThInputComponent] });
+    const fixture = TestBed.createComponent(ThInputComponent);
+    const component = fixture.componentInstance;
+    component.label = '';
+    fixture.detectChanges();
+
+    const ionInput: HTMLElement | null = fixture.nativeElement.querySelector('ion-input');
+    expect(ionInput!.getAttribute('aria-labelledby')).toBeNull();
+  });
+
+  it('two separate instances have different inputId values', () => {
+    TestBed.configureTestingModule({ imports: [ThInputComponent] });
+
+    const fixture1 = TestBed.createComponent(ThInputComponent);
+    const component1 = fixture1.componentInstance;
+
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({ imports: [ThInputComponent] });
+    const fixture2 = TestBed.createComponent(ThInputComponent);
+    const component2 = fixture2.componentInstance;
+
+    expect(component1.inputId).not.toBe(component2.inputId);
+  });
+
   it('uses disabled state when disabled', () => {
     TestBed.configureTestingModule({
       imports: [ThInputComponent],

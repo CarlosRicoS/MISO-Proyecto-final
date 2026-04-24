@@ -1,4 +1,5 @@
 <ion-header
+  aria-label="Site navigation"
   class="th-navbar"
   [class.th-navbar--layout-desktop]="layout === 'desktop'"
   [class.th-navbar--layout-mobile]="layout === 'mobile'"
@@ -33,7 +34,7 @@
           <ion-label>Account</ion-label>
         </ion-chip>
         <ion-button class="th-navbar__icon-btn" fill="clear" aria-label="Notifications">
-          <ion-icon name="notifications-outline"></ion-icon>
+          <ion-icon name="notifications-outline" aria-hidden="true"></ion-icon>
         </ion-button>
       </div>
 
@@ -69,8 +70,8 @@
           <ion-icon name="arrow-back"></ion-icon>
         </ion-button>
         <div class="th-navbar__mobile-title">{{ mobileTitle }}</div>
-        <ion-button class="th-navbar__mobile-action" fill="clear" aria-label="Menu">
-          <ion-icon [name]="isBookingList ? 'ellipsis-vertical' : 'heart'"></ion-icon>
+        <ion-button class="th-navbar__mobile-action" fill="clear" [attr.aria-label]="isBookingList ? 'More options' : 'Add to favorites'">
+          <ion-icon [name]="isBookingList ? 'ellipsis-vertical' : 'heart'" aria-hidden="true"></ion-icon>
         </ion-button>
       </ng-container>
       </ng-template>
@@ -80,7 +81,7 @@
           <img class="th-navbar__logo" [src]="logoSrc" [alt]="logoAlt" />
         </div>
         <ion-button class="th-navbar__icon-btn" fill="clear" aria-label="Notifications">
-          <ion-icon name="notifications-outline"></ion-icon>
+          <ion-icon name="notifications-outline" aria-hidden="true"></ion-icon>
         </ion-button>
       </ng-template>
     </div>

@@ -71,4 +71,36 @@ describe('PortalHotelesReservationOverviewCardComponent', () => {
     const cssClass = component.statusClass;
     expect(cssClass).toContain('portal-hoteles-reservation-overview-card__status--confirmed');
   });
+
+  // ----- Accessibility: status paragraph live region (AC-36) -----
+
+  it('status paragraph has role="status"', () => {
+    component.statusLabel = 'Pending';
+    fixture.detectChanges();
+
+    const statusP: HTMLElement | null = fixture.nativeElement.querySelector(
+      'p[role="status"]',
+    );
+    expect(statusP).not.toBeNull();
+  });
+
+  it('status paragraph has aria-live="polite"', () => {
+    component.statusLabel = 'Confirmed';
+    fixture.detectChanges();
+
+    const statusP: HTMLElement | null = fixture.nativeElement.querySelector(
+      'p[aria-live="polite"]',
+    );
+    expect(statusP).not.toBeNull();
+  });
+
+  it('status paragraph has aria-atomic="true"', () => {
+    component.statusLabel = 'Confirmed';
+    fixture.detectChanges();
+
+    const statusP: HTMLElement | null = fixture.nativeElement.querySelector(
+      'p[aria-atomic="true"]',
+    );
+    expect(statusP).not.toBeNull();
+  });
 });
