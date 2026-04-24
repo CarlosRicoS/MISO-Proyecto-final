@@ -1,5 +1,5 @@
 <div class="th-input" [ngClass]="stateClass">
-  <label class="th-input__label" *ngIf="label" [for]="inputId">{{ label }}</label>
+  <label class="th-input__label" *ngIf="label" [id]="labelId" [for]="inputId">{{ label }}</label>
   <ion-item class="th-input__item" lines="none">
     <ion-icon
       *ngIf="startIcon"

@@ -16,7 +16,7 @@
   <ion-card-content class="th-hotel-card__content">
     <div class="th-hotel-card__booking-top" *ngIf="variant === 'booking'; else defaultCardTop">
       <div class="th-hotel-card__header">
-        <h3 class="th-hotel-card__title">{{ title }}</h3>
+        <h2 class="th-hotel-card__title">{{ title }}</h2>
         <p class="th-hotel-card__location">
           <ion-icon name="location-outline" aria-hidden="true"></ion-icon>
           {{ location }}
@@ -34,7 +34,7 @@
 
     <ng-template #defaultCardTop>
       <div class="th-hotel-card__header">
-        <h3 class="th-hotel-card__title">{{ title }}</h3>
+        <h2 class="th-hotel-card__title">{{ title }}</h2>
         <p class="th-hotel-card__location">
           <ion-icon name="location-outline" aria-hidden="true"></ion-icon>
           {{ location }}

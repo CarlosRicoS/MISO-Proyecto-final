@@ -33,6 +33,8 @@ The application has solid foundational structure — routing, image alt text, an
 
 #### CRIT-01 — Dynamic icon button with misleading static aria-label
 
+**Status: Fixed**
+
 **WCAG:** 4.1.2 Name, Role, Value
 **Impact:** Screen reader users hear "Menu" regardless of route; on booking-list routes the button is actually "More options", on other routes it is "Add to favorites". The announced label contradicts the available action.
 **Check:** CHECK-01
@@ -61,6 +63,8 @@ The application has solid foundational structure — routing, image alt text, an
 ---
 
 #### CRIT-02 — th-input: label not programmatically associated with input
+
+**Status: Fixed**
 
 **WCAG:** 1.3.1 Info and Relationships
 **Impact:** Screen reader users hear the field's placeholder text only — not the label — when focused. Affects every form in the app (login, register, property detail booking, payment summary).
@@ -101,6 +105,8 @@ The component's TypeScript class should generate unique `inputId` and `labelId` 
 
 #### CRIT-03 — th-filter: span labels not associated with ion-inputs
 
+**Status: Fixed**
+
 **WCAG:** 1.3.1 Info and Relationships
 **Impact:** Location and Guests inputs have visible `<span>` labels that are invisible to assistive technology. Screen readers announce only the placeholder.
 **Check:** CHECK-02
@@ -138,6 +144,8 @@ Apply the same pattern to the Guests input using `id="th-filter-guests-label"` a
 
 #### MAJ-01 — Decorative location icons missing aria-hidden in hotel card
 
+**Status: Fixed**
+
 **WCAG:** 1.1.1 Non-text Content
 **Impact:** Screen readers announce the icon's implicit name (e.g., "location outline") in addition to the visible city text, creating redundant and confusing announcements.
 **Check:** CHECK-03
@@ -166,6 +174,8 @@ Apply the same pattern to the Guests input using `id="th-filter-guests-label"` a
 
 #### MAJ-02 — Decorative icons missing aria-hidden in filter component
 
+**Status: Fixed**
+
 **WCAG:** 1.1.1 Non-text Content
 **Impact:** All four filter icons (location, two calendar, people) are announced by screen readers alongside the field's placeholder text.
 **Check:** CHECK-03
@@ -182,6 +192,8 @@ Apply the same pattern to the Guests input using `id="th-filter-guests-label"` a
 ---
 
 #### MAJ-03 — Notifications button icon missing aria-hidden
+
+**Status: Fixed**
 
 **WCAG:** 1.1.1 Non-text Content
 **Impact:** Because the `<ion-button>` already has `aria-label="Notifications"`, the icon's implicit name is redundantly announced.
@@ -202,6 +214,8 @@ Apply the same pattern to the Guests input using `id="th-filter-guests-label"` a
 
 #### MAJ-04 — Favorite button icon missing aria-hidden in hotel card
 
+**Status: Fixed**
+
 **WCAG:** 1.1.1 Non-text Content
 **Impact:** `<ion-button aria-label="Favorite">` already provides the accessible name; the unguarded icon is announced redundantly.
 **Check:** CHECK-03
@@ -218,6 +232,8 @@ Apply the same pattern to the Guests input using `id="th-filter-guests-label"` a
 
 #### MAJ-05 — Accordion button icons missing aria-hidden in booking detail
 
+**Status: Fixed**
+
 **WCAG:** 1.1.1 Non-text Content
 **Impact:** Buttons have visible text labels; the decorative icons inside are announced in addition to the text.
 **Check:** CHECK-03
@@ -233,6 +249,8 @@ Apply the same pattern to the Guests input using `id="th-filter-guests-label"` a
 ---
 
 #### MAJ-06 — Badge icon missing aria-hidden
+
+**Status: Fixed**
 
 **WCAG:** 1.1.1 Non-text Content
 **Impact:** The star icon in the rating badge is announced alongside the numeric rating text, e.g., "star 4.8" instead of just "4.8".
@@ -257,6 +275,8 @@ Apply the same pattern to the Guests input using `id="th-filter-guests-label"` a
 ---
 
 #### MAJ-07 — Loading and error states without aria-live on home page
+
+**Status: Fixed**
 
 **WCAG:** 4.1.3 Status Messages
 **Impact:** When hotels load or an error occurs, screen reader users are not notified because the dynamic paragraphs appear outside a live region.

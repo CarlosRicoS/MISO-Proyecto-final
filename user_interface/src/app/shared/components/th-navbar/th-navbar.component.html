@@ -1,5 +1,4 @@
-<ion-header
-  aria-label="Site navigation"
+<div
   class="th-navbar"
   [class.th-navbar--layout-desktop]="layout === 'desktop'"
   [class.th-navbar--layout-mobile]="layout === 'mobile'"
@@ -47,7 +46,7 @@
     <div class="th-navbar__inner th-navbar__inner--mobile" *ngIf="layout !== 'desktop'">
       <ng-container *ngIf="isDetailRoute; else mobileSearchOrDefault">
         <ion-button class="th-navbar__mobile-action th-navbar__mobile-action--detail" fill="clear" aria-label="Back" [routerLink]="detailBackLink">
-          <ion-icon name="arrow-back"></ion-icon>
+          <ion-icon name="arrow-back" aria-hidden="true"></ion-icon>
         </ion-button>
         <div class="th-navbar__mobile-actions-right">
           <ion-button
@@ -56,10 +55,10 @@
             aria-label="Favorite"
             *ngIf="showDetailFavoriteAction"
           >
-            <ion-icon name="heart-outline"></ion-icon>
+            <ion-icon name="heart-outline" aria-hidden="true"></ion-icon>
           </ion-button>
           <ion-button class="th-navbar__mobile-action th-navbar__mobile-action--detail" fill="clear" aria-label="Share">
-            <ion-icon name="share-social"></ion-icon>
+            <ion-icon name="share-social" aria-hidden="true"></ion-icon>
           </ion-button>
         </div>
       </ng-container>
@@ -67,7 +66,7 @@
       <ng-template #mobileSearchOrDefault>
       <ng-container *ngIf="isSearchLikeRoute; else defaultMobile">
         <ion-button class="th-navbar__mobile-action" fill="clear" aria-label="Back" routerLink="/home">
-          <ion-icon name="arrow-back"></ion-icon>
+          <ion-icon name="arrow-back" aria-hidden="true"></ion-icon>
         </ion-button>
         <div class="th-navbar__mobile-title">{{ mobileTitle }}</div>
         <ion-button class="th-navbar__mobile-action" fill="clear" [attr.aria-label]="isBookingList ? 'More options' : 'Add to favorites'">
@@ -86,4 +85,4 @@
       </ng-template>
     </div>
   </ion-toolbar>
-</ion-header>
+</div>

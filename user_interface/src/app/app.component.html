@@ -1,9 +1,10 @@
 <ion-app [class.app-has-navbar]="hasTopBar" [class.app-no-navbar]="!hasTopBar">
-  <ion-header *ngIf="showNavbar && !isMobileLayout" slot="fixed">
+  <ion-header *ngIf="showNavbar && !isMobileLayout" aria-label="Site navigation" slot="fixed">
     <th-navbar [mode]="navbarMode" layout="desktop"></th-navbar>
   </ion-header>
   <ion-header
     *ngIf="showMobileTopBar && isMobileLayout"
+    aria-label="Site navigation"
     slot="fixed"
     [class.app-header--mobile-search-results]="isSearchResultsRoute"
     [class.app-header--mobile-booking-list]="isBookingListRoute"
@@ -20,25 +21,25 @@
       <ion-buttons class="mobile-tab-bar__buttons" slot="start">
         <ion-button class="mobile-tab-bar__button" fill="clear" routerLink="/home" routerLinkActive="is-active" [routerLinkActiveOptions]="{ exact: true }">
           <div class="stack-item">
-            <ion-icon name="search"></ion-icon>
+            <ion-icon name="search" aria-hidden="true"></ion-icon>
             <span class="mobile-tab-bar__label">Search</span>
           </div>
         </ion-button>
         <ion-button class="mobile-tab-bar__button" fill="clear" aria-label="Favorites">
           <div class="stack-item">
-            <ion-icon name="heart-outline"></ion-icon>
+            <ion-icon name="heart-outline" aria-hidden="true"></ion-icon>
             <span class="mobile-tab-bar__label">Favorites</span>
           </div>
         </ion-button>
         <ion-button class="mobile-tab-bar__button" fill="clear" aria-label="Bookings" routerLink="/booking-list" routerLinkActive="is-active" [routerLinkActiveOptions]="{ exact: true }">
           <div class="stack-item">
-            <ion-icon name="calendar-outline"></ion-icon>
+            <ion-icon name="calendar-outline" aria-hidden="true"></ion-icon>
             <span class="mobile-tab-bar__label">Bookings</span>
           </div>
         </ion-button>
         <ion-button class="mobile-tab-bar__button" fill="clear" aria-label="Profile" (click)="onProfileTabClick()">
           <div class="stack-item">
-            <ion-icon name="person-outline"></ion-icon>
+            <ion-icon name="person-outline" aria-hidden="true"></ion-icon>
             <span class="mobile-tab-bar__label">Profile</span>
           </div>
         </ion-button>
