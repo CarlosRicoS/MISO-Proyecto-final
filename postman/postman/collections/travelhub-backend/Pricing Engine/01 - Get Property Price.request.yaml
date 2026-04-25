@@ -1,0 +1,18 @@
+$kind: http-request
+name: Get Property Price
+url: "{{base_url}}/pricing-engine/api/PropertyPrice?propertyId={{property_id}}&guests=2&dateInit=2026-06-01&dateFinish=2026-06-03"
+method: GET
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Returns 200', function () {
+        pm.response.to.have.status(200);
+      });
+      pm.test('Response has price field', function () {
+        pm.expect(pm.response.json()).to.have.property('price');
+      });
+      pm.test('Price is a number', function () {
+        pm.expect(pm.response.json().price).to.be.a('number');
+      });
+    language: text/javascript
+order: 1000

@@ -143,14 +143,14 @@ services = {
     ecs_task_size             = { cpu = 256, memory = 512 }
     create_database           = false
     container_port            = 8080
-    desired_count_tasks       = 0
+    desired_count_tasks       = 1
     placement_constraint_type = ""
     health_check = {
       path = "/api/health"
     }
     autoscaling = {
       max_capacity           = 1
-      min_capacity           = 0
+      min_capacity           = 1
       target_cpu_utilization = 35
       scale_out_cooldown     = 30
     }

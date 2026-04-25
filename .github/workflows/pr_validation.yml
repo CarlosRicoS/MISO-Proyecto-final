@@ -31,6 +31,12 @@ jobs:
           - name: stripe_mock
             language: java
             context-path: services/stripe_mock
+          - name: pricing-engine
+            language: dotnet
+            context-path: services/PricingEngine
+          - name: pricing-orchestator
+            language: dotnet
+            context-path: services/PricingOrchestator
     name: Test ${{ matrix.name }}
     steps:
       - name: Checkout repository
@@ -45,6 +51,12 @@ jobs:
       - name: Run Java tests
         if: matrix.language == 'java'
         uses: ./.github/actions/test-java
+        with:
+          context-path: ${{ matrix.context-path }}
+
+      - name: Run .NET tests
+        if: matrix.language == 'dotnet'
+        uses: ./.github/actions/test-dotnet
         with:
           context-path: ${{ matrix.context-path }}
 
@@ -133,6 +145,14 @@ jobs:
             language: java
             ecr-repo: api_stripe_mock
             context-path: services/stripe_mock
+          - name: pricing_engine
+            language: dotnet
+            ecr-repo: api_pricing_engine
+            context-path: services/PricingEngine
+          - name: pricing_orchestator
+            language: dotnet
+            ecr-repo: api_pricing_orchestator
+            context-path: services/PricingOrchestator
     name: Build ${{ matrix.name }}
     steps:
       - name: Checkout repository

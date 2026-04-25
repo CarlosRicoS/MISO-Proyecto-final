@@ -13,6 +13,7 @@ import { CommonModule } from '@angular/common';
 
 class HotelsServiceMock {
   getHotels = jasmine.createSpy('getHotels').and.returnValue(of([]));
+  getHotelsWithPricing = jasmine.createSpy('getHotelsWithPricing').and.returnValue(of([]));
 }
 
 class RouterMock {
@@ -54,15 +55,15 @@ describe('HomePage', () => {
     expect(component).toBeTruthy();
   });
 
-  it('loads hotels on init', async () => {
+  it('loads hotels on init using getHotelsWithPricing (AC-1)', async () => {
     await component.loadHotels();
     const hotelsService = TestBed.inject(HotelsService) as unknown as HotelsServiceMock;
-    expect(hotelsService.getHotels).toHaveBeenCalled();
+    expect(hotelsService.getHotelsWithPricing).toHaveBeenCalled();
   });
 
   it('shows error on initial load failure', async () => {
     const hotelsService = TestBed.inject(HotelsService) as unknown as HotelsServiceMock;
-    hotelsService.getHotels.and.returnValue(throwError(() => new Error('fail')));
+    hotelsService.getHotelsWithPricing.and.returnValue(throwError(() => new Error('fail')));
 
     await component.loadHotels();
 
@@ -70,16 +71,16 @@ describe('HomePage', () => {
     expect(component.hotels).toEqual([]);
   });
 
-  it('searches with partial filters', async () => {
+  it('searches with partial filters using getHotelsWithPricing', async () => {
     component.searchCity = 'Paris';
 
     await component.onSearchHotels();
 
     const hotelsService = TestBed.inject(HotelsService) as unknown as HotelsServiceMock;
-    expect(hotelsService.getHotels).toHaveBeenCalledWith({ city: 'Paris' });
+    expect(hotelsService.getHotelsWithPricing).toHaveBeenCalledWith({ city: 'Paris' });
   });
 
-  it('searches with no filters', async () => {
+  it('searches with no filters using getHotelsWithPricing', async () => {
     component.searchCity = '';
     component.searchStartDate = '';
     component.searchEndDate = '';
@@ -88,7 +89,7 @@ describe('HomePage', () => {
     await component.onSearchHotels();
 
     const hotelsService = TestBed.inject(HotelsService) as unknown as HotelsServiceMock;
-    expect(hotelsService.getHotels).toHaveBeenCalled();
+    expect(hotelsService.getHotelsWithPricing).toHaveBeenCalled();
   });
 
   it('trims location input', () => {
@@ -175,7 +176,7 @@ describe('HomePage', () => {
 
   it('handles search error', async () => {
     const hotelsService = TestBed.inject(HotelsService) as unknown as HotelsServiceMock;
-    hotelsService.getHotels.and.returnValue(throwError(() => new Error('fail')));
+    hotelsService.getHotelsWithPricing.and.returnValue(throwError(() => new Error('fail')));
 
     await component.onSearchHotels();
 
@@ -377,7 +378,7 @@ describe('HomePage', () => {
 
       const hotelsService = TestBed.inject(HotelsService) as unknown as HotelsServiceMock;
       const mockHotels = [{ id: '1', title: 'Hotel' } as any];
-      hotelsService.getHotels.and.returnValue(of(mockHotels));
+      hotelsService.getHotelsWithPricing.and.returnValue(of(mockHotels));
 
       const router = TestBed.inject(Router) as unknown as RouterMock;
 
@@ -388,7 +389,7 @@ describe('HomePage', () => {
 
     it('should set isLoading correctly during search', async () => {
       const hotelsService = TestBed.inject(HotelsService) as unknown as HotelsServiceMock;
-      hotelsService.getHotels.and.returnValue(of([]));
+      hotelsService.getHotelsWithPricing.and.returnValue(of([]));
 
       expect(component.isLoading).toBe(false);
       const searchPromise = component.onSearchHotels();
@@ -401,7 +402,7 @@ describe('HomePage', () => {
     it('should clear error message when starting search', async () => {
       component.errorMessage = 'Previous error';
       const hotelsService = TestBed.inject(HotelsService) as unknown as HotelsServiceMock;
-      hotelsService.getHotels.and.returnValue(of([]));
+      hotelsService.getHotelsWithPricing.and.returnValue(of([]));
 
       await component.onSearchHotels();
 

@@ -3,7 +3,7 @@ name: travelhub-backend
 description: >-
   TravelHub backend microservices API collection.
 
-  Covers four microservices exposed via AWS API Gateway (HTTP API, apigatewayv2).
+  Covers six microservices exposed via AWS API Gateway (HTTP API, apigatewayv2).
   Route pattern: {base_url}/{service-name}/...
 
   Services:
@@ -11,6 +11,8 @@ description: >-
     - poc-properties — public, no JWT (GET search/detail, POST lock)
     - booking        — JWT protected (CRUD booking lifecycle)
     - booking-orchestrator — JWT protected (saga: create reservation end-to-end)
+    - pricing-engine — public, no JWT (GET property price computation)
+    - pricing-orchestator — public, no JWT (GET property details with computed price)
 
   ⚠️  admin_group_id note: seeded properties use 'admin-1' (not a UUID).
   The booking service parses it as UUID(admin_group_id) and will reject 'admin-1'.

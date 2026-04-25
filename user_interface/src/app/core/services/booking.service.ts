@@ -1,7 +1,28 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { ConfigService } from './config.service';
+
+function toNumericPrice(value: unknown): number {
+  if (typeof value === 'number') {
+    return Number.isFinite(value) ? value : 0;
+  }
+
+  if (typeof value === 'string') {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+
+  return 0;
+}
+
+function normalizeReservation<T extends { price?: unknown }>(reservation: T): T {
+  return {
+    ...reservation,
+    price: toNumericPrice(reservation?.price),
+  };
+}
 
 export interface ReservationRequest {
   property_id: string;
@@ -95,7 +116,9 @@ export class BookingService {
 
     const headers = new HttpHeaders(headersConfig);
 
-    return this.http.post<ReservationResponse>(url, payload, { headers });
+    return this.http
+      .post<ReservationResponse>(url, payload, { headers })
+      .pipe(map(normalizeReservation));
   }
 
   listReservations(accessToken?: string, userId?: string): Observable<Reservation[]> {
@@ -119,7 +142,9 @@ export class BookingService {
 
     const headers = new HttpHeaders(headersConfig);
 
-    return this.http.get<Reservation[]>(url, { headers });
+    return this.http
+      .get<Reservation[]>(url, { headers })
+      .pipe(map((reservations) => (reservations || []).map(normalizeReservation)));
   }
 
   getReservation(bookingId: string, accessToken?: string): Observable<Reservation> {
@@ -135,7 +160,7 @@ export class BookingService {
     }
 
     const headers = new HttpHeaders(headersConfig);
-    return this.http.get<Reservation>(url, { headers });
+    return this.http.get<Reservation>(url, { headers }).pipe(map(normalizeReservation));
   }
 
   cancelReservation(bookingId: string, accessToken?: string): Observable<Reservation> {
@@ -153,7 +178,7 @@ export class BookingService {
     }
 
     const headers = new HttpHeaders(headersConfig);
-    return this.http.post<Reservation>(url, {}, { headers });
+    return this.http.post<Reservation>(url, {}, { headers }).pipe(map(normalizeReservation));
   }
 
   updateReservationDates(
@@ -175,7 +200,9 @@ export class BookingService {
     }
 
     const headers = new HttpHeaders(headersConfig);
-    return this.http.patch<BookingDatesUpdateResponse>(url, payload, { headers });
+    return this.http
+      .patch<BookingDatesUpdateResponse>(url, payload, { headers })
+      .pipe(map(normalizeReservation));
   }
 
   adminConfirmBooking(bookingId: string, accessToken?: string): Observable<Reservation> {
@@ -193,7 +220,7 @@ export class BookingService {
     }
 
     const headers = new HttpHeaders(headersConfig);
-    return this.http.post<Reservation>(url, {}, { headers });
+    return this.http.post<Reservation>(url, {}, { headers }).pipe(map(normalizeReservation));
   }
 
   adminRejectBooking(bookingId: string, reason: string, accessToken?: string): Observable<Reservation> {
@@ -211,7 +238,7 @@ export class BookingService {
     }
 
     const headers = new HttpHeaders(headersConfig);
-    return this.http.post<Reservation>(url, { reason }, { headers });
+    return this.http.post<Reservation>(url, { reason }, { headers }).pipe(map(normalizeReservation));
   }
 
   updateOrchestratedReservationDates(
@@ -233,7 +260,9 @@ export class BookingService {
     }
 
     const headers = new HttpHeaders(headersConfig);
-    return this.http.patch<BookingDatesUpdateResponse>(url, payload, { headers });
+    return this.http
+      .patch<BookingDatesUpdateResponse>(url, payload, { headers })
+      .pipe(map(normalizeReservation));
   }
 
   adminConfirmReservation(

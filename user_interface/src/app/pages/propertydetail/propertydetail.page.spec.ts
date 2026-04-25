@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { IonicModule } from '@ionic/angular';
 import { ActivatedRoute, convertToParamMap, Router } from '@angular/router';
-import { of, throwError } from 'rxjs';
+import { of, throwError, Subject } from 'rxjs';
 import { ThBadgeComponent } from '../../shared/components/th-badge/th-badge.component';
 import { ThHotelCardComponent } from '../../shared/components/th-hotel-card/th-hotel-card.component';
 import { ThPaymentSummaryComponent } from '../../shared/components/th-payment-summary/th-payment-summary.component';
@@ -16,6 +16,7 @@ import { PropertyDetailService } from '../../core/services/property-detail.servi
 import { AuthSessionService } from '../../core/services/auth-session.service';
 import { BookingService } from '../../core/services/booking.service';
 import { PendingBookingService } from '../../core/services/pending-booking.service';
+import { PricingService } from '../../core/services/pricing.service';
 
 describe('PropertydetailPage', () => {
   let component: PropertydetailPage;
@@ -93,6 +94,10 @@ describe('PropertydetailPage', () => {
     clearPendingBooking = jasmine.createSpy('clearPendingBooking');
   }
 
+  class PricingServiceMock {
+    getPropertyWithPrice = jasmine.createSpy('getPropertyWithPrice').and.returnValue(of({ price: 500 }));
+  }
+
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       declarations: [PropertydetailPage],
@@ -118,6 +123,7 @@ describe('PropertydetailPage', () => {
         { provide: BookingService, useClass: BookingServiceMock },
         { provide: AuthSessionService, useClass: AuthSessionServiceMock },
         { provide: PendingBookingService, useClass: PendingBookingServiceMock },
+        { provide: PricingService, useClass: PricingServiceMock },
       ],
     }).compileComponents();
 
@@ -298,6 +304,7 @@ describe('PropertydetailPage', () => {
 
     authSession.isLoggedIn = false;
 
+    component.priceForStay = 400;
     component.paymentSummary = {
       ...component.paymentSummary,
       checkInValue: '2026-05-10',
@@ -322,6 +329,7 @@ describe('PropertydetailPage', () => {
     authSession.userEmail = 'user@example.com';
     authSession.idToken = 'token-123';
 
+    component.priceForStay = 400;
     component.paymentSummary = {
       ...component.paymentSummary,
       checkInValue: '2026-05-10',
@@ -339,6 +347,7 @@ describe('PropertydetailPage', () => {
     expect(payload.guests).toBe(2);
     expect(payload.period_start).toBe('2026-05-10');
     expect(payload.period_end).toBe('2026-05-12');
+    expect(payload.price).toBe(400);
     expect(token).toBe('token-123');
   });
 
@@ -350,6 +359,7 @@ describe('PropertydetailPage', () => {
     authSession.userEmail = 'user@example.com';
     authSession.idToken = 'token-123';
 
+    component.priceForStay = 400;
     component.paymentSummary = {
       ...component.paymentSummary,
       checkInValue: '2026-05-10',
@@ -361,5 +371,240 @@ describe('PropertydetailPage', () => {
     component.onAlertDismissed();
 
     expect((routerMock.navigate as jasmine.Spy)).toHaveBeenCalledWith(['/booking-list']);
+  });
+
+  describe('pricing integration', () => {
+    it('triggers pricing call when both dates are set via onCheckInChanged (AC-2)', async () => {
+      const pricingService = TestBed.inject(PricingService) as unknown as PricingServiceMock;
+      pricingService.getPropertyWithPrice.and.returnValue(of({ price: 700 }));
+
+      await component.ngOnInit();
+
+      component.paymentSummary.checkOutValue = '2026-05-15';
+      component.onCheckInChanged('2026-05-10');
+
+      // Allow the switchMap pipeline to execute
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      expect(pricingService.getPropertyWithPrice).toHaveBeenCalled();
+      expect(component.priceForStay).toBe(700);
+      expect(component.isPricingLoading).toBe(false);
+    });
+
+    it('triggers pricing call when both dates are set via onCheckOutChanged (AC-2)', async () => {
+      const pricingService = TestBed.inject(PricingService) as unknown as PricingServiceMock;
+      pricingService.getPropertyWithPrice.and.returnValue(of({ price: 450 }));
+
+      await component.ngOnInit();
+
+      component.paymentSummary.checkInValue = '2026-05-10';
+      component.onCheckOutChanged('2026-05-13');
+
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      expect(pricingService.getPropertyWithPrice).toHaveBeenCalled();
+      expect(component.priceForStay).toBe(450);
+    });
+
+    it('triggers pricing call when guests change and dates are set (AC-2)', async () => {
+      const pricingService = TestBed.inject(PricingService) as unknown as PricingServiceMock;
+      pricingService.getPropertyWithPrice.and.returnValue(of({ price: 600 }));
+
+      await component.ngOnInit();
+
+      component.paymentSummary.checkInValue = '2026-05-10';
+      component.paymentSummary.checkOutValue = '2026-05-15';
+      component.onGuestsChanged('3');
+
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      expect(pricingService.getPropertyWithPrice).toHaveBeenCalled();
+      expect(component.priceForStay).toBe(600);
+    });
+
+    it('does not trigger pricing when only check-in is set', async () => {
+      const pricingService = TestBed.inject(PricingService) as unknown as PricingServiceMock;
+
+      await component.ngOnInit();
+      pricingService.getPropertyWithPrice.calls.reset();
+
+      component.paymentSummary.checkOutValue = '';
+      component.onCheckInChanged('2026-05-10');
+
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      expect(pricingService.getPropertyWithPrice).not.toHaveBeenCalled();
+    });
+
+    it('updates payment summary total with pricing result', async () => {
+      const pricingService = TestBed.inject(PricingService) as unknown as PricingServiceMock;
+      pricingService.getPropertyWithPrice.and.returnValue(of({ price: 1000 }));
+
+      await component.ngOnInit();
+
+      component.paymentSummary.checkInValue = '2026-05-10';
+      component.paymentSummary.checkOutValue = '2026-05-15';
+      component.onGuestsChanged('2');
+
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      expect(component.paymentSummary.totalAmount).toContain('1000');
+    });
+
+    it('sets pricingError and resets priceForStay on pricing failure (AC-6)', async () => {
+      const pricingService = TestBed.inject(PricingService) as unknown as PricingServiceMock;
+      pricingService.getPropertyWithPrice.and.returnValue(
+        throwError(() => ({ status: 502, message: 'Bad Gateway' })),
+      );
+
+      await component.ngOnInit();
+
+      component.paymentSummary.checkInValue = '2026-05-10';
+      component.paymentSummary.checkOutValue = '2026-05-15';
+      component.onGuestsChanged('2');
+
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      expect(component.priceForStay).toBeNull();
+      expect(component.pricingError).toBe('Unable to calculate price. Please try again.');
+      expect(component.isPricingLoading).toBe(false);
+    });
+
+    it('onBookNow submits priceForStay instead of nightlyPrice (AC-3)', async () => {
+      const pricingService = TestBed.inject(PricingService) as unknown as PricingServiceMock;
+      const authSession = TestBed.inject(AuthSessionService) as unknown as AuthSessionServiceMock;
+      const bookingService = TestBed.inject(BookingService) as unknown as BookingServiceMock;
+
+      pricingService.getPropertyWithPrice.and.returnValue(of({ price: 750 }));
+      authSession.isLoggedIn = true;
+      authSession.userId = 'user-1';
+      authSession.userEmail = 'user@example.com';
+      authSession.idToken = 'token-123';
+
+      await component.ngOnInit();
+
+      // Set dates and trigger pricing
+      component.paymentSummary.checkInValue = '2026-05-10';
+      component.paymentSummary.checkOutValue = '2026-05-15';
+      component.onGuestsChanged('2');
+
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      expect(component.priceForStay).toBe(750);
+
+      // Now book
+      await component.onBookNow();
+
+      const [payload] = bookingService.createReservation.calls.mostRecent().args;
+      expect(payload.price).toBe(750);
+    });
+
+    it('onBookNow blocks when priceForStay is null with both dates set (AC-3)', async () => {
+      const authSession = TestBed.inject(AuthSessionService) as unknown as AuthSessionServiceMock;
+      const bookingService = TestBed.inject(BookingService) as unknown as BookingServiceMock;
+
+      authSession.isLoggedIn = true;
+      authSession.userId = 'user-1';
+      authSession.userEmail = 'user@example.com';
+      authSession.idToken = 'token-123';
+
+      await component.ngOnInit();
+
+      component.priceForStay = null;
+      component.paymentSummary.checkInValue = '2026-05-10';
+      component.paymentSummary.checkOutValue = '2026-05-15';
+      component.paymentSummary.guestsValue = '2';
+
+      await component.onBookNow();
+
+      expect(bookingService.createReservation).not.toHaveBeenCalled();
+      expect(component.isAlertOpen).toBeTrue();
+      expect(component.alertMessage).toContain('wait for price calculation');
+    });
+
+    it('onBookNow falls back to nightlyPrice when priceForStay is not set and no dates', async () => {
+      const authSession = TestBed.inject(AuthSessionService) as unknown as AuthSessionServiceMock;
+      const bookingService = TestBed.inject(BookingService) as unknown as BookingServiceMock;
+
+      authSession.isLoggedIn = true;
+      authSession.userId = 'user-1';
+      authSession.userEmail = 'user@example.com';
+      authSession.idToken = 'token-123';
+
+      await component.ngOnInit();
+
+      // With no valid dates, the priceForStay null guard is bypassed
+      // onBookNow will use validation errors for missing dates
+      component.priceForStay = null;
+      component.paymentSummary.checkInValue = '';
+      component.paymentSummary.checkOutValue = '';
+      component.paymentSummary.guestsValue = '2';
+
+      await component.onBookNow();
+
+      // Should show validation errors, not pricing errors
+      expect(component.bookingErrors.checkIn).toBe('Check-in date is required');
+    });
+
+    it('updates summaryItems with pricing result (AC-2)', async () => {
+      const pricingService = TestBed.inject(PricingService) as unknown as PricingServiceMock;
+      pricingService.getPropertyWithPrice.and.returnValue(of({ price: 500 }));
+
+      await component.ngOnInit();
+
+      component.paymentSummary.checkInValue = '2026-05-10';
+      component.paymentSummary.checkOutValue = '2026-05-15';
+      component.onGuestsChanged('2');
+
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      expect(component.summaryItems.length).toBeGreaterThan(0);
+      expect(component.summaryItems[0].amount).toContain('500');
+    });
+
+    it('initializes priceForStay as null before dates are known', () => {
+      const freshFixture = TestBed.createComponent(PropertydetailPage);
+      const freshComponent = freshFixture.componentInstance;
+      expect(freshComponent.priceForStay).toBeNull();
+    });
+
+    it('initializes isPricingLoading as false', () => {
+      expect(component.isPricingLoading).toBe(false);
+    });
+
+    it('initializes pricingError as empty string', () => {
+      expect(component.pricingError).toBe('');
+    });
+
+    it('normalizeDateForApi handles dd/mm/yyyy format', () => {
+      const normalizeDateForApi = (component as unknown as { normalizeDateForApi: (value: string) => string | null }).normalizeDateForApi.bind(component);
+      expect(normalizeDateForApi('10/05/2026')).toBe('2026-05-10');
+    });
+
+    it('normalizeDateForApi returns null for empty input', () => {
+      const normalizeDateForApi = (component as unknown as { normalizeDateForApi: (value: string) => string | null }).normalizeDateForApi.bind(component);
+      expect(normalizeDateForApi('')).toBeNull();
+    });
+
+    it('normalizeDateForApi returns null for invalid format', () => {
+      const normalizeDateForApi = (component as unknown as { normalizeDateForApi: (value: string) => string | null }).normalizeDateForApi.bind(component);
+      expect(normalizeDateForApi('not-a-date')).toBeNull();
+    });
+
+    it('normalizeDateForApi passes through ISO format', () => {
+      const normalizeDateForApi = (component as unknown as { normalizeDateForApi: (value: string) => string | null }).normalizeDateForApi.bind(component);
+      expect(normalizeDateForApi('2026-05-10')).toBe('2026-05-10');
+    });
+
+    it('cleans up subscriptions on destroy', () => {
+      const destroySubject = (component as unknown as { destroy$: Subject<void> }).destroy$;
+      spyOn(destroySubject, 'next');
+      spyOn(destroySubject, 'complete');
+
+      component.ngOnDestroy();
+
+      expect(destroySubject.next).toHaveBeenCalled();
+      expect(destroySubject.complete).toHaveBeenCalled();
+    });
   });
 });

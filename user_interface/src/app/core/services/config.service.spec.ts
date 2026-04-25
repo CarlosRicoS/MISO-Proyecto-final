@@ -50,5 +50,35 @@ describe('ConfigService', () => {
     expect(service.propertyApiPath).toBe('/poc-properties/api/property');
     expect(service.propertyApiToken).toBe('');
     expect(service.bookingApiPath).toBe('/booking-orchestrator/api/reservations');
+    expect(service.pricingOrchestratorApiPath).toBe('/pricing-orchestator/api/Property');
+  });
+
+  it('returns pricingOrchestratorApiPath from config when present', async () => {
+    const loadPromise = service.load();
+    const req = httpMock.expectOne('/assets/config.json');
+    req.flush({
+      apiBaseUrl: 'https://api.example.com',
+      pricingOrchestratorApiPath: '/custom-pricing/api/Property',
+    });
+
+    await loadPromise;
+
+    expect(service.pricingOrchestratorApiPath).toBe('/custom-pricing/api/Property');
+  });
+
+  it('returns default pricingOrchestratorApiPath before config is loaded', () => {
+    expect(service.pricingOrchestratorApiPath).toBe('/pricing-orchestator/api/Property');
+  });
+
+  it('returns default bookingListApiPath when not in config', async () => {
+    const loadPromise = service.load();
+    const req = httpMock.expectOne('/assets/config.json');
+    req.flush({
+      apiBaseUrl: 'https://api.example.com',
+    });
+
+    await loadPromise;
+
+    expect(service.bookingListApiPath).toBe('/booking/api/booking');
   });
 });

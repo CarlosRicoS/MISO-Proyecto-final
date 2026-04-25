@@ -1,7 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, Subject, of, EMPTY } from 'rxjs';
+import { switchMap, takeUntil, tap, catchError } from 'rxjs/operators';
 import { ThAmenityItem } from '../../shared/components/th-amenities-summary/th-amenities-summary.component';
 import { ThDetailsMosaicImage } from '../../shared/components/th-details-mosaic/th-details-mosaic.component';
 import { ThPaymentSummaryBadge, ThPaymentSummaryItem } from '../../shared/components/th-payment-summary/th-payment-summary.component';
@@ -12,6 +13,7 @@ import { Hotel } from '../../core/models/hotel.model';
 import { AuthSessionService } from '../../core/services/auth-session.service';
 import { BookingService, ReservationRequest } from '../../core/services/booking.service';
 import { PendingBookingService } from '../../core/services/pending-booking.service';
+import { PricingService } from '../../core/services/pricing.service';
 
 @Component({
   selector: 'app-propertydetail',
@@ -19,7 +21,7 @@ import { PendingBookingService } from '../../core/services/pending-booking.servi
   styleUrls: ['./propertydetail.page.scss'],
   standalone: false,
 })
-export class PropertydetailPage implements OnInit {
+export class PropertydetailPage implements OnInit, OnDestroy {
   property = {
     title: 'Property',
     location: '',
@@ -77,17 +79,78 @@ export class PropertydetailPage implements OnInit {
 
   paymentSummaryResetVersion = 0;
 
+  priceForStay: number | null = null;
+  isPricingLoading = false;
+  pricingError = '';
+
   private currentPropertyDetail: PropertyDetail | null = null;
   private nightlyPrice = 0;
+  private priceTrigger$ = new Subject<void>();
+  private destroy$ = new Subject<void>();
 
   constructor(
     private propertyDetailService: PropertyDetailService,
     private bookingService: BookingService,
     private authSessionService: AuthSessionService,
     private pendingBookingService: PendingBookingService,
+    private pricingService: PricingService,
     private route: ActivatedRoute,
     private router: Router,
-  ) {}
+  ) {
+    this.priceTrigger$.pipe(
+      takeUntil(this.destroy$),
+      switchMap(() => {
+        const propertyId = this.currentPropertyDetail?.id || this.route.snapshot.paramMap.get('id') || '';
+        const checkIn = this.normalizeDateForApi(this.paymentSummary.checkInValue);
+        const checkOut = this.normalizeDateForApi(this.paymentSummary.checkOutValue);
+        const guests = Number.parseInt(this.paymentSummary.guestsValue, 10);
+        const guestCount = Number.isFinite(guests) && guests > 0 ? guests : 1;
+
+        if (!propertyId || !checkIn || !checkOut) {
+          return EMPTY;
+        }
+
+        this.isPricingLoading = true;
+        this.pricingError = '';
+
+        return this.pricingService.getPropertyWithPrice({
+          propertyId,
+          guests: guestCount,
+          dateInit: checkIn,
+          dateFinish: checkOut,
+        }).pipe(
+          tap((result) => {
+            this.priceForStay = result.price;
+            this.isPricingLoading = false;
+
+            const nights = this.getNightsBetween(checkIn, checkOut);
+            const currency = this.currentPropertyDetail ? (this.property.price.charAt(0) || '$') : '$';
+            const perNight = nights > 0 ? Math.round(result.price / nights) : result.price;
+
+            this.paymentSummary = {
+              ...this.paymentSummary,
+              title: `${currency}${perNight}`,
+              totalAmount: `${currency}${result.price}`,
+            };
+
+            if (nights > 0) {
+              this.summaryItems = [
+                { label: `${currency}${perNight} x ${nights} nights`, amount: `${currency}${result.price}` },
+              ];
+            } else {
+              this.summaryItems = [{ label: 'Base rate', amount: `${currency}${result.price}` }];
+            }
+          }),
+          catchError((error) => {
+            this.isPricingLoading = false;
+            this.priceForStay = null;
+            this.pricingError = 'Unable to calculate price. Please try again.';
+            return of(null);
+          }),
+        );
+      }),
+    ).subscribe();
+  }
 
   async ngOnInit(): Promise<void> {
     const navState = this.router.getCurrentNavigation()?.extras.state ?? history.state;
@@ -191,21 +254,25 @@ export class PropertydetailPage implements OnInit {
 
     this.restorePendingBooking(detail.id);
     this.paymentSummaryResetVersion += 1;
+    this.triggerPricing();
   }
 
   onCheckInChanged(value: string): void {
     this.paymentSummary.checkInValue = value;
     this.bookingErrors.checkIn = '';
+    this.triggerPricing();
   }
 
   onCheckOutChanged(value: string): void {
     this.paymentSummary.checkOutValue = value;
     this.bookingErrors.checkOut = '';
+    this.triggerPricing();
   }
 
   onGuestsChanged(value: string): void {
     this.paymentSummary.guestsValue = value;
     this.bookingErrors.guests = '';
+    this.triggerPricing();
   }
 
   async onBookNow(): Promise<void> {
@@ -236,6 +303,11 @@ export class PropertydetailPage implements OnInit {
     }
 
     if (this.hasBookingErrors()) {
+      return;
+    }
+
+    if (this.priceForStay === null && normalizedCheckIn && normalizedCheckOut) {
+      this.showAlert('Booking Error', 'Please wait for price calculation.');
       return;
     }
 
@@ -277,7 +349,7 @@ export class PropertydetailPage implements OnInit {
       guests,
       period_start: normalizedCheckIn as string,
       period_end: normalizedCheckOut as string,
-      price: this.nightlyPrice,
+      price: this.priceForStay ?? this.nightlyPrice,
       admin_group_id: this.currentPropertyDetail?.adminGroupId || '',
     };
 
@@ -309,6 +381,21 @@ export class PropertydetailPage implements OnInit {
       this.showAlert('Booking Error', message);
     } finally {
       this.isBooking = false;
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  private triggerPricing(): void {
+    const propertyId = this.currentPropertyDetail?.id || this.route.snapshot.paramMap.get('id') || '';
+    const checkIn = this.normalizeDateForApi(this.paymentSummary.checkInValue);
+    const checkOut = this.normalizeDateForApi(this.paymentSummary.checkOutValue);
+
+    if (propertyId && checkIn && checkOut) {
+      this.priceTrigger$.next();
     }
   }
 

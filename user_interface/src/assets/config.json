@@ -4,5 +4,6 @@
   "propertyApiPath": "/poc-properties/api/property",
   "propertyApiToken": "",
   "bookingApiPath": "/booking-orchestrator/api/reservations",
-  "bookingListApiPath": "/booking/api/booking"
+  "bookingListApiPath": "/booking/api/booking",
+  "pricingOrchestratorApiPath": "/pricing-orchestator/api/Property"
 }

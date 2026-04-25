@@ -253,7 +253,8 @@ The platform uses **AWS Cognito** for user authentication. The `cognito` Terrafo
 - `poc-properties` reads DB credentials from SSM: `/final-project-miso/poc-properties/db_{host,name,username,password}`.
 - `booking` reads DB credentials from SSM: `/final-project-miso/booking/db_{host,name,username,password}`.
 - `auth` gets Cognito config from SSM: `/final-project-miso/cognito/{user_pool_id,app_client_id}` (injected as `COGNITO_USER_POOL_ID`, `COGNITO_CLIENT_ID` env vars).
-- `user_interface` (frontend) gets API Gateway URL from `/assets/config.json` loaded at runtime.
+- `user_interface` (frontend) gets API Gateway URL from `/assets/config.json` loaded at runtime. Config also includes `pricingOrchestratorApiPath` (default `/pricing-orchestator/api/Property`) used by `PricingService` to fetch live prices.
+- `user_interface` calls `PricingOrchestrator` (public, no JWT) via `PricingService.getPropertyWithPrice()` at three touchpoints: (1) home page listing enrichment (`HotelsService.getHotelsWithPricing()` fires parallel pricing calls via `forkJoin`), (2) property detail page (reactive `switchMap` on date/guest changes), (3) booking detail change-dates flow. PricingOrchestrator is a public endpoint so unauthenticated users also see real prices.
 - Services communicate internally within the VPC; the API Gateway (`172.16.0.0/16`) fronts external traffic.
 - All backend services receive `X-User-Id` and `X-User-Email` headers from API Gateway JWT authorizer (except public routes).
 

@@ -1,14 +1,16 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
-import { Component, HostListener, OnInit } from '@angular/core';
+import { Component, HostListener, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { IonicModule } from '@ionic/angular';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, Subject, of, EMPTY } from 'rxjs';
+import { switchMap, takeUntil, tap, catchError } from 'rxjs/operators';
 import { Hotel } from '../../core/models/hotel.model';
 import { PropertyDetail } from '../../core/models/property-detail.model';
 import { AuthSessionService } from '../../core/services/auth-session.service';
 import { BookingService, Reservation } from '../../core/services/booking.service';
 import { PropertyDetailService } from '../../core/services/property-detail.service';
+import { PricingService } from '../../core/services/pricing.service';
 import { ThAmenityItem } from '../../shared/components/th-amenities-summary/th-amenities-summary.component';
 import { ThDetailsMosaicImage } from '../../shared/components/th-details-mosaic/th-details-mosaic.component';
 import { ThPaymentSummaryCompactTab, ThPaymentSummaryItem } from '../../shared/components/th-payment-summary/th-payment-summary.component';
@@ -37,7 +39,7 @@ import { ThPropertyReviewSummaryComponent } from '../../shared/components/th-pro
     ThPropertyReviewSummaryComponent,
   ],
 })
-export class BookingDetailPage implements OnInit {
+export class BookingDetailPage implements OnInit, OnDestroy {
   property = {
     title: 'Property',
     location: '',
@@ -100,6 +102,13 @@ export class BookingDetailPage implements OnInit {
   isCancelAccordionOpen = true;
   isChangeDatesAccordionOpen = false;
 
+  previewedNewPrice: number | null = null;
+  isPricingLoading = false;
+  pricingError = '';
+
+  private priceTrigger$ = new Subject<void>();
+  private destroy$ = new Subject<void>();
+
   private currentReservation: Reservation | null = null;
   private hasInitialized = false;
   private isRefreshingPageData = false;
@@ -121,9 +130,63 @@ export class BookingDetailPage implements OnInit {
     private propertyDetailService: PropertyDetailService,
     private bookingService: BookingService,
     private authSessionService: AuthSessionService,
+    private pricingService: PricingService,
     private route: ActivatedRoute,
     private router: Router,
-  ) {}
+  ) {
+    this.priceTrigger$.pipe(
+      takeUntil(this.destroy$),
+      switchMap(() => {
+        const propertyId = this.currentReservation?.property_id || '';
+        const checkIn = this.normalizeDateForApi(this.paymentSummary.checkInValue);
+        const checkOut = this.normalizeDateForApi(this.paymentSummary.checkOutValue);
+        const guests = Number.parseInt(String(this.paymentSummary.guestsValue || '').trim(), 10);
+        const guestCount = Number.isFinite(guests) && guests > 0 ? guests : 1;
+
+        if (!propertyId || !checkIn || !checkOut) {
+          return EMPTY;
+        }
+
+        this.isPricingLoading = true;
+        this.pricingError = '';
+
+        return this.pricingService.getPropertyWithPrice({
+          propertyId,
+          guests: guestCount,
+          dateInit: checkIn,
+          dateFinish: checkOut,
+        }).pipe(
+          tap((result) => {
+            this.previewedNewPrice = result.price;
+            this.isPricingLoading = false;
+
+            const nights = this.getNightsBetween(checkIn, checkOut);
+            const currency = this.currentReservation ? (this.property.price.charAt(0) || '$') : '$';
+            const perNight = nights > 0 ? Math.round(result.price / nights) : result.price;
+
+            this.paymentSummary = {
+              ...this.paymentSummary,
+              title: this.formatAmount(perNight, currency),
+              totalAmount: this.formatAmount(result.price, currency),
+            };
+
+            this.summaryItems = [
+              {
+                label: `${this.formatAmount(perNight, currency)} x ${nights} nights`,
+                amount: this.formatAmount(result.price, currency),
+              },
+            ];
+          }),
+          catchError(() => {
+            this.isPricingLoading = false;
+            this.previewedNewPrice = null;
+            this.pricingError = 'Unable to calculate price. Please try again.';
+            return of(null);
+          }),
+        );
+      }),
+    ).subscribe();
+  }
 
   async ngOnInit(): Promise<void> {
     this.hasInitialized = true;
@@ -443,7 +506,7 @@ export class BookingDetailPage implements OnInit {
           {
             new_period_start: newPeriodStart,
             new_period_end: newPeriodEnd,
-            new_price: 0,
+            new_price: this.previewedNewPrice ?? 0,
           },
           this.authSessionService.idToken,
         ),
@@ -489,16 +552,19 @@ export class BookingDetailPage implements OnInit {
   onCheckInChanged(newDate: string): void {
     this.paymentSummary.checkInValue = newDate;
     this.hasDateChanges = true;
+    this.triggerPricing();
   }
 
   onCheckOutChanged(newDate: string): void {
     this.paymentSummary.checkOutValue = newDate;
     this.hasDateChanges = true;
+    this.triggerPricing();
   }
 
   onGuestsChanged(newGuests: string): void {
     this.paymentSummary.guestsValue = this.sanitizeGuestsValue(newGuests);
     this.hasDateChanges = true;
+    this.triggerPricing();
   }
 
   onMobilePanelAction(): void {
@@ -543,11 +609,26 @@ export class BookingDetailPage implements OnInit {
     this.isMobileViewport = window.matchMedia('(max-width: 720px)').matches;
   }
 
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
   onAlertDismissed(): void {
     this.isAlertOpen = false;
     if (this.shouldNavigateToBookingList) {
       this.shouldNavigateToBookingList = false;
       void this.router.navigate(['/booking-list']);
+    }
+  }
+
+  private triggerPricing(): void {
+    const propertyId = this.currentReservation?.property_id || '';
+    const checkIn = this.normalizeDateForApi(this.paymentSummary.checkInValue);
+    const checkOut = this.normalizeDateForApi(this.paymentSummary.checkOutValue);
+
+    if (propertyId && checkIn && checkOut) {
+      this.priceTrigger$.next();
     }
   }
 
