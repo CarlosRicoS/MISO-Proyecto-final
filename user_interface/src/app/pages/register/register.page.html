@@ -1,10 +1,11 @@
-<ion-alert
+<th-popup
   [isOpen]="isAlertOpen"
-  [header]="alertTitle"
+  [variant]="alertVariant"
+  [title]="alertTitle"
   [message]="alertMessage"
-  [buttons]="['OK']"
-  (didDismiss)="onAlertDismiss()"
-></ion-alert>
+  primaryButtonText="Accept"
+  (primaryAction)="onAlertDismiss()"
+></th-popup>
 
 <ion-content [fullscreen]="true" class="register-content">
   <ion-grid class="register-shell">

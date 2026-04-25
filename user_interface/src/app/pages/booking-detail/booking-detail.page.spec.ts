@@ -1,6 +1,7 @@
 /// <reference types="jasmine" />
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, Router } from '@angular/router';
+import { IonicModule, Platform, NavController } from '@ionic/angular';
 import { of, throwError } from 'rxjs';
 import { BookingDetailPage } from './booking-detail.page';
 import { AuthSessionService } from '../../core/services/auth-session.service';
@@ -48,6 +49,14 @@ describe('BookingDetailPage', () => {
     created_at: '2026-04-18T00:00:00Z',
   };
 
+  const mockCancellationPolicy = {
+    booking_id: 'res-1',
+    is_free_cancellation: true,
+    refund_amount: '150.00',
+    penalty_amount: '0.00',
+    cancellation_deadline: '2099-04-25T10:00:00+00:00',
+  };
+
   class RouterMock {
     url = '/booking-detail';
     returnNavigation = true;
@@ -76,6 +85,7 @@ describe('BookingDetailPage', () => {
 
   class BookingServiceMock {
     getReservation = jasmine.createSpy('getReservation').and.returnValue(of(mockReservation));
+    getCancellationPolicy = jasmine.createSpy('getCancellationPolicy').and.returnValue(of(mockCancellationPolicy));
     cancelReservation = jasmine.createSpy('cancelReservation').and.returnValue(of(mockReservation));
     updateOrchestratedReservationDates = jasmine.createSpy('updateOrchestratedReservationDates').and.returnValue(of({}));
   }
@@ -89,9 +99,19 @@ describe('BookingDetailPage', () => {
     getPropertyWithPrice = jasmine.createSpy('getPropertyWithPrice').and.returnValue(of({ price: 500 }));
   }
 
+  class NavControllerMock {
+    navigateBack = jasmine.createSpy('navigateBack').and.returnValue(Promise.resolve());
+    navigateForward = jasmine.createSpy('navigateForward').and.returnValue(Promise.resolve());
+  }
+
   beforeEach(async () => {
+    const platformMock = {
+      is: jasmine.createSpy('is').and.returnValue(true),
+      ready: jasmine.createSpy('ready').and.returnValue(Promise.resolve()),
+    };
+
     await TestBed.configureTestingModule({
-      imports: [BookingDetailPage],
+      imports: [BookingDetailPage, IonicModule.forRoot()],
       providers: [
         { provide: Router, useClass: RouterMock },
         { provide: ActivatedRoute, useValue: routeMock },
@@ -99,6 +119,8 @@ describe('BookingDetailPage', () => {
         { provide: BookingService, useClass: BookingServiceMock },
         { provide: AuthSessionService, useClass: AuthSessionServiceMock },
         { provide: PricingService, useClass: PricingServiceMock },
+        { provide: Platform, useValue: platformMock },
+        { provide: NavController, useClass: NavControllerMock },
       ],
     }).compileComponents();
 
@@ -166,22 +188,64 @@ describe('BookingDetailPage', () => {
     });
   });
 
-  it('shows not available alert when cancel action is requested without reservation', () => {
-    component.onCancelBooking();
+  it('shows not available alert when cancel action is requested without reservation', async () => {
+    await component.onCancelBooking();
 
     expect(component.isAlertOpen).toBeTrue();
     expect(component.alertTitle).toBe('Cancellation unavailable');
   });
 
-  it('opens cancel confirmation for active reservations', () => {
+  it('opens cancel confirmation for active reservations after loading policy', async () => {
+    const bookingService = TestBed.inject(BookingService) as unknown as BookingServiceMock;
     (component as unknown as { currentReservation: typeof mockReservation }).currentReservation = {
       ...mockReservation,
       status: 'CONFIRMED',
     };
 
-    component.onCancelBooking();
+    await component.onCancelBooking();
 
+    expect(bookingService.getCancellationPolicy).toHaveBeenCalledWith('res-1', 'id-token');
     expect(component.isCancelConfirmOpen).toBeTrue();
+    expect(component.cancelConfirmMessage).toContain('Cancellation is free');
+  });
+
+  it('blocks cancellation when policy deadline has passed', async () => {
+    const bookingService = TestBed.inject(BookingService) as unknown as BookingServiceMock;
+    bookingService.getCancellationPolicy.and.returnValue(
+      of({
+        ...mockCancellationPolicy,
+        cancellation_deadline: '2000-01-01T00:00:00+00:00',
+      }),
+    );
+    (component as unknown as { currentReservation: typeof mockReservation }).currentReservation = {
+      ...mockReservation,
+      status: 'CONFIRMED',
+    };
+
+    await component.onCancelBooking();
+
+    expect(component.isCancelConfirmOpen).toBeFalse();
+    expect(component.isAlertOpen).toBeTrue();
+    expect(component.alertTitle).toBe('Cancellation unavailable');
+    expect(component.alertMessage).toContain('deadline has passed');
+  });
+
+  it('shows policy retrieval error when cancellation policy request fails', async () => {
+    const bookingService = TestBed.inject(BookingService) as unknown as BookingServiceMock;
+    bookingService.getCancellationPolicy.and.returnValue(
+      throwError(() => ({ error: { detail: 'Policy service unavailable' } })),
+    );
+    (component as unknown as { currentReservation: typeof mockReservation }).currentReservation = {
+      ...mockReservation,
+      status: 'CONFIRMED',
+    };
+
+    await component.onCancelBooking();
+
+    expect(component.isCancelConfirmOpen).toBeFalse();
+    expect(component.isAlertOpen).toBeTrue();
+    expect(component.alertTitle).toBe('Cancellation unavailable');
+    expect(component.alertMessage).toBe('Policy service unavailable');
   });
 
   it('returns early from cancel confirmation when reservation is already canceled', async () => {
@@ -694,18 +758,18 @@ describe('BookingDetailPage', () => {
       expect((component as unknown as { mobileConfirmedTab: string }).mobileConfirmedTab).toBe('cancel');
     });
 
-    it('onMobilePanelAction calls onCancelConfirmed for Upcoming status on cancel tab', async () => {
+    it('onMobilePanelAction calls onCancelBooking for Upcoming status on cancel tab', async () => {
       (component as unknown as { currentReservation: typeof mockReservation }).currentReservation = {
         ...mockReservation,
         status: 'UPCOMING',
       };
       component.bookingStatus = 'Upcoming';
       (component as unknown as { mobileConfirmedTab: string }).mobileConfirmedTab = 'cancel';
-      spyOn(component, 'onCancelConfirmed');
+      spyOn(component, 'onCancelBooking').and.returnValue(Promise.resolve());
 
       await component.onMobilePanelAction();
 
-      expect(component.onCancelConfirmed).toHaveBeenCalled();
+      expect(component.onCancelBooking).toHaveBeenCalled();
     });
 
     it('onMobilePanelAction calls onRecalculatePrice for Confirmed status on change-dates tab', async () => {
@@ -819,10 +883,10 @@ describe('BookingDetailPage', () => {
     });
 
     // Cancel confirmation scenarios
-    it('onCancelBooking shows alert when no reservation', () => {
+    it('onCancelBooking shows alert when no reservation', async () => {
       (component as unknown as { currentReservation: unknown }).currentReservation = null;
 
-      component.onCancelBooking();
+      await component.onCancelBooking();
 
       expect(component.isAlertOpen).toBeTrue();
       expect(component.alertTitle).toBe('Cancellation unavailable');
@@ -897,11 +961,11 @@ describe('BookingDetailPage', () => {
       };
       component.bookingStatus = 'Completed';
       (component as unknown as { mobileConfirmedTab: string }).mobileConfirmedTab = 'cancel';
-      spyOn(component, 'onCancelConfirmed');
+      spyOn(component, 'onCancelBooking').and.returnValue(Promise.resolve());
 
       await component.onMobilePanelAction();
 
-      expect(component.onCancelConfirmed).not.toHaveBeenCalled();
+      expect(component.onCancelBooking).not.toHaveBeenCalled();
     });
 
     // Date range formatting edge cases
@@ -1548,18 +1612,18 @@ describe('BookingDetailPage', () => {
       expect(component.onRecalculatePrice).toHaveBeenCalled();
     });
 
-    it('onMobilePanelAction for Confirmed cancel tab triggers onCancelConfirmed', async () => {
+    it('onMobilePanelAction for Confirmed cancel tab triggers onCancelBooking', async () => {
       (component as unknown as { currentReservation: typeof mockReservation }).currentReservation = {
         ...mockReservation,
         status: 'CONFIRMED',
       };
       component.bookingStatus = 'Confirmed';
       (component as unknown as { mobileConfirmedTab: string }).mobileConfirmedTab = 'cancel';
-      spyOn(component, 'onCancelConfirmed');
+      spyOn(component, 'onCancelBooking').and.returnValue(Promise.resolve());
 
       await component.onMobilePanelAction();
 
-      expect(component.onCancelConfirmed).toHaveBeenCalled();
+      expect(component.onCancelBooking).toHaveBeenCalled();
     });
 
     it('ionViewWillEnter does nothing when not initialized', () => {

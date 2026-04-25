@@ -6,6 +6,7 @@ import { Router } from '@angular/router';
 import { IonicModule } from '@ionic/angular';
 import { firstValueFrom } from 'rxjs';
 import { ThButtonComponent } from '../../shared/components/th-button/th-button.component';
+import { ThPopupComponent, ThPopupVariant } from '../../shared/components/th-popup/th-popup.component';
 import {
   ThInputComponent,
   ThInputState,
@@ -24,6 +25,7 @@ import { AuthService } from '../../core/services/auth.service';
     IonicModule,
     ThInputComponent,
     ThButtonComponent,
+    ThPopupComponent,
   ],
 })
 export class RegisterPage {
@@ -42,6 +44,7 @@ export class RegisterPage {
   isAlertOpen = false;
   alertTitle = '';
   alertMessage = '';
+  alertVariant: ThPopupVariant = 'info';
   shouldNavigateToLogin = false;
 
   constructor(authService: AuthService, router: Router) {
@@ -199,18 +202,18 @@ export class RegisterPage {
       const response = await firstValueFrom(
         this.authService.register(this.fullName.trim(), this.email.trim(), this.password)
       );
-      this.showAlert('Account Created', response.message);
+      this.showAlert('Account Created', response.message, 'success');
       this.shouldNavigateToLogin = true;
     } catch (error) {
       const httpError = error as HttpErrorResponse;
       const detail = this.resolveBackendDetailMessage(httpError);
 
       if (httpError.status === 409) {
-        this.showAlert('Registration Failed', detail || 'Email is already in use.');
+        this.showAlert('Registration Failed', detail || 'Email is already in use.', 'error');
       } else if (httpError.status === 400) {
-        this.showAlert('Registration Failed', detail || 'Password does not meet criteria.');
+        this.showAlert('Registration Failed', detail || 'Password does not meet criteria.', 'error');
       } else {
-        this.showAlert('Registration Failed', detail || 'An error occurred. Please try again.');
+        this.showAlert('Registration Failed', detail || 'An error occurred. Please try again.', 'error');
       }
       this.shouldNavigateToLogin = false;
     } finally {
@@ -231,9 +234,10 @@ export class RegisterPage {
     return typeof detail === 'string' ? detail : '';
   }
 
-  private showAlert(title: string, message: string): void {
+  private showAlert(title: string, message: string, variant: ThPopupVariant = 'info'): void {
     this.alertTitle = title;
     this.alertMessage = message;
+    this.alertVariant = variant;
     this.isAlertOpen = true;
   }
 

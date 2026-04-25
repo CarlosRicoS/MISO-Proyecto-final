@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import {
-  IonAlert,
   IonButton,
   IonCard,
   IonCardContent,
@@ -17,6 +16,7 @@ import { firstValueFrom } from 'rxjs';
 import { AuthService } from '@travelhub/core/services/auth.service';
 import { AuthSessionService } from '@travelhub/core/services/auth-session.service';
 import { ThButtonComponent } from '@travelhub/shared/components/th-button/th-button.component';
+import { ThPopupComponent } from '@travelhub/shared/components/th-popup/th-popup.component';
 import {
   ThInputComponent,
   ThInputState,
@@ -30,7 +30,6 @@ import {
   standalone: true,
   imports: [
     CommonModule,
-    IonAlert,
     IonButton,
     IonCard,
     IonCardContent,
@@ -41,6 +40,7 @@ import {
     IonSpinner,
     ThInputComponent,
     ThButtonComponent,
+    ThPopupComponent,
   ],
 })
 export class PortalHotelesLoginPage {

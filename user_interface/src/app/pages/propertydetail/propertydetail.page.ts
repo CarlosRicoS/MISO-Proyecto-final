@@ -14,6 +14,7 @@ import { AuthSessionService } from '../../core/services/auth-session.service';
 import { BookingService, ReservationRequest } from '../../core/services/booking.service';
 import { PendingBookingService } from '../../core/services/pending-booking.service';
 import { PricingService } from '../../core/services/pricing.service';
+import { ThPopupVariant } from '../../shared/components/th-popup/th-popup.component';
 
 @Component({
   selector: 'app-propertydetail',
@@ -64,6 +65,7 @@ export class PropertydetailPage implements OnInit, OnDestroy {
   isAlertOpen = false;
   alertTitle = '';
   alertMessage = '';
+  alertVariant: ThPopupVariant = 'info';
   private bookingSuccess = false;
 
   paymentSummary = {
@@ -307,13 +309,13 @@ export class PropertydetailPage implements OnInit, OnDestroy {
     }
 
     if (this.priceForStay === null && normalizedCheckIn && normalizedCheckOut) {
-      this.showAlert('Booking Error', 'Please wait for price calculation.');
+      this.showAlert('Booking Error', 'Please wait for price calculation.', 'error');
       return;
     }
 
     const propertyId = this.currentPropertyDetail?.id || this.route.snapshot.paramMap.get('id') || '';
     if (!propertyId) {
-      this.showAlert('Booking Error', 'Unable to identify the selected property.');
+      this.showAlert('Booking Error', 'Unable to identify the selected property.', 'error');
       return;
     }
 
@@ -338,7 +340,7 @@ export class PropertydetailPage implements OnInit, OnDestroy {
     const userEmail = this.authSessionService.userEmail;
 
     if (!userId || !userEmail) {
-      this.showAlert('Booking Error', 'User information is missing. Please sign in again.');
+      this.showAlert('Booking Error', 'User information is missing. Please sign in again.', 'error');
       return;
     }
 
@@ -363,7 +365,7 @@ export class PropertydetailPage implements OnInit, OnDestroy {
       );
 
       this.bookingSuccess = true;
-      this.showAlert('Reservation Created', 'Your booking request was sent successfully.');
+  this.showAlert('Reservation Created', 'Your booking request was sent successfully.', 'success');
       this.pendingBookingService.clearPendingBooking();
     } catch (error) {
       this.bookingSuccess = false;
@@ -378,7 +380,7 @@ export class PropertydetailPage implements OnInit, OnDestroy {
         message = httpError.error.detail;
       }
 
-      this.showAlert('Booking Error', message);
+      this.showAlert('Booking Error', message, 'error');
     } finally {
       this.isBooking = false;
     }
@@ -494,9 +496,10 @@ export class PropertydetailPage implements OnInit, OnDestroy {
     };
   }
 
-  private showAlert(title: string, message: string): void {
+  private showAlert(title: string, message: string, variant: ThPopupVariant = 'info'): void {
     this.alertTitle = title;
     this.alertMessage = message;
+    this.alertVariant = variant;
     this.isAlertOpen = true;
   }
 
