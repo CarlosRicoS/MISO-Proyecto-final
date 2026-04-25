@@ -50,7 +50,7 @@ export class HomePage implements OnInit {
     this.errorMessage = '';
 
     try {
-      this.hotels = await firstValueFrom(this.hotelsService.getHotels());
+      this.hotels = await firstValueFrom(this.hotelsService.getHotelsWithPricing());
     } catch (error) {
       this.errorMessage = 'Unable to load hotels.';
       this.hotels = [];
@@ -156,7 +156,7 @@ export class HomePage implements OnInit {
 
     try {
       const results = await firstValueFrom(
-        Object.keys(params).length ? this.hotelsService.getHotels(params) : this.hotelsService.getHotels()
+        Object.keys(params).length ? this.hotelsService.getHotelsWithPricing(params) : this.hotelsService.getHotelsWithPricing()
       );
 
       this.hotels = results;

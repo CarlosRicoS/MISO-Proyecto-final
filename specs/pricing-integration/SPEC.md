@@ -1,7 +1,8 @@
 # Feature: Pricing Integration — Real Prices Across Property Discovery and Booking
 
-**Status:** Draft  
+**Status:** Implemented  
 **Created:** 2026-04-24  
+**Implemented:** 2026-04-24  
 **Author:** Angel Henao  
 **Slug:** `pricing-integration`
 
@@ -27,15 +28,15 @@ Success = all three touchpoints show prices fetched live from PricingOrchestrato
 
 ## Acceptance Criteria
 
-1. [ ] Property listing cards show "From $X /night" where X is the price returned by PricingOrchestrator for 1 guest, 1 night (dateInit = tomorrow, dateFinish = day-after-tomorrow) for each property.
-2. [ ] When a user selects both check-in and check-out dates on the property detail page, the booking panel automatically updates to show the total price returned by PricingOrchestrator for those dates and the entered guest count.
-3. [ ] "Book Now" on the property detail page submits the PricingOrchestrator-computed total price (not 0) to booking-orchestrator.
-4. [ ] On the booking detail page (CONFIRMED reservation), when the user changes dates in the "Change Dates" accordion, the payment summary panel automatically updates to show the new price from PricingOrchestrator inline — before the user clicks the action button.
-5. [ ] Clicking "Recalculate Price" / the action button on the booking detail page submits the PricingOrchestrator-computed price (not 0) to booking-orchestrator `PATCH /api/reservations/{id}/dates`.
-6. [ ] If PricingOrchestrator returns an error (non-2xx), the booking panel / change-dates panel shows a user-friendly error message and does not proceed to create/update the booking.
+1. [x] Property listing cards show "From $X /night" where X is the price returned by PricingOrchestrator for 1 guest, 1 night (dateInit = tomorrow, dateFinish = day-after-tomorrow) for each property.
+2. [x] When a user selects both check-in and check-out dates on the property detail page, the booking panel automatically updates to show the total price returned by PricingOrchestrator for those dates and the entered guest count.
+3. [x] "Book Now" on the property detail page submits the PricingOrchestrator-computed total price (not 0) to booking-orchestrator.
+4. [x] On the booking detail page (CONFIRMED reservation), when the user changes dates in the "Change Dates" accordion, the payment summary panel automatically updates to show the new price from PricingOrchestrator inline — before the user clicks the action button.
+5. [x] Clicking "Recalculate Price" / the action button on the booking detail page submits the PricingOrchestrator-computed price (not 0) to booking-orchestrator `PATCH /api/reservations/{id}/dates`.
+6. [x] If PricingOrchestrator returns an error (non-2xx), the booking panel / change-dates panel shows a user-friendly error message and does not proceed to create/update the booking.
 7. [ ] A "Pricing Engine" Postman folder exists with a `GET /api/propertyprice` request and passing tests.
 8. [ ] A "Pricing Orchestrator" Postman folder exists with a `GET /api/property` request and passing tests.
-9. [ ] `config.service.ts` exposes a `pricingOrchestratorApiPath` key (default `/pricing-orchestrator/api/property`).
+9. [x] `config.service.ts` exposes a `pricingOrchestratorApiPath` key (default `/pricing-orchestrator/api/property`).
 
 ---
 
@@ -220,8 +221,8 @@ None. All changes are in the frontend and Postman documentation.
 
 | # | Question | Resolution |
 |---|---|---|
-| 1 | Should the listing page show "$0" or "Prices from —" while pricing calls are in flight? | Pending — assume show a loading shimmer or keep $0 until resolved |
-| 2 | For the property detail page, if dates are not yet selected, should "Book Now" be disabled or still allow submitting with price=0? | Pending — assume disable "Book Now" until a valid price is fetched |
+| 1 | Should the listing page show "$0" or "Prices from —" while pricing calls are in flight? | **Resolved** — Hotels render with $0 from the property API, then update in-place once pricing resolves via `forkJoin`. No shimmer/skeleton was added. |
+| 2 | For the property detail page, if dates are not yet selected, should "Book Now" be disabled or still allow submitting with price=0? | **Resolved** — Book Now is disabled when `priceForStay` is null and `isPricingLoading` is true. If both dates are set but `priceForStay` is still null, `onBookNow()` shows a "Please wait for price calculation" alert. |
 | 3 | The PricingOrchestrator requires a JWT token — does the listing page (accessible to unauthenticated users) need a fallback? | **Resolved** — PricingEngine and PricingOrchestrator are public endpoints (no JWT required). All users get real prices on every page. |
 
 ---
@@ -231,3 +232,12 @@ None. All changes are in the frontend and Postman documentation.
 - `PricingOrchestrator`'s `price` field is the **total** for the full stay, not per-night. For the listing page "From $X/night", we call with `dateInit=tomorrow, dateFinish=tomorrow+1` (1 night) so that `price == per-night price`.
 - The `PATCH /api/reservations/{id}/dates` endpoint in booking-orchestrator already accepts `new_price` in its request body — no backend change needed.
 - PricingOrchestrator reads `PROPERTIES_ENGINE_URL` and `PRICING_SERVICE_URL` from environment — these are already wired via SSM in the ECS stack.
+
+---
+
+## Implementation Notes
+
+- **API path casing:** The spec listed the default `pricingOrchestratorApiPath` as `/pricing-orchestrator/api/property`, but the actual deployed .NET service uses the path `/pricing-orchestator/api/Property` (note: "Orchestator" matches the existing service directory name typo, and "Property" is uppercase to match the .NET controller route). The implementation uses the correct deployed path.
+- **AC 7 and AC 8 (Postman folders):** These are being handled by the devops-engineer and are not yet complete at the time the frontend integration shipped. The `definition.yaml` collection file exists and has the necessary collection-level variables (`flow_price`, `flow_new_price`, `property_id`) but the Pricing Engine and Pricing Orchestrator request folders have not been added yet.
+- **`PropertyPriceQuery` interface location:** The spec described a `PropertyPriceQuery` type in `pricing.model.ts`, but it was implemented in `platform-api.model.ts` and re-exported from `pricing.model.ts`. This avoids circular dependencies since the query shape is a general platform concern.
+- **No shimmer/loading on listing:** The listing page does not show a loading indicator while pricing calls are in flight. Properties render immediately with `$0` from the property API, then prices update in-place once the `forkJoin` of pricing calls resolves. Individual pricing failures fall back to `0` silently.

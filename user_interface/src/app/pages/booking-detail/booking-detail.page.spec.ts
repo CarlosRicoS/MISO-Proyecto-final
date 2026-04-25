@@ -6,6 +6,7 @@ import { BookingDetailPage } from './booking-detail.page';
 import { AuthSessionService } from '../../core/services/auth-session.service';
 import { BookingService } from '../../core/services/booking.service';
 import { PropertyDetailService } from '../../core/services/property-detail.service';
+import { PricingService } from '../../core/services/pricing.service';
 
 describe('BookingDetailPage', () => {
   let component: BookingDetailPage;
@@ -84,6 +85,10 @@ describe('BookingDetailPage', () => {
     idToken = 'id-token';
   }
 
+  class PricingServiceMock {
+    getPropertyWithPrice = jasmine.createSpy('getPropertyWithPrice').and.returnValue(of({ price: 500 }));
+  }
+
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [BookingDetailPage],
@@ -93,6 +98,7 @@ describe('BookingDetailPage', () => {
         { provide: PropertyDetailService, useClass: PropertyDetailServiceMock },
         { provide: BookingService, useClass: BookingServiceMock },
         { provide: AuthSessionService, useClass: AuthSessionServiceMock },
+        { provide: PricingService, useClass: PricingServiceMock },
       ],
     }).compileComponents();
 
@@ -1122,6 +1128,582 @@ describe('BookingDetailPage', () => {
 
       expect(component.shouldNavigateToBookingList).toBeFalse();
       expect(routerMock.navigate).toHaveBeenCalledWith(['/booking-list']);
+    });
+  });
+
+  describe('pricing integration', () => {
+    it('initializes previewedNewPrice as null', () => {
+      expect(component.previewedNewPrice).toBeNull();
+    });
+
+    it('initializes isPricingLoading as false', () => {
+      expect(component.isPricingLoading).toBe(false);
+    });
+
+    it('initializes pricingError as empty string', () => {
+      expect(component.pricingError).toBe('');
+    });
+
+    it('triggers pricing call when both dates are set via onCheckInChanged (AC-4)', async () => {
+      const pricingService = TestBed.inject(PricingService) as unknown as PricingServiceMock;
+      pricingService.getPropertyWithPrice.and.returnValue(of({ price: 900 }));
+
+      // Set up reservation so property_id is available
+      (component as unknown as { currentReservation: typeof mockReservation }).currentReservation = {
+        ...mockReservation,
+        status: 'CONFIRMED',
+      };
+
+      component.paymentSummary.checkOutValue = '2026-05-05';
+      component.onCheckInChanged('2026-05-01');
+
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      expect(pricingService.getPropertyWithPrice).toHaveBeenCalled();
+      expect(component.previewedNewPrice).toBe(900);
+      expect(component.isPricingLoading).toBe(false);
+    });
+
+    it('triggers pricing call when both dates are set via onCheckOutChanged (AC-4)', async () => {
+      const pricingService = TestBed.inject(PricingService) as unknown as PricingServiceMock;
+      pricingService.getPropertyWithPrice.and.returnValue(of({ price: 800 }));
+
+      (component as unknown as { currentReservation: typeof mockReservation }).currentReservation = {
+        ...mockReservation,
+        status: 'CONFIRMED',
+      };
+
+      component.paymentSummary.checkInValue = '2026-05-01';
+      component.onCheckOutChanged('2026-05-04');
+
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      expect(pricingService.getPropertyWithPrice).toHaveBeenCalled();
+      expect(component.previewedNewPrice).toBe(800);
+    });
+
+    it('triggers pricing call when guests change and dates are set', async () => {
+      const pricingService = TestBed.inject(PricingService) as unknown as PricingServiceMock;
+      pricingService.getPropertyWithPrice.and.returnValue(of({ price: 1200 }));
+
+      (component as unknown as { currentReservation: typeof mockReservation }).currentReservation = {
+        ...mockReservation,
+        status: 'CONFIRMED',
+      };
+
+      component.paymentSummary.checkInValue = '2026-05-01';
+      component.paymentSummary.checkOutValue = '2026-05-05';
+      component.onGuestsChanged('3');
+
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      expect(pricingService.getPropertyWithPrice).toHaveBeenCalled();
+      expect(component.previewedNewPrice).toBe(1200);
+    });
+
+    it('does not trigger pricing when only check-in is set', async () => {
+      const pricingService = TestBed.inject(PricingService) as unknown as PricingServiceMock;
+
+      (component as unknown as { currentReservation: typeof mockReservation }).currentReservation = {
+        ...mockReservation,
+        status: 'CONFIRMED',
+      };
+
+      component.paymentSummary.checkOutValue = '';
+      component.onCheckInChanged('2026-05-01');
+
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      expect(pricingService.getPropertyWithPrice).not.toHaveBeenCalled();
+    });
+
+    it('does not trigger pricing when property_id is missing', async () => {
+      const pricingService = TestBed.inject(PricingService) as unknown as PricingServiceMock;
+
+      (component as unknown as { currentReservation: unknown }).currentReservation = null;
+
+      component.paymentSummary.checkInValue = '2026-05-01';
+      component.paymentSummary.checkOutValue = '2026-05-05';
+      component.onGuestsChanged('2');
+
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      expect(pricingService.getPropertyWithPrice).not.toHaveBeenCalled();
+    });
+
+    it('updates payment summary with pricing result (AC-4)', async () => {
+      const pricingService = TestBed.inject(PricingService) as unknown as PricingServiceMock;
+      pricingService.getPropertyWithPrice.and.returnValue(of({ price: 600 }));
+
+      (component as unknown as { currentReservation: typeof mockReservation }).currentReservation = {
+        ...mockReservation,
+        status: 'CONFIRMED',
+      };
+
+      component.paymentSummary.checkInValue = '2026-05-01';
+      component.paymentSummary.checkOutValue = '2026-05-04';
+      component.onGuestsChanged('2');
+
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      expect(component.paymentSummary.totalAmount).toContain('600');
+    });
+
+    it('sets pricingError and resets previewedNewPrice on pricing failure (AC-6)', async () => {
+      const pricingService = TestBed.inject(PricingService) as unknown as PricingServiceMock;
+      pricingService.getPropertyWithPrice.and.returnValue(
+        throwError(() => ({ status: 502, message: 'Bad Gateway' })),
+      );
+
+      (component as unknown as { currentReservation: typeof mockReservation }).currentReservation = {
+        ...mockReservation,
+        status: 'CONFIRMED',
+      };
+
+      component.paymentSummary.checkInValue = '2026-05-01';
+      component.paymentSummary.checkOutValue = '2026-05-04';
+      component.onGuestsChanged('2');
+
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      expect(component.previewedNewPrice).toBeNull();
+      expect(component.pricingError).toBe('Unable to calculate price. Please try again.');
+      expect(component.isPricingLoading).toBe(false);
+    });
+
+    it('onRecalculatePrice submits previewedNewPrice instead of 0 (AC-5)', async () => {
+      const bookingService = TestBed.inject(BookingService) as unknown as BookingServiceMock;
+      const pricingService = TestBed.inject(PricingService) as unknown as PricingServiceMock;
+      pricingService.getPropertyWithPrice.and.returnValue(of({ price: 900 }));
+
+      const mockResponse = {
+        id: 'res-1',
+        period_start: '2026-05-01',
+        period_end: '2026-05-05',
+        price: 900,
+        status: 'CONFIRMED',
+        price_difference: 600,
+      };
+      bookingService.updateOrchestratedReservationDates = jasmine
+        .createSpy('updateOrchestratedReservationDates')
+        .and.returnValue(of(mockResponse));
+
+      (component as unknown as { currentReservation: typeof mockReservation }).currentReservation = mockReservation;
+
+      // Trigger pricing to set previewedNewPrice
+      component.paymentSummary.checkInValue = '2026-05-01';
+      component.paymentSummary.checkOutValue = '2026-05-05';
+      component.onGuestsChanged('2');
+
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      expect(component.previewedNewPrice).toBe(900);
+
+      // Now recalculate
+      await component.onRecalculatePrice();
+
+      expect(bookingService.updateOrchestratedReservationDates).toHaveBeenCalledWith(
+        'res-1',
+        { new_period_start: '2026-05-01', new_period_end: '2026-05-05', new_price: 900 },
+        'id-token',
+      );
+    });
+
+    it('onRecalculatePrice defaults to 0 when previewedNewPrice is null (AC-5)', async () => {
+      const bookingService = TestBed.inject(BookingService) as unknown as BookingServiceMock;
+      const mockResponse = {
+        id: 'res-1',
+        period_start: '2026-05-01',
+        period_end: '2026-05-05',
+        price: 400,
+        status: 'CONFIRMED',
+        price_difference: 100,
+      };
+      bookingService.updateOrchestratedReservationDates = jasmine
+        .createSpy('updateOrchestratedReservationDates')
+        .and.returnValue(of(mockResponse));
+
+      (component as unknown as { currentReservation: typeof mockReservation }).currentReservation = mockReservation;
+      component.previewedNewPrice = null;
+      component.paymentSummary.checkInValue = '2026-05-01';
+      component.paymentSummary.checkOutValue = '2026-05-05';
+      component.paymentSummary.guestsValue = '2';
+
+      await component.onRecalculatePrice();
+
+      expect(bookingService.updateOrchestratedReservationDates).toHaveBeenCalledWith(
+        'res-1',
+        { new_period_start: '2026-05-01', new_period_end: '2026-05-05', new_price: 0 },
+        'id-token',
+      );
+    });
+
+    it('updates summaryItems with pricing-resolved per-night rate', async () => {
+      const pricingService = TestBed.inject(PricingService) as unknown as PricingServiceMock;
+      pricingService.getPropertyWithPrice.and.returnValue(of({ price: 900 }));
+
+      (component as unknown as { currentReservation: typeof mockReservation }).currentReservation = {
+        ...mockReservation,
+        status: 'CONFIRMED',
+      };
+
+      component.paymentSummary.checkInValue = '2026-05-01';
+      component.paymentSummary.checkOutValue = '2026-05-04';
+      component.onGuestsChanged('2');
+
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // 3 nights, $900 total => $300/night
+      expect(component.summaryItems.length).toBeGreaterThan(0);
+      expect(component.summaryItems[0].label).toContain('300');
+      expect(component.summaryItems[0].label).toContain('3 nights');
+      expect(component.summaryItems[0].amount).toContain('900');
+    });
+
+    it('cleans up subscriptions on destroy', () => {
+      const destroySubject = (component as unknown as { destroy$: { next: () => void; complete: () => void } }).destroy$;
+      spyOn(destroySubject, 'next');
+      spyOn(destroySubject, 'complete');
+
+      component.ngOnDestroy();
+
+      expect(destroySubject.next).toHaveBeenCalled();
+      expect(destroySubject.complete).toHaveBeenCalled();
+    });
+  });
+
+  describe('computed property coverage for status-based getters', () => {
+    it('isAccordionLayout returns true for CONFIRMED status', async () => {
+      routerMock.navigationState = {
+        reservation: { ...mockReservation, status: 'CONFIRMED' },
+        propertyDetail: mockPropertyDetail,
+      };
+
+      await component.ngOnInit();
+
+      expect(component.isAccordionLayout).toBeTrue();
+      expect(component.isEditableStatus).toBeTrue();
+      expect(component.showCancelAccordion).toBeTrue();
+      expect(component.showChangeDatesAccordion).toBeTrue();
+    });
+
+    it('isFlatEditableLayout returns true for REJECTED status', async () => {
+      routerMock.navigationState = {
+        reservation: { ...mockReservation, status: 'REJECTED' },
+        propertyDetail: mockPropertyDetail,
+      };
+
+      await component.ngOnInit();
+
+      expect(component.isFlatEditableLayout).toBeTrue();
+      expect(component.isFlatChangeDatesLayout).toBeTrue();
+      expect(component.isFlatCancelLayout).toBeFalse();
+    });
+
+    it('isCancellationHiddenForStatus returns true for CANCELED status', async () => {
+      routerMock.navigationState = {
+        reservation: { ...mockReservation, status: 'CANCELED' },
+        propertyDetail: mockPropertyDetail,
+      };
+
+      await component.ngOnInit();
+
+      expect(component.isCancellationHiddenForStatus).toBeTrue();
+    });
+
+    it('isCancellationHiddenForStatus returns true for COMPLETED status', async () => {
+      routerMock.navigationState = {
+        reservation: { ...mockReservation, status: 'COMPLETED' },
+        propertyDetail: mockPropertyDetail,
+      };
+
+      await component.ngOnInit();
+
+      expect(component.isCancellationHiddenForStatus).toBeTrue();
+    });
+
+    it('mobile panel getters return correct values for Upcoming status', async () => {
+      routerMock.navigationState = {
+        reservation: { ...mockReservation, status: 'PENDING' },
+        propertyDetail: mockPropertyDetail,
+      };
+
+      await component.ngOnInit();
+
+      expect(component.mobilePanelActionLabel).toBe('Cancel Reservation');
+      expect(component.mobilePanelActionDisabled).toBeFalse();
+      expect(component.mobilePanelIsLoading).toBeFalse();
+      expect(component.mobilePanelShowAction).toBeTrue();
+    });
+
+    it('mobile panel getters for CONFIRMED cancel tab', async () => {
+      routerMock.navigationState = {
+        reservation: { ...mockReservation, status: 'CONFIRMED' },
+        propertyDetail: mockPropertyDetail,
+      };
+
+      await component.ngOnInit();
+
+      (component as unknown as { mobileConfirmedTab: string }).mobileConfirmedTab = 'cancel';
+
+      expect(component.mobilePanelActionLabel).toBe('Cancel Reservation');
+      expect(component.mobilePanelEditable).toBeFalse();
+      expect(component.mobilePanelPromoText).toBe('Reservation details');
+      expect(component.mobilePanelFootnote).toContain('Cancellation policies');
+    });
+
+    it('mobile panel getters for CONFIRMED change-dates tab', async () => {
+      routerMock.navigationState = {
+        reservation: { ...mockReservation, status: 'CONFIRMED' },
+        propertyDetail: mockPropertyDetail,
+      };
+
+      await component.ngOnInit();
+
+      (component as unknown as { mobileConfirmedTab: string }).mobileConfirmedTab = 'change-dates';
+
+      expect(component.mobilePanelActionLabel).toBe('Recalculate Price');
+      expect(component.mobilePanelEditable).toBeTrue();
+      expect(component.mobilePanelPromoText).toBe('Update Your Dates');
+      expect(component.mobilePanelTabs.length).toBe(2);
+    });
+
+    it('mobile panel getters for REJECTED status', async () => {
+      routerMock.navigationState = {
+        reservation: { ...mockReservation, status: 'REJECTED' },
+        propertyDetail: mockPropertyDetail,
+      };
+
+      await component.ngOnInit();
+
+      expect(component.mobilePanelActionLabel).toBe('Recalculate Price');
+      expect(component.mobilePanelEditable).toBeTrue();
+      expect(component.mobilePanelActionDisabled).toBeFalse();
+      expect(component.mobilePanelIsLoading).toBeFalse();
+    });
+
+    it('mobilePanelHideAfterTotal returns true for terminal statuses', async () => {
+      routerMock.navigationState = {
+        reservation: { ...mockReservation, status: 'COMPLETED' },
+        propertyDetail: mockPropertyDetail,
+      };
+
+      await component.ngOnInit();
+
+      expect(component.mobilePanelHideAfterTotal).toBeTrue();
+      expect(component.mobilePanelShowAction).toBeFalse();
+      expect(component.mobilePanelFootnote).toBe('');
+    });
+
+    it('mobilePanelFootnote for editable status with date changes', async () => {
+      routerMock.navigationState = {
+        reservation: { ...mockReservation, status: 'REJECTED' },
+        propertyDetail: mockPropertyDetail,
+      };
+
+      await component.ngOnInit();
+
+      component.hasDateChanges = true;
+      expect(component.mobilePanelFootnote).toContain('Dates updated');
+
+      component.hasDateChanges = false;
+      expect(component.mobilePanelFootnote).toContain('Select new dates');
+    });
+
+    it('toggleCancelAccordion toggles state and closes change dates', () => {
+      component.isCancelAccordionOpen = false;
+      component.isChangeDatesAccordionOpen = true;
+
+      component.toggleCancelAccordion();
+
+      expect(component.isCancelAccordionOpen).toBeTrue();
+      expect(component.isChangeDatesAccordionOpen).toBeFalse();
+    });
+
+    it('toggleChangeDatesAccordion toggles state and closes cancel', () => {
+      component.isChangeDatesAccordionOpen = false;
+      component.isCancelAccordionOpen = true;
+
+      component.toggleChangeDatesAccordion();
+
+      expect(component.isChangeDatesAccordionOpen).toBeTrue();
+      expect(component.isCancelAccordionOpen).toBeFalse();
+    });
+
+    it('mobilePanelTabs returns empty for non-accordion layout', () => {
+      component.bookingStatus = 'Upcoming';
+      expect(component.mobilePanelTabs).toEqual([]);
+    });
+
+    it('onMobilePanelAction for Rejected status triggers onRecalculatePrice', async () => {
+      (component as unknown as { currentReservation: typeof mockReservation }).currentReservation = {
+        ...mockReservation,
+        status: 'REJECTED',
+      };
+      component.bookingStatus = 'Rejected';
+      spyOn(component, 'onRecalculatePrice');
+
+      await component.onMobilePanelAction();
+
+      expect(component.onRecalculatePrice).toHaveBeenCalled();
+    });
+
+    it('onMobilePanelAction for Confirmed cancel tab triggers onCancelConfirmed', async () => {
+      (component as unknown as { currentReservation: typeof mockReservation }).currentReservation = {
+        ...mockReservation,
+        status: 'CONFIRMED',
+      };
+      component.bookingStatus = 'Confirmed';
+      (component as unknown as { mobileConfirmedTab: string }).mobileConfirmedTab = 'cancel';
+      spyOn(component, 'onCancelConfirmed');
+
+      await component.onMobilePanelAction();
+
+      expect(component.onCancelConfirmed).toHaveBeenCalled();
+    });
+
+    it('ionViewWillEnter does nothing when not initialized', () => {
+      (component as unknown as { hasInitialized: boolean }).hasInitialized = false;
+      component.ionViewWillEnter();
+      // Should return early without errors
+      expect(component).toBeTruthy();
+    });
+
+    it('mobilePanelActionDisabled returns true for terminal status', () => {
+      component.bookingStatus = 'Completed';
+      expect(component.mobilePanelActionDisabled).toBeTrue();
+    });
+
+    it('mobilePanelIsLoading returns false for terminal status', () => {
+      component.bookingStatus = 'Completed';
+      expect(component.mobilePanelIsLoading).toBeFalse();
+    });
+
+    it('mobilePanelActionLabel returns Cancel for unrecognized status', () => {
+      component.bookingStatus = 'SomeOther';
+      expect(component.mobilePanelActionLabel).toBe('Cancel');
+    });
+
+    it('showMobileStickyPanel reflects isMobileViewport', () => {
+      component.isMobileViewport = true;
+      expect(component.showMobileStickyPanel).toBeTrue();
+
+      component.isMobileViewport = false;
+      expect(component.showMobileStickyPanel).toBeFalse();
+    });
+
+    it('isAccordionLayout is false for non-CONFIRMED status', () => {
+      component.bookingStatus = 'Upcoming';
+      expect(component.isAccordionLayout).toBeFalse();
+      expect(component.showCancelAccordion).toBeFalse();
+      expect(component.showChangeDatesAccordion).toBeFalse();
+    });
+
+    it('isFlatCancelLayout returns true for UPCOMING status', () => {
+      component.bookingStatus = 'Upcoming';
+      expect(component.isFlatCancelLayout).toBeTrue();
+    });
+
+    it('isCancellationHiddenForStatus returns true for CANCELLED variant', () => {
+      component.bookingStatus = 'Cancelled';
+      expect(component.isCancellationHiddenForStatus).toBeTrue();
+    });
+
+    it('formatAmount handles non-finite values', () => {
+      const formatAmount = (
+        component as unknown as {
+          formatAmount: (value: number, currency: string) => string;
+        }
+      ).formatAmount.bind(component);
+
+      expect(formatAmount(NaN, '$')).toBe('$0');
+      expect(formatAmount(Infinity, '$')).toBe('$0');
+    });
+
+    it('handles applyBookingDetail with missing hotel data', async () => {
+      routerMock.navigationState = {
+        reservation: mockReservation,
+        propertyDetail: { ...mockPropertyDetail, photos: [], reviews: [] },
+      };
+
+      await component.ngOnInit();
+
+      expect(component.property.title).toBe('Casa Playa Cartagena');
+      expect(component.guestReviews.length).toBe(0);
+    });
+
+    it('handles reservation without payment_reference', async () => {
+      routerMock.navigationState = {
+        reservation: { ...mockReservation, payment_reference: null },
+        propertyDetail: mockPropertyDetail,
+      };
+
+      await component.ngOnInit();
+
+      expect(component).toBeTruthy();
+    });
+
+    it('handles error with detail field in onRecalculatePrice', async () => {
+      const bookingService = TestBed.inject(BookingService) as unknown as BookingServiceMock;
+      bookingService.updateOrchestratedReservationDates = jasmine
+        .createSpy('updateOrchestratedReservationDates')
+        .and.returnValue(throwError(() => ({ status: 500, error: { detail: 'Some detail error' } })));
+
+      (component as unknown as { currentReservation: typeof mockReservation }).currentReservation = mockReservation;
+      component.paymentSummary.checkInValue = '2026-05-01';
+      component.paymentSummary.checkOutValue = '2026-05-05';
+      component.paymentSummary.guestsValue = '2';
+
+      await component.onRecalculatePrice();
+
+      expect(component.alertMessage).toBe('Some detail error');
+    });
+
+    it('handles error with detail field in onCancelConfirmed', async () => {
+      const bookingService = TestBed.inject(BookingService) as unknown as BookingServiceMock;
+      bookingService.cancelReservation = jasmine
+        .createSpy('cancelReservation')
+        .and.returnValue(throwError(() => ({ status: 500, error: { detail: 'Cancel detail error' } })));
+
+      (component as unknown as { currentReservation: typeof mockReservation }).currentReservation = {
+        ...mockReservation,
+        status: 'CONFIRMED',
+      };
+
+      await component.onCancelConfirmed();
+
+      expect(component.alertMessage).toBe('Cancel detail error');
+    });
+
+    it('loadPropertyDetail is called when reservation is present but no propertyDetail', async () => {
+      const propertyDetailService = TestBed.inject(PropertyDetailService) as unknown as PropertyDetailServiceMock;
+      routerMock.navigationState = {
+        reservation: mockReservation,
+      };
+
+      await component.ngOnInit();
+
+      expect(propertyDetailService.getPropertyDetail).toHaveBeenCalledWith('prop-1');
+    });
+
+    it('getAverageReviewRating returns null for empty reviews', () => {
+      const getAverageReviewRating = (
+        component as unknown as {
+          getAverageReviewRating: (detail: { reviews: any[] }) => number | null;
+        }
+      ).getAverageReviewRating.bind(component);
+
+      expect(getAverageReviewRating({ reviews: [] })).toBeNull();
+    });
+
+    it('getAverageReviewRating computes average for multiple reviews', () => {
+      const getAverageReviewRating = (
+        component as unknown as {
+          getAverageReviewRating: (detail: { reviews: any[] }) => number | null;
+        }
+      ).getAverageReviewRating.bind(component);
+
+      expect(getAverageReviewRating({ reviews: [{ rating: 4 }, { rating: 5 }] })).toBe(4.5);
     });
   });
 });

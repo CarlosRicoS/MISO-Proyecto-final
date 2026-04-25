@@ -30,6 +30,12 @@ jobs:
           - name: notifications
             language: python
             context-path: services/notifications
+          - name: pricing-engine
+            language: dotnet
+            context-path: services/PricingEngine
+          - name: pricing-orchestator
+            language: dotnet
+            context-path: services/PricingOrchestator
     name: Test ${{ matrix.name }}
     steps:
       - name: Checkout repository
@@ -38,6 +44,12 @@ jobs:
       - name: Run Python tests
         if: matrix.language == 'python'
         uses: ./.github/actions/test-python
+        with:
+          context-path: ${{ matrix.context-path }}
+
+      - name: Run .NET tests
+        if: matrix.language == 'dotnet'
+        uses: ./.github/actions/test-dotnet
         with:
           context-path: ${{ matrix.context-path }}
 

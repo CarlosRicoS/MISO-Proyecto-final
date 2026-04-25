@@ -8,6 +8,7 @@ interface AppConfig {
   propertyApiToken?: string;
   bookingApiPath?: string;
   bookingListApiPath?: string;
+  pricingOrchestratorApiPath?: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -18,6 +19,7 @@ export class ConfigService {
     propertyApiToken: '',
     bookingApiPath: '/booking-orchestrator/api/reservations',
     bookingListApiPath: '/booking/api/booking',
+    pricingOrchestratorApiPath: '/pricing-orchestator/api/Property',
   };
 
   constructor(private http: HttpClient) {}
@@ -46,5 +48,9 @@ export class ConfigService {
 
   get bookingListApiPath(): string {
     return this.config.bookingListApiPath || '/booking/api/booking';
+  }
+
+  get pricingOrchestratorApiPath(): string {
+    return this.config.pricingOrchestratorApiPath || '/pricing-orchestator/api/Property';
   }
 }

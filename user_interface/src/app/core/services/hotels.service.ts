@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { Observable, of, forkJoin } from 'rxjs';
+import { map, switchMap, catchError } from 'rxjs/operators';
 import { ConfigService } from './config.service';
+import { PricingService } from './pricing.service';
 import { Hotel } from '../models/hotel.model';
 
 interface PropertyApiResponse {
@@ -30,7 +31,11 @@ interface PropertySearchParams {
 
 @Injectable({ providedIn: 'root' })
 export class HotelsService {
-  constructor(private http: HttpClient, private config: ConfigService) {}
+  constructor(
+    private http: HttpClient,
+    private config: ConfigService,
+    private pricingService: PricingService,
+  ) {}
 
   getHotels(params: PropertySearchParams = {}): Observable<Hotel[]> {
     const baseUrl = this.config.apiBaseUrl?.replace(/\/$/, '');
@@ -76,6 +81,69 @@ export class HotelsService {
     return this.http
         .get<PropertyApiResponse[]>(url, { headers, params: queryParams })
         .pipe(map((response) => response.map((property) => this.mapPropertyToHotel(property, params.city))));
+  }
+
+  /**
+   * Fetch hotels from poc-properties and enrich each with a base nightly price from PricingOrchestrator.
+   *
+   * Calls `getHotels()` first, then fires one `PricingService.getPropertyWithPrice()` call per
+   * hotel in parallel via `forkJoin` (1 guest, tomorrow to day-after-tomorrow). If an individual
+   * pricing call fails, that hotel falls back to pricePerNight = 0 (non-blocking).
+   *
+   * @param params - Optional search filters (city, capacity, dates, pagination).
+   * @returns Observable of Hotel[] with `pricePerNight` populated from live pricing data.
+   */
+  getHotelsWithPricing(params: PropertySearchParams = {}): Observable<Hotel[]> {
+    return this.getHotels(params).pipe(
+      switchMap((hotels) => this.enrichWithPricing(hotels)),
+    );
+  }
+
+  private enrichWithPricing(hotels: Hotel[]): Observable<Hotel[]> {
+    if (!hotels.length) {
+      return of([]);
+    }
+
+    const tomorrowISO = this.getTomorrowISO();
+    const dayAfterTomorrowISO = this.getDayAfterTomorrowISO();
+
+    const pricingCalls = hotels.map((hotel) =>
+      this.pricingService.getPropertyWithPrice({
+        propertyId: hotel.id,
+        guests: 1,
+        dateInit: tomorrowISO,
+        dateFinish: dayAfterTomorrowISO,
+      }).pipe(
+        catchError(() => of({ price: 0 } as { price: number })),
+      ),
+    );
+
+    return forkJoin(pricingCalls).pipe(
+      map((pricingResults) =>
+        hotels.map((hotel, index) => ({
+          ...hotel,
+          pricePerNight: pricingResults[index].price ?? hotel.pricePerNight,
+        })),
+      ),
+    );
+  }
+
+  private getTomorrowISO(): string {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const year = tomorrow.getFullYear();
+    const month = String(tomorrow.getMonth() + 1).padStart(2, '0');
+    const day = String(tomorrow.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  private getDayAfterTomorrowISO(): string {
+    const dayAfter = new Date();
+    dayAfter.setDate(dayAfter.getDate() + 2);
+    const year = dayAfter.getFullYear();
+    const month = String(dayAfter.getMonth() + 1).padStart(2, '0');
+    const day = String(dayAfter.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 
   private mapPropertyToHotel(property: PropertyApiResponse, fallbackCity?: string): Hotel {
