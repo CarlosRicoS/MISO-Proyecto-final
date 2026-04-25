@@ -1,0 +1,142 @@
+<ion-content class="portal-hoteles-reports-content">
+  <section class="portal-hoteles-reports-hero">
+    <h1 class="portal-hoteles-reports-hero__kicker">Incoming Report</h1>
+    <p>Welcome back! Here's what's happening at your hotel today.</p>
+  </section>
+
+  <section class="portal-hoteles-reports-grid portal-hoteles-reports-grid--kpi">
+    <portal-hoteles-grid-card
+      cardClass="portal-hoteles-grid-card--metric"
+      *ngFor="let card of kpiCards"
+    >
+      <div class="portal-hoteles-reports-kpi">
+        <div>
+          <span class="portal-hoteles-reports-kpi__label">{{ card.label }}</span>
+          <strong class="portal-hoteles-reports-kpi__value">{{ card.value }}</strong>
+          <p [class]="'portal-hoteles-reports-kpi__trend ' + card.trendClass">{{ card.trend }}</p>
+        </div>
+        <div class="portal-hoteles-reports-kpi__badge" aria-hidden="true">
+          <ion-icon class="portal-hoteles-reports-kpi__icon" [name]="card.icon"></ion-icon>
+        </div>
+      </div>
+    </portal-hoteles-grid-card>
+  </section>
+
+  <section class="portal-hoteles-reports-grid portal-hoteles-reports-grid--content portal-hoteles-reports-grid--full-width">
+    <portal-hoteles-revenue-chart-card
+      title="Revenue Overview"
+      subtitle="Visual revenue trend by month"
+      [periodLabel]="chartPeriod"
+      [periodOptions]="chartPeriodOptions"
+      [categories]="chartCategories"
+      [values]="chartValues"
+      [yAxisTicks]="chartTicks"
+      [ariaDescription]="'Revenue overview chart for period ' + chartPeriod"
+      (periodChange)="onChartPeriodChange($event)"
+    ></portal-hoteles-revenue-chart-card>
+
+    <portal-hoteles-grid-card
+      cardClass="portal-hoteles-grid-card--panel portal-hoteles-grid-card--wide"
+      title="Daily Revenue Report"
+      subtitle="Detailed transactions and payment status"
+    >
+      <div slot="header-actions" class="portal-hoteles-reports-toolbar-header" role="group" aria-label="Report filters and export options">
+        <div class="portal-hoteles-reports-toolbar-header__filters">
+          <ion-select
+            class="portal-hoteles-reports-toolbar-header__select"
+            interface="popover"
+            [value]="selectedTablePeriod"
+            aria-label="Filter report period"
+            (ionChange)="onTablePeriodChange($event.detail.value)"
+          >
+            <ion-select-option *ngFor="let period of tablePeriodOptions" [value]="period">{{ period }}</ion-select-option>
+          </ion-select>
+
+          <ion-select
+            class="portal-hoteles-reports-toolbar-header__select"
+            interface="popover"
+            [value]="selectedCurrency"
+            aria-label="Select report currency"
+            (ionChange)="onCurrencyChange($event.detail.value)"
+          >
+            <ion-select-option *ngFor="let currency of currencyOptions" [value]="currency">{{ currency }}</ion-select-option>
+          </ion-select>
+        </div>
+
+        <div class="portal-hoteles-reports-toolbar-header__export">
+          <ion-button
+            size="small"
+            fill="outline"
+            class="portal-hoteles-reports-toolbar-header__export-button portal-hoteles-reports-toolbar-header__export-button--secondary"
+          >
+            PDF
+          </ion-button>
+          <ion-button
+            size="small"
+            fill="solid"
+            class="portal-hoteles-reports-toolbar-header__export-button portal-hoteles-reports-toolbar-header__export-button--primary"
+          >
+            Excel
+          </ion-button>
+        </div>
+      </div>
+
+      <table class="portal-hoteles-reports-table" *ngIf="hasRows; else noRowsTemplate">
+        <thead>
+          <tr class="portal-hoteles-reports-table__header">
+            <th scope="col">Date</th>
+            <th scope="col">Booking ID</th>
+            <th scope="col">Guest</th>
+            <th scope="col">Room Type</th>
+            <th scope="col">Payment</th>
+            <th scope="col">Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="portal-hoteles-reports-table__row" *ngFor="let row of visibleRows">
+            <td>{{ row.dateLabel }}</td>
+            <td>#{{ row.bookingId }}</td>
+            <td>{{ row.guestLabel }}</td>
+            <td>{{ row.roomLabel }}</td>
+            <td>
+              <span [class]="getPaymentStatusClass(row.paymentStatus)">{{ row.paymentStatus }}</span>
+            </td>
+            <td>{{ formatAmount(row.amount) }}</td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="6" class="portal-hoteles-reports-table__footer">
+              <span>{{ rangeLabel }}</span>
+              <div class="portal-hoteles-reports-table__pagination" *ngIf="shouldShowPagination">
+                <ion-button
+                  fill="outline"
+                  size="small"
+                  class="portal-hoteles-reports-table__pagination-button"
+                  [disabled]="!canGoToPreviousPage"
+                  (click)="onPreviousPage()"
+                >
+                  Previous
+                </ion-button>
+                <span class="portal-hoteles-reports-table__pagination-label">{{ paginationLabel }}</span>
+                <ion-button
+                  fill="outline"
+                  size="small"
+                  class="portal-hoteles-reports-table__pagination-button"
+                  [disabled]="!canGoToNextPage"
+                  (click)="onNextPage()"
+                >
+                  Next
+                </ion-button>
+              </div>
+            </td>
+          </tr>
+        </tfoot>
+      </table>
+
+      <ng-template #noRowsTemplate>
+        <p class="portal-hoteles-reports-table__message" aria-live="polite" aria-atomic="true">No revenue transactions available.</p>
+      </ng-template>
+    </portal-hoteles-grid-card>
+  </section>
+</ion-content>

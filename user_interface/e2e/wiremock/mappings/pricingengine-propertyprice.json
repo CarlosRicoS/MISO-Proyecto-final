@@ -1,7 +1,21 @@
 {
   "request": {
     "method": "GET",
-    "urlPathPattern": "^/(pricing-engine/)?api/PropertyPrice$"
+    "urlPathPattern": "^/(pricing-engine/)?api/PropertyPrice$",
+    "queryParameters": {
+      "propertyId": {
+        "matches": "^[0-9a-fA-F-]{36}$"
+      },
+      "guests": {
+        "matches": "^[0-9]+$"
+      },
+      "dateInit": {
+        "matches": "^\\d{4}-\\d{2}-\\d{2}$"
+      },
+      "dateFinish": {
+        "matches": "^\\d{4}-\\d{2}-\\d{2}$"
+      }
+    }
   },
   "response": {
     "status": 200,

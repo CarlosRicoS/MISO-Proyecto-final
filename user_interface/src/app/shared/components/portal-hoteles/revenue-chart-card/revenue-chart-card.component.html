@@ -1,0 +1,39 @@
+<portal-hoteles-grid-card
+  cardClass="portal-hoteles-grid-card--panel portal-hoteles-grid-card--wide"
+  [title]="title"
+  [subtitle]="subtitle"
+>
+  <div class="portal-hoteles-revenue-chart-card__toolbar">
+    <ion-chip color="light">{{ periodLabel }}</ion-chip>
+    <ion-select
+      interface="popover"
+      [value]="selectedPeriod"
+      aria-label="Select chart period"
+      (ionChange)="onPeriodSelectionChange($event)"
+    >
+      <ion-select-option *ngFor="let option of periodOptions" [value]="option">{{ option }}</ion-select-option>
+    </ion-select>
+  </div>
+
+  <div class="portal-hoteles-revenue-chart-card__chart" [attr.aria-label]="ariaDescription" role="img" *ngIf="hasData; else emptyChart">
+    <ol class="portal-hoteles-revenue-chart-card__y-axis" aria-hidden="true">
+      <li *ngFor="let tick of resolvedTicks">{{ formatCurrency(tick) }}</li>
+    </ol>
+
+    <ul class="portal-hoteles-revenue-chart-card__bars">
+      <li class="portal-hoteles-revenue-chart-card__bar-item" *ngFor="let point of chartPoints; trackBy: trackByCategory">
+        <div
+          class="portal-hoteles-revenue-chart-card__bar"
+          [style.height.%]="getBarHeight(point.value)"
+          [attr.aria-label]="getBarAriaLabel(point)"
+          tabindex="0"
+        ></div>
+        <span class="portal-hoteles-revenue-chart-card__bar-label">{{ point.category }}</span>
+      </li>
+    </ul>
+  </div>
+
+  <ng-template #emptyChart>
+    <p class="portal-hoteles-revenue-chart-card__empty" aria-live="polite" aria-atomic="true">No revenue data available.</p>
+  </ng-template>
+</portal-hoteles-grid-card>

@@ -1,0 +1,94 @@
+.portal-hoteles-revenue-chart-card__toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--th-space-2);
+  margin-bottom: var(--th-space-4);
+}
+
+.portal-hoteles-revenue-chart-card__chart {
+  display: grid;
+  grid-template-columns: minmax(72px, auto) minmax(0, 1fr);
+  gap: var(--th-space-4);
+  align-items: end;
+  min-height: 260px;
+}
+
+.portal-hoteles-revenue-chart-card__y-axis {
+  display: grid;
+  align-self: stretch;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--th-neutral-600);
+  font-size: var(--th-text-caption-size);
+}
+
+.portal-hoteles-revenue-chart-card__y-axis li {
+  display: flex;
+  align-items: center;
+  border-top: 1px dashed var(--th-neutral-300);
+  padding-top: var(--th-space-1);
+}
+
+.portal-hoteles-revenue-chart-card__bars {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: var(--th-space-3);
+  grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
+  align-items: end;
+  min-height: 260px;
+}
+
+.portal-hoteles-revenue-chart-card__bar-item {
+  display: grid;
+  justify-items: center;
+  gap: var(--th-space-2);
+}
+
+.portal-hoteles-revenue-chart-card__bar {
+  width: 100%;
+  max-width: 52px;
+  min-height: 6px;
+  border-radius: var(--th-radius-md);
+  background: linear-gradient(180deg, var(--th-primary-500) 0%, var(--th-primary-700) 100%);
+  border: 1px solid var(--th-primary-700);
+}
+
+.portal-hoteles-revenue-chart-card__bar:focus-visible {
+  outline: 2px solid var(--th-primary-700);
+  outline-offset: 2px;
+}
+
+.portal-hoteles-revenue-chart-card__bar-label {
+  color: var(--th-neutral-700);
+  font-size: var(--th-text-caption-size);
+  text-align: center;
+}
+
+.portal-hoteles-revenue-chart-card__empty {
+  margin: var(--th-space-2) 0 0;
+  color: var(--th-neutral-700);
+}
+
+@media (max-width: 960px) {
+  .portal-hoteles-revenue-chart-card__chart {
+    grid-template-columns: 1fr;
+  }
+
+  .portal-hoteles-revenue-chart-card__y-axis {
+    grid-auto-flow: column;
+    overflow-x: auto;
+    gap: var(--th-space-3);
+    border-bottom: 1px dashed var(--th-neutral-300);
+    padding-bottom: var(--th-space-2);
+  }
+
+  .portal-hoteles-revenue-chart-card__y-axis li {
+    border-top: 0;
+    padding-top: 0;
+    white-space: nowrap;
+  }
+}

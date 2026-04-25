@@ -4,7 +4,7 @@ services:
   wiremock:
     image: docker.io/wiremock/wiremock:3.9.1
     ports:
-      - "8080:8080"
+      - "8081:8080"
     volumes:
       - ./mappings:/home/wiremock/mappings:ro
       - ./__files:/home/wiremock/__files:ro
