@@ -53,6 +53,28 @@ function buildJwt(payload: Record<string, string>): string {
 }
 
 async function mockPropertyApis(page: Page): Promise<void> {
+  await page.route('**/pricing-orchestator/api/Property**', async (route) => {
+    const requestUrl = new URL(route.request().url());
+    const propertyId = requestUrl.searchParams.get('propertyId') || 'unknown';
+    const matchedHotel = mockedHotels.find((h) => h.id === propertyId);
+
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        id: propertyId,
+        name: matchedHotel?.name || 'Hotel',
+        maxCapacity: 4,
+        description: 'Test property',
+        urlBucketPhotos: matchedHotel?.imageUrl || '',
+        checkInTime: '15:00:00',
+        checkOutTime: '11:00:00',
+        adminGroupId: 'hotel-admins',
+        price: matchedHotel?.pricePerNight || 100,
+      }),
+    });
+  });
+
   await page.route('**/api/property**', async (route) => {
     const requestUrl = new URL(route.request().url());
     const path = requestUrl.pathname;

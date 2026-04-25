@@ -254,6 +254,7 @@ export class PropertydetailPage implements OnInit, OnDestroy {
 
     this.restorePendingBooking(detail.id);
     this.paymentSummaryResetVersion += 1;
+    this.triggerPricing();
   }
 
   onCheckInChanged(value: string): void {

@@ -1,8 +1,6 @@
 using FluentValidation.Results;
 using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.Extensions.Options;
 using NSubstitute;
-using PricingOrchestator;
 using PricingOrchestator.Controllers;
 using PricingOrchestator.Models;
 using System.Net;
@@ -14,9 +12,7 @@ namespace PricingOrchestatorTests
 	[TestFixture]
 	public class PropertyControllerTests
 	{
-		private IOptions<AppSettings> _options;
 		private IHttpClientFactory _httpClientFactory;
-		private AppSettings _appSettings;
 		private PropertyController _controller;
 		private HttpClient _httpClient;
 		private TestHttpMessageHandler _messageHandler;
@@ -24,14 +20,8 @@ namespace PricingOrchestatorTests
 		[SetUp]
 		public void Setup()
 		{
-			_appSettings = new AppSettings
-			{
-				PropertiesEngineUrl = "https://properties-engine.test",
-				PricingEngineUrl = "https://pricing-engine.test"
-			};
-
-			_options = Substitute.For<IOptions<AppSettings>>();
-			_options.Value.Returns(_appSettings);
+			Environment.SetEnvironmentVariable("PROPERTIES_ENGINE_URL", "https://properties-engine.test");
+			Environment.SetEnvironmentVariable("PRICING_SERVICE_URL", "https://pricing-engine.test");
 
 			_messageHandler = new TestHttpMessageHandler();
 			_httpClient = new HttpClient(_messageHandler);
@@ -39,7 +29,7 @@ namespace PricingOrchestatorTests
 			_httpClientFactory = Substitute.For<IHttpClientFactory>();
 			_httpClientFactory.CreateClient(Arg.Any<string>()).Returns(_httpClient);
 
-			_controller = new PropertyController(_options, _httpClientFactory);
+			_controller = new PropertyController(_httpClientFactory);
 		}
 
 		[TearDown]
