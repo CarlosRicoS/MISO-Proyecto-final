@@ -189,7 +189,7 @@ test.describe('TravelHub core journeys', () => {
     await page.getByRole('button', { name: 'Book Now' }).click();
 
     await expect(page.getByText('Reservation Created')).toBeVisible();
-    await page.getByRole('button', { name: 'OK' }).click();
+    await page.locator('th-popup').getByRole('button', { name: 'Accept' }).click();
     await expect(page).toHaveURL(/\/booking-list/);
   });
 
