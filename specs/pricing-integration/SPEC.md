@@ -222,7 +222,7 @@ None. All changes are in the frontend and Postman documentation.
 |---|---|---|
 | 1 | Should the listing page show "$0" or "Prices from —" while pricing calls are in flight? | Pending — assume show a loading shimmer or keep $0 until resolved |
 | 2 | For the property detail page, if dates are not yet selected, should "Book Now" be disabled or still allow submitting with price=0? | Pending — assume disable "Book Now" until a valid price is fetched |
-| 3 | The PricingOrchestrator requires a JWT token — does the listing page (accessible to unauthenticated users) need a fallback? | Pending — assume listing-page pricing calls omit the auth header; if the API requires JWT, this needs a public pricing endpoint or a server-side cache |
+| 3 | The PricingOrchestrator requires a JWT token — does the listing page (accessible to unauthenticated users) need a fallback? | **Resolved** — PricingEngine and PricingOrchestrator are public endpoints (no JWT required). All users get real prices on every page. |
 
 ---
 
