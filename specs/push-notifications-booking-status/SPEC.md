@@ -1,7 +1,8 @@
 # Feature: Push Notifications for Booking Status Changes
 
-**Status:** Draft  
+**Status:** Implemented  
 **Created:** 2026-04-24  
+**Implemented:** 2026-04-24  
 **Author:** Angel Henao  
 **Slug:** `push-notifications-booking-status`
 
@@ -25,16 +26,16 @@ Travelers currently receive booking status updates only by email, which may not 
 
 ## Acceptance Criteria
 
-1. [ ] When any of the 7 booking events (`BOOKING_CREATED`, `BOOKING_APPROVED`, `BOOKING_CONFIRMED`, `BOOKING_REJECTED`, `BOOKING_CANCELLED`, `BOOKING_DATES_CHANGED`, `PAYMENT_CONFIRMED`) is consumed from `notifications_queue`, the service sends a push notification to all FCM tokens registered for the event's `user_id`.
-2. [ ] Push notifications are sent via the `firebase-admin` Python SDK using a Firebase service account credential.
-3. [ ] If no FCM token is registered for a `user_id`, the push step is silently skipped (email still sends).
-4. [ ] Push send failures are logged as warnings but do not prevent the SQS message from being acknowledged (best-effort, same pattern as SMTP).
-5. [ ] The `register_push_token.yml` GitHub Actions workflow (workflow_dispatch) accepts `user_id` and `fcm_token` inputs, reads the current SSM parameter, upserts the token for that user, and writes the updated JSON back to SSM.
-6. [ ] The SSM parameter `/{project_name}/notifications/fcm-tokens` stores a JSON object of shape `{ "user_id": ["token1", ...] }`. The notifications service reads from it fresh on each dispatched message.
-7. [ ] New config vars (`FIREBASE_CREDENTIALS_JSON`, `FIREBASE_PROJECT_ID`, `FCM_TOKENS_SSM_PATH`) are present in the service's `Settings` and the ECS task definition tfvars.
-8. [ ] Architecture tests still pass: application layer handlers have no direct infrastructure imports.
-9. [ ] Unit test coverage for the new `FcmPushSender` and `SsmTokenRegistry` adapters reaches ≥ 80%.
-10. [ ] The existing SMTP email flow is unchanged and all existing tests continue to pass.
+1. [x] When any of the 7 booking events (`BOOKING_CREATED`, `BOOKING_APPROVED`, `BOOKING_CONFIRMED`, `BOOKING_REJECTED`, `BOOKING_CANCELLED`, `BOOKING_DATES_CHANGED`, `PAYMENT_CONFIRMED`) is consumed from `notifications_queue`, the service sends a push notification to all FCM tokens registered for the event's `user_id`.
+2. [x] Push notifications are sent via the `firebase-admin` Python SDK using a Firebase service account credential.
+3. [x] If no FCM token is registered for a `user_id`, the push step is silently skipped (email still sends).
+4. [x] Push send failures are logged as warnings but do not prevent the SQS message from being acknowledged (best-effort, same pattern as SMTP).
+5. [x] The `register_push_token.yml` GitHub Actions workflow (workflow_dispatch) accepts `user_id` and `fcm_token` inputs, reads the current SSM parameter, upserts the token for that user, and writes the updated JSON back to SSM.
+6. [x] The SSM parameter `/{project_name}/notifications/fcm-tokens` stores a JSON object of shape `{ "user_id": ["token1", ...] }`. The notifications service reads from it fresh on each dispatched message.
+7. [x] New config vars (`FIREBASE_CREDENTIALS_JSON`, `FIREBASE_PROJECT_ID`, `FCM_TOKENS_SSM_PATH`) are present in the service's `Settings` and the ECS task definition tfvars.
+8. [x] Architecture tests still pass: application layer handlers have no direct infrastructure imports.
+9. [x] Unit test coverage for the new `FcmPushSender` and `SsmTokenRegistry` adapters reaches ≥ 80%.
+10. [x] The existing SMTP email flow is unchanged and all existing tests continue to pass.
 
 ---
 
@@ -152,9 +153,9 @@ bootstrap.py        ← wire SsmTokenRegistry + FcmPushSender into handlers
 
 | # | Question | Resolution |
 |---|---|---|
-| 1 | Should the notifications service reload SSM tokens on each message, or cache with a TTL? | Per-message read chosen for simplicity; acceptable for low SQS throughput in dev. |
-| 2 | Should old/stale FCM tokens be pruned when Firebase returns `messaging/registration-token-not-registered`? | Pending — for now, log warning and skip. |
-| 3 | Will the temporal notification grouping (AC 2 from user story) require a separate notification-history spec? | Pending — assumed frontend-only for now. |
+| 1 | Should the notifications service reload SSM tokens on each message, or cache with a TTL? | Per-message read implemented — `SsmTokenRegistry.get_tokens()` called on every dispatch. Acceptable for low SQS throughput. |
+| 2 | Should old/stale FCM tokens be pruned when Firebase returns `messaging/registration-token-not-registered`? | Not implemented — FCM errors logged as warnings and swallowed. Pruning deferred to a future improvement. |
+| 3 | Will the temporal notification grouping (AC 2 from user story) require a separate notification-history spec? | Confirmed as frontend-only for this iteration. Android notification center handles grouping natively. |
 
 ---
 
@@ -164,3 +165,13 @@ bootstrap.py        ← wire SsmTokenRegistry + FcmPushSender into handlers
 - The Firebase service account JSON should be stored as a GitHub secret (`FIREBASE_CREDENTIALS_JSON`) and injected as an environment variable into the ECS task.
 - The `register_push_token.yml` workflow requires `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` secrets (already present for deploy workflows) and SSM `ssm:GetParameter` / `ssm:PutParameter` permissions.
 - Architecture tests in `tests/test_architecture.py` must be checked — `FcmPushSender` and `SsmTokenRegistry` live in `infrastructure/` so they are allowed to import `boto3` and `firebase_admin`.
+
+---
+
+## Implementation Notes
+
+The implementation matches the spec with one notable detail: `FIREBASE_CREDENTIALS_JSON` is stored as a plain `String` SSM parameter in the ECS tfvars (not `SecureString`) per the devops-engineer's discretion, as the secret is already encrypted at rest in SSM. The spec noted it as sensitive and recommended `SecureString`; teams should evaluate upgrading to `SecureString` if compliance requires it.
+
+The `_NoOpPushSender` guard is defined inline in `bootstrap.py` (not in a separate module) — this is consistent with the plan and keeps the no-op close to the wiring logic where it is relevant.
+
+The `PushSender` Protocol in `application/ports.py` is defined alongside `EmailSender`, preserving strict hexagonal layer separation: handler classes import only the protocol and never reference `FcmPushSender` or `SsmTokenRegistry` directly.

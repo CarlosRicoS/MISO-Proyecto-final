@@ -334,6 +334,12 @@ services = {
     health_check = {
       path = "/api/health"
     }
+    environment_variables = [
+      {
+        name  = "FCM_TOKENS_SSM_PATH"
+        value = "/final-project-miso/notifications/fcm-tokens"
+      }
+    ]
     secrets = [
       {
         name      = "NOTIFICATIONS_QUEUE_URL"
@@ -358,6 +364,14 @@ services = {
       {
         name      = "SMTP_FROM"
         valueFrom = "/final-project-miso/notifications/smtp_from"
+      },
+      {
+        name      = "FIREBASE_CREDENTIALS_JSON"
+        valueFrom = "/final-project-miso/notifications/firebase_credentials_json"
+      },
+      {
+        name      = "FIREBASE_PROJECT_ID"
+        valueFrom = "/final-project-miso/notifications/firebase_project_id"
       }
     ]
   }
