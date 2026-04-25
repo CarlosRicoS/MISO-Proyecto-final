@@ -12,6 +12,19 @@ class SpyEmail:
         self.sent.append({"to": to, "subject": subject, "body": body})
 
 
+class SpyPush:
+    def __init__(self) -> None:
+        self.sent: list[dict] = []
+
+    def send(self, *, user_id: str, title: str, body: str) -> None:
+        self.sent.append({"user_id": user_id, "title": title, "body": body})
+
+
+class _NoOpPush:
+    def send(self, *, user_id: str, title: str, body: str) -> None:
+        pass
+
+
 def _make_event(**overrides) -> BookingCancelledEvent:
     defaults = dict(
         booking_id="b1",
@@ -32,7 +45,7 @@ def _make_event(**overrides) -> BookingCancelledEvent:
 
 def test_free_cancellation_email_includes_refund_amount():
     spy = SpyEmail()
-    handler = HandleBookingCancelled(spy)
+    handler = HandleBookingCancelled(spy, _NoOpPush())
     handler(_make_event(refund_amount="150.00", penalty_amount="0.00"))
 
     assert len(spy.sent) == 1
@@ -44,7 +57,7 @@ def test_free_cancellation_email_includes_refund_amount():
 
 def test_free_cancellation_email_sent_to_correct_address():
     spy = SpyEmail()
-    handler = HandleBookingCancelled(spy)
+    handler = HandleBookingCancelled(spy, _NoOpPush())
     handler(_make_event(refund_amount="150.00"))
 
     assert spy.sent[0]["to"] == "traveler@example.com"
@@ -52,7 +65,7 @@ def test_free_cancellation_email_sent_to_correct_address():
 
 def test_free_cancellation_subject_contains_booking_id():
     spy = SpyEmail()
-    handler = HandleBookingCancelled(spy)
+    handler = HandleBookingCancelled(spy, _NoOpPush())
     handler(_make_event(refund_amount="150.00"))
 
     assert "b1" in spy.sent[0]["subject"]
@@ -62,7 +75,7 @@ def test_free_cancellation_subject_contains_booking_id():
 
 def test_penalty_email_includes_both_refund_and_penalty():
     spy = SpyEmail()
-    handler = HandleBookingCancelled(spy)
+    handler = HandleBookingCancelled(spy, _NoOpPush())
     handler(_make_event(refund_amount="75.00", penalty_amount="75.00"))
 
     body = spy.sent[0]["body"]
@@ -73,7 +86,7 @@ def test_penalty_email_includes_both_refund_and_penalty():
 
 def test_penalty_email_contains_dates():
     spy = SpyEmail()
-    handler = HandleBookingCancelled(spy)
+    handler = HandleBookingCancelled(spy, _NoOpPush())
     handler(_make_event(refund_amount="75.00", penalty_amount="75.00"))
 
     body = spy.sent[0]["body"]
@@ -85,7 +98,7 @@ def test_penalty_email_contains_dates():
 
 def test_no_payment_email_says_no_charge():
     spy = SpyEmail()
-    handler = HandleBookingCancelled(spy)
+    handler = HandleBookingCancelled(spy, _NoOpPush())
     handler(_make_event(refund_amount="0.00", penalty_amount="0.00"))
 
     body = spy.sent[0]["body"]
@@ -94,7 +107,7 @@ def test_no_payment_email_says_no_charge():
 
 def test_no_payment_email_does_not_mention_refund_amount():
     spy = SpyEmail()
-    handler = HandleBookingCancelled(spy)
+    handler = HandleBookingCancelled(spy, _NoOpPush())
     handler(_make_event(refund_amount="0.00", penalty_amount="0.00"))
 
     body = spy.sent[0]["body"]
@@ -106,7 +119,7 @@ def test_no_payment_email_does_not_mention_refund_amount():
 
 def test_email_contains_property_id():
     spy = SpyEmail()
-    handler = HandleBookingCancelled(spy)
+    handler = HandleBookingCancelled(spy, _NoOpPush())
     handler(_make_event())
 
     assert "p1" in spy.sent[0]["body"]
@@ -114,7 +127,26 @@ def test_email_contains_property_id():
 
 def test_email_contains_booking_id_in_body():
     spy = SpyEmail()
-    handler = HandleBookingCancelled(spy)
+    handler = HandleBookingCancelled(spy, _NoOpPush())
     handler(_make_event())
 
     assert "b1" in spy.sent[0]["body"]
+
+
+# ---- Push tests -------------------------------------------------------------
+
+def test_handler_sends_push_with_correct_user_id():
+    spy_push = SpyPush()
+    handler = HandleBookingCancelled(SpyEmail(), spy_push)
+    handler(_make_event(user_id="u1", booking_id="b1", refund_amount="50.00"))
+
+    assert len(spy_push.sent) == 1
+    assert spy_push.sent[0]["user_id"] == "u1"
+
+
+def test_handler_push_title_contains_booking_id():
+    spy_push = SpyPush()
+    handler = HandleBookingCancelled(SpyEmail(), spy_push)
+    handler(_make_event(booking_id="b1"))
+
+    assert "b1" in spy_push.sent[0]["title"]

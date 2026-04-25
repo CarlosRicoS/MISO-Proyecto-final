@@ -10,6 +10,19 @@ class SpyEmail:
         self.sent.append({"to": to, "subject": subject, "body": body})
 
 
+class SpyPush:
+    def __init__(self) -> None:
+        self.sent: list[dict] = []
+
+    def send(self, *, user_id: str, title: str, body: str) -> None:
+        self.sent.append({"user_id": user_id, "title": title, "body": body})
+
+
+class _NoOpPush:
+    def send(self, *, user_id: str, title: str, body: str) -> None:
+        pass
+
+
 def _make_event(**overrides) -> BookingRejectedEvent:
     defaults = dict(
         booking_id="b1",
@@ -26,7 +39,7 @@ def _make_event(**overrides) -> BookingRejectedEvent:
 
 def test_handler_sends_email_to_traveler():
     spy = SpyEmail()
-    handler = HandleBookingRejected(spy)
+    handler = HandleBookingRejected(spy, _NoOpPush())
     handler(_make_event())
 
     assert len(spy.sent) == 1
@@ -35,7 +48,7 @@ def test_handler_sends_email_to_traveler():
 
 def test_handler_subject_contains_booking_id():
     spy = SpyEmail()
-    handler = HandleBookingRejected(spy)
+    handler = HandleBookingRejected(spy, _NoOpPush())
     handler(_make_event())
 
     assert "b1" in spy.sent[0]["subject"]
@@ -43,7 +56,7 @@ def test_handler_subject_contains_booking_id():
 
 def test_handler_body_contains_dates():
     spy = SpyEmail()
-    handler = HandleBookingRejected(spy)
+    handler = HandleBookingRejected(spy, _NoOpPush())
     handler(_make_event())
 
     body = spy.sent[0]["body"]
@@ -53,7 +66,26 @@ def test_handler_body_contains_dates():
 
 def test_handler_body_contains_rejection_reason():
     spy = SpyEmail()
-    handler = HandleBookingRejected(spy)
+    handler = HandleBookingRejected(spy, _NoOpPush())
     handler(_make_event(rejection_reason="Overbooking detectado."))
 
     assert "Overbooking detectado." in spy.sent[0]["body"]
+
+
+# ---- Push tests -------------------------------------------------------------
+
+def test_handler_sends_push_with_correct_user_id():
+    spy_push = SpyPush()
+    handler = HandleBookingRejected(SpyEmail(), spy_push)
+    handler(_make_event(user_id="u1", booking_id="b1"))
+
+    assert len(spy_push.sent) == 1
+    assert spy_push.sent[0]["user_id"] == "u1"
+
+
+def test_handler_push_title_contains_booking_id():
+    spy_push = SpyPush()
+    handler = HandleBookingRejected(SpyEmail(), spy_push)
+    handler(_make_event(booking_id="b1"))
+
+    assert "b1" in spy_push.sent[0]["title"]

@@ -1,12 +1,17 @@
 """Handler for BOOKING_CONFIRMED events — notifies the traveler that their booking is confirmed."""
 
-from notifications.application.ports import EmailSender
+import logging
+
+from notifications.application.ports import EmailSender, PushSender
 from notifications.domain.events import BookingConfirmedEvent
+
+logger = logging.getLogger(__name__)
 
 
 class HandleBookingConfirmed:
-    def __init__(self, email_sender: EmailSender) -> None:
+    def __init__(self, email_sender: EmailSender, push_sender: PushSender) -> None:
         self._email = email_sender
+        self._push = push_sender
 
     def __call__(self, event: BookingConfirmedEvent) -> None:
         subject = f"Tu reserva {event.booking_id} fue confirmada"
@@ -23,3 +28,8 @@ class HandleBookingConfirmed:
             f"¡Disfruta tu estadía!\n"
         )
         self._email.send(to=event.user_email, subject=subject, body=body)
+        try:
+            push_body = "Tu reserva ha sido confirmada. ¡Hasta pronto!"
+            self._push.send(user_id=event.user_id, title=subject, body=push_body)
+        except Exception:
+            logger.warning("push failed for booking %s", event.booking_id)

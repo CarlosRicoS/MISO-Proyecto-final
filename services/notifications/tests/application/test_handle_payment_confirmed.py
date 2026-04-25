@@ -10,6 +10,19 @@ class SpyEmail:
         self.sent.append({"to": to, "subject": subject, "body": body})
 
 
+class SpyPush:
+    def __init__(self) -> None:
+        self.sent: list[dict] = []
+
+    def send(self, *, user_id: str, title: str, body: str) -> None:
+        self.sent.append({"user_id": user_id, "title": title, "body": body})
+
+
+class _NoOpPush:
+    def send(self, *, user_id: str, title: str, body: str) -> None:
+        pass
+
+
 def _make_event(**overrides) -> PaymentConfirmedEvent:
     defaults = dict(
         booking_id="b1",
@@ -28,7 +41,7 @@ def _make_event(**overrides) -> PaymentConfirmedEvent:
 
 def test_handler_sends_email_to_traveler():
     spy = SpyEmail()
-    handler = HandlePaymentConfirmed(spy)
+    handler = HandlePaymentConfirmed(spy, _NoOpPush())
     handler(_make_event())
 
     assert len(spy.sent) == 1
@@ -37,7 +50,7 @@ def test_handler_sends_email_to_traveler():
 
 def test_handler_subject_contains_booking_id():
     spy = SpyEmail()
-    handler = HandlePaymentConfirmed(spy)
+    handler = HandlePaymentConfirmed(spy, _NoOpPush())
     handler(_make_event())
 
     assert "b1" in spy.sent[0]["subject"]
@@ -45,7 +58,7 @@ def test_handler_subject_contains_booking_id():
 
 def test_handler_body_contains_dates_and_price():
     spy = SpyEmail()
-    handler = HandlePaymentConfirmed(spy)
+    handler = HandlePaymentConfirmed(spy, _NoOpPush())
     handler(_make_event())
 
     body = spy.sent[0]["body"]
@@ -56,7 +69,26 @@ def test_handler_body_contains_dates_and_price():
 
 def test_handler_body_contains_payment_reference():
     spy = SpyEmail()
-    handler = HandlePaymentConfirmed(spy)
+    handler = HandlePaymentConfirmed(spy, _NoOpPush())
     handler(_make_event(payment_reference="stripe-ref-xyz789"))
 
     assert "stripe-ref-xyz789" in spy.sent[0]["body"]
+
+
+# ---- Push tests -------------------------------------------------------------
+
+def test_handler_sends_push_with_correct_user_id():
+    spy_push = SpyPush()
+    handler = HandlePaymentConfirmed(SpyEmail(), spy_push)
+    handler(_make_event(user_id="u1", booking_id="b1"))
+
+    assert len(spy_push.sent) == 1
+    assert spy_push.sent[0]["user_id"] == "u1"
+
+
+def test_handler_push_title_contains_booking_id():
+    spy_push = SpyPush()
+    handler = HandlePaymentConfirmed(SpyEmail(), spy_push)
+    handler(_make_event(booking_id="b1"))
+
+    assert "b1" in spy_push.sent[0]["title"]

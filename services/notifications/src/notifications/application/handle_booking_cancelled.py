@@ -1,9 +1,12 @@
 """Handler for BOOKING_CANCELLED events — notifies the traveler their booking was cancelled."""
 
+import logging
 from decimal import Decimal, InvalidOperation
 
-from notifications.application.ports import EmailSender
+from notifications.application.ports import EmailSender, PushSender
 from notifications.domain.events import BookingCancelledEvent
+
+logger = logging.getLogger(__name__)
 
 
 def _has_refund(refund_amount: str) -> bool:
@@ -15,8 +18,9 @@ def _has_refund(refund_amount: str) -> bool:
 
 
 class HandleBookingCancelled:
-    def __init__(self, email_sender: EmailSender) -> None:
+    def __init__(self, email_sender: EmailSender, push_sender: PushSender) -> None:
         self._email = email_sender
+        self._push = push_sender
 
     def __call__(self, event: BookingCancelledEvent) -> None:
         subject = f"Tu reserva {event.booking_id} fue cancelada"
@@ -43,3 +47,8 @@ class HandleBookingCancelled:
             body += "\nNo se realizó ningún cargo, por lo que no hay reembolso.\n"
 
         self._email.send(to=event.user_email, subject=subject, body=body)
+        try:
+            push_body = f"Tu reserva fue cancelada. Reembolso: ${event.refund_amount}."
+            self._push.send(user_id=event.user_id, title=subject, body=push_body)
+        except Exception:
+            logger.warning("push failed for booking %s", event.booking_id)

@@ -1,5 +1,7 @@
-from notifications.application.handle_booking_dates_changed import HandleBookingDatesChanged
-from notifications.domain.events import BookingDatesChangedEvent
+"""Tests for HandleBookingApproved — both email and push behavior."""
+
+from notifications.application.handle_booking_approved import HandleBookingApproved
+from notifications.domain.events import BookingApprovedEvent
 
 
 class SpyEmail:
@@ -23,26 +25,26 @@ class _NoOpPush:
         pass
 
 
-def _make_event(**overrides) -> BookingDatesChangedEvent:
+def _make_event(**overrides) -> BookingApprovedEvent:
     defaults = dict(
         booking_id="b1",
         property_id="p1",
-        old_period_start="2026-06-01",
-        old_period_end="2026-06-05",
-        new_period_start="2026-07-01",
-        new_period_end="2026-07-06",
-        new_price="320.00",
-        price_difference="70.00",
+        period_start="2026-06-01",
+        period_end="2026-06-05",
+        guests=2,
+        price="250.00",
         user_id="u1",
         user_email="traveler@example.com",
     )
     defaults.update(overrides)
-    return BookingDatesChangedEvent(**defaults)
+    return BookingApprovedEvent(**defaults)
 
+
+# ---- Email tests -------------------------------------------------------------
 
 def test_handler_sends_email_to_traveler():
     spy = SpyEmail()
-    handler = HandleBookingDatesChanged(spy, _NoOpPush())
+    handler = HandleBookingApproved(spy, _NoOpPush())
     handler(_make_event())
 
     assert len(spy.sent) == 1
@@ -51,45 +53,36 @@ def test_handler_sends_email_to_traveler():
 
 def test_handler_subject_contains_booking_id():
     spy = SpyEmail()
-    handler = HandleBookingDatesChanged(spy, _NoOpPush())
+    handler = HandleBookingApproved(spy, _NoOpPush())
     handler(_make_event())
 
     assert "b1" in spy.sent[0]["subject"]
 
 
-def test_handler_body_contains_old_and_new_dates():
+def test_handler_body_contains_dates_and_price():
     spy = SpyEmail()
-    handler = HandleBookingDatesChanged(spy, _NoOpPush())
+    handler = HandleBookingApproved(spy, _NoOpPush())
     handler(_make_event())
 
     body = spy.sent[0]["body"]
     assert "2026-06-01" in body
     assert "2026-06-05" in body
-    assert "2026-07-01" in body
-    assert "2026-07-06" in body
+    assert "250.00" in body
 
 
-def test_handler_body_shows_positive_price_difference():
+def test_handler_body_contains_property_id():
     spy = SpyEmail()
-    handler = HandleBookingDatesChanged(spy, _NoOpPush())
-    handler(_make_event(price_difference="70.00"))
+    handler = HandleBookingApproved(spy, _NoOpPush())
+    handler(_make_event())
 
-    assert "+70.00" in spy.sent[0]["body"]
-
-
-def test_handler_body_shows_negative_price_difference():
-    spy = SpyEmail()
-    handler = HandleBookingDatesChanged(spy, _NoOpPush())
-    handler(_make_event(price_difference="-30.00"))
-
-    assert "-30.00" in spy.sent[0]["body"]
+    assert "p1" in spy.sent[0]["body"]
 
 
 # ---- Push tests -------------------------------------------------------------
 
 def test_handler_sends_push_with_correct_user_id():
     spy_push = SpyPush()
-    handler = HandleBookingDatesChanged(SpyEmail(), spy_push)
+    handler = HandleBookingApproved(SpyEmail(), spy_push)
     handler(_make_event(user_id="u1", booking_id="b1"))
 
     assert len(spy_push.sent) == 1
@@ -98,7 +91,7 @@ def test_handler_sends_push_with_correct_user_id():
 
 def test_handler_push_title_contains_booking_id():
     spy_push = SpyPush()
-    handler = HandleBookingDatesChanged(SpyEmail(), spy_push)
+    handler = HandleBookingApproved(SpyEmail(), spy_push)
     handler(_make_event(booking_id="b1"))
 
     assert "b1" in spy_push.sent[0]["title"]
