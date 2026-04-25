@@ -426,6 +426,7 @@ describe('PropertydetailPage', () => {
       const pricingService = TestBed.inject(PricingService) as unknown as PricingServiceMock;
 
       await component.ngOnInit();
+      pricingService.getPropertyWithPrice.calls.reset();
 
       component.paymentSummary.checkOutValue = '';
       component.onCheckInChanged('2026-05-10');
@@ -561,8 +562,10 @@ describe('PropertydetailPage', () => {
       expect(component.summaryItems[0].amount).toContain('500');
     });
 
-    it('initializes priceForStay as null', () => {
-      expect(component.priceForStay).toBeNull();
+    it('initializes priceForStay as null before dates are known', () => {
+      const freshFixture = TestBed.createComponent(PropertydetailPage);
+      const freshComponent = freshFixture.componentInstance;
+      expect(freshComponent.priceForStay).toBeNull();
     });
 
     it('initializes isPricingLoading as false', () => {
