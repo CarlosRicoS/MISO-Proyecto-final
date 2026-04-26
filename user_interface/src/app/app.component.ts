@@ -3,6 +3,7 @@ import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
 import { Capacitor } from '@capacitor/core';
 import { filter, Subscription } from 'rxjs';
 import { AuthSessionService } from './core/services/auth-session.service';
+import { NotificationService } from './core/services/notification.service';
 import { ThNavbarMode } from './shared/components/th-navbar/th-navbar.component';
 
 @Component({
@@ -25,7 +26,8 @@ export class AppComponent implements OnInit, OnDestroy {
   constructor(
     private router: Router,
     private route: ActivatedRoute,
-    private authSessionService: AuthSessionService
+    private authSessionService: AuthSessionService,
+    private notificationService: NotificationService
   ) {}
 
   ngOnInit(): void {
@@ -46,6 +48,8 @@ export class AppComponent implements OnInit, OnDestroy {
     if (typeof window !== 'undefined') {
       window.addEventListener('resize', this.handleResize);
     }
+
+    void this.notificationService.initialize();
   }
 
   ngOnDestroy(): void {
@@ -55,6 +59,7 @@ export class AppComponent implements OnInit, OnDestroy {
       window.removeEventListener('resize', this.handleResize);
     }
     this.clearPlatformClasses();
+    void this.notificationService.teardown();
   }
 
   get isPropertyDetailRoute(): boolean {
