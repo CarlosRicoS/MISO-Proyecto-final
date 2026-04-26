@@ -12,6 +12,7 @@ import { BehaviorSubject, Subject } from 'rxjs';
 export class NotificationService {
   private initialized = false;
   private readonly listenerHandles: PluginListenerHandle[] = [];
+  private readonly logPrefix = '[NotificationService]';
 
   private readonly tokenSubject = new BehaviorSubject<string | null>(null);
   private readonly notificationReceivedSubject = new Subject<NotificationReceivedEvent>();
@@ -24,38 +25,54 @@ export class NotificationService {
   constructor(private zone: NgZone) {}
 
   async initialize(): Promise<void> {
-    if (this.initialized || !Capacitor.isNativePlatform()) {
+    this.log('initialize() called.');
+
+    if (this.initialized) {
+      this.log('Initialization skipped: already initialized.');
+      return;
+    }
+
+    if (!Capacitor.isNativePlatform()) {
+      this.log('Initialization skipped: not running on a native platform.');
       return;
     }
 
     try {
       const support = await FirebaseMessaging.isSupported();
+      this.log(`FirebaseMessaging.isSupported() => ${String(support.isSupported)}`);
       if (!support.isSupported) {
+        this.log('Initialization stopped: Firebase messaging not supported in this runtime.');
         return;
       }
 
       const permissions = await this.ensurePermissions();
+      this.log(`Permissions status after ensurePermissions() => ${permissions.receive}`);
       if (permissions.receive !== 'granted') {
+        this.log('Initialization stopped: notification permission not granted.');
         return;
       }
 
       const tokenResult = await FirebaseMessaging.getToken();
+      this.log(`Token received from getToken(). Empty=${String(!tokenResult.token)}`);
       this.handleToken(tokenResult.token);
 
       await this.registerListeners();
       this.initialized = true;
+      this.log('Initialization completed successfully.');
     } catch (error) {
-      console.error('[NotificationService] Failed to initialize notifications.', error);
+      console.error(`${this.logPrefix} Failed to initialize notifications.`, error);
     }
   }
 
   async teardown(): Promise<void> {
+    this.log('teardown() called.');
     while (this.listenerHandles.length > 0) {
       const handle = this.listenerHandles.pop();
       await handle?.remove();
     }
 
     this.initialized = false;
+    this.log('teardown() completed.');
   }
 
   get currentToken(): string | null {
@@ -64,17 +81,22 @@ export class NotificationService {
 
   private async ensurePermissions(): Promise<PermissionStatus> {
     const currentPermissions = await FirebaseMessaging.checkPermissions();
+    this.log(`checkPermissions() => ${currentPermissions.receive}`);
     if (currentPermissions.receive === 'granted') {
       return currentPermissions;
     }
 
-    return FirebaseMessaging.requestPermissions();
+    const requestedPermissions = await FirebaseMessaging.requestPermissions();
+    this.log(`requestPermissions() => ${requestedPermissions.receive}`);
+    return requestedPermissions;
   }
 
   private async registerListeners(): Promise<void> {
+    this.log('Registering Firebase messaging listeners.');
     this.listenerHandles.push(
       await FirebaseMessaging.addListener('tokenReceived', (event) => {
         this.zone.run(() => {
+          this.log('tokenReceived listener fired.');
           this.handleToken(event.token);
         });
       })
@@ -83,6 +105,7 @@ export class NotificationService {
     this.listenerHandles.push(
       await FirebaseMessaging.addListener('notificationReceived', (event) => {
         this.zone.run(() => {
+          this.log('notificationReceived listener fired.');
           this.notificationReceivedSubject.next(event);
         });
       })
@@ -91,23 +114,31 @@ export class NotificationService {
     this.listenerHandles.push(
       await FirebaseMessaging.addListener('notificationActionPerformed', (event) => {
         this.zone.run(() => {
+          this.log('notificationActionPerformed listener fired.');
           this.notificationActionSubject.next(event);
         });
       })
     );
+    this.log('Firebase messaging listeners registered.');
   }
 
   private handleToken(token: string): void {
     if (!token || this.tokenSubject.value === token) {
+      this.log('handleToken() skipped: empty token or unchanged token.');
       return;
     }
 
+    this.log('handleToken() accepted new token.');
     this.tokenSubject.next(token);
     void this.registerTokenOnBackend(token);
   }
 
   private async registerTokenOnBackend(token: string): Promise<void> {
     // TODO: Replace this placeholder with your backend API call.
-    console.info('[NotificationService] FCM token ready for backend registration.', token);
+    console.info(`${this.logPrefix} FCM token ready for backend registration.`, token);
+  }
+
+  private log(message: string): void {
+    console.info(`${this.logPrefix} ${message}`);
   }
 }
