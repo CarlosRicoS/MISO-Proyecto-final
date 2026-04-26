@@ -33,7 +33,15 @@ class FcmPushSender:
             )
         self._registry = token_registry
 
-    def send(self, *, user_id: str, title: str, body: str) -> None:
+    def send(
+        self,
+        *,
+        user_id: str,
+        title: str,
+        body: str,
+        notification_type: str,
+        booking_id: str,
+    ) -> None:
         tokens = self._registry.get_tokens(user_id)
         if not tokens:
             logger.debug("no fcm tokens registered for user_id=%s, skipping push", user_id)
@@ -41,9 +49,12 @@ class FcmPushSender:
         for token in tokens:
             msg = messaging.Message(
                 notification=messaging.Notification(title=title, body=body),
+                data={"bookingId": booking_id, "type": notification_type},
+                android=messaging.AndroidConfig(priority="high"),
                 token=token,
             )
             messaging.send(msg, app=self._app)
             logger.info(
-                "fcm push sent to token=...%s for user_id=%s", token[-6:], user_id
+                "fcm push sent type=%s token=...%s for user_id=%s",
+                notification_type, token[-6:], user_id,
             )

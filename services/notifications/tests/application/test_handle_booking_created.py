@@ -14,12 +14,12 @@ class SpyPush:
     def __init__(self) -> None:
         self.sent: list[dict] = []
 
-    def send(self, *, user_id: str, title: str, body: str) -> None:
-        self.sent.append({"user_id": user_id, "title": title, "body": body})
+    def send(self, *, user_id: str, title: str, body: str, notification_type: str, booking_id: str) -> None:
+        self.sent.append({"user_id": user_id, "title": title, "body": body, "notification_type": notification_type, "booking_id": booking_id})
 
 
 class _NoOpPush:
-    def send(self, *, user_id: str, title: str, body: str) -> None:
+    def send(self, *, user_id: str, title: str, body: str, notification_type: str, booking_id: str) -> None:
         pass
 
 

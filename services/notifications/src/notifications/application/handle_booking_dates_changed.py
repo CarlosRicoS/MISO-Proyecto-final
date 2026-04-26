@@ -34,6 +34,12 @@ class HandleBookingDatesChanged:
             push_body = (
                 f"Nuevas fechas: {event.new_period_start} → {event.new_period_end}."
             )
-            self._push.send(user_id=event.user_id, title=subject, body=push_body)
+            self._push.send(
+                user_id=event.user_id,
+                title=subject,
+                body=push_body,
+                notification_type="BOOKING_DATES_CHANGED",
+                booking_id=event.booking_id,
+            )
         except Exception:
             logger.warning("push failed for booking %s", event.booking_id)

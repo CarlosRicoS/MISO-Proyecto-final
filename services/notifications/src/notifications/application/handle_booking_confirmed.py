@@ -30,6 +30,12 @@ class HandleBookingConfirmed:
         self._email.send(to=event.user_email, subject=subject, body=body)
         try:
             push_body = "Tu reserva ha sido confirmada. ¡Hasta pronto!"
-            self._push.send(user_id=event.user_id, title=subject, body=push_body)
+            self._push.send(
+                user_id=event.user_id,
+                title=subject,
+                body=push_body,
+                notification_type="BOOKING_CONFIRMED",
+                booking_id=event.booking_id,
+            )
         except Exception:
             logger.warning("push failed for booking %s", event.booking_id)

@@ -70,7 +70,7 @@ class TestFcmPushSenderSend:
                 token_registry=registry,
             )
 
-            sender.send(user_id="u1", title="Test Title", body="Test Body")
+            sender.send(user_id="u1", title="Test Title", body="Test Body", notification_type="BOOKING_CREATED", booking_id="b1")
 
             assert mock_msg.send.call_count == 2
 
@@ -92,7 +92,7 @@ class TestFcmPushSenderSend:
                 token_registry=registry,
             )
 
-            sender.send(user_id="u1", title="Test Title", body="Test Body")
+            sender.send(user_id="u1", title="Test Title", body="Test Body", notification_type="BOOKING_CREATED", booking_id="b1")
 
             mock_msg.send.assert_not_called()
 
@@ -118,7 +118,7 @@ class TestFcmPushSenderSend:
 
             with caplog.at_level(logging.DEBUG, logger="notifications.infrastructure.fcm_push_sender"):
                 # Must not raise any exception
-                sender.send(user_id="u1", title="T", body="B")
+                sender.send(user_id="u1", title="T", body="B", notification_type="BOOKING_CREATED", booking_id="b1")
 
             assert any("skipping push" in record.message for record in caplog.records)
 
@@ -165,7 +165,7 @@ class TestFcmPushSenderSend:
                 token_registry=registry,
             )
 
-            sender.send(user_id="u1", title="Title", body="Body")
+            sender.send(user_id="u1", title="Title", body="Body", notification_type="BOOKING_CONFIRMED", booking_id="b1")
 
             # Verify the app passed to messaging.send is the one from initialize_app
             mock_msg.send.assert_called_once()
@@ -190,6 +190,6 @@ class TestFcmPushSenderSend:
                 token_registry=registry,
             )
 
-            sender.send(user_id="user-xyz", title="T", body="B")
+            sender.send(user_id="user-xyz", title="T", body="B", notification_type="BOOKING_APPROVED", booking_id="b1")
 
             registry.get_tokens.assert_called_once_with("user-xyz")
