@@ -30,6 +30,8 @@ resource "aws_ecs_service" "service" {
     container_name   = var.container_name
     container_port   = var.container_port
   }
+
+  depends_on = [aws_lb_listener.service]
 }
 
 
