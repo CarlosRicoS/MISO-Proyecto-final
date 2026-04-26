@@ -296,6 +296,14 @@ services = {
       {
         name      = "BILLING_QUEUE_URL"
         valueFrom = "/final-project-miso/billing/queue_url"
+      },
+      {
+        name      = "AWS_ACCESS_KEY"
+        valueFrom = "/final-project-miso/billing/aws_access_key"
+      },
+      {
+        name      = "AWS_SECRET_KEY"
+        valueFrom = "/final-project-miso/billing/aws_secret_key"
       }
     ]
   }
@@ -376,4 +384,3 @@ services = {
     ]
   }
 }
-
