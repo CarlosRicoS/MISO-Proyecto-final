@@ -17,6 +17,10 @@ const routes: Routes = [
     loadChildren: () => import('./pages/booking-list/booking-list.module').then( m => m.BookingListPageModule)
   },
   {
+    path: 'notifications',
+    loadComponent: () => import('./pages/notifications/notifications.page').then( m => m.NotificationsPage)
+  },
+  {
     path: 'propertydetail',
     loadChildren: () => import('./pages/propertydetail/propertydetail.module').then(m => m.PropertydetailPageModule)
   },

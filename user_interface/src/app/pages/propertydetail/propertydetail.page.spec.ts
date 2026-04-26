@@ -17,6 +17,7 @@ import { AuthSessionService } from '../../core/services/auth-session.service';
 import { BookingService } from '../../core/services/booking.service';
 import { PendingBookingService } from '../../core/services/pending-booking.service';
 import { PricingService } from '../../core/services/pricing.service';
+import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 
 describe('PropertydetailPage', () => {
   let component: PropertydetailPage;
@@ -125,6 +126,7 @@ describe('PropertydetailPage', () => {
         { provide: PendingBookingService, useClass: PendingBookingServiceMock },
         { provide: PricingService, useClass: PricingServiceMock },
       ],
+      schemas: [CUSTOM_ELEMENTS_SCHEMA],
     }).compileComponents();
 
     fixture = TestBed.createComponent(PropertydetailPage);

@@ -1,0 +1,53 @@
+.notifications-page {
+  --background: var(--th-white);
+  display: grid;
+  gap: 20px;
+  min-height: 100%;
+}
+
+.notifications-page__header {
+  display: grid;
+  gap: 8px;
+  padding: 20px 16px 0;
+}
+
+.notifications-page__title {
+  margin: 0;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--th-neutral-900);
+}
+
+.notifications-page__subtitle {
+  margin: 0;
+  color: var(--th-neutral-600);
+  font-size: 0.98rem;
+  line-height: 1.5;
+}
+
+.notifications-page__content {
+  display: grid;
+  padding: 0 16px calc(70px + var(--ion-safe-area-bottom, 0px)) 16px;
+}
+
+.notifications-page__empty-state {
+  display: grid;
+  gap: 12px;
+  place-items: center;
+  min-height: 220px;
+  padding: 32px 16px;
+  text-align: center;
+  color: var(--th-neutral-600);
+}
+
+.notifications-page__empty-state h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: var(--th-neutral-900);
+}
+
+.notifications-page__empty-state p {
+  margin: 0;
+  max-width: 320px;
+  line-height: 1.6;
+}

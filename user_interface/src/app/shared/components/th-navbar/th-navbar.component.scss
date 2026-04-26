@@ -63,6 +63,31 @@
   color: var(--th-neutral-700);
 }
 
+.th-navbar--mobile-notifications {
+  background: var(--th-white);
+  border: none;
+  box-shadow: none;
+  --border-color: transparent;
+  --border-width: 0;
+}
+
+.th-navbar--mobile-notifications .th-navbar__toolbar {
+  --background: var(--th-white);
+}
+
+.th-navbar--mobile-notifications .th-navbar__mobile-action {
+  color: var(--th-neutral-700);
+  --color: var(--th-neutral-700);
+}
+
+.th-navbar--mobile-notifications .th-navbar__mobile-title {
+  color: var(--th-neutral-900);
+}
+
+.th-navbar--mobile-notifications .th-navbar__mobile-action ion-icon {
+  color: var(--th-neutral-700);
+}
+
 .th-navbar--mobile-detail {
   background: var(--th-gray-100-alt);
   border: none;

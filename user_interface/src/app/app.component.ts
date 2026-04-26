@@ -22,6 +22,7 @@ export class AppComponent implements OnInit, OnDestroy {
   private readonly webPlatformClass = 'app-platform-web';
   private routerEventsSub?: Subscription;
   private authStateSub?: Subscription;
+  private lastLoggedInState = false;
 
   constructor(
     private router: Router,
@@ -32,9 +33,14 @@ export class AppComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.applyPlatformClasses();
+    this.lastLoggedInState = this.authSessionService.isLoggedIn;
     this.updateNavbarVisibility();
     this.navbarMode = this.authSessionService.isLoggedIn ? 'full' : 'auth';
     this.authStateSub = this.authSessionService.state$.subscribe((state) => {
+      if (state.loggedIn && !this.lastLoggedInState) {
+        this.notificationService.clearNotifications();
+      }
+      this.lastLoggedInState = state.loggedIn;
       this.navbarMode = state.loggedIn ? 'full' : 'auth';
     });
     this.updateLayout();
@@ -82,8 +88,12 @@ export class AppComponent implements OnInit, OnDestroy {
     return this.router.url.startsWith('/booking-list');
   }
 
+  get isNotificationsRoute(): boolean {
+    return this.router.url.startsWith('/notifications');
+  }
+
   get showMobileTopBar(): boolean {
-    return this.showNavbar || this.isSearchResultsRoute || this.isBookingListRoute || this.isDetailRoute;
+    return this.showNavbar || this.isSearchResultsRoute || this.isBookingListRoute || this.isDetailRoute || this.isNotificationsRoute;
   }
 
   get hasTopBar(): boolean {
