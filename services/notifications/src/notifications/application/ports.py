@@ -10,4 +10,12 @@ class EmailSender(Protocol):
 class PushSender(Protocol):
     """Port for sending a push notification to a user's registered devices."""
 
-    def send(self, *, user_id: str, title: str, body: str) -> None: ...
+    def send(
+        self,
+        *,
+        user_id: str,
+        title: str,
+        body: str,
+        notification_type: str,
+        booking_id: str,
+    ) -> None: ...
