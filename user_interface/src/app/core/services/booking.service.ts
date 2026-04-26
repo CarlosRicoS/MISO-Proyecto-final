@@ -65,6 +65,14 @@ export interface Reservation {
   created_at: string;
 }
 
+export interface CancellationPolicyResponse {
+  booking_id: string;
+  is_free_cancellation: boolean;
+  refund_amount: string;
+  penalty_amount: string;
+  cancellation_deadline: string;
+}
+
 export interface BookingDatesUpdateRequest {
   new_period_start: string;
   new_period_end: string;
@@ -179,6 +187,22 @@ export class BookingService {
 
     const headers = new HttpHeaders(headersConfig);
     return this.http.post<Reservation>(url, {}, { headers }).pipe(map(normalizeReservation));
+  }
+
+  getCancellationPolicy(bookingId: string, accessToken?: string): Observable<CancellationPolicyResponse> {
+    const baseUrl = this.config.apiBaseUrl?.replace(/\/$/, '');
+    const bookingPath = this.config.bookingApiPath?.replace(/^\//, '') || 'booking-orchestrator/api/reservations';
+    const url = baseUrl
+      ? `${baseUrl}/${bookingPath}/${bookingId}/cancellation-policy`
+      : `/${bookingPath}/${bookingId}/cancellation-policy`;
+
+    const headersConfig: Record<string, string> = {};
+    if (accessToken) {
+      headersConfig['Authorization'] = `Bearer ${accessToken}`;
+    }
+
+    const headers = new HttpHeaders(headersConfig);
+    return this.http.get<CancellationPolicyResponse>(url, { headers });
   }
 
   updateReservationDates(

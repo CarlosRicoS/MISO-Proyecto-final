@@ -168,6 +168,39 @@ describe('BookingService', () => {
     req.flush({ id: 'res-1' });
   });
 
+  it('gets cancellation policy from orchestrator endpoint with token', () => {
+    service.getCancellationPolicy('res-1', 'token-policy').subscribe((response) => {
+      expect(response.booking_id).toBe('res-1');
+      expect(response.is_free_cancellation).toBeTrue();
+    });
+
+    const req = httpMock.expectOne('https://api.example.com/booking-orchestrator/api/reservations/res-1/cancellation-policy');
+    expect(req.request.method).toBe('GET');
+    expect(req.request.headers.get('Authorization')).toBe('Bearer token-policy');
+    req.flush({
+      booking_id: 'res-1',
+      is_free_cancellation: true,
+      refund_amount: '150.00',
+      penalty_amount: '0.00',
+      cancellation_deadline: '2099-01-01T00:00:00+00:00',
+    });
+  });
+
+  it('gets cancellation policy without Authorization when token is not provided', () => {
+    service.getCancellationPolicy('res-1').subscribe();
+
+    const req = httpMock.expectOne('https://api.example.com/booking-orchestrator/api/reservations/res-1/cancellation-policy');
+    expect(req.request.method).toBe('GET');
+    expect(req.request.headers.has('Authorization')).toBeFalse();
+    req.flush({
+      booking_id: 'res-1',
+      is_free_cancellation: false,
+      refund_amount: '0.00',
+      penalty_amount: '80.00',
+      cancellation_deadline: '2099-01-01T00:00:00+00:00',
+    });
+  });
+
   it('patches reservation dates on booking service endpoint', () => {
     const payload = {
       new_period_start: '2026-05-15',
@@ -414,6 +447,17 @@ describe('BookingService', () => {
     const cancelReq = httpMock.expectOne('/booking-orchestrator/api/reservations/res-1/cancel');
     expect(cancelReq.request.method).toBe('POST');
     cancelReq.flush({ id: 'res-1' });
+
+    service.getCancellationPolicy('res-1').subscribe();
+    const cancellationPolicyReq = httpMock.expectOne('/booking-orchestrator/api/reservations/res-1/cancellation-policy');
+    expect(cancellationPolicyReq.request.method).toBe('GET');
+    cancellationPolicyReq.flush({
+      booking_id: 'res-1',
+      is_free_cancellation: true,
+      refund_amount: '20.00',
+      penalty_amount: '0.00',
+      cancellation_deadline: '2099-01-01T00:00:00+00:00',
+    });
 
     service.updateReservationDates('res-1', {
       new_period_start: '2026-05-15',

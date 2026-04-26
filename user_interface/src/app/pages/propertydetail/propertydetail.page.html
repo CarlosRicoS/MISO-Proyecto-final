@@ -1,10 +1,11 @@
-<ion-alert
+<th-popup
   [isOpen]="isAlertOpen"
-  [header]="alertTitle"
+  [variant]="alertVariant"
+  [title]="alertTitle"
   [message]="alertMessage"
-  [buttons]="['OK']"
-  (didDismiss)="onAlertDismissed()"
-></ion-alert>
+  primaryButtonText="Accept"
+  (primaryAction)="onAlertDismissed()"
+></th-popup>
 
 <ion-content class="propertydetail-content">
   <section class="propertydetail-main" *ngIf="!isLoading && !errorMessage">

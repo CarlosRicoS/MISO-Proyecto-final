@@ -1,0 +1,39 @@
+<div class="th-popup" [class.th-popup--open]="isOpen" [attr.aria-hidden]="!isOpen">
+  <div class="th-popup__backdrop" (click)="onBackdropClicked()"></div>
+
+  <ion-card
+    class="th-popup__card"
+    [class.th-popup__card--one-button]="!hasSecondaryButton"
+    role="alertdialog"
+    aria-modal="true"
+    [attr.aria-label]="title"
+  >
+    <ion-card-content class="th-popup__content">
+      <div class="th-popup__header">
+        <div class="th-popup__icon" [ngClass]="['th-popup__icon--' + variant, hideIcon ? 'th-popup__icon--hidden' : '']">
+          <ion-icon [name]="resolvedIconName" aria-hidden="true"></ion-icon>
+        </div>
+        <h2 class="th-popup__title">{{ title }}</h2>
+      </div>
+
+      <div class="th-popup__body">
+        <p class="th-popup__message">{{ message }}</p>
+
+        <div class="th-popup__actions" [class.th-popup__actions--single]="!hasSecondaryButton">
+          <th-button [variant]="resolvedPrimaryButtonVariant" size="sm" (click)="onPrimaryClicked()">
+            {{ primaryButtonText }}
+          </th-button>
+
+          <th-button
+            *ngIf="hasSecondaryButton"
+            [variant]="secondaryButtonVariant"
+            size="sm"
+            (click)="onSecondaryClicked()"
+          >
+            {{ secondaryButtonText }}
+          </th-button>
+        </div>
+      </div>
+    </ion-card-content>
+  </ion-card>
+</div>

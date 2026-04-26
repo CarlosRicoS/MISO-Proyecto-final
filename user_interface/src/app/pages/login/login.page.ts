@@ -4,7 +4,6 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { ActivatedRoute } from '@angular/router';
 import {
-  IonAlert,
   IonButton,
   IonCard,
   IonCardContent,
@@ -16,6 +15,7 @@ import {
 } from '@ionic/angular/standalone';
 import { firstValueFrom } from 'rxjs';
 import { ThButtonComponent } from '../../shared/components/th-button/th-button.component';
+import { ThPopupComponent } from '../../shared/components/th-popup/th-popup.component';
 import {
   ThInputComponent,
   ThInputType,
@@ -38,10 +38,10 @@ import { AuthSessionService } from '../../core/services/auth-session.service';
     IonCol,
     IonCard,
     IonButton,
-    IonAlert,
     IonSpinner,
     ThInputComponent,
     ThButtonComponent,
+    ThPopupComponent,
   ],
 })
 export class LoginPage {

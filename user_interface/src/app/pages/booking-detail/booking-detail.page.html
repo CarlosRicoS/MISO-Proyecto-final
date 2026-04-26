@@ -1,20 +1,27 @@
-<ion-alert
-  [isOpen]="isCancelConfirmOpen"
-  header="Cancel booking?"
-  message="This reservation will be cancelled and the booking list will be updated."
-  [buttons]="cancelAlertButtons"
-  (didDismiss)="isCancelConfirmOpen = false"
-></ion-alert>
-
-<ion-alert
-  [isOpen]="isAlertOpen"
-  [header]="alertTitle"
-  [message]="alertMessage"
-  [buttons]="['OK']"
-  (didDismiss)="onAlertDismissed()"
-></ion-alert>
-
 <ion-content class="bookingdetail-content">
+  <th-popup
+    [isOpen]="isCancelConfirmOpen"
+    variant="warning"
+    title="Cancel booking"
+    [message]="cancelConfirmMessage"
+    primaryButtonText="Accept"
+    secondaryButtonText="Cancel"
+    primaryButtonVariant="secondary"
+    secondaryButtonVariant="primary"
+    (primaryAction)="onCancelConfirmed()"
+    (closed)="isCancelConfirmOpen = false"
+  ></th-popup>
+
+  <th-popup
+    [isOpen]="isAlertOpen"
+    [variant]="alertVariant"
+    [title]="alertTitle"
+    [message]="alertMessage"
+    primaryButtonText="Accept"
+    [closeOnBackdrop]="false"
+    (primaryAction)="onAlertDismissed()"
+  ></th-popup>
+
   <section class="bookingdetail-main" *ngIf="!isLoading && !errorMessage">
     <div class="bookingdetail-main__inner">
       <div class="bookingdetail-main__left">
@@ -111,9 +118,9 @@
                 totalLabel="Total"
                 [totalAmount]="paymentSummary.totalAmount"
                 actionLabel="Cancel Reservation"
-                [actionDisabled]="isCancelling"
-                [isLoading]="isCancelling"
-                (actionClick)="onCancelConfirmed()"
+                [actionDisabled]="isCancelling || isCancellationPolicyLoading"
+                [isLoading]="isCancelling || isCancellationPolicyLoading"
+                (actionClick)="onCancelBooking()"
                 footnote="Cancellation policies may apply"
                 trustLeftLabel="Secure booking"
                 trustRightLabel="Flexible cancellation"
@@ -189,9 +196,9 @@
           totalLabel="Total"
           [totalAmount]="paymentSummary.totalAmount"
           actionLabel="Cancel Reservation"
-          [actionDisabled]="isCancelling"
-          [isLoading]="isCancelling"
-          (actionClick)="onCancelConfirmed()"
+          [actionDisabled]="isCancelling || isCancellationPolicyLoading"
+          [isLoading]="isCancelling || isCancellationPolicyLoading"
+          (actionClick)="onCancelBooking()"
           footnote="Cancellation policies may apply"
           trustLeftLabel="Secure booking"
           trustRightLabel="Flexible cancellation"
@@ -243,8 +250,8 @@
           [hideAfterTotal]="isCancellationHiddenForStatus"
           actionLabel="Cancel"
           [showAction]="!isCancellationHiddenForStatus"
-          [actionDisabled]="isCancelling"
-          [isLoading]="isCancelling"
+          [actionDisabled]="isCancelling || isCancellationPolicyLoading"
+          [isLoading]="isCancelling || isCancellationPolicyLoading"
           (actionClick)="onCancelBooking()"
           footnote="Cancellation policies may apply"
           trustLeftLabel="Secure booking"

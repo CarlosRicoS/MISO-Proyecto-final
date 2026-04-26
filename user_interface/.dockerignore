@@ -1,0 +1,30 @@
+# VCS and editor metadata
+.git
+.gitignore
+.vscode
+.agents
+
+# Local dependencies and caches
+node_modules
+.angular
+
+# Native/mobile artifacts not needed for web image build
+android
+
+# Build and test outputs
+coverage
+test-results
+build
+www
+
+# End-to-end and testing assets
+e2e
+
+# Logs and local env files
+*.log
+.env
+.env.*
+
+# OS files
+.DS_Store
+Thumbs.db

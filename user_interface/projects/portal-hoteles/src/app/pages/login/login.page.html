@@ -1,10 +1,11 @@
-<ion-alert
+<th-popup
   [isOpen]="isAlertOpen"
-  [header]="alertTitle"
+  variant="error"
+  [title]="alertTitle"
   [message]="alertMessage"
-  [buttons]="['OK']"
-  (didDismiss)="isAlertOpen = false"
-></ion-alert>
+  primaryButtonText="Accept"
+  (primaryAction)="isAlertOpen = false"
+></th-popup>
 
 <ion-content [fullscreen]="true" class="login-content">
   <ion-grid class="login-shell">
