@@ -68,3 +68,6 @@ testem.log
 # System files
 .DS_Store
 Thumbs.db
+
+# Security - ignore environment files that may contain sensitive information
+/Android/app/google-services.json
