@@ -61,11 +61,18 @@ describe('NotificationService', () => {
     });
 
     it('should return "X hr(s) ago" for timestamps from today', () => {
-      const today = new Date();
-      today.setHours(14, 0, 0, 0); // midday, safe from date boundary
-      const twoHoursAgo = new Date(today.getTime() - 2 * 60 * 60 * 1000).toISOString();
+      jasmine.clock().install();
+
+      const base = new Date('2024-01-01T16:00:00Z'); // fixed time
+      jasmine.clock().mockDate(base);
+
+      const twoHoursAgo = new Date(base.getTime() - 2 * 60 * 60 * 1000).toISOString();
+
       const label = service.getTimeLabel(twoHoursAgo);
+
       expect(label).toMatch(/^\d+ hrs? ago$/);
+
+      jasmine.clock().uninstall();
     });
 
     it('should return "Yesterday at HH:MM" for timestamps from yesterday', () => {
