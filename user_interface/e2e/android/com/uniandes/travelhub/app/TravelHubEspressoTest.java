@@ -11,6 +11,7 @@ import static org.junit.Assert.assertThat;
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.LargeTest;
+import androidx.test.rule.GrantPermissionRule;
 
 import org.hamcrest.Matchers;
 import org.junit.Rule;
@@ -24,6 +25,12 @@ import java.util.concurrent.atomic.AtomicReference;
 @RunWith(AndroidJUnit4.class)
 @LargeTest
 public class TravelHubEspressoTest {
+
+    // Pre-grant POST_NOTIFICATIONS (required on API 33+) so the runtime permission
+    // dialog never appears mid-test and puts MainActivity into PAUSED state.
+    @Rule
+    public GrantPermissionRule notificationPermissionRule =
+            GrantPermissionRule.grant(android.Manifest.permission.POST_NOTIFICATIONS);
 
     @Rule
     public ActivityScenarioRule<MainActivity> activityScenarioRule =
