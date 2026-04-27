@@ -82,18 +82,25 @@ describe('PlatformApiService', () => {
   });
 
   describe('buildUrl', () => {
-    // it('prepends baseUrl when it is defined', () => {
-    //   service.getPricingEnginePropertyPrice({
-    //     propertyId: 'prop-1',
-    //     guests: 2,
-    //     dateInit: '2026-05-10',
-    //     dateFinish: '2026-05-12',
-    //   }).subscribe();
+    it('prepends baseUrl when it is defined', () => {
+      service.getPricingEnginePropertyPrice({
+        propertyId: 'prop-1',
+        guests: 2,
+        dateInit: '2026-05-10',
+        dateFinish: '2026-05-12',
+      }).subscribe();
 
-    //   const req = httpMock.expectOne('https://api.example.com/pricing-engine/api/PropertyPrice');
-    //   expect(req.request.url).toBe('https://api.example.com/pricing-engine/api/PropertyPrice');
-    //   req.flush({ price: 100000 });
-    // });
+      const req = httpMock.expectOne((request) => {
+        return request.url === 'https://api.example.com/pricing-engine/api/PropertyPrice'
+          && request.params.get('propertyId') === 'prop-1'
+          && request.params.get('guests') === '2'
+          && request.params.get('dateInit') === '2026-05-10'
+          && request.params.get('dateFinish') === '2026-05-12';
+      });
+
+      expect(req.request.method).toBe('GET');
+      req.flush({ price: 100000 });
+    });
 
     it('normalizes path by removing leading slash', () => {
       service.getBookingOrchestratorHealth().subscribe();

@@ -1,6 +1,8 @@
 import { NgZone } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
+import { Capacitor } from '@capacitor/core';
+import { FirebaseMessaging } from '@capacitor-firebase/messaging';
 import { NotificationItem, NotificationService } from './notification.service';
 
 class RouterMock {
@@ -389,6 +391,107 @@ describe('NotificationService', () => {
         expect(notifications).toEqual([]);
         done();
       });
+    });
+  });
+
+  describe('private helpers and initialization', () => {
+    it('skips initialization when not running on native platform', async () => {
+      spyOn(Capacitor, 'isNativePlatform').and.returnValue(false);
+      const isSupportedSpy = spyOn(FirebaseMessaging, 'isSupported').and.resolveTo({ isSupported: true } as any);
+
+      await service.initialize();
+
+      expect(isSupportedSpy).not.toHaveBeenCalled();
+      expect((service as any).initialized).toBeFalse();
+    });
+
+    it('skips initialization when Firebase messaging is not supported', async () => {
+      spyOn(Capacitor, 'isNativePlatform').and.returnValue(true);
+      spyOn(FirebaseMessaging, 'isSupported').and.resolveTo({ isSupported: false } as any);
+      const checkPermissionsSpy = spyOn<any>(FirebaseMessaging, 'checkPermissions').and.resolveTo({ receive: 'granted' } as any);
+
+      await service.initialize();
+
+      expect(checkPermissionsSpy).not.toHaveBeenCalled();
+      expect((service as any).initialized).toBeFalse();
+    });
+
+    it('skips initialization when notification permission is denied', async () => {
+      spyOn(Capacitor, 'isNativePlatform').and.returnValue(true);
+      spyOn(FirebaseMessaging, 'isSupported').and.resolveTo({ isSupported: true } as any);
+      spyOn<any>(FirebaseMessaging, 'checkPermissions').and.resolveTo({ receive: 'denied' } as any);
+      spyOn<any>(FirebaseMessaging, 'requestPermissions').and.resolveTo({ receive: 'denied' } as any);
+
+      await service.initialize();
+
+      expect((service as any).initialized).toBeFalse();
+    });
+
+    it('accepts new token and skips duplicate or empty tokens', () => {
+      const registerSpy = spyOn<any>(service, 'registerTokenOnBackend').and.stub();
+
+      (service as any).handleToken('token-123');
+      expect(service.currentToken).toBe('token-123');
+      expect(registerSpy).toHaveBeenCalledWith('token-123');
+
+      (service as any).handleToken('token-123');
+      expect(registerSpy).toHaveBeenCalledTimes(1);
+
+      (service as any).handleToken('');
+      expect(service.currentToken).toBe('token-123');
+    });
+
+    it('reads notification payload correctly and falls back on invalid JSON or non-object values', () => {
+      const jsonPayload = (service as any).readNotificationData('{"bookingId":"123"}');
+      expect(jsonPayload.bookingId).toBe('123');
+
+      const invalidPayload = (service as any).readNotificationData('not json');
+      expect(invalidPayload).toEqual({});
+
+      const objectPayload = (service as any).readNotificationData({ foo: 'bar' });
+      expect(objectPayload).toEqual({ foo: 'bar' });
+
+      const primitivePayload = (service as any).readNotificationData(42);
+      expect(primitivePayload).toEqual({});
+    });
+
+    it('extracts booking id from direct payload and nested payloads', () => {
+      expect((service as any).extractBookingId({ bookingId: 'abc' })).toBe('abc');
+      expect((service as any).extractBookingId({ reservationId: 123 })).toBe('123');
+      expect((service as any).extractBookingId({ id: 'xyz' })).toBe('xyz');
+      expect((service as any).extractBookingId({ data: '{"bookingId":"nested"}' })).toBe('nested');
+      expect((service as any).extractBookingId({})).toBe('');
+    });
+
+    it('navigates correctly based on notification action payload', async () => {
+      const router = TestBed.inject(Router) as unknown as RouterMock;
+      const event = {
+        notification: {
+          data: { bookingId: 'book-1' },
+        },
+      } as any;
+
+      await (service as any).navigateFromNotification(event);
+
+      expect(router.navigate).toHaveBeenCalledWith(['/booking-detail'], {
+        queryParams: { bookingId: 'book-1' },
+        state: { bookingId: 'book-1' },
+      });
+    });
+
+    it('navigates to home when booking id is missing', async () => {
+      const router = TestBed.inject(Router) as unknown as RouterMock;
+      const event = { notification: { data: {} } } as any;
+
+      await (service as any).navigateFromNotification(event);
+
+      expect(router.navigate).toHaveBeenCalledWith(['/home']);
+    });
+
+    it('does not store invalid notification events', () => {
+      const notificationsBefore = (service as any).notificationsSubject.value.length;
+      (service as any).storeNotificationEvent(null);
+      expect((service as any).notificationsSubject.value.length).toBe(notificationsBefore);
     });
   });
 

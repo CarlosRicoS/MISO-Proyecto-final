@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { take, skip } from 'rxjs/operators';
 import { AuthSessionService } from './auth-session.service';
 import { LoginResponse } from './auth.service';
 
@@ -154,20 +155,17 @@ describe('AuthSessionService', () => {
   });
 
   describe('state observables', () => {
-  //  it('emits state$ when login response is set', (done) => {
-  //    let emissionCount = 0;
-  //    service.state$.subscribe((state) => {
-  //      emissionCount++;
-  //      if (emissionCount === 2) {
-  //        // Second emission should be after setLoginResponse
-  //        expect(state.loggedIn).toBeTrue();
-  //        expect(state.loginResponse).toEqual(mockResponse);
-  //        done();
-  //      }
-  //    });
-//
-  //    service.setLoginResponse(mockResponse);
-  //  });
+    it('emits state$ when login response is set', (done) => {
+      service.state$
+        .pipe(skip(1), take(1))
+        .subscribe((state) => {
+          expect(state.loggedIn).toBeTrue();
+          expect(state.loginResponse).toEqual(mockResponse);
+          done();
+        });
+
+      service.setLoginResponse(mockResponse);
+    });
 
     it('emits isLoggedIn$ when login state changes', (done) => {
       const states: boolean[] = [];
