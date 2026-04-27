@@ -61,7 +61,9 @@ describe('NotificationService', () => {
     });
 
     it('should return "X hr(s) ago" for timestamps from today', () => {
-      const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
+      const today = new Date();
+      today.setHours(14, 0, 0, 0); // midday, safe from date boundary
+      const twoHoursAgo = new Date(today.getTime() - 2 * 60 * 60 * 1000).toISOString();
       const label = service.getTimeLabel(twoHoursAgo);
       expect(label).toMatch(/^\d+ hrs? ago$/);
     });

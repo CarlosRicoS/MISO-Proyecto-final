@@ -1,5 +1,5 @@
 {
-  "playwrightBaseUrl": "http://localhost:8100",
+  "playwrightBaseUrl": "http://localhost:4200",
   "apiBaseUrl": "https://n548xflwbl.execute-api.us-east-1.amazonaws.com/",
   "propertyApiPath": "/poc-properties/api/property",
   "propertyApiToken": "",
