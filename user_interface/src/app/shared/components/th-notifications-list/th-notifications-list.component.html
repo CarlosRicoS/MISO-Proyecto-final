@@ -1,0 +1,23 @@
+<div class="th-notifications-list">
+  <ng-container *ngFor="let group of notificationGroups">
+    <div class="th-notifications-list__section">
+      <div class="th-notifications-list__section-title">{{ group.title }}</div>
+      <ion-list class="th-notifications-list__list" lines="none">
+        <ion-item *ngFor="let notification of group.items" detail="false" class="th-notifications-list__item">
+          <ion-avatar slot="start" class="th-notifications-list__item-icon" [style.background]="notification.iconColor">
+            <ion-icon [name]="notification.iconName" aria-hidden="true"></ion-icon>
+          </ion-avatar>
+
+          <ion-label>
+            <div class="th-notifications-list__item-header">
+              <h3>{{ notification.title }}</h3>
+              <span class="th-notifications-list__time">{{ notificationService.getTimeLabel(notification.receivedAt) }}</span>
+            </div>
+            <p class="th-notifications-list__item-subtitle">{{ notification.subtitle }}</p>
+            <p class="th-notifications-list__item-message">{{ notification.message }}</p>
+          </ion-label>
+        </ion-item>
+      </ion-list>
+    </div>
+  </ng-container>
+</div>

@@ -1,0 +1,16 @@
+<ion-content fullscreen class="notifications-page">
+  <div class="notifications-page__content">
+    <ng-container *ngIf="notificationGroups$ | async as groups">
+      <ng-container *ngIf="groups.length > 0; else emptyState">
+        <th-notifications-list [notificationGroups]="groups"></th-notifications-list>
+      </ng-container>
+    </ng-container>
+
+    <ng-template #emptyState>
+      <div class="notifications-page__empty-state">
+        <h2>No notifications yet</h2>
+        <p>New booking alerts, payment updates, and reservation changes appear here as they arrive.</p>
+      </div>
+    </ng-template>
+  </div>
+</ion-content>

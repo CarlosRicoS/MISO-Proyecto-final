@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, Input } from '@angular/core';
-import { IonicModule } from '@ionic/angular';
+import { IonicModule, Platform } from '@ionic/angular';
 
 @Component({
   selector: 'portal-hoteles-header-bar',
@@ -16,6 +16,8 @@ export class PortalHotelesHeaderBarComponent {
   @Input() userRole = 'Hotel Manager';
   @Input() notificationCount = 3;
 
+  constructor(private platform: Platform) {}
+
   get avatarInitials(): string {
     return this.userName
       .split(' ')
@@ -24,5 +26,9 @@ export class PortalHotelesHeaderBarComponent {
       .slice(0, 2)
       .join('')
       .toUpperCase();
+  }
+
+  get isMobileNative(): boolean {
+    return this.platform.is('capacitor');
   }
 }

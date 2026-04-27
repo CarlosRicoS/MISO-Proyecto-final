@@ -4,6 +4,7 @@
   [class.th-navbar--layout-mobile]="layout === 'mobile'"
   [class.th-navbar--mobile-search]="layout !== 'desktop' && isSearchResults"
   [class.th-navbar--mobile-booking]="layout !== 'desktop' && isBookingList"
+  [class.th-navbar--mobile-notifications]="layout !== 'desktop' && isNotificationsRoute"
   [class.th-navbar--mobile-detail]="layout !== 'desktop' && isDetailRoute"
 >
   <ion-toolbar class="th-navbar__toolbar">
@@ -32,7 +33,7 @@
           <ion-icon name="person-circle-outline" aria-hidden="true"></ion-icon>
           <ion-label>Account</ion-label>
         </ion-chip>
-        <ion-button class="th-navbar__icon-btn" fill="clear" aria-label="Notifications">
+        <ion-button *ngIf="isMobileNative" class="th-navbar__icon-btn" fill="clear" aria-label="Notifications" (click)="onNotificationsClick($event)">
           <ion-icon name="notifications-outline" aria-hidden="true"></ion-icon>
         </ion-button>
       </div>
@@ -69,8 +70,13 @@
           <ion-icon name="arrow-back" aria-hidden="true"></ion-icon>
         </ion-button>
         <div class="th-navbar__mobile-title">{{ mobileTitle }}</div>
-        <ion-button class="th-navbar__mobile-action" fill="clear" [attr.aria-label]="isBookingList ? 'More options' : 'Add to favorites'">
-          <ion-icon [name]="isBookingList ? 'ellipsis-vertical' : 'heart'" aria-hidden="true"></ion-icon>
+        <ion-button
+          *ngIf="isBookingList"
+          class="th-navbar__mobile-action"
+          fill="clear"
+          aria-label="More options"
+        >
+          <ion-icon name="ellipsis-vertical" aria-hidden="true"></ion-icon>
         </ion-button>
       </ng-container>
       </ng-template>
@@ -79,7 +85,7 @@
         <div class="th-navbar__brand">
           <img class="th-navbar__logo" [src]="logoSrc" [alt]="logoAlt" />
         </div>
-        <ion-button class="th-navbar__icon-btn" fill="clear" aria-label="Notifications">
+        <ion-button *ngIf="isMobileNative" class="th-navbar__icon-btn" fill="clear" aria-label="Notifications" (click)="onNotificationsClick($event)">
           <ion-icon name="notifications-outline" aria-hidden="true"></ion-icon>
         </ion-button>
       </ng-template>

@@ -8,7 +8,7 @@
   </button>
 
   <div class="portal-hoteles-header-bar__actions">
-    <button type="button" class="portal-hoteles-header-bar__notification" aria-label="Notifications">
+    <button *ngIf="isMobileNative" type="button" class="portal-hoteles-header-bar__notification" aria-label="Notifications">
       <ion-icon name="notifications-outline" aria-hidden="true"></ion-icon>
       <span *ngIf="notificationCount > 0" class="portal-hoteles-header-bar__badge">{{ notificationCount }}</span>
     </button>

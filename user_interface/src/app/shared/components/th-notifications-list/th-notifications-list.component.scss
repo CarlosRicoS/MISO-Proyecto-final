@@ -1,0 +1,94 @@
+.th-notifications-list {
+  display: grid;
+  gap: 18px;
+  background: var(--th-white);
+  border-radius: 20px;
+  box-shadow: none;
+  padding: 8px 0 12px;
+}
+
+.th-notifications-list__section {
+  display: grid;
+  gap: 12px;
+}
+
+.th-notifications-list__list {
+  --background: transparent;
+  --ion-background-color: transparent;
+  background: transparent;
+  box-shadow: none;
+  border: none;
+}
+
+.th-notifications-list__item {
+  --background: var(--th-white);
+  background: var(--th-white);
+  --border-radius: 16px;
+  margin: 0;
+  padding: 16px;
+  box-shadow: var(--th-shadow-1);
+  border: 1px solid var(--th-border-soft);
+  color: var(--th-neutral-900);
+}
+
+.th-notifications-list__section-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0.04em;
+  color: var(--th-neutral-600);
+  padding-left: 8px;
+}
+
+.th-notifications-list__item {
+  --background: var(--th-white);
+  --border-radius: 16px;
+  margin: 0;
+  padding: 16px;
+  box-shadow: var(--th-shadow-1);
+  border: 1px solid var(--th-border-soft);
+  color: var(--th-neutral-900);
+}
+
+.th-notifications-list__item-icon {
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  color: var(--th-white);
+}
+
+.th-notifications-list__item-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.th-notifications-list__item-header h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.th-notifications-list__time {
+  font-size: 0.8rem;
+  color: var(--th-neutral-500);
+  white-space: nowrap;
+}
+
+.th-notifications-list__item-subtitle {
+  margin: 0;
+  color: var(--th-neutral-600);
+  font-size: 0.92rem;
+}
+
+.th-notifications-list__item-message {
+  margin: 8px 0 0;
+  color: var(--th-neutral-700);
+  font-size: 0.95rem;
+  line-height: 1.4;
+}

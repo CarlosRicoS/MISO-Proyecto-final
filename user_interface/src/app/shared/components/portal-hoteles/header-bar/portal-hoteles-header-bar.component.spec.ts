@@ -1,6 +1,13 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { IonicModule, Platform } from '@ionic/angular';
 
 import { PortalHotelesHeaderBarComponent } from './portal-hoteles-header-bar.component';
+
+class PlatformMock {
+  is(platform: string): boolean {
+    return false; // Simulate web environment for tests
+  }
+}
 
 describe('PortalHotelesHeaderBarComponent', () => {
   let component: PortalHotelesHeaderBarComponent;
@@ -8,7 +15,8 @@ describe('PortalHotelesHeaderBarComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [PortalHotelesHeaderBarComponent],
+      imports: [IonicModule.forRoot(), PortalHotelesHeaderBarComponent],
+      providers: [{ provide: Platform, useClass: PlatformMock }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(PortalHotelesHeaderBarComponent);

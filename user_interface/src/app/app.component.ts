@@ -3,6 +3,7 @@ import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
 import { Capacitor } from '@capacitor/core';
 import { filter, Subscription } from 'rxjs';
 import { AuthSessionService } from './core/services/auth-session.service';
+import { NotificationService } from './core/services/notification.service';
 import { ThNavbarMode } from './shared/components/th-navbar/th-navbar.component';
 
 @Component({
@@ -21,18 +22,25 @@ export class AppComponent implements OnInit, OnDestroy {
   private readonly webPlatformClass = 'app-platform-web';
   private routerEventsSub?: Subscription;
   private authStateSub?: Subscription;
+  private lastLoggedInState = false;
 
   constructor(
     private router: Router,
     private route: ActivatedRoute,
-    private authSessionService: AuthSessionService
+    private authSessionService: AuthSessionService,
+    private notificationService: NotificationService
   ) {}
 
   ngOnInit(): void {
     this.applyPlatformClasses();
+    this.lastLoggedInState = this.authSessionService.isLoggedIn;
     this.updateNavbarVisibility();
     this.navbarMode = this.authSessionService.isLoggedIn ? 'full' : 'auth';
     this.authStateSub = this.authSessionService.state$.subscribe((state) => {
+      if (state.loggedIn && !this.lastLoggedInState) {
+        this.notificationService.clearNotifications();
+      }
+      this.lastLoggedInState = state.loggedIn;
       this.navbarMode = state.loggedIn ? 'full' : 'auth';
     });
     this.updateLayout();
@@ -46,6 +54,8 @@ export class AppComponent implements OnInit, OnDestroy {
     if (typeof window !== 'undefined') {
       window.addEventListener('resize', this.handleResize);
     }
+
+    void this.notificationService.initialize();
   }
 
   ngOnDestroy(): void {
@@ -55,6 +65,7 @@ export class AppComponent implements OnInit, OnDestroy {
       window.removeEventListener('resize', this.handleResize);
     }
     this.clearPlatformClasses();
+    void this.notificationService.teardown();
   }
 
   get isPropertyDetailRoute(): boolean {
@@ -77,8 +88,12 @@ export class AppComponent implements OnInit, OnDestroy {
     return this.router.url.startsWith('/booking-list');
   }
 
+  get isNotificationsRoute(): boolean {
+    return this.router.url.startsWith('/notifications');
+  }
+
   get showMobileTopBar(): boolean {
-    return this.showNavbar || this.isSearchResultsRoute || this.isBookingListRoute || this.isDetailRoute;
+    return this.showNavbar || this.isSearchResultsRoute || this.isBookingListRoute || this.isDetailRoute || this.isNotificationsRoute;
   }
 
   get hasTopBar(): boolean {

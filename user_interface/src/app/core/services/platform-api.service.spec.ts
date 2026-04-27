@@ -80,4 +80,163 @@ describe('PlatformApiService', () => {
     expect(req.request.method).toBe('GET');
     req.flush({ price: 560000 });
   });
+
+  describe('buildUrl', () => {
+    it('prepends baseUrl when it is defined', () => {
+      service.getPricingEnginePropertyPrice({
+        propertyId: 'prop-1',
+        guests: 2,
+        dateInit: '2026-05-10',
+        dateFinish: '2026-05-12',
+      }).subscribe();
+
+      const req = httpMock.expectOne((request) => {
+        return request.url === 'https://api.example.com/pricing-engine/api/PropertyPrice'
+          && request.params.get('propertyId') === 'prop-1'
+          && request.params.get('guests') === '2'
+          && request.params.get('dateInit') === '2026-05-10'
+          && request.params.get('dateFinish') === '2026-05-12';
+      });
+
+      expect(req.request.method).toBe('GET');
+      req.flush({ price: 100000 });
+    });
+
+    it('normalizes path by removing leading slash', () => {
+      service.getBookingOrchestratorHealth().subscribe();
+
+      const req = httpMock.expectOne('https://api.example.com/booking-orchestrator/api/health');
+      expect(req.request.url).toBe('https://api.example.com/booking-orchestrator/api/health');
+      req.flush({ status: 'healthy' });
+    });
+
+    it('normalizes baseUrl by removing trailing slash', () => {
+      // Test the logic indirectly by verifying double slashes are not created
+      service.getPricingEngineHealth().subscribe();
+
+      const req = httpMock.expectOne('https://api.example.com/pricing-engine/api/Health');
+      // Should not have double slash between baseUrl and path
+      expect(req.request.url).not.toContain('//pricing');
+      req.flush({ status: 'healthy' });
+    });
+  });
+
+  describe('buildPropertyPriceParams', () => {
+    it('includes discountCode in params when provided', () => {
+      service.getPricingEnginePropertyPrice({
+        propertyId: 'prop-1',
+        guests: 2,
+        dateInit: '2026-05-10',
+        dateFinish: '2026-05-12',
+        discountCode: 'DISCOUNT20',
+      }).subscribe();
+
+      const req = httpMock.expectOne((request) => {
+        return request.url.includes('pricing-engine/api/PropertyPrice')
+          && request.params.get('discountCode') === 'DISCOUNT20';
+      });
+
+      expect(req.request.params.get('discountCode')).toBe('DISCOUNT20');
+      req.flush({ price: 100000 });
+    });
+
+    it('excludes discountCode from params when not provided', () => {
+      service.getPricingEnginePropertyPrice({
+        propertyId: 'prop-1',
+        guests: 2,
+        dateInit: '2026-05-10',
+        dateFinish: '2026-05-12',
+      }).subscribe();
+
+      const req = httpMock.expectOne((request) => {
+        return request.url.includes('pricing-engine/api/PropertyPrice');
+      });
+
+      expect(req.request.params.has('discountCode')).toBeFalse();
+      req.flush({ price: 100000 });
+    });
+
+    it('correctly sets all required params', () => {
+      service.getPricingEnginePropertyPrice({
+        propertyId: 'prop-123',
+        guests: 5,
+        dateInit: '2026-06-01',
+        dateFinish: '2026-06-05',
+      }).subscribe();
+
+      const req = httpMock.expectOne((request) => {
+        return request.url.includes('pricing-engine/api/PropertyPrice')
+          && request.params.get('propertyId') === 'prop-123'
+          && request.params.get('guests') === '5'
+          && request.params.get('dateInit') === '2026-06-01'
+          && request.params.get('dateFinish') === '2026-06-05';
+      });
+
+      expect(req.request.params.get('propertyId')).toBe('prop-123');
+      expect(req.request.params.get('guests')).toBe('5');
+      req.flush({ price: 250000 });
+    });
+  });
+
+  describe('all health check endpoints', () => {
+    it('calls auth health endpoint', () => {
+      service.getAuthHealth().subscribe();
+
+      const req = httpMock.expectOne((request) => {
+        return request.url.includes('auth/api/health');
+      });
+
+      expect(req.request.method).toBe('GET');
+      req.flush({ status: 'healthy' });
+    });
+
+    it('calls pricing engine health endpoint', () => {
+      service.getPricingEngineHealth().subscribe();
+
+      const req = httpMock.expectOne((request) => {
+        return request.url.includes('pricing-engine/api/Health');
+      });
+
+      expect(req.request.method).toBe('GET');
+      req.flush({ status: 'healthy' });
+    });
+
+    it('calls pricing orchestrator property endpoint', () => {
+      service.getPricingOrchestratorProperty({
+        propertyId: 'prop-1',
+        guests: 2,
+        dateInit: '2026-05-10',
+        dateFinish: '2026-05-12',
+      }).subscribe();
+
+      const req = httpMock.expectOne((request) => {
+        return request.url.includes('pricing-orchestator/api/Property');
+      });
+
+      expect(req.request.method).toBe('GET');
+      req.flush({ price: 150000 });
+    });
+
+    it('calls pricing orchestrator health endpoint', () => {
+      service.getPricingOrchestratorHealth().subscribe();
+
+      const req = httpMock.expectOne((request) => {
+        return request.url.includes('pricing-orchestator/api/Health');
+      });
+
+      expect(req.request.method).toBe('GET');
+      req.flush({ status: 'healthy' });
+    });
+
+    it('calls pms health endpoint', () => {
+      service.getPmsHealth().subscribe();
+
+      const req = httpMock.expectOne((request) => {
+        return request.url.includes('pms/api/health');
+      });
+
+      expect(req.request.method).toBe('GET');
+      req.flush({ status: 'healthy' });
+    });
+  });
 });

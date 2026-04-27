@@ -82,6 +82,16 @@ describe('AppComponent', () => {
     expect(component.isPropertyDetailRoute).toBe(false);
   });
 
+  it('should return true for isNotificationsRoute when on notifications page', () => {
+    routerMock.url = '/notifications';
+    expect(component.isNotificationsRoute).toBe(true);
+  });
+
+  it('should show mobile top bar on notifications route', () => {
+    routerMock.url = '/notifications';
+    expect(component.showMobileTopBar).toBeTrue();
+  });
+
   it('should expose auth mode when the session is logged out', () => {
     expect(component.navbarMode).toBe('auth');
   });
