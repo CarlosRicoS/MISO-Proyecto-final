@@ -29,4 +29,10 @@ export interface PricingPropertyResponse {
   city?: string;
   country?: string;
   price?: number;
+  maxCapacity?: number;
+  description?: string;
+  urlBucketPhotos?: string;
+  checkInTime?: string;
+  checkOutTime?: string;
+  adminGroupId?: string;
 }

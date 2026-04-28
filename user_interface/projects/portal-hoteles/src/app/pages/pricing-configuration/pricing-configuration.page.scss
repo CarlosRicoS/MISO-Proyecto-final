@@ -1,0 +1,443 @@
+/*
+ * Portal-Hoteles Pricing Configuration Page Styles
+ * ----------------------------------------------------------------------------
+ * Reuses theme tokens from variables.scss and global patterns from global.scss
+ */
+
+/* Pricing Content Container */
+.portal-hoteles-pricing-content {
+  --background: transparent;
+  --color: var(--th-neutral-900);
+  color: var(--th-neutral-900);
+}
+
+/* Hero Section */
+.portal-hoteles-pricing-hero {
+  padding: 0 0 var(--th-space-6);
+}
+
+.portal-hoteles-pricing-hero__kicker {
+  margin: 0 0 var(--th-space-2);
+  color: var(--th-primary-700);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: var(--th-text-caption-size);
+  font-weight: var(--th-font-weight-semibold);
+}
+
+.portal-hoteles-pricing-hero h1 {
+  margin: 0;
+  color: var(--th-neutral-900);
+  font-size: var(--th-text-h1-size);
+  line-height: 1.1;
+}
+
+/* Grid Layout */
+.portal-hoteles-pricing-grid {
+  display: grid;
+  gap: var(--th-space-4);
+}
+
+.portal-hoteles-pricing-grid--full-width {
+  grid-template-columns: minmax(0, 0.8fr);
+  justify-content: center;
+}
+
+/* Panel Cards */
+.portal-hoteles-pricing-grid--panel {
+  grid-column: 1 / -1;
+}
+
+.portal-hoteles-pricing-grid--sidebar {
+  grid-column: 1 / -1;
+}
+
+.portal-hoteles-pricing-toolbar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--th-space-3);
+  border: 1px solid var(--th-neutral-300);
+  border-radius: var(--th-radius-md);
+  background: var(--th-white);
+  padding: var(--th-space-2);
+}
+
+.portal-hoteles-pricing-toolbar-header__filters {
+  display: flex;
+  align-items: center;
+  gap: var(--th-space-2);
+}
+
+.portal-hoteles-pricing-toolbar-header__select {
+  --background: var(--th-white);
+  --border-color: var(--th-neutral-300);
+  --border-style: solid;
+  --border-width: 1px;
+  --border-radius: var(--th-radius-md);
+  --padding-start: 10px;
+  min-width: 140px;
+}
+
+.portal-hoteles-pricing-toolbar-header__action-button {
+  --background: var(--th-primary-700);
+  --background-hover: var(--th-primary-800);
+  --color: var(--th-white);
+  margin: 0;
+  text-transform: none;
+  font-size: var(--th-text-body-sm-size);
+}
+
+.portal-hoteles-pricing-content-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--th-space-2);
+  margin-bottom: var(--th-space-3);
+}
+
+.portal-hoteles-pricing-content-toolbar__search {
+  --background: var(--th-white);
+  --border-color: var(--th-neutral-300);
+  --border-width: 1px;
+  --border-style: solid;
+  --border-radius: var(--th-radius-md);
+  --padding-start: 10px;
+  flex: 1;
+}
+
+/* Table Styles */
+.portal-hoteles-pricing-table {
+  display: flex;
+  flex-direction: column;
+  gap: var(--th-space-3);
+  margin-top: var(--th-space-2);
+}
+
+.portal-hoteles-pricing-table__header,
+.portal-hoteles-pricing-table__row {
+  padding: 18px 12px;
+  display: grid;
+  grid-template-columns: minmax(180px, 1.5fr) minmax(100px, 0.8fr) repeat(3, minmax(110px, 1fr)) minmax(72px, 0.5fr) 46px;
+  align-items: center;
+  gap: var(--th-space-3);
+  border: 1px solid var(--th-neutral-300);
+  border-radius: var(--th-radius-lg);
+  background: var(--th-white);
+}
+
+.portal-hoteles-pricing-table__header{
+  font-weight: var(--th-font-weight-medium);
+}
+
+
+/* Room Type Column */
+.portal-hoteles-pricing-table__room-type {
+  display: flex;
+  flex-direction: column;
+}
+
+.portal-hoteles-pricing-table__meta {
+  display: block;
+  margin-top: 2px;
+  color: var(--th-neutral-600);
+  font-size: var(--th-text-caption-size);
+}
+
+.portal-hoteles-pricing-table__accent {
+  color: var(--th-primary-700);
+}
+
+.portal-hoteles-pricing-table__room-type-id {
+  font-size: var(--th-text-caption-size);
+  color: var(--th-neutral-600);
+}
+
+/* Capacity Column */
+.portal-hoteles-pricing-table__capacity {
+  display: flex;
+  align-items: center;
+}
+
+.portal-hoteles-pricing-table__capacity-input {
+  width: 100%;
+}
+
+/* Base Rate Column */
+.portal-hoteles-pricing-table__base-rate {
+  display: flex;
+  align-items: center;
+}
+
+.portal-hoteles-pricing-table__base-rate-input {
+  width: 100%;
+}
+
+/* Discount Column */
+.portal-hoteles-pricing-table__discount {
+  display: flex;
+  align-items: center;
+}
+
+.portal-hoteles-pricing-table__discount-input {
+  width: 100%;
+}
+
+/* Final Rate Column */
+.portal-hoteles-pricing-table__final-rate {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Status Column */
+.portal-hoteles-pricing-table__status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Actions Column */
+.portal-hoteles-pricing-table__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--th-space-2);
+}
+
+.portal-hoteles-pricing-table__actions-button {
+  --color: var(--th-neutral-500);
+  margin: 0;
+}
+
+/* Date Range Column */
+.portal-hoteles-pricing-table__date-range {
+  display: flex;
+  align-items: center;
+}
+
+.portal-hoteles-pricing-table__date-range-input {
+  width: 100%;
+}
+
+/* Modifier Column */
+.portal-hoteles-pricing-table__modifier {
+  display: flex;
+  align-items: center;
+}
+
+.portal-hoteles-pricing-table__modifier-input {
+  width: 100%;
+}
+
+/* Footer */
+.portal-hoteles-pricing-table__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--th-space-3);
+  color: var(--th-neutral-600);
+  font-size: var(--th-text-body-sm-size);
+}
+
+.portal-hoteles-pricing-table__pagination {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--th-space-2);
+}
+
+.portal-hoteles-pricing-table__pagination-button {
+  --border-color: var(--th-neutral-300);
+  --color: var(--th-neutral-700);
+  --padding-start: 12px;
+  --padding-end: 12px;
+  font-size: var(--th-text-body-sm-size);
+  text-transform: none;
+}
+
+.portal-hoteles-pricing-table__pagination-label {
+  color: var(--th-neutral-600);
+}
+
+.portal-hoteles-pricing-table__page {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  border: 1px solid var(--th-neutral-300);
+  color: var(--th-neutral-700);
+  font-size: var(--th-text-caption-size);
+}
+
+.portal-hoteles-pricing-table__page--active {
+  border-color: var(--th-primary-700);
+  background: var(--th-primary-700);
+  color: var(--th-white);
+}
+
+/* Message */
+.portal-hoteles-pricing-table__message {
+  padding: var(--th-space-4);
+  color: var(--th-neutral-600);
+  font-size: var(--th-text-body-sm-size);
+  text-align: center;
+}
+
+/* Status Classes */
+.portal-hoteles-pricing-status {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  width: fit-content;
+  max-width: 100%;
+  border-radius: var(--th-radius-full);
+  padding: var(--th-space-1) var(--th-space-3);
+  font-size: var(--th-text-caption-size);
+  font-weight: var(--th-font-weight-medium);
+}
+
+.portal-hoteles-pricing-status--active {
+  color: var(--th-success-700);
+  background: var(--th-success-50);
+}
+
+.portal-hoteles-pricing-status--inactive {
+  color: var(--th-neutral-700);
+  background: var(--th-neutral-100);
+}
+
+.portal-hoteles-pricing-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--th-radius-full);
+  padding: 5px 8px;
+  font-size: var(--th-text-caption-size);
+  font-weight: var(--th-font-weight-semibold);
+  width: fit-content;
+}
+
+.portal-hoteles-pricing-badge--danger {
+  color: var(--th-error-700);
+  background: var(--th-error-50);
+}
+
+.portal-hoteles-pricing-badge--success {
+  color: var(--th-success-700);
+  background: var(--th-success-50);
+}
+
+.portal-hoteles-pricing-table__header--seasonal,
+.portal-hoteles-pricing-table__row--seasonal {
+  grid-template-columns: minmax(200px, 1.4fr) minmax(180px, 1.2fr) minmax(100px, 0.8fr) minmax(72px, 0.5fr) 46px;
+}
+
+/* Input Field Styles */
+ion-input {
+  --input-bg-color: var(--th-white);
+  --input-border-color: var(--th-neutral-300);
+  --input-color: var(--th-neutral-900);
+  --input-placeholder-color: var(--th-neutral-400);
+  --input-border-width: 1px;
+  --border-radius: var(--th-radius-md);
+}
+
+ion-input:focus {
+  --input-border-color: var(--th-primary-500);
+  --box-shadow: 0 0 0 3px var(--th-primary-100);
+}
+
+ion-input ion-label {
+  font-size: var(--th-text-body-sm-size);
+}
+
+/* Button Styles */
+ion-button {
+  --border-color: var(--th-neutral-300);
+  --color: var(--th-neutral-700);
+  --padding-start: 12px;
+  --padding-end: 12px;
+  font-size: var(--th-text-body-sm-size);
+}
+
+ion-button:active {
+  --border-color: var(--th-primary-500);
+  --color: var(--th-primary-600);
+}
+
+ion-button ion-icon {
+  font-size: var(--th-text-body-sm-size);
+}
+
+/* Responsive Adjustments */
+@media (max-width: 1024px) {
+  .portal-hoteles-pricing-toolbar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .portal-hoteles-pricing-toolbar__search {
+    grid-column: 1 / -1;
+  }
+
+  .portal-hoteles-pricing-toolbar__chip {
+    width: 100%;
+  }
+
+  .portal-hoteles-pricing-grid--panel {
+    grid-column: span 1;
+  }
+
+  .portal-hoteles-pricing-grid--sidebar {
+    grid-column: span 1;
+  }
+
+  .portal-hoteles-pricing-table__header,
+  .portal-hoteles-pricing-table__row {
+    grid-template-columns: minmax(100px, 1fr) repeat(4, minmax(80px, 1fr));
+  }
+
+  .portal-hoteles-pricing-table__room-type {
+    display: none;
+  }
+
+  .portal-hoteles-pricing-table__room-type-id {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .portal-hoteles-pricing-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .portal-hoteles-pricing-grid--panel,
+  .portal-hoteles-pricing-grid--sidebar {
+    grid-column: span 1;
+  }
+
+  .portal-hoteles-pricing-table__header,
+  .portal-hoteles-pricing-table__row {
+    grid-template-columns: 1fr;
+  }
+
+  .portal-hoteles-pricing-table__capacity,
+  .portal-hoteles-pricing-table__base-rate,
+  .portal-hoteles-pricing-table__discount,
+  .portal-hoteles-pricing-table__final-rate,
+  .portal-hoteles-pricing-table__status,
+  .portal-hoteles-pricing-table__actions {
+    display: flex;
+  }
+
+  .portal-hoteles-pricing-table__room-type {
+    display: flex;
+  }
+
+  .portal-hoteles-pricing-table__room-type-id {
+    display: none;
+  }
+
+  .portal-hoteles-pricing-toolbar {
+    grid-template-columns: 1fr;
+  }
+}
