@@ -31,7 +31,7 @@ namespace PricingEngine
 			// Ensure database is created
 			using (var scope = app.Services.CreateScope())
 			{
-				var dbContext = scope.ServiceProvider.GetRequiredService<DatabaseContext>();
+				var dbContext = scope.ServiceProvider.GetRequiredService<DatabaseContext>();				
 				dbContext.Database.EnsureCreated();
 			}
 
