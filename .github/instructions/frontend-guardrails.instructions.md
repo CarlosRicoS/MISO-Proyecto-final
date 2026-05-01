@@ -1,5 +1,5 @@
 ---
-description: "Always-on frontend guardrails for user_interface changes: Ionic-first UI, shared-component reuse, theme/global-style token reuse, UI unit-test discipline, and portal-hoteles/main-project reuse boundaries."
+description: "Always-on frontend guardrails for user_interface changes: Ionic-first UI, shared-component reuse, theme/global-style token reuse, accessibility compliance with a11y-audit, UI unit-test discipline, and portal-hoteles/main-project reuse boundaries."
 applyTo: "user_interface/{src,projects/portal-hoteles/src}/**/*.{ts,html,scss}"
 ---
 
@@ -54,6 +54,11 @@ Mandatory rules
 - When new core elements are needed, create them only under user_interface/src/app/core.
 - When new shared components are needed, create them only under user_interface/src/app/shared/components.
 
+7. Accessibility compliance for new UI changes (mandatory)
+- Any new or modified UI behavior must comply with accessibility requirements (semantic structure, keyboard access, visible focus states, accessible labels/names, and sufficient contrast).
+- Assess accessibility using the a11y-audit skill before finalizing frontend changes.
+- If any accessibility issue remains, explicitly report it with impact, rationale, and a remediation plan.
+
 Allowed exceptions
 - clamp(...)
 - calc(...)
@@ -69,6 +74,7 @@ Required pre-edit checklist
 3. List theme tokens/global patterns to reuse.
 4. List any exception needed and rationale.
 5. For portal-hoteles work, confirm that no new local core/shared files are introduced under projects/portal-hoteles/src/app.
+6. List accessibility checks considered and confirm that a11y-audit was used (or explain why it was not possible).
 
 Required response addendum for frontend changes
 1. Compliance summary
@@ -90,3 +96,7 @@ Required response addendum for frontend changes
 - Any exception with rationale
 6. Portal-hoteles boundary compliance
 - Confirm the feature stays page-only in portal-hoteles and reuses main-project core/shared assets.
+7. Accessibility compliance
+- Accessibility checks applied for the change
+- a11y-audit assessment result
+- Any remaining a11y risk and remediation plan

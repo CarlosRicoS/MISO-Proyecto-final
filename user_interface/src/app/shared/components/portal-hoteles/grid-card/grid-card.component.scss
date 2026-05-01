@@ -1,22 +1,43 @@
 .portal-hoteles-grid-card {
-  background: var(--th-color-neutral-0);
+  background: var(--th-white);
   border: 1px solid var(--th-color-primary-100);
   border-radius: 16px;
   box-shadow: 0 12px 24px rgba(20, 53, 88, 0.08);
 }
 
 .portal-hoteles-grid-card__header {
+  display: none;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--th-space-4);
   margin-bottom: var(--th-space-4);
+}
+
+.portal-hoteles-grid-card__header:has(.portal-hoteles-grid-card__header-copy:not(:empty)),
+.portal-hoteles-grid-card__header:has(.portal-hoteles-grid-card__header-actions:not(:empty)) {
+  display: flex;
+}
+
+.portal-hoteles-grid-card__header-copy {
+  min-width: 0;
 }
 
 .portal-hoteles-grid-card__header h2 {
   margin: 0;
-  font-size: var(--th-font-size-2xl);
+  font-size: var(--th-text-h2-size);
+  font-weight: var(--th-font-weight-bold);
 }
 
 .portal-hoteles-grid-card__header p {
   margin: var(--th-space-1) 0 0;
   color: var(--th-color-neutral-700);
+}
+
+.portal-hoteles-grid-card__header-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-shrink: 0;
 }
 
 .portal-hoteles-grid-card__body {

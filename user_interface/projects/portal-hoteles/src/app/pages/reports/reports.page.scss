@@ -1,0 +1,297 @@
+.portal-hoteles-reports-content {
+  --background: transparent;
+  --color: var(--th-neutral-900);
+  color: var(--th-neutral-900);
+}
+
+.portal-hoteles-reports-hero {
+  width: min(100%, 960px);
+  margin: 0 auto;
+  padding: 0 0 var(--th-space-6);
+}
+
+.portal-hoteles-reports-hero__kicker {
+  padding-top: var(--th-space-5);
+  margin: 0 0 var(--th-space-2);
+  color: var(--th-primary-700);
+  font-size: var(--th-text-caption-size);
+  font-weight: var(--th-font-weight-semibold);
+}
+
+.portal-hoteles-reports-hero h1 {
+  margin: 0;
+  color: var(--th-neutral-900);
+  font-size: var(--th-text-h1-size);
+  line-height: 1.1;
+}
+
+.portal-hoteles-reports-hero p {
+  margin: var(--th-space-2) 0 0;
+  color: var(--th-neutral-700);
+}
+
+.portal-hoteles-reports-grid {
+  display: grid;
+  gap: var(--th-space-4);
+}
+
+.portal-hoteles-reports-grid--full-width {
+  grid-template-columns: minmax(0, 0.8fr);
+  justify-content: center;
+}
+
+.portal-hoteles-reports-grid--kpi {
+  width: min(100%, 960px);
+  margin: 0 auto;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  padding: 0 0 var(--th-space-4);
+}
+
+.portal-hoteles-reports-grid--content {
+  padding: 0 0 var(--th-space-8);
+}
+
+.portal-hoteles-reports-kpi {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--th-space-3);
+}
+
+.portal-hoteles-reports-kpi__label {
+  display: block;
+  color: var(--th-neutral-700);
+  font-size: var(--th-text-body-sm-size);
+}
+
+.portal-hoteles-reports-kpi__value {
+  display: block;
+  margin-top: var(--th-space-2);
+  color: var(--th-neutral-900);
+  font-size: var(--th-text-h1-size);
+  line-height: 1;
+}
+
+.portal-hoteles-reports-kpi__trend {
+  margin: var(--th-space-2) 0 0;
+  font-size: var(--th-text-body-sm-size);
+}
+
+.portal-hoteles-reports-kpi__trend--positive {
+  color: var(--th-success-700);
+}
+
+.portal-hoteles-reports-kpi__icon {
+  font-size: 20px;
+  color: var(--th-primary-700);
+}
+
+.portal-hoteles-reports-kpi__badge {
+  background: var(--th-primary-50);
+  border: 1px solid var(--th-primary-100);
+  border-radius: var(--th-radius-full);
+  padding: var(--th-space-2) var(--th-space-3);
+}
+
+.portal-hoteles-reports-toolbar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--th-space-3);
+  border: 1px solid var(--th-neutral-300);
+  border-radius: var(--th-radius-md);
+  background: var(--th-white);
+  padding: var(--th-space-2);
+}
+
+.portal-hoteles-reports-toolbar-header__filters {
+  display: flex;
+  align-items: center;
+  gap: var(--th-space-2);
+}
+
+.portal-hoteles-reports-toolbar-header__select {
+  --background: var(--th-white);
+  --border-color: var(--th-neutral-300);
+  --border-style: solid;
+  --border-width: 1px;
+  --border-radius: var(--th-radius-md);
+  --padding-start: 10px;
+  min-width: 140px;
+}
+
+.portal-hoteles-reports-toolbar-header__export {
+  display: inline-flex;
+  align-items: stretch;
+  overflow: hidden;
+  border: 1px solid var(--th-neutral-300);
+  border-radius: var(--th-radius-md);
+  background: var(--th-white);
+}
+
+.portal-hoteles-reports-toolbar-header__export-button {
+  margin: 0;
+  min-height: 30px;
+  --border-radius: 0;
+  --padding-start: 14px;
+  --padding-end: 14px;
+  text-transform: none;
+  font-size: var(--th-text-body-sm-size);
+}
+
+.portal-hoteles-reports-toolbar-header__export-button--secondary {
+  --background: var(--th-white);
+  --background-hover: var(--th-neutral-50);
+  --color: var(--th-neutral-700);
+  --border-color: transparent;
+}
+
+.portal-hoteles-reports-toolbar-header__export-button--primary {
+  --background: var(--th-primary-700);
+  --background-hover: var(--th-primary-800);
+  --color: var(--th-white);
+  --border-color: transparent;
+}
+
+.portal-hoteles-reports-table {
+  display: flex;
+  flex-direction: column;
+  gap: var(--th-space-3);
+}
+
+.portal-hoteles-reports-table__header,
+.portal-hoteles-reports-table__row {
+  display: grid;
+  grid-template-columns: minmax(100px, 1fr) minmax(110px, 0.9fr) minmax(140px, 1fr) minmax(130px, 1fr) minmax(100px, 0.9fr) minmax(90px, 0.8fr);
+  align-items: center;
+  gap: var(--th-space-3);
+  border: 1px solid var(--th-neutral-300);
+  border-radius: var(--th-radius-lg);
+  background: var(--th-white);
+}
+
+.portal-hoteles-reports-table__header {
+  min-height: 40px;
+  padding: 0 var(--th-space-4);
+  font-size: var(--th-text-overline-size);
+  font-weight: var(--th-font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--th-neutral-600);
+}
+
+.portal-hoteles-reports-table__row {
+  min-height: 68px;
+  padding: var(--th-space-3) var(--th-space-4);
+  color: var(--th-neutral-900);
+  font-size: var(--th-text-body-sm-size);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.portal-hoteles-reports-table__row:hover {
+  border-color: var(--th-primary-200);
+  box-shadow: 0 8px 16px rgba(20, 53, 88, 0.08);
+}
+
+.portal-hoteles-reports-table-status {
+  display: inline-flex;
+  justify-content: center;
+  min-width: 86px;
+  border-radius: var(--th-radius-full);
+  padding: var(--th-space-1) var(--th-space-3);
+  font-size: var(--th-text-caption-size);
+  font-weight: var(--th-font-weight-medium);
+}
+
+.portal-hoteles-reports-table-status--paid {
+  color: var(--th-success-700);
+  background: var(--th-success-50);
+}
+
+.portal-hoteles-reports-table-status--pending {
+  color: var(--th-warning-700);
+  background: var(--th-warning-50);
+}
+
+.portal-hoteles-reports-table-status--failed {
+  color: var(--th-error-700);
+  background: var(--th-error-50);
+}
+
+.portal-hoteles-reports-table-status--refunded,
+.portal-hoteles-reports-table-status--default {
+  color: var(--th-neutral-700);
+  background: var(--th-neutral-100);
+}
+
+.portal-hoteles-reports-table__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--th-space-3);
+  color: var(--th-neutral-700);
+  font-size: var(--th-text-body-sm-size);
+}
+
+.portal-hoteles-reports-table__pagination {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--th-space-2);
+}
+
+.portal-hoteles-reports-table__pagination-button {
+  --border-color: var(--th-neutral-300);
+  --color: var(--th-neutral-700);
+  --padding-start: 12px;
+  --padding-end: 12px;
+  font-size: var(--th-text-body-sm-size);
+  text-transform: none;
+}
+
+.portal-hoteles-reports-table__pagination-label {
+  min-width: 96px;
+  text-align: center;
+  color: var(--th-neutral-700);
+}
+
+.portal-hoteles-reports-table__message {
+  margin: var(--th-space-4) 0 0;
+  color: var(--th-neutral-700);
+}
+
+@media (max-width: 1200px) {
+  .portal-hoteles-reports-grid--kpi {
+    grid-template-columns: 1fr;
+  }
+
+  .portal-hoteles-reports-table__header,
+  .portal-hoteles-reports-table__row {
+    grid-template-columns: 1fr;
+    gap: var(--th-space-2);
+  }
+
+  .portal-hoteles-reports-table__header {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .portal-hoteles-reports-table-toolbar {
+    flex-wrap: wrap;
+  }
+
+  .portal-hoteles-reports-table-toolbar__select,
+  .portal-hoteles-reports-table-toolbar__export {
+    width: 100%;
+  }
+
+  .portal-hoteles-reports-table__footer {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .portal-hoteles-reports-table__pagination {
+    width: 100%;
+    justify-content: space-between;
+  }
+}

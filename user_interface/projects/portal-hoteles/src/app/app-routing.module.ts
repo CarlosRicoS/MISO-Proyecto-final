@@ -24,6 +24,20 @@ const routes: Routes = [
       ),
   },
   {
+    path: 'pricing',
+    canActivate: [portalHotelesAuthGuard],
+    loadComponent: () =>
+      import('./pages/pricing-configuration/pricing-configuration.page').then(
+        (m) => m.PortalHotelesPricingConfigurationPage,
+      ),
+  },
+  {
+    path: 'reports',
+    canActivate: [portalHotelesAuthGuard],
+    loadComponent: () =>
+      import('./pages/reports/reports.page').then((m) => m.PortalHotelesReportsPage),
+  },
+  {
     path: 'home',
     redirectTo: 'dashboard',
     pathMatch: 'full',

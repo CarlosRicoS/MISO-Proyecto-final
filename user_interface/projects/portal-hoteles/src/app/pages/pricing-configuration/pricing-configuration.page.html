@@ -1,0 +1,190 @@
+<ion-content class="portal-hoteles-pricing-content">
+  <!-- <section class="portal-hoteles-pricing-hero">
+    <p class="portal-hoteles-pricing-hero__kicker">Pricing Management</p>
+    <h1>Create, edit, and manage room rates and discounts</h1>
+  </section> -->
+
+  <section class="portal-hoteles-pricing-grid portal-hoteles-pricing-grid--full-width">
+    <portal-hoteles-grid-card
+      cardClass="portal-hoteles-grid-card--panel portal-hoteles-grid-card--wide"
+      title="Pricing Management"
+      subtitle="Create, edit, and manage room rates and discounts"
+    >
+      <div slot="header-actions" class="portal-hoteles-pricing-toolbar-header" role="group" aria-label="Room rate filters and actions">
+        <div class="portal-hoteles-pricing-toolbar-header__filters">
+          <ion-select
+            class="portal-hoteles-pricing-toolbar-header__select"
+            interface="popover"
+            aria-label="Filter by room type"
+          >
+            <ion-select-option>All Room Types</ion-select-option>
+            <ion-select-option>Superior Double</ion-select-option>
+            <ion-select-option>Deluxe Suite</ion-select-option>
+            <ion-select-option>Standard Room</ion-select-option>
+            <ion-select-option>Junior Suite</ion-select-option>
+          </ion-select>
+
+          <ion-select
+            class="portal-hoteles-pricing-toolbar-header__select"
+            interface="popover"
+            aria-label="Select currency"
+          >
+            <ion-select-option>USD</ion-select-option>
+            <ion-select-option>EUR</ion-select-option>
+            <ion-select-option>COP</ion-select-option>
+          </ion-select>
+
+          <ion-select
+            class="portal-hoteles-pricing-toolbar-header__select"
+            interface="popover"
+            aria-label="Filter by season"
+          >
+            <ion-select-option>All Seasons</ion-select-option>
+            <ion-select-option>High Season</ion-select-option>
+            <ion-select-option>Low Season</ion-select-option>
+          </ion-select>
+        </div>
+
+        <ion-button
+          size="small"
+          fill="solid"
+          class="portal-hoteles-pricing-toolbar-header__action-button"
+        >
+          + New Rate
+        </ion-button>
+      </div>
+
+      <div class="portal-hoteles-pricing-content-toolbar">
+        <ion-input class="portal-hoteles-pricing-content-toolbar__search" placeholder="Search by room type..."></ion-input>
+      </div>
+
+      <p class="portal-hoteles-pricing-table__message" *ngIf="isLoading">
+        Loading pricing data...
+      </p>
+
+      <div class="portal-hoteles-pricing-table" *ngIf="roomRateRows.length > 0">
+        <div class="portal-hoteles-pricing-table__header" role="row">
+          <span>Room Type</span>
+          <span>Capacity</span>
+          <span>Base Rate</span>
+          <span>Discount</span>
+          <span>Final Rate</span>
+          <span>Status</span>
+          <span>Actions</span>
+        </div>
+
+        <article class="portal-hoteles-pricing-table__row" *ngFor="let row of roomRateRows; trackBy: trackByRoomType">
+          <div class="portal-hoteles-pricing-table__room-type">
+            <strong>{{ row.roomType }}</strong>
+            <span class="portal-hoteles-pricing-table__meta">{{ row.roomTypeId }}</span>
+          </div>
+
+          <span>{{ row.capacityLabel }}</span>
+          <strong>{{ row.baseRateLabel }}</strong>
+          <span [class]="row.discountClass">{{ row.discountLabel }}</span>
+          <strong class="portal-hoteles-pricing-table__accent">{{ row.finalRateLabel }}</strong>
+          <span [class]="row.statusClass">{{ row.status }}</span>
+          <ion-button fill="clear" size="small" class="portal-hoteles-pricing-table__actions-button">⋮</ion-button>
+        </article>
+
+        <footer class="portal-hoteles-pricing-table__footer">
+          <span>Showing 1-{{ roomRateRows.length }} of 12 room types</span>
+          <div class="portal-hoteles-pricing-table__pagination">
+            <ion-button fill="outline" size="small" class="portal-hoteles-pricing-table__pagination-button">‹</ion-button>
+            <span class="portal-hoteles-pricing-table__page portal-hoteles-pricing-table__page--active">1</span>
+            <span class="portal-hoteles-pricing-table__page">2</span>
+            <ion-button fill="outline" size="small" class="portal-hoteles-pricing-table__pagination-button">›</ion-button>
+          </div>
+        </footer>
+      </div>
+
+      <p class="portal-hoteles-pricing-table__message" *ngIf="!isLoading && !errorMessage && roomRateRows.length === 0">
+        No room rates available.
+      </p>
+      <p class="portal-hoteles-pricing-table__message" *ngIf="!isLoading && errorMessage">
+        {{ errorMessage }}
+      </p>
+      <p class="portal-hoteles-pricing-table__message" *ngIf="!isLoading && !errorMessage && roomRateRows.length === 0">
+        No pricing data available for this property.
+      </p>
+    </portal-hoteles-grid-card>
+
+    <portal-hoteles-grid-card
+      cardClass="portal-hoteles-grid-card--panel portal-hoteles-grid-card--wide"
+      title="Seasonal Pricing Rules"
+      subtitle="Manage seasonal pricing modifiers"
+    >
+      <div slot="header-actions" class="portal-hoteles-pricing-toolbar-header" role="group" aria-label="Seasonal pricing filters and actions">
+        <div class="portal-hoteles-pricing-toolbar-header__filters">
+          <ion-select
+            class="portal-hoteles-pricing-toolbar-header__select"
+            interface="popover"
+            aria-label="Filter by room type"
+          >
+            <ion-select-option>All Room Types</ion-select-option>
+            <ion-select-option>Superior Double</ion-select-option>
+            <ion-select-option>Deluxe Suite</ion-select-option>
+            <ion-select-option>Standard Room</ion-select-option>
+            <ion-select-option>Junior Suite</ion-select-option>
+          </ion-select>
+
+          <ion-select
+            class="portal-hoteles-pricing-toolbar-header__select"
+            interface="popover"
+            aria-label="Select currency"
+          >
+            <ion-select-option>USD</ion-select-option>
+            <ion-select-option>EUR</ion-select-option>
+            <ion-select-option>COP</ion-select-option>
+          </ion-select>
+
+          <ion-select
+            class="portal-hoteles-pricing-toolbar-header__select"
+            interface="popover"
+            aria-label="Filter by season"
+          >
+            <ion-select-option>All Seasons</ion-select-option>
+            <ion-select-option>High Season</ion-select-option>
+            <ion-select-option>Low Season</ion-select-option>
+          </ion-select>
+        </div>
+
+        <ion-button
+          size="small"
+          fill="solid"
+          class="portal-hoteles-pricing-toolbar-header__action-button"
+        >
+          + New Rate
+        </ion-button>
+      </div>
+
+      <div class="portal-hoteles-pricing-table" *ngIf="seasonalRulesRows.length > 0">
+        <div class="portal-hoteles-pricing-table__header portal-hoteles-pricing-table__header--seasonal" role="row">
+          <span>Season</span>
+          <span>Date Range</span>
+          <span>Modifier</span>
+          <span>Status</span>
+          <span>Actions</span>
+        </div>
+
+        <article class="portal-hoteles-pricing-table__row portal-hoteles-pricing-table__row--seasonal" *ngFor="let row of seasonalRulesRows; trackBy: trackBySeason">
+          <div>
+            <strong>{{ row.season }}</strong>
+            <span class="portal-hoteles-pricing-table__meta">{{ row.description }}</span>
+          </div>
+          <div>
+            <span>{{ row.dateRange }}</span>
+            <span class="portal-hoteles-pricing-table__meta">{{ row.helperDateRange }}</span>
+          </div>
+          <span [class]="row.modifierClass">{{ row.modifierLabel }}</span>
+          <span [class]="row.statusClass">{{ row.status }}</span>
+          <ion-button fill="clear" size="small" class="portal-hoteles-pricing-table__actions-button">⋮</ion-button>
+        </article>
+      </div>
+
+      <p class="portal-hoteles-pricing-table__message" *ngIf="seasonalRulesRows.length === 0">
+        No seasonal rules available.
+      </p>
+    </portal-hoteles-grid-card>
+  </section>
+</ion-content>
