@@ -1,4 +1,10 @@
 <ion-app [class.app-has-navbar]="hasTopBar" [class.app-no-navbar]="!hasTopBar">
+  <div *ngIf="showOfflineBanner" class="offline-banner" aria-live="polite" role="status">
+    <div class="offline-banner__content">
+      <ion-icon name="cloud-offline-outline" aria-hidden="true"></ion-icon>
+      <span>Offline. Reconnect to keep using the app.</span>
+    </div>
+  </div>
   <ion-header *ngIf="showNavbar && !isMobileLayout" aria-label="Site navigation" slot="fixed">
     <th-navbar [mode]="navbarMode" layout="desktop"></th-navbar>
   </ion-header>
