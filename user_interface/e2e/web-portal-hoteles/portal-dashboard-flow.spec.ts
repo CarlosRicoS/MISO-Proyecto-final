@@ -101,7 +101,7 @@ async function injectAuthSession(page: Page): Promise<void> {
         expires_in: 3600,
         token_type: 'Bearer',
       };
-      window.sessionStorage.setItem('th_auth_session', JSON.stringify(loginResponse));
+      window.localStorage.setItem('th_auth_session', JSON.stringify(loginResponse));
     },
     [idToken, accessToken],
   );
