@@ -14,9 +14,11 @@ from booking.application.commands import (
     AdminRejectBookingCommand,
     CancelBookingCommand,
     ChangeDatesCommand,
+    CompleteBookingCommand,
     CreateBookingCommand,
     UpdatePaymentStateCommand,
 )
+from booking.application.complete_booking import CompleteBookingUseCase
 from booking.application.create_booking import CreateBookingUseCase
 from booking.application.delete_booking import DeleteBookingUseCase
 from booking.application.get_booking import GetBookingUseCase, ListUserBookingsUseCase
@@ -27,6 +29,7 @@ from booking.bootstrap import (
     get_admin_reject_booking_use_case,
     get_cancel_booking_use_case,
     get_change_dates_use_case,
+    get_complete_booking_use_case,
     get_create_booking_use_case,
     get_delete_booking_use_case,
     get_get_booking_use_case,
@@ -63,6 +66,7 @@ AdminRejectBookingDep = Annotated[AdminRejectBookingUseCase, Depends(get_admin_r
 AdminApproveBookingDep = Annotated[AdminApproveBookingUseCase, Depends(get_admin_approve_booking_use_case)]
 DeleteBookingDep = Annotated[DeleteBookingUseCase, Depends(get_delete_booking_use_case)]
 UpdatePaymentStateDep = Annotated[UpdatePaymentStateUseCase, Depends(get_update_payment_state_use_case)]
+CompleteBookingDep = Annotated[CompleteBookingUseCase, Depends(get_complete_booking_use_case)]
 
 
 @router.post(
@@ -243,6 +247,21 @@ async def delete_booking(
 ) -> None:
     try:
         await use_case.execute(str(booking_id))
+    except BookingNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Booking not found") from e
+    except InvalidBookingStatusTransitionError as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e)) from e
+
+
+@router.post("/{booking_id}/complete", response_model=BookingResponse)
+async def complete_booking(
+    booking_id: UUID,
+    use_case: CompleteBookingDep,
+) -> BookingResponse:
+    try:
+        command = CompleteBookingCommand(booking_id=str(booking_id))
+        booking = await use_case.execute(command)
+        return BookingResponse.from_domain(booking)
     except BookingNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Booking not found") from e
     except InvalidBookingStatusTransitionError as e:

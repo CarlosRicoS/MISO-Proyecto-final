@@ -1,10 +1,13 @@
 $kind: http-request
-name: 07 - Admin Approve Reservation
-url: "{{base_url}}/booking-orchestrator/api/reservations/{{booking_id}}/admin-approve"
+name: 06 - Admin Approve Reservation
+url: "{{base_url}}/booking-orchestrator/api/reservations/{{booking_id}}/admin-a\
+  pprove"
 method: POST
 headers:
-  Content-Type: application/json
-  Authorization: Bearer {{id_token}}
+  - key: Content-Type
+    value: application/json
+  - key: Authorization
+    value: Bearer {{id_token}}
 body:
   type: json
   content: |-
@@ -23,4 +26,4 @@ scripts:
       });
       console.log('Reservation approved. booking_id:', json.id);
     language: text/javascript
-order: 7000
+order: 6010

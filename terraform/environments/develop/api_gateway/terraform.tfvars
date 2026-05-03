@@ -11,7 +11,8 @@ service_names = [
   "booking-orchestrator",
   "auth",
   "billing",
-  "stripe-mock"
+  "stripe-mock",
+  "checkin"
 ]
 
 enable_auth = true

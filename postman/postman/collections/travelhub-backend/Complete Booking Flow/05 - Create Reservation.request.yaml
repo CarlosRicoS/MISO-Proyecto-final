@@ -11,8 +11,8 @@ body:
     {
       "property_id": "{{flow_property_id}}",
       "guests": 2,
-      "period_start": "2026-06-06",
-      "period_end": "2026-06-10",
+      "period_start": "2026-06-08",
+      "period_end": "2026-06-12",
       "price": "{{flow_price}}",
       "admin_group_id": "a1b2c3d4-9999-4000-8000-000000000002"
     }

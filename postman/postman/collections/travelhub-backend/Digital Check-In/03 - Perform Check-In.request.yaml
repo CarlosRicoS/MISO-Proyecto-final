@@ -1,0 +1,26 @@
+$kind: http-request
+name: Perform Check-In
+url: "{{base_url}}/check-in/api/check-in"
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{id_token}}
+body:
+  type: json
+  content: |-
+    {
+      "booking_id": "{{booking_id}}",
+      "qr_token": "{{flow_qr_token}}"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Returns 200', function () {
+        pm.response.to.have.status(200);
+      });
+      const json = pm.response.json();
+      pm.test('status equals COMPLETED', function () {
+        pm.expect(json.status).to.equal('COMPLETED');
+      });
+    language: text/javascript
+order: 3000
