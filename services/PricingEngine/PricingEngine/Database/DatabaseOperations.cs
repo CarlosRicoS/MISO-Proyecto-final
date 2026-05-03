@@ -93,5 +93,214 @@ namespace PricingEngine.Database
 
 			return new PropertyPriceResponse { Id = r.PropertyId, Price = Math.Round(total, 2) };
 		}
+
+		// Pricing CRUD Operations
+
+		public async Task<PricingResponse> CreatePricing(CreatePricingRequest request)
+		{
+			if (request.BasePrice <= 0)
+				throw new ArgumentException("BasePrice must be greater than 0");
+
+			var pricing = new Pricing
+			{
+				Id = Guid.NewGuid(),
+				BasePrice = request.BasePrice,
+				PropertyId = request.PropertyId
+			};
+
+			context.Pricings.Add(pricing);
+			await context.SaveChangesAsync();
+
+			return new PricingResponse
+			{
+				Id = pricing.Id,
+				BasePrice = pricing.BasePrice,
+				PropertyId = pricing.PropertyId
+			};
+		}
+
+		public async Task<PricingResponse> GetPricingById(Guid id)
+		{
+			var pricing = await context.Pricings.FindAsync(id) 
+				?? throw new KeyNotFoundException($"Pricing with id {id} not found");
+
+			return new PricingResponse
+			{
+				Id = pricing.Id,
+				BasePrice = pricing.BasePrice,
+				PropertyId = pricing.PropertyId
+			};
+		}
+
+		public async Task<List<PricingResponse>> GetAllPricings()
+		{
+			var pricings = await context.Pricings
+				.Select(p => new PricingResponse
+				{
+					Id = p.Id,
+					BasePrice = p.BasePrice,
+					PropertyId = p.PropertyId
+				})
+				.ToListAsync();
+
+			return pricings;
+		}
+
+		public async Task<PricingResponse> UpdatePricing(Guid id, UpdatePricingRequest request)
+		{
+			if (request.BasePrice <= 0)
+				throw new ArgumentException("BasePrice must be greater than 0");
+
+			var pricing = await context.Pricings.FindAsync(id)
+				?? throw new KeyNotFoundException($"Pricing with id {id} not found");
+
+			pricing.BasePrice = request.BasePrice;
+			pricing.PropertyId = request.PropertyId;
+
+			context.Pricings.Update(pricing);
+			await context.SaveChangesAsync();
+
+			return new PricingResponse
+			{
+				Id = pricing.Id,
+				BasePrice = pricing.BasePrice,
+				PropertyId = pricing.PropertyId
+			};
+		}
+
+		public async Task<bool> DeletePricing(Guid id)
+		{
+			var pricing = await context.Pricings
+				.Include(p => p.PricingRules)
+				.FirstOrDefaultAsync(p => p.Id == id)
+				?? throw new KeyNotFoundException($"Pricing with id {id} not found");
+
+			// Delete associated PricingRules
+			context.PricingRules.RemoveRange(pricing.PricingRules);
+			context.Pricings.Remove(pricing);
+			await context.SaveChangesAsync();
+
+			return true;
+		}
+
+		// PricingRule CRUD Operations
+
+		public async Task<PricingRuleResponse> CreatePricingRule(Guid pricingId, CreatePricingRuleRequest request)
+		{
+			if (request.Percentage < 0 || request.Percentage > 100)
+				throw new ArgumentException("Percentage must be between 0 and 100");
+
+			// Verify that the Pricing exists
+			var pricing = await context.Pricings.FindAsync(pricingId)
+				?? throw new KeyNotFoundException($"Pricing with id {pricingId} not found");
+
+			var rule = new PricingRule
+			{
+				Id = Guid.NewGuid(),
+				PriceId = pricingId,
+				DateInit = request.DateInit,
+				DateFinish = request.DateFinish,
+				MinGuests = request.MinGuests,
+				MaxGuests = request.MaxGuests,
+				Percentage = request.Percentage
+			};
+
+			context.PricingRules.Add(rule);
+			await context.SaveChangesAsync();
+
+			return new PricingRuleResponse
+			{
+				Id = rule.Id,
+				PriceId = rule.PriceId,
+				DateInit = rule.DateInit,
+				DateFinish = rule.DateFinish,
+				MinGuests = rule.MinGuests,
+				MaxGuests = rule.MaxGuests,
+				Percentage = rule.Percentage
+			};
+		}
+
+		public async Task<PricingRuleResponse> GetPricingRuleById(Guid pricingId, Guid ruleId)
+		{
+			var rule = await context.PricingRules
+				.FirstOrDefaultAsync(r => r.Id == ruleId && r.PriceId == pricingId)
+				?? throw new KeyNotFoundException($"PricingRule with id {ruleId} not found for Pricing {pricingId}");
+
+			return new PricingRuleResponse
+			{
+				Id = rule.Id,
+				PriceId = rule.PriceId,
+				DateInit = rule.DateInit,
+				DateFinish = rule.DateFinish,
+				MinGuests = rule.MinGuests,
+				MaxGuests = rule.MaxGuests,
+				Percentage = rule.Percentage
+			};
+		}
+
+		public async Task<List<PricingRuleResponse>> GetPricingRulesByPricingId(Guid pricingId)
+		{
+			// Verify that the Pricing exists
+			var pricing = await context.Pricings.FindAsync(pricingId)
+				?? throw new KeyNotFoundException($"Pricing with id {pricingId} not found");
+
+			var rules = await context.PricingRules
+				.Where(r => r.PriceId == pricingId)
+				.Select(r => new PricingRuleResponse
+				{
+					Id = r.Id,
+					PriceId = r.PriceId,
+					DateInit = r.DateInit,
+					DateFinish = r.DateFinish,
+					MinGuests = r.MinGuests,
+					MaxGuests = r.MaxGuests,
+					Percentage = r.Percentage
+				})
+				.ToListAsync();
+
+			return rules;
+		}
+
+		public async Task<PricingRuleResponse> UpdatePricingRule(Guid pricingId, Guid ruleId, UpdatePricingRuleRequest request)
+		{
+			if (request.Percentage < 0 || request.Percentage > 100)
+				throw new ArgumentException("Percentage must be between 0 and 100");
+
+			var rule = await context.PricingRules
+				.FirstOrDefaultAsync(r => r.Id == ruleId && r.PriceId == pricingId)
+				?? throw new KeyNotFoundException($"PricingRule with id {ruleId} not found for Pricing {pricingId}");
+
+			rule.DateInit = request.DateInit;
+			rule.DateFinish = request.DateFinish;
+			rule.MinGuests = request.MinGuests;
+			rule.MaxGuests = request.MaxGuests;
+			rule.Percentage = request.Percentage;
+
+			context.PricingRules.Update(rule);
+			await context.SaveChangesAsync();
+
+			return new PricingRuleResponse
+			{
+				Id = rule.Id,
+				PriceId = rule.PriceId,
+				DateInit = rule.DateInit,
+				DateFinish = rule.DateFinish,
+				MinGuests = rule.MinGuests,
+				MaxGuests = rule.MaxGuests,
+				Percentage = rule.Percentage
+			};
+		}
+
+		public async Task<bool> DeletePricingRule(Guid pricingId, Guid ruleId)
+		{
+			var rule = await context.PricingRules
+				.FirstOrDefaultAsync(r => r.Id == ruleId && r.PriceId == pricingId)
+				?? throw new KeyNotFoundException($"PricingRule with id {ruleId} not found for Pricing {pricingId}");
+
+			context.PricingRules.Remove(rule);
+			await context.SaveChangesAsync();
+
+			return true;
+		}
 	}
 }
