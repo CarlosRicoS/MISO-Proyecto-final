@@ -163,14 +163,14 @@ test.describe('TravelHub core journeys', () => {
         token_type: 'Bearer',
       };
 
-      window.sessionStorage.setItem('th_auth_session', JSON.stringify(loginResponse));
+      window.localStorage.setItem('th_auth_session', JSON.stringify(loginResponse));
     }, [idToken, accessToken]);
 
     await page.route('**/booking-orchestrator/api/reservations', async (route) => {
       await route.fulfill({
-        status: 200,
+        status: 201,
         contentType: 'application/json',
-        body: JSON.stringify({ reservation_id: 'r-1' }),
+        body: JSON.stringify({ id: 'r-1', status: 'PENDING' }),
       });
     });
 
