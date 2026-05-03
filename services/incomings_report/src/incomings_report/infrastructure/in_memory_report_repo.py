@@ -1,5 +1,5 @@
 import calendar
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 
 from incomings_report.domain.entities import BillingRecord, ReportRecord
@@ -106,14 +106,10 @@ class InMemoryReportRepository:
     async def get_dashboard_metrics(self) -> dict:
         now = datetime.now(tz=timezone.utc)
         today = now.date()
-        current_month = today.month
-        current_year = today.year
-        days_in_month = calendar.monthrange(current_year, current_month)[1]
 
-        if current_month == 1:
-            prev_month, prev_year = 12, current_year - 1
-        else:
-            prev_month, prev_year = current_month - 1, current_year
+        period_start = today - timedelta(days=30)
+        prev_period_start = today - timedelta(days=60)
+        prev_period_end = today - timedelta(days=31)
 
         total_reservations = len(self._reports)
         monthly_revenue = Decimal("0")
@@ -123,14 +119,17 @@ class InMemoryReportRepository:
 
         for r in self._reports.values():
             if r.payment_date:
-                if r.payment_date.year == current_year and r.payment_date.month == current_month:
+                pd = r.payment_date if isinstance(r.payment_date, date) else r.payment_date.date()
+                if period_start <= pd <= today:
                     monthly_revenue += r.gross_value
-                if r.payment_date.year == prev_year and r.payment_date.month == prev_month:
+                if prev_period_start <= pd <= prev_period_end:
                     prev_revenue += r.gross_value
-                if r.payment_date == today:
+                if pd == today:
                     today_checkins += 1
-            if r.update_date and r.update_date == today:
-                today_checkouts += 1
+            if r.update_date:
+                ud = r.update_date if isinstance(r.update_date, date) else r.update_date.date()
+                if ud == today:
+                    today_checkouts += 1
 
         if prev_revenue == Decimal("0"):
             revenue_trend_pct = 0.0
@@ -139,7 +138,7 @@ class InMemoryReportRepository:
                 float((monthly_revenue - prev_revenue) / prev_revenue * 100), 1
             )
 
-        avg_daily_revenue = round(float(monthly_revenue) / days_in_month, 2)
+        avg_daily_revenue = round(float(monthly_revenue) / 30, 2)
 
         return {
             "total_reservations": total_reservations,

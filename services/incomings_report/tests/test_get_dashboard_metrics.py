@@ -5,7 +5,7 @@ Covers:
   - AC-4: GET /dashboard-metrics returns KPI object with all required fields
 """
 
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 
 import pytest
@@ -14,13 +14,14 @@ from incomings_report.application.commands import GetDashboardMetricsQuery
 from incomings_report.application.get_dashboard_metrics import GetDashboardMetricsUseCase
 from incomings_report.infrastructure.in_memory_report_repo import InMemoryReportRepository
 from tests.conftest import (
-    CURRENT_MONTH,
-    CURRENT_YEAR,
-    PREV_MONTH,
-    PREV_YEAR,
     TODAY,
     make_report_record,
 )
+
+# Dates relative to the rolling 30-day windows used by get_dashboard_metrics.
+DATE_IN_WINDOW = TODAY - timedelta(days=5)       # last 30 days (current period)
+DATE_IN_PREV_WINDOW = TODAY - timedelta(days=40) # 30-60 days ago (previous period)
+DATE_OLD = TODAY - timedelta(days=90)            # well outside both windows
 
 
 class TestGetDashboardMetricsUseCase:
@@ -72,17 +73,17 @@ class TestGetDashboardMetricsUseCase:
     # Monthly revenue calculation
     # ------------------------------------------------------------------
 
-    async def test_monthly_revenue_sums_current_month_records(self):
+    async def test_monthly_revenue_sums_current_window_records(self):
         reports = [
             make_report_record(
                 booking_id="b-current",
                 gross_value=Decimal("1000.00"),
-                payment_date=date(CURRENT_YEAR, CURRENT_MONTH, 10),
+                payment_date=DATE_IN_WINDOW,
             ),
             make_report_record(
                 booking_id="b-old",
                 gross_value=Decimal("9999.00"),
-                payment_date=date(PREV_YEAR, PREV_MONTH, 5),
+                payment_date=DATE_OLD,
             ),
         ]
         repo = InMemoryReportRepository(report_records=reports)
@@ -99,7 +100,7 @@ class TestGetDashboardMetricsUseCase:
             make_report_record(
                 booking_id="b-with-date",
                 gross_value=Decimal("500.00"),
-                payment_date=date(CURRENT_YEAR, CURRENT_MONTH, 1),
+                payment_date=DATE_IN_WINDOW,
             ),
             # Explicitly build a record with payment_date=None
             ReportRecord(
@@ -123,17 +124,17 @@ class TestGetDashboardMetricsUseCase:
     # Revenue trend percentage
     # ------------------------------------------------------------------
 
-    async def test_revenue_trend_pct_positive_when_current_month_higher(self):
+    async def test_revenue_trend_pct_positive_when_current_window_higher(self):
         reports = [
             make_report_record(
                 booking_id="b-current",
                 gross_value=Decimal("1000.00"),
-                payment_date=date(CURRENT_YEAR, CURRENT_MONTH, 15),
+                payment_date=DATE_IN_WINDOW,
             ),
             make_report_record(
                 booking_id="b-prev",
                 gross_value=Decimal("500.00"),
-                payment_date=date(PREV_YEAR, PREV_MONTH, 15),
+                payment_date=DATE_IN_PREV_WINDOW,
             ),
         ]
         repo = InMemoryReportRepository(report_records=reports)
@@ -143,17 +144,17 @@ class TestGetDashboardMetricsUseCase:
         # (1000 - 500) / 500 * 100 = 100.0
         assert result["revenue_trend_pct"] == 100.0
 
-    async def test_revenue_trend_pct_negative_when_current_month_lower(self):
+    async def test_revenue_trend_pct_negative_when_current_window_lower(self):
         reports = [
             make_report_record(
                 booking_id="b-current",
                 gross_value=Decimal("500.00"),
-                payment_date=date(CURRENT_YEAR, CURRENT_MONTH, 15),
+                payment_date=DATE_IN_WINDOW,
             ),
             make_report_record(
                 booking_id="b-prev",
                 gross_value=Decimal("1000.00"),
-                payment_date=date(PREV_YEAR, PREV_MONTH, 15),
+                payment_date=DATE_IN_PREV_WINDOW,
             ),
         ]
         repo = InMemoryReportRepository(report_records=reports)
@@ -163,13 +164,13 @@ class TestGetDashboardMetricsUseCase:
         # (500 - 1000) / 1000 * 100 = -50.0
         assert result["revenue_trend_pct"] == -50.0
 
-    async def test_revenue_trend_pct_zero_when_no_previous_month_data(self):
-        """When previous month revenue is 0, trend should be 0 (no division by zero)."""
+    async def test_revenue_trend_pct_zero_when_no_previous_window_data(self):
+        """When previous 30-day window revenue is 0, trend should be 0 (no division by zero)."""
         reports = [
             make_report_record(
                 booking_id="b-current",
                 gross_value=Decimal("1000.00"),
-                payment_date=date(CURRENT_YEAR, CURRENT_MONTH, 15),
+                payment_date=DATE_IN_WINDOW,
             ),
         ]
         repo = InMemoryReportRepository(report_records=reports)
@@ -182,21 +183,19 @@ class TestGetDashboardMetricsUseCase:
     # Average daily revenue
     # ------------------------------------------------------------------
 
-    async def test_avg_daily_revenue_is_monthly_revenue_over_days_in_month(self):
-        import calendar
+    async def test_avg_daily_revenue_is_monthly_revenue_over_30_days(self):
         reports = [
             make_report_record(
                 booking_id="b1",
-                gross_value=Decimal("3100.00"),
-                payment_date=date(CURRENT_YEAR, CURRENT_MONTH, 1),
+                gross_value=Decimal("3000.00"),
+                payment_date=DATE_IN_WINDOW,
             ),
         ]
         repo = InMemoryReportRepository(report_records=reports)
         use_case = GetDashboardMetricsUseCase(repo=repo)
         result = await use_case.execute(GetDashboardMetricsQuery())
 
-        days_in_month = calendar.monthrange(CURRENT_YEAR, CURRENT_MONTH)[1]
-        expected = round(3100.0 / days_in_month, 2)
+        expected = round(3000.0 / 30, 2)
         assert result["avg_daily_revenue"] == expected
 
     # ------------------------------------------------------------------

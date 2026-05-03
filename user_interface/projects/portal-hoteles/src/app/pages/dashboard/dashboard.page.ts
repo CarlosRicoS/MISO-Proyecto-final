@@ -4,6 +4,7 @@ import { IonicModule } from '@ionic/angular';
 import { firstValueFrom } from 'rxjs';
 import { AuthSessionService } from '@travelhub/core/services/auth-session.service';
 import { BookingService, Reservation } from '@travelhub/core/services/booking.service';
+import { ReportsService, DashboardMetricsResponse } from '@travelhub/core/services/reports.service';
 import { PortalHotelesGenericCardComponent } from '@travelhub/shared/components/portal-hoteles/generic-card/generic-card.component';
 import { PortalHotelesGridCardComponent } from '@travelhub/shared/components/portal-hoteles/grid-card/grid-card.component';
 import { RouterModule } from '@angular/router';
@@ -24,13 +25,48 @@ export class PortalHotelesDashboardPage {
   isLoadingReservations = false;
   reservationsErrorMessage = '';
 
+  metrics: DashboardMetricsResponse | null = null;
+
   constructor(
     private readonly authSession: AuthSessionService,
     private readonly bookingService: BookingService,
+    private readonly reportsService: ReportsService,
   ) {}
 
   ionViewWillEnter(): void {
     void this.loadReservations();
+    void this.loadMetrics();
+  }
+
+  get totalReservationsLabel(): string {
+    return this.metrics ? String(this.metrics.total_reservations) : '—';
+  }
+
+  get monthlyRevenueLabel(): string {
+    if (!this.metrics) return '—';
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(this.metrics.monthly_revenue);
+  }
+
+  get revenueTrendLabel(): string {
+    if (!this.metrics) return '';
+    const pct = this.metrics.revenue_trend_pct ?? 0;
+    return `${pct >= 0 ? '+' : ''}${pct.toFixed(1)}% from last month`;
+  }
+
+  get revenueTrendClass(): string {
+    if (!this.metrics) return 'portal-hoteles-dashboard-card__hint';
+    const pct = this.metrics.revenue_trend_pct ?? 0;
+    return pct >= 0
+      ? 'portal-hoteles-dashboard-card__hint portal-hoteles-dashboard-card__hint--positive'
+      : 'portal-hoteles-dashboard-card__hint portal-hoteles-dashboard-card__hint--warning';
+  }
+
+  get todayCheckinsLabel(): string {
+    return this.metrics ? String(this.metrics.today_checkins) : '—';
+  }
+
+  get todayCheckoutsLabel(): string {
+    return this.metrics ? String(this.metrics.today_checkouts) : '—';
   }
 
   get operatorEmail(): string {
@@ -115,6 +151,16 @@ export class PortalHotelesDashboardPage {
         return 'portal-hoteles-dashboard-status portal-hoteles-dashboard-status--completed';
       default:
         return 'portal-hoteles-dashboard-status portal-hoteles-dashboard-status--default';
+    }
+  }
+
+  private async loadMetrics(): Promise<void> {
+    try {
+      this.metrics = await firstValueFrom(
+        this.reportsService.getDashboardMetrics(this.authSession.idToken),
+      );
+    } catch {
+      this.metrics = null;
     }
   }
 

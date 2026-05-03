@@ -24,7 +24,7 @@
       <li class="portal-hoteles-revenue-chart-card__bar-item" *ngFor="let point of chartPoints; trackBy: trackByCategory">
         <div
           class="portal-hoteles-revenue-chart-card__bar"
-          [style.height.%]="getBarHeight(point.value)"
+          [style.height.px]="getBarHeight(point.value)"
           [attr.aria-label]="getBarAriaLabel(point)"
           tabindex="0"
         ></div>

@@ -10,26 +10,26 @@
   <section class="portal-hoteles-dashboard-grid portal-hoteles-dashboard-grid--stats">
     <portal-hoteles-grid-card cardClass="portal-hoteles-grid-card--metric">
       <span class="portal-hoteles-dashboard-card__label">Total Reservations</span>
-      <strong class="portal-hoteles-dashboard-card__value">247</strong>
-      <p class="portal-hoteles-dashboard-card__hint portal-hoteles-dashboard-card__hint--positive">+12% from last month</p>
+      <strong class="portal-hoteles-dashboard-card__value">{{ totalReservationsLabel }}</strong>
+      <p [class]="revenueTrendClass">{{ revenueTrendLabel }}</p>
     </portal-hoteles-grid-card>
 
     <portal-hoteles-grid-card cardClass="portal-hoteles-grid-card--metric">
       <span class="portal-hoteles-dashboard-card__label">Monthly Revenue</span>
-      <strong class="portal-hoteles-dashboard-card__value">$89,240</strong>
-      <p class="portal-hoteles-dashboard-card__hint portal-hoteles-dashboard-card__hint--positive">+18% from last month</p>
+      <strong class="portal-hoteles-dashboard-card__value">{{ monthlyRevenueLabel }}</strong>
+      <p [class]="revenueTrendClass">{{ revenueTrendLabel }}</p>
     </portal-hoteles-grid-card>
 
     <portal-hoteles-grid-card cardClass="portal-hoteles-grid-card--metric">
       <span class="portal-hoteles-dashboard-card__label">Today&apos;s Check-ins</span>
-      <strong class="portal-hoteles-dashboard-card__value">28</strong>
-      <p class="portal-hoteles-dashboard-card__hint portal-hoteles-dashboard-card__hint--info">6 pending confirmation</p>
+      <strong class="portal-hoteles-dashboard-card__value">{{ todayCheckinsLabel }}</strong>
+      <p class="portal-hoteles-dashboard-card__hint portal-hoteles-dashboard-card__hint--info">from payment records</p>
     </portal-hoteles-grid-card>
 
     <portal-hoteles-grid-card cardClass="portal-hoteles-grid-card--metric">
       <span class="portal-hoteles-dashboard-card__label">Today&apos;s Check-outs</span>
-      <strong class="portal-hoteles-dashboard-card__value">22</strong>
-      <p class="portal-hoteles-dashboard-card__hint portal-hoteles-dashboard-card__hint--warning">4 late check-outs</p>
+      <strong class="portal-hoteles-dashboard-card__value">{{ todayCheckoutsLabel }}</strong>
+      <p class="portal-hoteles-dashboard-card__hint portal-hoteles-dashboard-card__hint--info">from payment records</p>
     </portal-hoteles-grid-card>
   </section>
 
