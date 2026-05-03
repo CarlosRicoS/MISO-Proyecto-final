@@ -7,4 +7,5 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" <<-EOSQL
   CREATE DATABASE "PricingRuleDB";
   CREATE DATABASE billing;
   CREATE DATABASE checkin;
+  CREATE DATABASE incomings_report;
 EOSQL
