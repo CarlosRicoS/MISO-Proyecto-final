@@ -401,4 +401,53 @@ services = {
       }
     ]
   }
+  "incomings-report" = {
+    ecr_repository_name       = "api_incomings_report"
+    container_name            = "api_incomings_report"
+    ecs_task_size             = { cpu = 256, memory = 512 }
+    create_database           = true
+    desired_count_tasks       = 1
+    placement_constraint_type = ""
+    autoscaling = {
+      max_capacity = 1
+      min_capacity = 1
+    }
+    health_check = {
+      path = "/api/health"
+    }
+    secrets = [
+      {
+        name      = "DB_USERNAME"
+        valueFrom = "/final-project-miso/incomings-report/db_username"
+      },
+      {
+        name      = "DB_PASSWORD"
+        valueFrom = "/final-project-miso/incomings-report/db_password"
+      },
+      {
+        name      = "DB_HOST"
+        valueFrom = "/final-project-miso/incomings-report/db_host"
+      },
+      {
+        name      = "DB_NAME"
+        valueFrom = "/final-project-miso/incomings-report/db_name"
+      },
+      {
+        name      = "BILLING_DB_USERNAME"
+        valueFrom = "/final-project-miso/billing/db_username"
+      },
+      {
+        name      = "BILLING_DB_PASSWORD"
+        valueFrom = "/final-project-miso/billing/db_password"
+      },
+      {
+        name      = "BILLING_DB_HOST"
+        valueFrom = "/final-project-miso/billing/db_host"
+      },
+      {
+        name      = "BILLING_DB_NAME"
+        valueFrom = "/final-project-miso/billing/db_name"
+      }
+    ]
+  }
 }

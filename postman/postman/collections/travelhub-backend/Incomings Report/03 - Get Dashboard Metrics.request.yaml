@@ -1,0 +1,21 @@
+$kind: http-request
+name: Get Dashboard Metrics
+url: "{{base_url}}/incomings-report/api/reports/dashboard-metrics"
+method: GET
+headers:
+  Authorization: "Bearer {{id_token}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Returns 200', function () {
+        pm.response.to.have.status(200);
+      });
+      const json = pm.response.json();
+      pm.test('Has KPI fields', function () {
+        pm.expect(json).to.have.property('total_reservations');
+        pm.expect(json).to.have.property('monthly_revenue');
+        pm.expect(json).to.have.property('avg_daily_revenue');
+        pm.expect(json).to.have.property('revenue_trend_pct');
+      });
+    language: text/javascript
+order: 3000

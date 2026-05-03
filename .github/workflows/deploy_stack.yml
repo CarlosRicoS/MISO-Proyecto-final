@@ -61,6 +61,10 @@ jobs:
             language: python
             ecr-repo: api_checkin
             context-path: services/checkin
+          - name: incomings_report
+            language: python
+            ecr-repo: api_incomings_report
+            context-path: services/incomings_report
           - name: poc_properties
             language: java
             ecr-repo: api_poc_properties

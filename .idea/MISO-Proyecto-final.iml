@@ -30,6 +30,7 @@
       <excludeFolder url="file://$MODULE_DIR$/terraform/stacks/web_app/.terraform" />
       <excludeFolder url="file://$MODULE_DIR$/terraform/stacks/web_app_portal_hoteles/.terraform" />
       <excludeFolder url="file://$MODULE_DIR$/services/checkin/.venv" />
+      <excludeFolder url="file://$MODULE_DIR$/.claude/worktrees/agent-a46eb69f7fa8230d2/services/incomings_report/.venv" />
     </content>
     <orderEntry type="jdk" jdkName="Python 3.13 (MISO-Proyecto-final) (3)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
