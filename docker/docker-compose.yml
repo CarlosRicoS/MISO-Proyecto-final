@@ -49,6 +49,8 @@ services:
         condition: service_started
       stripe-mock:
         condition: service_started
+      checkin:
+        condition: service_started
 
   # =====================================================================
   # PYTHON SERVICES
@@ -138,6 +140,29 @@ services:
       SMTP_USE_TLS: ${SMTP_USE_TLS:-true}
       SMTP_FROM: ${SMTP_FROM:-no-reply@travelhub.local}
       DEBUG: "true"
+    healthcheck:
+      test: ["CMD-SHELL", "python3 -c \"import urllib.request; urllib.request.urlopen('http://localhost:80/api/health')\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  checkin:
+    build:
+      context: ../services/checkin
+    environment:
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_NAME: checkin
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      BOOKING_SERVICE_URL: http://booking:80
+      DEBUG: "true"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      booking:
+        condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "python3 -c \"import urllib.request; urllib.request.urlopen('http://localhost:80/api/health')\""]
       interval: 10s

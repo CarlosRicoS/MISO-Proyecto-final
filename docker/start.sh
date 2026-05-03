@@ -70,6 +70,7 @@ wait_for_healthy poc-properties
 wait_for_healthy pricing-engine
 wait_for_healthy booking
 wait_for_healthy billing
+wait_for_healthy checkin
 
 # ------------------------------------------------------------------
 # Step 4: Seed databases
