@@ -2,28 +2,65 @@
   <div class="th-detail-summary__top-row">
     <div class="th-detail-summary__title-wrap">
       <h1 class="th-detail-summary__title" *ngIf="title">{{ title }}</h1>
-      <p class="th-detail-summary__location" *ngIf="location">
-        <ion-icon name="location" aria-hidden="true"></ion-icon>
-        <span>{{ location }}</span>
-      </p>
-      <p
-        class="th-detail-summary__status"
-        [ngClass]="'th-detail-summary__status--' + statusVariant"
-        *ngIf="statusText"
-      >
-        {{ statusText }}
-      </p>
+      <div class="th-detail-summary__meta-row">
+        <div class="th-detail-summary__meta-left">
+          <p class="th-detail-summary__location" *ngIf="location">
+            <ion-icon name="location" aria-hidden="true"></ion-icon>
+            <span>{{ location }}</span>
+          </p>
+          <p
+            class="th-detail-summary__status"
+            [ngClass]="'th-detail-summary__status--' + statusVariant"
+            *ngIf="statusText"
+          >
+            {{ statusText }}
+          </p>
+        </div>
+        <!-- Mobile check-in control: aligned to the right on the same line as location/status -->
+        <div class="th-detail-summary__checkin" role="group" *ngIf="isPlatformNative">
+          <button
+            class="th-detail-summary__checkin-button"
+            type="button"
+            (click)="onCheckinClick()"
+            aria-label="Check in with camera"
+          >
+            <ion-icon name="qr-code" aria-hidden="true"></ion-icon>
+          </button>
+          <div class="th-detail-summary__checkin-label">Check in</div>
+        </div>
+      </div>
     </div>
 
-    <div class="th-detail-summary__actions" *ngIf="showActions || hasBookingMeta">
+    <div
+      class="th-detail-summary__actions"
+      *ngIf="showActions || hasBookingMeta"
+    >
       <div class="th-detail-summary__action-buttons" *ngIf="showActions">
-        <ion-button size="small" fill="outline" color="medium" *ngIf="showSaveAction">
-        <ion-icon slot="start" name="heart-outline" aria-hidden="true"></ion-icon>
-        Save
+        <ion-button
+          size="small"
+          fill="outline"
+          color="medium"
+          *ngIf="showSaveAction"
+        >
+          <ion-icon
+            slot="start"
+            name="heart-outline"
+            aria-hidden="true"
+          ></ion-icon>
+          Save
         </ion-button>
-        <ion-button size="small" fill="outline" color="medium" *ngIf="showShareAction">
-        <ion-icon slot="start" name="share-social-outline" aria-hidden="true"></ion-icon>
-        Share
+        <ion-button
+          size="small"
+          fill="outline"
+          color="medium"
+          *ngIf="showShareAction"
+        >
+          <ion-icon
+            slot="start"
+            name="share-social-outline"
+            aria-hidden="true"
+          ></ion-icon>
+          Share
         </ion-button>
       </div>
 
@@ -45,10 +82,22 @@
       <ion-icon name="star" aria-hidden="true"></ion-icon>
       {{ score }}
     </span>
-    <span class="th-detail-summary__score-label" *ngIf="scoreLabel">{{ scoreLabel }}</span>
-    <span class="th-detail-summary__reviews" *ngIf="reviewsText">{{ reviewsText }}</span>
-    <span class="th-detail-summary__stars" *ngIf="stars > 0" aria-label="{{ stars }} star rating">
-      <ion-icon *ngFor="let icon of starIcons" [name]="icon" aria-hidden="true"></ion-icon>
+    <span class="th-detail-summary__score-label" *ngIf="scoreLabel">{{
+      scoreLabel
+    }}</span>
+    <span class="th-detail-summary__reviews" *ngIf="reviewsText">{{
+      reviewsText
+    }}</span>
+    <span
+      class="th-detail-summary__stars"
+      *ngIf="stars > 0"
+      aria-label="{{ stars }} star rating"
+    >
+      <ion-icon
+        *ngFor="let icon of starIcons"
+        [name]="icon"
+        aria-hidden="true"
+      ></ion-icon>
     </span>
   </div>
 </section>

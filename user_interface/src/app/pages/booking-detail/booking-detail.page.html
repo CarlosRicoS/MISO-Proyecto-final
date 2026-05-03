@@ -38,7 +38,7 @@
 
         <section class="bookingdetail-summary">
           <div class="bookingdetail-summary__inner">
-            <th-detail-summary
+            <th-detail-summary (checkin)="openCameraForCheckin()"
               [title]="property.title"
               [location]="property.location"
               [showSaveAction]="false"
@@ -48,7 +48,7 @@
               [statusVariant]="bookingStatusVariant"
               [metaPrimary]="bookingDateRange"
               [metaSecondary]="bookingNights"
-            ></th-detail-summary>
+              ></th-detail-summary>
           </div>
         </section>
 

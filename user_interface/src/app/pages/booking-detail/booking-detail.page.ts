@@ -24,6 +24,7 @@ import { ThPaymentSummaryComponent } from '../../shared/components/th-payment-su
 import { ThPopupComponent, ThPopupVariant } from '../../shared/components/th-popup/th-popup.component';
 import { ThPropertyDescriptionSummaryComponent } from '../../shared/components/th-property-description-summary/th-property-description-summary.component';
 import { ThPropertyReviewSummaryComponent } from '../../shared/components/th-property-review-summary/th-property-review-summary.component';
+import { CapacitorBarcodeScanner, CapacitorBarcodeScannerTypeHint } from '@capacitor/barcode-scanner';
 
 @Component({
   selector: 'app-booking-detail',
@@ -1093,5 +1094,25 @@ export class BookingDetailPage implements OnInit, OnDestroy {
     this.alertMessage = message;
     this.alertVariant = variant;
     this.isAlertOpen = true;
+  }
+
+  async openCameraForCheckin(): Promise<void> {
+    try {
+      // Use @capacitor/barcode-scanner to read QR codes for check-in
+      const result = await CapacitorBarcodeScanner.scanBarcode({
+        hint: CapacitorBarcodeScannerTypeHint.QR_CODE,
+      });
+
+      if (result && result.ScanResult) {
+        const qrData = result.ScanResult;
+        // TODO: Validate QR data against reservation
+        // Extract booking info from QR code and verify match
+        this.showAlert('Check-in', `QR code scanned: ${qrData}`, 'success');
+      } else {
+        this.showAlert('Check-in', 'No QR code detected.', 'warning');
+      }
+    } catch (err) {
+      this.showAlert('Scanner error', 'Unable to scan QR code.', 'error');
+    }
   }
 }

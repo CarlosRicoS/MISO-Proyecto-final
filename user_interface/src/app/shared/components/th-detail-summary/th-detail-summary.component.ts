@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input } from '@angular/core';
+import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { IonicModule } from '@ionic/angular';
+import { Capacitor } from '@capacitor/core';
 
 export type ThDetailSummaryStatusVariant =
   | 'default'
@@ -33,11 +34,19 @@ export class ThDetailSummaryComponent {
   @Input() metaPrimary = '';
   @Input() metaSecondary = '';
 
+  isPlatformNative = Capacitor.isNativePlatform();
+
   get hasBookingMeta(): boolean {
     return Boolean(this.metaPrimary || this.metaSecondary);
   }
 
   get starIcons(): string[] {
     return Array.from({ length: Math.max(0, this.stars) }, () => 'star');
+  }
+
+  @Output() checkin = new EventEmitter<void>();
+
+  onCheckinClick(): void {
+    this.checkin.emit();
   }
 }

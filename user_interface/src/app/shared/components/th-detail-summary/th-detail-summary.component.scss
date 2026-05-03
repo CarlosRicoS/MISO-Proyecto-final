@@ -26,8 +26,26 @@ font-weight: var(--th-font-weight-bold);
   text-wrap: balance;
 }
 
+/* Container for location, status, and check-in on the same line */
+.th-detail-summary__meta-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--th-space-3);
+  margin-top: 12px;
+}
+
+/* Left side: location and status stacked vertically */
+.th-detail-summary__meta-left {
+  display: flex;
+  flex-direction: column;
+  gap: var(--th-space-2);
+  flex: 1;
+  min-width: 0;
+}
+
 .th-detail-summary__location {
-  margin: 12px 0 0;
+  margin: 0;
   display: inline-flex;
   align-items: center;
   gap: var(--th-space-2);
@@ -44,7 +62,7 @@ font-weight: var(--th-font-weight-bold);
 }
 
 .th-detail-summary__status {
-  margin: var(--th-space-3) 0 0;
+  margin: 0;
   color: var(--th-primary-600, #1d4ed8);
   font-size: var(--th-text-body-md-size);
   line-height: var(--th-text-body-md-line-height);
@@ -194,8 +212,12 @@ padding: var(--th-space-4);
     display: none;
   }
 
+  .th-detail-summary__action-buttons {
+    display: none;
+  }
+
   .th-detail-summary__status {
-    margin-top: var(--th-space-2);
+    margin-top: 0;
   }
 
   .th-detail-summary__rating-row {
@@ -227,4 +249,34 @@ gap: var(--th-space-1);
       font-size: var(--th-text-body-md-size);
     }
   }
+}
+
+/* Check-in control styles: visibility controlled by *ngIf="isPlatformNative" in template */
+.th-detail-summary__checkin {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.th-detail-summary__checkin-button {
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: var(--th-blue-600, #1e88e5);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+}
+
+.th-detail-summary__checkin-button ion-icon {
+  font-size: 20px;
+}
+
+.th-detail-summary__checkin-label {
+  font-size: var(--th-text-body-sm-size);
+  color: var(--th-slate-700);
 }
