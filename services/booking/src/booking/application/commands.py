@@ -62,3 +62,10 @@ class UpdatePaymentStateCommand:
 
     booking_id: str
     payment_reference: str
+
+
+@dataclass(frozen=True)
+class CompleteBookingCommand:
+    """Command to complete a confirmed booking (CONFIRMED → COMPLETED)."""
+
+    booking_id: str

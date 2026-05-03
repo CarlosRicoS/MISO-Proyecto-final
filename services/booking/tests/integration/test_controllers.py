@@ -485,3 +485,63 @@ class TestUpdatePaymentState:
             f"/api/booking/{booking['id']}/update-payment-state",
         )
         assert response.status_code == 422
+
+
+class TestCompleteBooking:
+    async def test_complete_confirmed_booking_returns_200(self, client: AsyncClient, repo):
+        """200 with status=COMPLETED when booking is CONFIRMED."""
+        booking = await _create_booking(client)
+        booking_id = booking["id"]
+
+        from uuid import UUID as _UUID
+        stored = await repo.get_by_id(_UUID(booking_id))
+        stored.approve()
+        stored.confirm(payment_reference="PAY-COMPLETE")
+        await repo.save(stored)
+
+        response = await client.post(f"/api/booking/{booking_id}/complete")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == "COMPLETED"
+        assert data["id"] == booking_id
+
+    async def test_complete_nonexistent_booking_returns_404(self, client: AsyncClient):
+        """404 when booking does not exist."""
+        response = await client.post(f"/api/booking/{uuid4()}/complete")
+        assert response.status_code == 404
+
+    async def test_complete_pending_booking_returns_409(self, client: AsyncClient):
+        """409 when booking is PENDING (invalid transition)."""
+        booking = await _create_booking(client)
+        response = await client.post(f"/api/booking/{booking['id']}/complete")
+        assert response.status_code == 409
+
+    async def test_complete_canceled_booking_returns_409(self, client: AsyncClient, repo):
+        """409 when booking is CANCELED (terminal state)."""
+        booking = await _create_booking(client)
+        booking_id = booking["id"]
+
+        from uuid import UUID as _UUID
+        stored = await repo.get_by_id(_UUID(booking_id))
+        stored.cancel()
+        await repo.save(stored)
+
+        response = await client.post(f"/api/booking/{booking_id}/complete")
+        assert response.status_code == 409
+
+    async def test_complete_already_completed_booking_returns_409(
+        self, client: AsyncClient, repo
+    ):
+        """409 when booking is already COMPLETED."""
+        booking = await _create_booking(client)
+        booking_id = booking["id"]
+
+        from uuid import UUID as _UUID
+        stored = await repo.get_by_id(_UUID(booking_id))
+        stored.approve()
+        stored.confirm(payment_reference="PAY-DONE")
+        stored.complete()
+        await repo.save(stored)
+
+        response = await client.post(f"/api/booking/{booking_id}/complete")
+        assert response.status_code == 409

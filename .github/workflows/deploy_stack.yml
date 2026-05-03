@@ -57,6 +57,10 @@ jobs:
             language: python
             ecr-repo: api_notifications
             context-path: services/notifications
+          - name: checkin
+            language: python
+            ecr-repo: api_checkin
+            context-path: services/checkin
           - name: poc_properties
             language: java
             ecr-repo: api_poc_properties

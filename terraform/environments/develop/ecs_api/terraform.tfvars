@@ -325,6 +325,24 @@ services = {
       scale_out_cooldown     = 30
     }
   }
+  "checkin" = {
+    ecr_repository_name       = "api_checkin"
+    container_name            = "api_checkin"
+    ecs_task_size             = { cpu = 256, memory = 512 }
+    create_database           = true
+    desired_count_tasks       = 1
+    placement_constraint_type = ""
+    autoscaling = {
+      max_capacity = 1
+      min_capacity = 1
+    }
+    secrets = [
+      {
+        name      = "BOOKING_SERVICE_URL"
+        valueFrom = "/final-project-miso/booking/service_url"
+      }
+    ]
+  }
   "notifications" = {
     ecr_repository_name       = "api_notifications"
     container_name            = "api_notifications"

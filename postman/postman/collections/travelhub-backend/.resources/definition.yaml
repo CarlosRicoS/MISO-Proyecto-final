@@ -14,3 +14,4 @@ variables:
   flow_admin_group_id: ""
   flow_price: ""
   flow_new_price: ""
+  flow_qr_token: ""

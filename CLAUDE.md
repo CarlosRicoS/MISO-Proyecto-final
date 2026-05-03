@@ -13,6 +13,7 @@ This is a multi-microservice platform deployed on AWS ECS (EC2-backed) behind an
 - `services/PricingOrchestator/` — .NET 8 / ASP.NET Core. Orchestrates pricing operations across the platform.
 - `services/booking/` — Python/FastAPI with hexagonal (ports & adapters) architecture. Manages booking lifecycle (PENDING → APPROVED → CONFIRMED → COMPLETED/CANCELED/REJECTED). PostgreSQL-backed with async SQLAlchemy. Admin actions: approve, confirm, reject (from PENDING or CONFIRMED). Delete endpoint for saga compensation.
 - `services/booking_orchestrator/` — Python/FastAPI hexagonal. Synchronous saga coordinator for the booking lifecycle: create reservation, admin approve/confirm/reject, cancel, change dates, and make payment. Creates a booking in `booking`, locks the property in `poc_properties`, and publishes domain events onto the notifications SQS queue. On lock failure, deletes the booking (not cancel) so the user doesn't see spurious cancelled reservations. Requires JWT (forwards `X-User-Id`). No database.
+- `services/checkin/` — Python/FastAPI hexagonal. Digital check-in service. Validates hotel QR tokens, verifies booking ownership and CONFIRMED status, records check-in events, and calls the booking service to transition reservations to COMPLETED. Two DB tables: `checking_available` (properties with digital check-in enabled + their QR token) and `checking` (audit log of completed check-ins). Exposes three endpoints: register a property (POC/public), check availability (JWT), perform check-in (JWT).
 - `services/notifications/` — Python/FastAPI hexagonal. Background SQS consumer for `notifications_queue` that sends transactional emails via the AWS SES SMTP relay and FCM push notifications via the `firebase-admin` SDK. Device tokens stored in SSM Parameter Store (`/{project}/notifications/fcm-tokens`). Not called by the frontend, no auth, no database.
 - `services/auth/` — Python/FastAPI + boto3. Authentication microservice for user registration via AWS Cognito. Public endpoint (no JWT required).
 
@@ -68,6 +69,7 @@ make unittest-uv DIR=services/booking
 - `POST /api/booking/{booking_id}/admin-reject` — Reject a PENDING or CONFIRMED booking
 - `PATCH /api/booking/{booking_id}/dates` — Change dates of a CONFIRMED booking
 - `POST /api/booking/{booking_id}/update-payment-state` — Confirm with payment reference
+- `POST /api/booking/{booking_id}/complete` — Transition a CONFIRMED booking to COMPLETED (VPC-internal, called by checkin service — not exposed through API Gateway)
 - Status state machine: `PENDING` → `APPROVED` → `CONFIRMED` → `COMPLETED` (or `CANCELED`/`REJECTED` — see transitions below)
   - `PENDING` → `APPROVED`, `CONFIRMED`, `CANCELED`, `REJECTED`
   - `APPROVED` → `CONFIRMED`, `CANCELED`
@@ -255,6 +257,7 @@ The platform uses **AWS Cognito** for user authentication. The `cognito` Terrafo
 - `auth` gets Cognito config from SSM: `/final-project-miso/cognito/{user_pool_id,app_client_id}` (injected as `COGNITO_USER_POOL_ID`, `COGNITO_CLIENT_ID` env vars).
 - `user_interface` (frontend) gets API Gateway URL from `/assets/config.json` loaded at runtime. Config also includes `pricingOrchestratorApiPath` (default `/pricing-orchestator/api/Property`) used by `PricingService` to fetch live prices.
 - `user_interface` calls `PricingOrchestrator` (public, no JWT) via `PricingService.getPropertyWithPrice()` at three touchpoints: (1) home page listing enrichment (`HotelsService.getHotelsWithPricing()` fires parallel pricing calls via `forkJoin`), (2) property detail page (reactive `switchMap` on date/guest changes), (3) booking detail change-dates flow. PricingOrchestrator is a public endpoint so unauthenticated users also see real prices.
+- `checkin` calls `booking` directly within the VPC (not via orchestrator): `GET /api/booking/{id}` to verify ownership and CONFIRMED status, then `POST /api/booking/{id}/complete` to finalize. The `BOOKING_SERVICE_URL` SSM parameter (`/final-project-miso/booking/service_url`) is injected as an env var.
 - Services communicate internally within the VPC; the API Gateway (`172.16.0.0/16`) fronts external traffic.
 - All backend services receive `X-User-Id` and `X-User-Email` headers from API Gateway JWT authorizer (except public routes).
 

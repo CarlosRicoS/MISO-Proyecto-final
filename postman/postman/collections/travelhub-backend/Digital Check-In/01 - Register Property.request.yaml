@@ -1,0 +1,25 @@
+$kind: http-request
+name: Register Property
+url: "{{base_url}}/check-in/api/check-in/available"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "property_id": "{{flow_property_id}}"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Returns 201 Created', function () {
+        pm.response.to.have.status(201);
+      });
+      const json = pm.response.json();
+      if (json && json.qr_token) {
+        pm.collectionVariables.set('flow_qr_token', json.qr_token);
+        console.log('flow_qr_token saved:', json.qr_token);
+      }
+    language: text/javascript
+order: 1000
