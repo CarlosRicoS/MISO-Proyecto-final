@@ -8,6 +8,7 @@ import {
   type PermissionStatus,
 } from '@capacitor-firebase/messaging';
 import { BehaviorSubject, Subject, type Observable, map } from 'rxjs';
+import { AppCacheService } from './app-cache.service';
 
 export type NotificationType =
   | 'BOOKING_CREATED'
@@ -44,7 +45,7 @@ export class NotificationService {
   private readonly tokenSubject = new BehaviorSubject<string | null>(null);
   private readonly notificationReceivedSubject = new Subject<NotificationReceivedEvent>();
   private readonly notificationActionSubject = new Subject<NotificationActionPerformedEvent>();
-  private readonly notificationsSubject = new BehaviorSubject<NotificationItem[]>(this.readNotificationsFromSession());
+  private readonly notificationsSubject = new BehaviorSubject<NotificationItem[]>(this.readNotificationsFromCache());
 
   readonly token$ = this.tokenSubject.asObservable();
   readonly notificationReceived$ = this.notificationReceivedSubject.asObservable();
@@ -57,6 +58,7 @@ export class NotificationService {
   constructor(
     private zone: NgZone,
     private router: Router,
+    private cache: AppCacheService,
   ) {}
 
   async initialize(): Promise<void> {
@@ -120,9 +122,7 @@ export class NotificationService {
 
   clearNotifications(): void {
     this.log('Clearing all stored notifications.');
-    if (typeof localStorage !== 'undefined') {
-      localStorage.removeItem(this.storageKey);
-    }
+    this.cache.remove(this.storageKey);
     this.notificationsSubject.next([]);
   }
 
@@ -471,45 +471,29 @@ export class NotificationService {
     return diffDays > 1 && diffDays < 7;
   }
 
-  private readNotificationsFromSession(): NotificationItem[] {
-    if (typeof localStorage === 'undefined') {
-      this.log('Local storage unavailable when reading notifications.');
-      return [];
-    }
-
-    const raw = localStorage.getItem(this.storageKey);
-    if (!raw) {
-      this.log('No notification history found in local storage.');
-      return [];
-    }
-
-    try {
-      const parsed = JSON.parse(raw) as NotificationItem[];
-      const notifications = Array.isArray(parsed) ? parsed : [];
-      this.log(`Loaded ${notifications.length} stored notifications from local storage.`);
-      
-      // Clean up old notifications on initialization
-      const cleanedNotifications = this.removeOldNotifications(notifications);
-      if (cleanedNotifications.length < notifications.length) {
-        this.persistNotifications(cleanedNotifications);
+  private readNotificationsFromCache(): NotificationItem[] {
+    const notifications = this.cache.read<unknown>(this.storageKey);
+    if (!Array.isArray(notifications)) {
+      if (notifications !== null) {
+        this.cache.remove(this.storageKey);
       }
-      
-      return cleanedNotifications;
-    } catch (error) {
-      this.log(`Failed to parse notification history from local storage: ${String(error)}`);
-      localStorage.removeItem(this.storageKey);
+      this.log('No notification history found in cache.');
       return [];
     }
+
+    this.log(`Loaded ${notifications.length} stored notifications from cache.`);
+
+    const cleanedNotifications = this.removeOldNotifications(notifications);
+    if (cleanedNotifications.length < notifications.length) {
+      this.persistNotifications(cleanedNotifications);
+    }
+
+    return cleanedNotifications;
   }
 
   private persistNotifications(notifications: NotificationItem[]): void {
-    if (typeof localStorage === 'undefined') {
-      this.log('Local storage unavailable when persisting notifications.');
-      return;
-    }
-
-    localStorage.setItem(this.storageKey, JSON.stringify(notifications));
-    this.log(`Persisted ${notifications.length} notifications to local storage.`);
+    this.cache.write(this.storageKey, notifications);
+    this.log(`Persisted ${notifications.length} notifications to cache.`);
   }
 
   private async registerTokenOnBackend(token: string): Promise<void> {

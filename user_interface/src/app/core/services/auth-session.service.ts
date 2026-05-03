@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, distinctUntilChanged, map } from 'rxjs';
+import { AppCacheService } from './app-cache.service';
 import { LoginResponse } from './auth.service';
 
 export interface AuthSessionState {
@@ -11,6 +12,8 @@ export interface AuthSessionState {
 export class AuthSessionService {
   private readonly storageKey = 'th_auth_session';
   private readonly stateSubject = new BehaviorSubject<AuthSessionState>(this.readState());
+
+  constructor(private readonly cache: AppCacheService) {}
 
   readonly state$ = this.stateSubject.asObservable();
   readonly isLoggedIn$ = this.state$.pipe(
@@ -29,9 +32,7 @@ export class AuthSessionService {
   }
 
   clearSession(): void {
-    if (typeof sessionStorage !== 'undefined') {
-      sessionStorage.removeItem(this.storageKey);
-    }
+    this.cache.remove(this.storageKey);
 
     this.stateSubject.next({ loggedIn: false, loginResponse: null });
   }
@@ -65,38 +66,24 @@ export class AuthSessionService {
   }
 
   private readState(): AuthSessionState {
-    if (typeof sessionStorage === 'undefined') {
-      return { loggedIn: false, loginResponse: null };
-    }
-
-    const storedValue = sessionStorage.getItem(this.storageKey);
+    const storedValue = this.cache.read<LoginResponse>(this.storageKey);
     if (!storedValue) {
       return { loggedIn: false, loginResponse: null };
     }
 
-    try {
-      const parsed = JSON.parse(storedValue) as LoginResponse;
-      return {
-        loggedIn: Boolean(parsed?.access_token),
-        loginResponse: parsed,
-      };
-    } catch {
-      sessionStorage.removeItem(this.storageKey);
-      return { loggedIn: false, loginResponse: null };
-    }
+    return {
+      loggedIn: Boolean(storedValue?.access_token),
+      loginResponse: storedValue,
+    };
   }
 
   private persistState(state: AuthSessionState): void {
-    if (typeof sessionStorage === 'undefined') {
-      return;
-    }
-
     if (!state.loginResponse) {
-      sessionStorage.removeItem(this.storageKey);
+      this.cache.remove(this.storageKey);
       return;
     }
 
-    sessionStorage.setItem(this.storageKey, JSON.stringify(state.loginResponse));
+    this.cache.write(this.storageKey, state.loginResponse);
   }
 
   private getClaimValue(...keys: string[]): string {
