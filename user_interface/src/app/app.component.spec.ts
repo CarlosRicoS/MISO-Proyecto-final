@@ -5,10 +5,15 @@ import { of } from 'rxjs';
 
 import { AppComponent } from './app.component';
 import { AuthSessionService } from './core/services/auth-session.service';
+import { ConnectivityService } from './core/services/connectivity.service';
 
 class AuthSessionServiceMock {
   isLoggedIn = false;
   state$ = of({ loggedIn: false, loginResponse: null });
+}
+
+class ConnectivityServiceMock {
+  shouldShowMobileBanner = false;
 }
 
 describe('AppComponent', () => {
@@ -17,6 +22,7 @@ describe('AppComponent', () => {
   let routerMock: any;
   let activatedRouteMock: any;
   let authSessionServiceMock: AuthSessionServiceMock;
+  let connectivityServiceMock: ConnectivityServiceMock;
 
   beforeEach(async () => {
     activatedRouteMock = {
@@ -35,6 +41,7 @@ describe('AppComponent', () => {
     } as Partial<Router>;
 
     authSessionServiceMock = new AuthSessionServiceMock();
+    connectivityServiceMock = new ConnectivityServiceMock();
 
     await TestBed.configureTestingModule({
       declarations: [AppComponent],
@@ -43,6 +50,7 @@ describe('AppComponent', () => {
         { provide: ActivatedRoute, useValue: activatedRouteMock },
         { provide: Router, useValue: routerMock },
         { provide: AuthSessionService, useValue: authSessionServiceMock },
+        { provide: ConnectivityService, useValue: connectivityServiceMock },
       ],
     }).compileComponents();
   });
@@ -94,6 +102,20 @@ describe('AppComponent', () => {
 
   it('should expose auth mode when the session is logged out', () => {
     expect(component.navbarMode).toBe('auth');
+  });
+
+  it('should hide the offline banner by default', () => {
+    expect(component.showOfflineBanner).toBeFalse();
+  });
+
+  it('should show the offline banner when connectivity is unavailable on mobile', () => {
+    connectivityServiceMock.shouldShowMobileBanner = true;
+
+    fixture = TestBed.createComponent(AppComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    expect(component.showOfflineBanner).toBeTrue();
   });
 
   it('should return full navbar mode when session is logged in', () => {

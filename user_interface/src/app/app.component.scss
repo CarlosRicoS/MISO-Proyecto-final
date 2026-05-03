@@ -2,6 +2,37 @@ ion-app {
 	background: var(--th-page-background);
 }
 
+.offline-banner {
+	background: var(--ion-color-danger);
+	color: var(--ion-color-danger-contrast);
+	left: 0;
+	padding-top: var(--ion-safe-area-top, 0px);
+	position: fixed;
+	right: 0;
+	top: 0;
+	z-index: 999;
+}
+
+.offline-banner__content {
+	align-items: center;
+	display: flex;
+	font-size: 12px;
+	font-weight: 700;
+	gap: 6px;
+	justify-content: center;
+	letter-spacing: 0.02em;
+	line-height: 1.2;
+	min-height: 32px;
+	padding: 6px 12px;
+	text-align: center;
+	width: 100%;
+}
+
+.offline-banner__content ion-icon {
+	font-size: 14px;
+	flex: 0 0 auto;
+}
+
 .site-content {
 	margin-top: calc(clamp(60px, 6vw, 72px) + 2px);
 }

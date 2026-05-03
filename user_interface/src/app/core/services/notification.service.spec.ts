@@ -404,6 +404,41 @@ describe('NotificationService', () => {
   });
 
   describe('private helpers and initialization', () => {
+    it('skips initialization when already initialized', async () => {
+      (service as any).initialized = true;
+      const isSupportedSpy = spyOn(FirebaseMessaging, 'isSupported').and.resolveTo({ isSupported: true } as any);
+
+      await service.initialize();
+
+      expect(isSupportedSpy).not.toHaveBeenCalled();
+    });
+
+    it('handles native initialization errors and still removes listeners on teardown', async () => {
+      const listenerHandles = [
+        { remove: jasmine.createSpy('removeToken') },
+        { remove: jasmine.createSpy('removeReceived') },
+        { remove: jasmine.createSpy('removeAction') },
+      ];
+
+      spyOn(Capacitor, 'isNativePlatform').and.returnValue(true);
+      spyOn(FirebaseMessaging, 'isSupported').and.resolveTo({ isSupported: true } as any);
+      const ensurePermissionsSpy = spyOn<any>(service, 'ensurePermissions').and.resolveTo({ receive: 'granted' });
+
+      await service.initialize();
+
+      expect(ensurePermissionsSpy).toHaveBeenCalled();
+      expect((service as any).initialized).toBeFalse();
+
+      (service as any).listenerHandles.push(...listenerHandles as any[]);
+
+      await service.teardown();
+
+      expect(listenerHandles[0].remove).toHaveBeenCalled();
+      expect(listenerHandles[1].remove).toHaveBeenCalled();
+      expect(listenerHandles[2].remove).toHaveBeenCalled();
+      expect((service as any).initialized).toBeFalse();
+    });
+
     it('skips initialization when not running on native platform', async () => {
       spyOn(Capacitor, 'isNativePlatform').and.returnValue(false);
       const isSupportedSpy = spyOn(FirebaseMessaging, 'isSupported').and.resolveTo({ isSupported: true } as any);
@@ -501,6 +536,29 @@ describe('NotificationService', () => {
       const notificationsBefore = (service as any).notificationsSubject.value.length;
       (service as any).storeNotificationEvent(null);
       expect((service as any).notificationsSubject.value.length).toBe(notificationsBefore);
+    });
+
+    it('formats yesterday labels correctly', () => {
+      jasmine.clock().install();
+      const now = new Date('2026-05-10T12:00:00Z');
+      jasmine.clock().mockDate(now);
+
+      const yesterday = new Date('2026-05-09T09:30:00Z').toISOString();
+      const label = service.getTimeLabel(yesterday);
+
+      expect(label).toContain('Yesterday at');
+      jasmine.clock().uninstall();
+    });
+
+    it('returns generated id when no id candidates exist', () => {
+      jasmine.clock().install();
+      jasmine.clock().mockDate(new Date('2026-05-10T12:00:00Z'));
+      spyOn(Math, 'random').and.returnValue(0.5);
+
+      const generatedId = (service as any).notificationId({ data: {} }, {});
+
+      expect(generatedId).toContain('notification-');
+      jasmine.clock().uninstall();
     });
   });
 

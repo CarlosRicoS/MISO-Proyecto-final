@@ -1,8 +1,11 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { Capacitor } from '@capacitor/core';
+import { Observable, of, throwError } from 'rxjs';
+import { catchError, map, tap } from 'rxjs/operators';
+import { AppCacheService } from './app-cache.service';
 import { ConfigService } from './config.service';
+import { ConnectivityService } from './connectivity.service';
 
 function toNumericPrice(value: unknown): number {
   if (typeof value === 'number') {
@@ -104,7 +107,12 @@ export interface ReservationAdminRejectRequest extends ReservationAdminActionReq
 
 @Injectable({ providedIn: 'root' })
 export class BookingService {
-  constructor(private http: HttpClient, private config: ConfigService) {}
+  constructor(
+    private http: HttpClient,
+    private config: ConfigService,
+    private cache: AppCacheService,
+    private connectivityService: ConnectivityService,
+  ) {}
 
   createReservation(
     payload: ReservationRequest,
@@ -152,7 +160,18 @@ export class BookingService {
 
     return this.http
       .get<Reservation[]>(url, { headers })
-      .pipe(map((reservations) => (reservations || []).map(normalizeReservation)));
+      .pipe(
+        map((reservations) => (reservations || []).map(normalizeReservation)),
+        tap((reservations) => this.cacheReservationList(userId, reservations)),
+        catchError((error) => {
+          const cachedReservations = this.readCachedReservationList(userId);
+          if (cachedReservations) {
+            return of(cachedReservations);
+          }
+
+          return throwError(() => error);
+        }),
+      );
   }
 
   getReservation(bookingId: string, accessToken?: string): Observable<Reservation> {
@@ -168,7 +187,19 @@ export class BookingService {
     }
 
     const headers = new HttpHeaders(headersConfig);
-    return this.http.get<Reservation>(url, { headers }).pipe(map(normalizeReservation));
+
+    return this.http.get<Reservation>(url, { headers }).pipe(
+      map(normalizeReservation),
+      tap((reservation) => this.cacheReservation(reservation)),
+      catchError((error) => {
+        const cachedReservation = this.readCachedReservation(bookingId);
+        if (cachedReservation) {
+          return of(cachedReservation);
+        }
+
+        return throwError(() => error);
+      }),
+    );
   }
 
   cancelReservation(bookingId: string, accessToken?: string): Observable<Reservation> {
@@ -331,5 +362,51 @@ export class BookingService {
 
     const headers = new HttpHeaders(headersConfig);
     return this.http.post<ReservationResponse>(url, payload, { headers });
+  }
+
+  private shouldReadFromCache(): boolean {
+    return Capacitor.isNativePlatform() && this.connectivityService.isOffline;
+  }
+
+  private cacheReservationList(userId: string | undefined, reservations: Reservation[]): void {
+    if (!Capacitor.isNativePlatform()) {
+      return;
+    }
+
+    const cacheKey = this.getReservationListCacheKey(userId);
+    this.cache.write(cacheKey, reservations);
+    reservations.forEach((reservation) => this.cacheReservation(reservation));
+  }
+
+  private readCachedReservationList(userId: string | undefined): Reservation[] | null {
+    if (!Capacitor.isNativePlatform()) {
+      return null;
+    }
+
+    return this.cache.read<Reservation[]>(this.getReservationListCacheKey(userId));
+  }
+
+  private cacheReservation(reservation: Reservation): void {
+    if (!Capacitor.isNativePlatform()) {
+      return;
+    }
+
+    this.cache.write(this.getReservationCacheKey(reservation.id), reservation);
+  }
+
+  private readCachedReservation(bookingId: string): Reservation | null {
+    if (!Capacitor.isNativePlatform()) {
+      return null;
+    }
+
+    return this.cache.read<Reservation>(this.getReservationCacheKey(bookingId));
+  }
+
+  private getReservationListCacheKey(userId?: string): string {
+    return `th_booking_reservations:${(userId || 'anonymous').trim()}`;
+  }
+
+  private getReservationCacheKey(bookingId: string): string {
+    return `th_booking_reservation:${bookingId.trim()}`;
   }
 }

@@ -44,6 +44,22 @@ describe('PortalHotelesRevenueChartCardComponent', () => {
     expect(component.chartPoints[1].category).toBe('Feb');
   });
 
+  it('normalizes invalid chart values to zero', () => {
+    // Arrange
+    component.categories = ['Jan', 'Feb', 'Mar'];
+    component.values = [-100, 200, Number.NaN];
+
+    // Act
+    fixture.detectChanges();
+
+    // Assert
+    expect(component.chartPoints).toEqual([
+      { category: 'Jan', value: 0 },
+      { category: 'Feb', value: 200 },
+      { category: 'Mar', value: 0 },
+    ]);
+  });
+
   it('shows empty fallback when chart input is empty', () => {
     // Arrange
     component.categories = [];
@@ -70,6 +86,94 @@ describe('PortalHotelesRevenueChartCardComponent', () => {
     expect(component.getBarHeight(1000)).toBe(50);
   });
 
+  it('uses explicit maxValue when it is a positive number', () => {
+    // Arrange
+    component.categories = ['Jan', 'Feb'];
+    component.values = [200, 500];
+    component.maxValue = 1000;
+
+    // Act
+    fixture.detectChanges();
+
+    // Assert
+    expect(component.resolvedMaxValue).toBe(1000);
+    expect(component.getBarHeight(500)).toBe(50);
+  });
+
+  it('falls back to max value of 1 when data and maxValue are not positive', () => {
+    // Arrange
+    component.categories = ['Jan'];
+    component.values = [0];
+    component.maxValue = 0;
+
+    // Act
+    fixture.detectChanges();
+
+    // Assert
+    expect(component.resolvedMaxValue).toBe(1);
+    expect(component.getBarHeight(0)).toBe(0);
+  });
+
+  it('uses explicit yAxisTicks sorted descending when valid ticks are provided', () => {
+    // Arrange
+    component.yAxisTicks = [0, 500, -10, 1000, Number.NaN, 250];
+
+    // Act
+    fixture.detectChanges();
+
+    // Assert
+    expect(component.resolvedTicks).toEqual([1000, 500, 250, 0]);
+  });
+
+  it('builds default y-axis ticks when explicit ticks are missing', () => {
+    // Arrange
+    component.categories = ['Jan', 'Feb'];
+    component.values = [100, 200];
+    component.yAxisTicks = [];
+
+    // Act
+    fixture.detectChanges();
+
+    // Assert
+    expect(component.resolvedTicks).toEqual([200, 150, 100, 50, 0]);
+  });
+
+  it('returns selected period from options when periodLabel exists', () => {
+    // Arrange
+    component.periodOptions = ['Last 3 months', 'Last 6 months'];
+    component.periodLabel = 'Last 6 months';
+
+    // Act
+    fixture.detectChanges();
+
+    // Assert
+    expect(component.selectedPeriod).toBe('Last 6 months');
+  });
+
+  it('returns first period option when periodLabel is not in options', () => {
+    // Arrange
+    component.periodOptions = ['Last 3 months', 'Last 6 months'];
+    component.periodLabel = 'This year';
+
+    // Act
+    fixture.detectChanges();
+
+    // Assert
+    expect(component.selectedPeriod).toBe('Last 3 months');
+  });
+
+  it('falls back to periodLabel when period options are empty', () => {
+    // Arrange
+    component.periodOptions = [];
+    component.periodLabel = 'This quarter';
+
+    // Act
+    fixture.detectChanges();
+
+    // Assert
+    expect(component.selectedPeriod).toBe('This quarter');
+  });
+
   it('applies aria description to chart container', () => {
     // Arrange
     component.categories = ['Jan'];
@@ -94,5 +198,38 @@ describe('PortalHotelesRevenueChartCardComponent', () => {
 
     // Assert
     expect(component.periodChange.emit).toHaveBeenCalledWith('Last 12 months');
+  });
+
+  it('does not emit periodChange for blank selection', () => {
+    // Arrange
+    spyOn(component.periodChange, 'emit');
+
+    // Act
+    component.onPeriodSelectionChange({ detail: { value: '   ' } } as CustomEvent);
+
+    // Assert
+    expect(component.periodChange.emit).not.toHaveBeenCalled();
+  });
+
+  it('formats bar aria labels using category and currency value', () => {
+    // Arrange
+    component.currencyPrefix = 'COP ';
+
+    // Act
+    const label = component.getBarAriaLabel({ category: 'Jan', value: 1234 });
+
+    // Assert
+    expect(label).toBe('Jan: COP 1,234');
+  });
+
+  it('tracks bars by category', () => {
+    // Arrange
+    const point = { category: 'Feb', value: 200 };
+
+    // Act
+    const trackId = component.trackByCategory(1, point);
+
+    // Assert
+    expect(trackId).toBe('Feb');
   });
 });
