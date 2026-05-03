@@ -9,6 +9,7 @@ import { ThFilterSummaryComponent } from '../../shared/components/th-filter-summ
 import { ThHotelCardComponent } from '../../shared/components/th-hotel-card/th-hotel-card.component';
 import { IonicModule } from '@ionic/angular';
 import { CommonModule } from '@angular/common';
+import { ImageCacheService } from '../../core/services/image-cache.service';
 
 describe('BookingListPage', () => {
   let component: BookingListPage;
@@ -35,6 +36,11 @@ describe('BookingListPage', () => {
     getPropertyDetail = jasmine.createSpy('getPropertyDetail').and.returnValue(of({}));
   }
 
+  class ImageCacheServiceMock {
+    resolveImageUrl = jasmine.createSpy('resolveImageUrl').and.callFake((url: string) => url);
+    cacheImages = jasmine.createSpy('cacheImages').and.returnValue(Promise.resolve());
+  }
+
   type ListReservation = Reservation & {
     propertyName: string;
     location: string;
@@ -55,6 +61,7 @@ describe('BookingListPage', () => {
         { provide: BookingService, useClass: BookingServiceMock },
         { provide: AuthSessionService, useClass: AuthSessionServiceMock },
         { provide: PropertyDetailService, useClass: PropertyDetailServiceMock },
+        { provide: ImageCacheService, useClass: ImageCacheServiceMock },
       ],
     }).compileComponents();
 

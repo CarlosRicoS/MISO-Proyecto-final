@@ -6,6 +6,7 @@ import { AuthSessionService } from '../../core/services/auth-session.service';
 import { BookingService, Reservation } from '../../core/services/booking.service';
 import { PropertyDetail } from '../../core/models/property-detail.model';
 import { PropertyDetailService } from '../../core/services/property-detail.service';
+import { ImageCacheService } from '../../core/services/image-cache.service';
 import { FilterSummaryParams } from '../../shared/components/th-filter-summary/th-filter-summary.component';
 
 @Component({
@@ -41,6 +42,7 @@ export class BookingListPage {
     private authSessionService: AuthSessionService,
     private propertyDetailService: PropertyDetailService,
     private router: Router,
+    private imageCache: ImageCacheService,
   ) {
     this.filterSummaryParams = {
       ...this.filterSummaryParams,
@@ -315,10 +317,14 @@ export class BookingListPage {
 
       try {
         const detail = await firstValueFrom(this.propertyDetailService.getPropertyDetail(propertyId));
+        // Pre-cache property images for offline access (await to ensure images are cached)
+        if (detail.photos && detail.photos.length > 0) {
+          await this.imageCache.cacheImages(detail.photos);
+        }
         this.applyReservationDetail(reservation.id, {
           propertyName: detail.name || reservation.propertyName,
           location: this.formatPropertyLocation(detail) || reservation.location,
-          photoUrl: detail.photos?.[0] || reservation.photoUrl,
+          photoUrl: this.imageCache.resolveImageUrl(detail.photos?.[0] as string) || reservation.photoUrl,
         });
       } catch {
         this.applyReservationDetail(reservation.id, {

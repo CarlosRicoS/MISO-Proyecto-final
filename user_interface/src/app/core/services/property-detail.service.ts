@@ -6,6 +6,7 @@ import { Capacitor } from '@capacitor/core';
 import { AppCacheService } from './app-cache.service';
 import { ConfigService } from './config.service';
 import { ConnectivityService } from './connectivity.service';
+import { ImageCacheService } from './image-cache.service';
 import { PropertyAmenity, PropertyDetail, PropertyReview } from '../models/property-detail.model';
 
 interface PropertyDetailApiResponse {
@@ -30,6 +31,7 @@ export class PropertyDetailService {
     private config: ConfigService,
     private cache: AppCacheService,
     private connectivityService: ConnectivityService,
+    private imageCache: ImageCacheService,
   ) {}
 
   getPropertyDetail(propertyId: string, accessToken?: string): Observable<PropertyDetail> {
@@ -74,6 +76,11 @@ export class PropertyDetailService {
       return;
     }
 
+
+    // Pre-cache property images in background
+    if (detail.photos && detail.photos.length > 0) {
+      void this.imageCache.cacheImages(detail.photos);
+    }
     this.cache.write(this.getCacheKey(propertyId), detail);
   }
 
