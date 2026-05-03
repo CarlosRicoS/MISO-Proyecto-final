@@ -1,0 +1,26 @@
+$kind: http-request
+name: Get Revenue Overview
+url: "{{base_url}}/incomings-report/api/reports/revenue-overview"
+method: GET
+headers:
+  Authorization: "Bearer {{id_token}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Returns 200', function () {
+        pm.response.to.have.status(200);
+      });
+      const json = pm.response.json();
+      pm.test('Has data array', function () {
+        pm.expect(json).to.have.property('data');
+        pm.expect(json.data).to.be.an('array');
+      });
+      if (json.data && json.data.length > 0) {
+        pm.test('Each entry has month, year and total_revenue', function () {
+          pm.expect(json.data[0]).to.have.property('month');
+          pm.expect(json.data[0]).to.have.property('year');
+          pm.expect(json.data[0]).to.have.property('total_revenue');
+        });
+      }
+    language: text/javascript
+order: 2000

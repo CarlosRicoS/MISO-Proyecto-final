@@ -1,0 +1,22 @@
+$kind: http-request
+name: Get Incoming CSV
+url: "{{base_url}}/incomings-report/api/reports/incoming/csv"
+method: GET
+headers:
+  Authorization: "Bearer {{id_token}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Returns 200', function () {
+        pm.response.to.have.status(200);
+      });
+      pm.test('Response is CSV', function () {
+        const contentType = pm.response.headers.get('Content-Type');
+        pm.expect(contentType).to.include('text/csv');
+      });
+      pm.test('Content-Disposition is attachment', function () {
+        const disposition = pm.response.headers.get('Content-Disposition');
+        pm.expect(disposition).to.include('attachment');
+      });
+    language: text/javascript
+order: 4000

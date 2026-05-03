@@ -12,7 +12,8 @@ service_names = [
   "auth",
   "billing",
   "stripe-mock",
-  "checkin"
+  "checkin",
+  "incomings-report"
 ]
 
 enable_auth = true

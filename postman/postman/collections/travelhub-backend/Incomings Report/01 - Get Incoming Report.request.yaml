@@ -1,0 +1,24 @@
+$kind: http-request
+name: Get Incoming Report
+url: "{{base_url}}/incomings-report/api/reports/incoming"
+method: GET
+headers:
+  Authorization: "Bearer {{id_token}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Returns 200', function () {
+        pm.response.to.have.status(200);
+      });
+      const json = pm.response.json();
+      pm.test('Has records array', function () {
+        pm.expect(json).to.have.property('records');
+        pm.expect(json.records).to.be.an('array');
+      });
+      pm.test('Has totals', function () {
+        pm.expect(json).to.have.property('total_records');
+        pm.expect(json).to.have.property('total_gross');
+        pm.expect(json).to.have.property('total_net');
+      });
+    language: text/javascript
+order: 1000

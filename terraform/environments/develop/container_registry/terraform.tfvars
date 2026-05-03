@@ -14,6 +14,7 @@ repository_names = [
   "api_billing",
   "api_stripe_mock",
   "api_checkin",
+  "api_incomings_report",
   "web_travelhub",
   "web_portal_hoteles"
 ]

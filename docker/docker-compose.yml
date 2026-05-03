@@ -51,6 +51,8 @@ services:
         condition: service_started
       checkin:
         condition: service_started
+      incomings-report:
+        condition: service_started
 
   # =====================================================================
   # PYTHON SERVICES
@@ -162,6 +164,33 @@ services:
       postgres:
         condition: service_healthy
       booking:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python3 -c \"import urllib.request; urllib.request.urlopen('http://localhost:80/api/health')\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  incomings-report:
+    build:
+      context: ../services/incomings_report
+    environment:
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_NAME: incomings_report
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      BILLING_DB_HOST: postgres
+      BILLING_DB_PORT: "5432"
+      BILLING_DB_NAME: billing
+      BILLING_DB_USERNAME: postgres
+      BILLING_DB_PASSWORD: postgres
+      DEBUG: "true"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      billing:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "python3 -c \"import urllib.request; urllib.request.urlopen('http://localhost:80/api/health')\""]
