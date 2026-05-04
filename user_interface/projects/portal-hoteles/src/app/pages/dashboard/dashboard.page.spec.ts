@@ -22,6 +22,16 @@ type BookingServiceLike = {
   listReservations: jasmine.Spy;
 };
 
+type ReportsServiceLike = {
+  getDashboardMetrics: jasmine.Spy;
+};
+
+function createReportsServiceStub(): ReportsServiceLike {
+  return {
+    getDashboardMetrics: jasmine.createSpy('getDashboardMetrics').and.returnValue(of(null)),
+  };
+}
+
 describe('PortalHotelesDashboardPage', () => {
   const reservationFixture: ReservationLike[] = [
     {
@@ -85,7 +95,7 @@ describe('PortalHotelesDashboardPage', () => {
     // Arrange
     const authSessionStub = createAuthSessionStub();
     const bookingServiceStub = createBookingServiceStub();
-    const component = new PortalHotelesDashboardPage(authSessionStub as never, bookingServiceStub as never);
+    const component = new PortalHotelesDashboardPage(authSessionStub as never, bookingServiceStub as never, createReportsServiceStub() as never);
 
     // Act
     const operatorEmail = component.operatorEmail;
@@ -98,7 +108,7 @@ describe('PortalHotelesDashboardPage', () => {
     // Arrange
     const authSessionStub = createAuthSessionStub({ userEmail: '' });
     const bookingServiceStub = createBookingServiceStub();
-    const component = new PortalHotelesDashboardPage(authSessionStub as never, bookingServiceStub as never);
+    const component = new PortalHotelesDashboardPage(authSessionStub as never, bookingServiceStub as never, createReportsServiceStub() as never);
 
     // Act
     const operatorEmail = component.operatorEmail;
@@ -111,7 +121,7 @@ describe('PortalHotelesDashboardPage', () => {
     // Arrange
     const authSessionStub = createAuthSessionStub();
     const bookingServiceStub = createBookingServiceStub();
-    const component = new PortalHotelesDashboardPage(authSessionStub as never, bookingServiceStub as never);
+    const component = new PortalHotelesDashboardPage(authSessionStub as never, bookingServiceStub as never, createReportsServiceStub() as never);
 
     // Act
     component.ionViewWillEnter();
@@ -136,7 +146,7 @@ describe('PortalHotelesDashboardPage', () => {
     // Arrange
     const authSessionStub = createAuthSessionStub();
     const bookingServiceStub = createBookingServiceStub();
-    const component = new PortalHotelesDashboardPage(authSessionStub as never, bookingServiceStub as never);
+    const component = new PortalHotelesDashboardPage(authSessionStub as never, bookingServiceStub as never, createReportsServiceStub() as never);
 
     // Act
     component.ionViewWillEnter();
@@ -164,7 +174,7 @@ describe('PortalHotelesDashboardPage', () => {
     // Arrange
     const authSessionStub = createAuthSessionStub();
     const bookingServiceStub = createBookingServiceStub(reservationFixture.slice(0, 3));
-    const component = new PortalHotelesDashboardPage(authSessionStub as never, bookingServiceStub as never);
+    const component = new PortalHotelesDashboardPage(authSessionStub as never, bookingServiceStub as never, createReportsServiceStub() as never);
 
     // Act
     component.ionViewWillEnter();
@@ -188,7 +198,7 @@ describe('PortalHotelesDashboardPage', () => {
         throwError(() => new Error('Network error')),
       ),
     };
-    const component = new PortalHotelesDashboardPage(authSessionStub as never, bookingServiceStub as never);
+    const component = new PortalHotelesDashboardPage(authSessionStub as never, bookingServiceStub as never, createReportsServiceStub() as never);
 
     // Act
     component.ionViewWillEnter();
@@ -205,7 +215,7 @@ describe('PortalHotelesDashboardPage', () => {
     // Arrange
     const authSessionStub = createAuthSessionStub();
     const bookingServiceStub = createBookingServiceStub();
-    const component = new PortalHotelesDashboardPage(authSessionStub as never, bookingServiceStub as never);
+    const component = new PortalHotelesDashboardPage(authSessionStub as never, bookingServiceStub as never, createReportsServiceStub() as never);
 
     // Act
     const confirmedClass = component.getStatusClass('confirmed');
@@ -222,7 +232,7 @@ describe('PortalHotelesDashboardPage', () => {
     // Arrange
     const authSessionStub = createAuthSessionStub();
     const bookingServiceStub = createBookingServiceStub();
-    const component = new PortalHotelesDashboardPage(authSessionStub as never, bookingServiceStub as never);
+    const component = new PortalHotelesDashboardPage(authSessionStub as never, bookingServiceStub as never, createReportsServiceStub() as never);
 
     // Act
     const pending = component.getStatusClass('pending');
@@ -243,7 +253,7 @@ describe('PortalHotelesDashboardPage', () => {
     // Arrange
     const authSessionStub = createAuthSessionStub();
     const bookingServiceStub = createBookingServiceStub();
-    const component = new PortalHotelesDashboardPage(authSessionStub as never, bookingServiceStub as never);
+    const component = new PortalHotelesDashboardPage(authSessionStub as never, bookingServiceStub as never, createReportsServiceStub() as never);
 
     // Act
     const statusClass = component.getStatusClass('  CONFIRMED  ');
@@ -256,7 +266,7 @@ describe('PortalHotelesDashboardPage', () => {
     // Arrange
     const authSessionStub = createAuthSessionStub({ userEmail: 'operator@travelhub.com' });
     const bookingServiceStub = createBookingServiceStub();
-    const component = new PortalHotelesDashboardPage(authSessionStub as never, bookingServiceStub as never);
+    const component = new PortalHotelesDashboardPage(authSessionStub as never, bookingServiceStub as never, createReportsServiceStub() as never);
     const reservation = {
       id: '',
       reservation_id: '  BK-FALLBACK  ',
@@ -285,7 +295,7 @@ describe('PortalHotelesDashboardPage', () => {
     // Arrange
     const authSessionStub = createAuthSessionStub({ userEmail: 'operator@travelhub.com' });
     const bookingServiceStub = createBookingServiceStub();
-    const component = new PortalHotelesDashboardPage(authSessionStub as never, bookingServiceStub as never);
+    const component = new PortalHotelesDashboardPage(authSessionStub as never, bookingServiceStub as never, createReportsServiceStub() as never);
     const reservation = {
       id: '   ',
       user_id: '',
@@ -309,7 +319,7 @@ describe('PortalHotelesDashboardPage', () => {
     // Arrange
     const authSessionStub = createAuthSessionStub();
     const bookingServiceStub = createBookingServiceStub();
-    const component = new PortalHotelesDashboardPage(authSessionStub as never, bookingServiceStub as never);
+    const component = new PortalHotelesDashboardPage(authSessionStub as never, bookingServiceStub as never, createReportsServiceStub() as never);
     const reservationWithGuestName = {
       guest_name: '  Mary Jane  ',
       user_email: 'mary.jane@email.com',
@@ -339,7 +349,7 @@ describe('PortalHotelesDashboardPage', () => {
     // Arrange
     const authSessionStub = createAuthSessionStub();
     const bookingServiceStub = createBookingServiceStub();
-    const component = new PortalHotelesDashboardPage(authSessionStub as never, bookingServiceStub as never);
+    const component = new PortalHotelesDashboardPage(authSessionStub as never, bookingServiceStub as never, createReportsServiceStub() as never);
 
     // Act
     const guest = (component as unknown as { getGuestName: (r: any, userId: string) => string }).getGuestName({}, '   ');
@@ -352,7 +362,7 @@ describe('PortalHotelesDashboardPage', () => {
     // Arrange
     const authSessionStub = createAuthSessionStub();
     const bookingServiceStub = createBookingServiceStub();
-    const component = new PortalHotelesDashboardPage(authSessionStub as never, bookingServiceStub as never);
+    const component = new PortalHotelesDashboardPage(authSessionStub as never, bookingServiceStub as never, createReportsServiceStub() as never);
 
     // Act
     const normalized = (component as unknown as { toDisplayName: (raw: string) => string }).toDisplayName(
@@ -369,7 +379,7 @@ describe('PortalHotelesDashboardPage', () => {
     // Arrange
     const authSessionStub = createAuthSessionStub();
     const bookingServiceStub = createBookingServiceStub();
-    const component = new PortalHotelesDashboardPage(authSessionStub as never, bookingServiceStub as never);
+    const component = new PortalHotelesDashboardPage(authSessionStub as never, bookingServiceStub as never, createReportsServiceStub() as never);
 
     // Act
     const known = (component as unknown as { formatStatusLabel: (status: string) => string }).formatStatusLabel('REJECTED');
