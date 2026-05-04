@@ -136,7 +136,8 @@
       </table>
 
       <ng-template #noRowsTemplate>
-        <p class="portal-hoteles-reports-table__message" aria-live="polite" aria-atomic="true">No revenue transactions available.</p>
+        <p *ngIf="reportErrorMessage" class="portal-hoteles-reports-table__message" role="alert">{{ reportErrorMessage }}</p>
+        <p *ngIf="!reportErrorMessage" class="portal-hoteles-reports-table__message" aria-live="polite" aria-atomic="true">No revenue transactions available.</p>
       </ng-template>
     </portal-hoteles-grid-card>
   </section>
