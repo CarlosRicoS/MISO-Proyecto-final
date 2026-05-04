@@ -81,11 +81,8 @@ export class PortalHotelesRevenueChartCardComponent {
     this.periodChange.emit(nextValue);
   }
 
-  readonly chartHeightPx = 220;
-
   getBarHeight(value: number): number {
-    const ratio = value / this.resolvedMaxValue;
-    return Math.max(6, Math.round(ratio * this.chartHeightPx));
+    return (value / this.resolvedMaxValue) * 100;
   }
 
   formatCurrency(value: number): string {
