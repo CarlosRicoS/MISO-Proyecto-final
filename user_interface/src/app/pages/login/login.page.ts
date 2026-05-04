@@ -146,6 +146,15 @@ export class LoginPage {
       }
     } catch (error) {
       const httpError = error as HttpErrorResponse;
+      console.log(
+        'Login request failed: ' +
+        JSON.stringify({
+          status: httpError.status,
+          message: httpError.message,
+          url: httpError.url,
+          error: httpError.error
+        }, null, 2)
+      );
       if (httpError.status === 401) {
         this.showErrorAlert('Invalid email or password.');
       } else {

@@ -1,9 +1,10 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable, of, forkJoin } from 'rxjs';
-import { map, switchMap, catchError } from 'rxjs/operators';
+import { map, switchMap, catchError, tap } from 'rxjs/operators';
 import { ConfigService } from './config.service';
 import { PricingService } from './pricing.service';
+import { ImageCacheService } from './image-cache.service';
 import { Hotel } from '../models/hotel.model';
 
 interface PropertyApiResponse {
@@ -35,6 +36,7 @@ export class HotelsService {
     private http: HttpClient,
     private config: ConfigService,
     private pricingService: PricingService,
+    private imageCache: ImageCacheService,
   ) {}
 
   getHotels(params: PropertySearchParams = {}): Observable<Hotel[]> {
@@ -79,8 +81,11 @@ export class HotelsService {
     const headers = new HttpHeaders(headersConfig);
 
     return this.http
-        .get<PropertyApiResponse[]>(url, { headers, params: queryParams })
-        .pipe(map((response) => response.map((property) => this.mapPropertyToHotel(property, params.city))));
+      .get<PropertyApiResponse[]>(url, { headers, params: queryParams })
+      .pipe(
+        map((response) => response.map((property) => this.mapPropertyToHotel(property, params.city))),
+        tap((hotels) => this.preloadHotelImages(hotels)),
+      );
   }
 
   /**
@@ -177,6 +182,22 @@ export class HotelsService {
       return [property.imageUrl];
     }
 
-    return [''];
+    return [];
+  }
+
+  private preloadHotelImages(hotels: Hotel[]): void {
+    // Collect all unique images from all hotels and pre-cache in background
+    const imageUrls = new Set<string>();
+    hotels.forEach((hotel) => {
+      hotel.photos.forEach((photo) => {
+        if (photo && photo.trim()) {
+          imageUrls.add(photo);
+        }
+      });
+    });
+
+    if (imageUrls.size > 0) {
+      void this.imageCache.cacheImages(Array.from(imageUrls));
+    }
   }
 }

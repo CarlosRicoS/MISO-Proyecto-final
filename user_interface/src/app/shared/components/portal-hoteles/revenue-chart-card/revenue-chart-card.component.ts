@@ -41,7 +41,7 @@ export class PortalHotelesRevenueChartCardComponent {
 
     return Array.from({ length: size }, (_, index) => ({
       category: this.categories[index],
-      value: Math.max(0, this.values[index] ?? 0),
+      value: Math.max(0, Number.isFinite(this.values[index]) ? this.values[index] : 0),
     }));
   }
 

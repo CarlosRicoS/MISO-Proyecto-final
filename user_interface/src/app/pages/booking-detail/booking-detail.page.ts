@@ -11,6 +11,7 @@ import { AuthSessionService } from '../../core/services/auth-session.service';
 import { BookingService, CancellationPolicyResponse, Reservation } from '../../core/services/booking.service';
 import { PropertyDetailService } from '../../core/services/property-detail.service';
 import { PricingService } from '../../core/services/pricing.service';
+import { ImageCacheService } from '../../core/services/image-cache.service';
 import { ThAmenityItem } from '../../shared/components/th-amenities-summary/th-amenities-summary.component';
 import { ThDetailsMosaicImage } from '../../shared/components/th-details-mosaic/th-details-mosaic.component';
 import { ThPaymentSummaryCompactTab, ThPaymentSummaryItem } from '../../shared/components/th-payment-summary/th-payment-summary.component';
@@ -124,6 +125,7 @@ export class BookingDetailPage implements OnInit, OnDestroy {
     private pricingService: PricingService,
     private route: ActivatedRoute,
     private router: Router,
+    private imageCache: ImageCacheService,
   ) {
     this.priceTrigger$.pipe(
       takeUntil(this.destroy$),
@@ -664,6 +666,10 @@ export class BookingDetailPage implements OnInit, OnDestroy {
     hotel?: Hotel,
   ): Promise<void> {
     const detail = await firstValueFrom(this.propertyDetailService.getPropertyDetail(propertyId));
+    // Pre-cache property images for offline access (await to ensure images are cached before display)
+    if (detail.photos && detail.photos.length > 0) {
+      await this.imageCache.cacheImages(detail.photos);
+    }
     this.applyBookingDetail(reservation, detail, hotel);
   }
 
@@ -689,13 +695,13 @@ export class BookingDetailPage implements OnInit, OnDestroy {
     const nightlyPrice = nights > 0 ? Math.max(0, Math.round(stayTotal / nights)) : stayTotal;
 
     const photos = Array.isArray(propertyDetail.photos) ? propertyDetail.photos : [];
-    const images: ThDetailsMosaicImage[] = photos.map((photo) => ({ src: photo }));
+    const images: ThDetailsMosaicImage[] = photos.map((photo) => ({ src: this.imageCache.resolveImageUrl(photo) }));
     if (!images.length && hotel?.photos?.[0]) {
-      images.push({ src: hotel.photos[0], alt: propertyDetail.name || 'Property photo' });
+      images.push({ src: this.imageCache.resolveImageUrl(hotel.photos[0]), alt: propertyDetail.name || 'Property photo' });
     }
 
     if (!images.length && hotel?.imageUrl) {
-      images.push({ src: hotel.imageUrl, alt: propertyDetail.name || 'Property photo' });
+      images.push({ src: this.imageCache.resolveImageUrl(hotel.imageUrl), alt: propertyDetail.name || 'Property photo' });
     }
 
     this.property = {
@@ -707,7 +713,7 @@ export class BookingDetailPage implements OnInit, OnDestroy {
       scoreLabel: ratingValue !== null ? this.getScoreLabel(ratingValue) : 'Unrated',
       reviewsText: reviewCountText,
       stars: ratingValue !== null ? Math.round(ratingValue) : 0,
-      imageUrl: hotel?.photos?.[0] || hotel?.imageUrl || '',
+      imageUrl: this.imageCache.resolveImageUrl(hotel?.photos?.[0] || hotel?.imageUrl || ''),
       totalPhotos: photos.length,
       images,
     };

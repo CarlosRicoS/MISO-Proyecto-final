@@ -1,8 +1,12 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { Observable, of, throwError } from 'rxjs';
+import { catchError, map, tap } from 'rxjs/operators';
+import { Capacitor } from '@capacitor/core';
+import { AppCacheService } from './app-cache.service';
 import { ConfigService } from './config.service';
+import { ConnectivityService } from './connectivity.service';
+import { ImageCacheService } from './image-cache.service';
 import { PropertyAmenity, PropertyDetail, PropertyReview } from '../models/property-detail.model';
 
 interface PropertyDetailApiResponse {
@@ -22,7 +26,13 @@ interface PropertyDetailApiResponse {
 
 @Injectable({ providedIn: 'root' })
 export class PropertyDetailService {
-  constructor(private http: HttpClient, private config: ConfigService) {}
+  constructor(
+    private http: HttpClient,
+    private config: ConfigService,
+    private cache: AppCacheService,
+    private connectivityService: ConnectivityService,
+    private imageCache: ImageCacheService,
+  ) {}
 
   getPropertyDetail(propertyId: string, accessToken?: string): Observable<PropertyDetail> {
     const baseUrl = this.config.apiBaseUrl?.replace(/\/$/, '');
@@ -43,7 +53,47 @@ export class PropertyDetailService {
 
     return this.http
       .get<PropertyDetailApiResponse>(url, { headers })
-      .pipe(map((response) => this.mapPropertyDetail(response, propertyId)));
+      .pipe(
+        map((response) => this.mapPropertyDetail(response, propertyId)),
+        tap((detail) => this.cachePropertyDetail(propertyId, detail)),
+        catchError((error) => {
+          const cachedDetail = this.readCachedPropertyDetail(propertyId);
+          if (cachedDetail) {
+            return of(cachedDetail);
+          }
+
+          return throwError(() => error);
+        }),
+      );
+  }
+
+  private shouldReadFromCache(): boolean {
+    return Capacitor.isNativePlatform() && this.connectivityService.isOffline;
+  }
+
+  private cachePropertyDetail(propertyId: string, detail: PropertyDetail): void {
+    if (!Capacitor.isNativePlatform()) {
+      return;
+    }
+
+
+    // Pre-cache property images in background
+    if (detail.photos && detail.photos.length > 0) {
+      void this.imageCache.cacheImages(detail.photos);
+    }
+    this.cache.write(this.getCacheKey(propertyId), detail);
+  }
+
+  private readCachedPropertyDetail(propertyId: string): PropertyDetail | null {
+    if (!Capacitor.isNativePlatform()) {
+      return null;
+    }
+
+    return this.cache.read<PropertyDetail>(this.getCacheKey(propertyId));
+  }
+
+  private getCacheKey(propertyId: string): string {
+    return `th_property_detail:${propertyId.trim()}`;
   }
 
   private mapPropertyDetail(response: PropertyDetailApiResponse, fallbackId: string): PropertyDetail {

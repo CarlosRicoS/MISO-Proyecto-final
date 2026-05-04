@@ -14,6 +14,7 @@ import { AuthSessionService } from '../../core/services/auth-session.service';
 import { BookingService, ReservationRequest } from '../../core/services/booking.service';
 import { PendingBookingService } from '../../core/services/pending-booking.service';
 import { PricingService } from '../../core/services/pricing.service';
+import { ImageCacheService } from '../../core/services/image-cache.service';
 import { ThPopupVariant } from '../../shared/components/th-popup/th-popup.component';
 
 @Component({
@@ -98,6 +99,7 @@ export class PropertydetailPage implements OnInit, OnDestroy {
     private pricingService: PricingService,
     private route: ActivatedRoute,
     private router: Router,
+    private imageCache: ImageCacheService,
   ) {
     this.priceTrigger$.pipe(
       takeUntil(this.destroy$),
@@ -199,13 +201,13 @@ export class PropertydetailPage implements OnInit, OnDestroy {
     const hotelRating = Number.isFinite(hotel?.rating) ? Number(hotel?.rating) : null;
 
     const photos = Array.isArray(detail.photos) ? detail.photos : [];
-    const images: ThDetailsMosaicImage[] = photos.map((photo) => ({ src: photo }));
+    const images: ThDetailsMosaicImage[] = photos.map((photo) => ({ src: this.imageCache.resolveImageUrl(photo) }));
     if (!images.length && hotel?.photos?.[0]) {
-      images.push({ src: hotel.photos[0], alt: detail.name || 'Property photo' });
+      images.push({ src: this.imageCache.resolveImageUrl(hotel.photos[0]), alt: detail.name || 'Property photo' });
     }
 
     if (!images.length && hotel?.imageUrl) {
-      images.push({ src: hotel.imageUrl, alt: detail.name || 'Property photo' });
+      images.push({ src: this.imageCache.resolveImageUrl(hotel.imageUrl), alt: detail.name || 'Property photo' });
     }
 
     const reviews = Array.isArray(detail.reviews) ? detail.reviews : [];
@@ -228,7 +230,7 @@ export class PropertydetailPage implements OnInit, OnDestroy {
       scoreLabel: ratingValue !== null ? this.getScoreLabel(ratingValue) : 'Unrated',
       reviewsText: reviewCountText,
       stars: ratingValue !== null ? Math.round(ratingValue) : 0,
-      imageUrl: hotel?.photos?.[0] || hotel?.imageUrl || '',
+      imageUrl: this.imageCache.resolveImageUrl(hotel?.photos?.[0] || hotel?.imageUrl || ''),
       totalPhotos: photos.length,
       images,
     };

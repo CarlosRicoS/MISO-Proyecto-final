@@ -8,6 +8,7 @@ import { AuthSessionService } from '../../core/services/auth-session.service';
 import { BookingService } from '../../core/services/booking.service';
 import { PropertyDetailService } from '../../core/services/property-detail.service';
 import { PricingService } from '../../core/services/pricing.service';
+import { ImageCacheService } from '../../core/services/image-cache.service';
 
 describe('BookingDetailPage', () => {
   let component: BookingDetailPage;
@@ -104,6 +105,11 @@ describe('BookingDetailPage', () => {
     navigateForward = jasmine.createSpy('navigateForward').and.returnValue(Promise.resolve());
   }
 
+  class ImageCacheServiceMock {
+    resolveImageUrl = jasmine.createSpy('resolveImageUrl').and.callFake((url: string) => url);
+    cacheImages = jasmine.createSpy('cacheImages').and.returnValue(Promise.resolve());
+  }
+
   beforeEach(async () => {
     const platformMock = {
       is: jasmine.createSpy('is').and.returnValue(true),
@@ -121,6 +127,7 @@ describe('BookingDetailPage', () => {
         { provide: PricingService, useClass: PricingServiceMock },
         { provide: Platform, useValue: platformMock },
         { provide: NavController, useClass: NavControllerMock },
+        { provide: ImageCacheService, useClass: ImageCacheServiceMock },
       ],
     }).compileComponents();
 

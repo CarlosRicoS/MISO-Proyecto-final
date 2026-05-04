@@ -17,6 +17,7 @@ import { AuthSessionService } from '../../core/services/auth-session.service';
 import { BookingService } from '../../core/services/booking.service';
 import { PendingBookingService } from '../../core/services/pending-booking.service';
 import { PricingService } from '../../core/services/pricing.service';
+import { ImageCacheService } from '../../core/services/image-cache.service';
 import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 
 describe('PropertydetailPage', () => {
@@ -98,7 +99,10 @@ describe('PropertydetailPage', () => {
   class PricingServiceMock {
     getPropertyWithPrice = jasmine.createSpy('getPropertyWithPrice').and.returnValue(of({ price: 500 }));
   }
-
+  class ImageCacheServiceMock {
+    resolveImageUrl = jasmine.createSpy('resolveImageUrl').and.callFake((url: string) => url);
+    cacheImages = jasmine.createSpy('cacheImages').and.returnValue(Promise.resolve());
+  }
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       declarations: [PropertydetailPage],
@@ -125,6 +129,7 @@ describe('PropertydetailPage', () => {
         { provide: AuthSessionService, useClass: AuthSessionServiceMock },
         { provide: PendingBookingService, useClass: PendingBookingServiceMock },
         { provide: PricingService, useClass: PricingServiceMock },
+        { provide: ImageCacheService, useClass: ImageCacheServiceMock },
       ],
       schemas: [CUSTOM_ELEMENTS_SCHEMA],
     }).compileComponents();

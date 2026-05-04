@@ -3,6 +3,7 @@ import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
 import { Capacitor } from '@capacitor/core';
 import { filter, Subscription } from 'rxjs';
 import { AuthSessionService } from './core/services/auth-session.service';
+import { ConnectivityService } from './core/services/connectivity.service';
 import { NotificationService } from './core/services/notification.service';
 import { ThNavbarMode } from './shared/components/th-navbar/th-navbar.component';
 
@@ -28,6 +29,7 @@ export class AppComponent implements OnInit, OnDestroy {
     private router: Router,
     private route: ActivatedRoute,
     private authSessionService: AuthSessionService,
+    private connectivityService: ConnectivityService,
     private notificationService: NotificationService
   ) {}
 
@@ -90,6 +92,10 @@ export class AppComponent implements OnInit, OnDestroy {
 
   get isNotificationsRoute(): boolean {
     return this.router.url.startsWith('/notifications');
+  }
+
+  get showOfflineBanner(): boolean {
+    return this.connectivityService.shouldShowMobileBanner;
   }
 
   get showMobileTopBar(): boolean {

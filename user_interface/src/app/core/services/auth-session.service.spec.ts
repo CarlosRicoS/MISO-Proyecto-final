@@ -23,7 +23,7 @@ describe('AuthSessionService', () => {
   };
 
   beforeEach(() => {
-    sessionStorage.clear();
+    localStorage.clear();
     TestBed.configureTestingModule({});
     service = TestBed.inject(AuthSessionService);
   });
@@ -42,7 +42,7 @@ describe('AuthSessionService', () => {
     expect(service.accessToken).toBe('access-token');
     expect(service.refreshToken).toBe('refresh-token');
 
-    const storedValue = sessionStorage.getItem('th_auth_session');
+    const storedValue = localStorage.getItem('th_auth_session');
     expect(storedValue).not.toBeNull();
 
     const parsed = JSON.parse(storedValue as string) as LoginResponse;
@@ -55,7 +55,7 @@ describe('AuthSessionService', () => {
 
     expect(service.isLoggedIn).toBeFalse();
     expect(service.loginResponse).toBeNull();
-    expect(sessionStorage.getItem('th_auth_session')).toBeNull();
+    expect(localStorage.getItem('th_auth_session')).toBeNull();
   });
 
   it('reads user id and email from id token claims', () => {
@@ -200,8 +200,8 @@ describe('AuthSessionService', () => {
   describe('corrupted storage', () => {
     it('handles invalid JSON in storage gracefully on initialization', () => {
       // Clear first, then set corrupted data before service initialization
-      sessionStorage.clear();
-      sessionStorage.setItem('th_auth_session', 'not valid json {]');
+      localStorage.clear();
+      localStorage.setItem('th_auth_session', 'not valid json {]');
       
       // Create a fresh service that will try to parse corrupted data
       const testBed = TestBed.resetTestingModule();
@@ -214,7 +214,7 @@ describe('AuthSessionService', () => {
     });
 
     it('treats response without access_token as logged out', () => {
-      sessionStorage.clear();
+      localStorage.clear();
       const responseWithoutAccessToken: LoginResponse = {
         id_token: 'id-token',
         refresh_token: 'refresh-token',
@@ -223,7 +223,7 @@ describe('AuthSessionService', () => {
         access_token: '',
       };
 
-      sessionStorage.setItem('th_auth_session', JSON.stringify(responseWithoutAccessToken));
+      localStorage.setItem('th_auth_session', JSON.stringify(responseWithoutAccessToken));
       
       const testBed = TestBed.resetTestingModule();
       testBed.configureTestingModule({});
