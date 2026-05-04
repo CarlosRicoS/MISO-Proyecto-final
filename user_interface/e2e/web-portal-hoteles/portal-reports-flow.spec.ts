@@ -23,7 +23,7 @@ const mockIncomingReport = {
     },
     {
       id: 'rpt-002',
-      booking_id: 'bk000001-0000-0000-0000-000000000002',
+      booking_id: 'bk000002-0000-0000-0000-000000000002',
       payment_reference: 'PAY-APR-002',
       payment_date: '2026-04-14T13:00:00',
       gross_value: 920.0,
@@ -34,7 +34,7 @@ const mockIncomingReport = {
     },
     {
       id: 'rpt-003',
-      booking_id: 'bk000001-0000-0000-0000-000000000003',
+      booking_id: 'bk000003-0000-0000-0000-000000000003',
       payment_reference: null,
       payment_date: '2026-04-21T08:30:00',
       gross_value: 1480.0,
@@ -130,22 +130,24 @@ test.describe('Portal Hoteles — reports page', () => {
 
   test('shows KPI cards with values from dashboard-metrics API', async ({ page }) => {
     await page.goto('/reports');
-    await page.waitForLoadState('networkidle');
 
     await expect(page.getByText('Avg. Daily Revenue')).toBeVisible();
     await expect(page.getByText('Monthly Revenue')).toBeVisible();
     await expect(page.getByText('$278')).toBeVisible();
     await expect(page.getByText('$8,350')).toBeVisible();
-    await expect(page.getByText('+23.0% from previous month')).toBeVisible();
+    // Trend label appears once per KPI card — use first() to avoid strict-mode violation.
+    await expect(page.getByText('+23.0% from previous month').first()).toBeVisible();
   });
 
   test('shows report table with records from incoming API', async ({ page }) => {
     await page.goto('/reports');
-    await page.waitForLoadState('networkidle');
 
-    await expect(page.getByText('#bk000001')).toBeVisible();
-    await expect(page.getByText('PAY-APR-001')).toBeVisible();
-    await expect(page.getByText('CONFIRMED')).toBeVisible();
+    await expect(page.getByRole('cell', { name: '#bk000001' })).toBeVisible();
+    await expect(page.getByRole('cell', { name: '#bk000002' })).toBeVisible();
+    await expect(page.getByRole('cell', { name: '#bk000003' })).toBeVisible();
+    await expect(page.getByRole('cell', { name: 'PAY-APR-001' })).toBeVisible();
+    // CONFIRMED appears in two rows — pick the first for visibility.
+    await expect(page.getByText('CONFIRMED').first()).toBeVisible();
     await expect(page.getByText('PENDING')).toBeVisible();
   });
 
@@ -159,7 +161,6 @@ test.describe('Portal Hoteles — reports page', () => {
     });
 
     await page.goto('/reports');
-    await page.waitForLoadState('networkidle');
 
     await expect(page.getByText('No revenue transactions available.')).toBeVisible();
   });
@@ -170,14 +171,14 @@ test.describe('Portal Hoteles — reports page', () => {
     });
 
     await page.goto('/reports');
-    await page.waitForLoadState('networkidle');
 
     await expect(page.getByText('Unable to load report data.')).toBeVisible();
   });
 
   test('Excel button triggers CSV request to backend', async ({ page }) => {
     await page.goto('/reports');
-    await page.waitForLoadState('networkidle');
+    // Wait for the report rows to render so the Excel button is interactable.
+    await expect(page.getByRole('cell', { name: '#bk000001' })).toBeVisible();
 
     // Using createObjectURL + synthetic anchor click does not fire Playwright's download event.
     // Instead verify that the Angular HttpClient makes the correct network request to the backend.
@@ -190,13 +191,12 @@ test.describe('Portal Hoteles — reports page', () => {
 
   test('shows correct table columns for financial data', async ({ page }) => {
     await page.goto('/reports');
-    await page.waitForLoadState('networkidle');
 
-    await expect(page.getByText('Booking Code')).toBeVisible();
-    await expect(page.getByText('Payment Ref')).toBeVisible();
-    await expect(page.getByText('Gross Value')).toBeVisible();
-    await expect(page.getByText('Net Income')).toBeVisible();
-    await expect(page.getByText('Status')).toBeVisible();
+    await expect(page.getByRole('columnheader', { name: 'Booking Code' })).toBeVisible();
+    await expect(page.getByRole('columnheader', { name: 'Payment Ref' })).toBeVisible();
+    await expect(page.getByRole('columnheader', { name: 'Gross Value' })).toBeVisible();
+    await expect(page.getByRole('columnheader', { name: 'Net Income' })).toBeVisible();
+    await expect(page.getByRole('columnheader', { name: 'Status' })).toBeVisible();
   });
 });
 
@@ -212,27 +212,30 @@ test.describe('Portal Hoteles — dashboard KPI metrics', () => {
 
   test('shows live total reservations count from API', async ({ page }) => {
     await page.goto('/dashboard');
-    await page.waitForLoadState('networkidle');
 
-    await expect(page.getByText('28').first()).toBeVisible();
+    const reservationsCard = page
+      .locator('portal-hoteles-grid-card')
+      .filter({ hasText: 'Total Reservations' });
+    await expect(reservationsCard.locator('.portal-hoteles-dashboard-card__value')).toHaveText('28');
   });
 
   test('shows live monthly revenue from API', async ({ page }) => {
     await page.goto('/dashboard');
-    await page.waitForLoadState('networkidle');
 
-    await expect(page.getByText('$8,350')).toBeVisible();
+    const revenueCard = page
+      .locator('portal-hoteles-grid-card')
+      .filter({ hasText: 'Monthly Revenue' });
+    await expect(revenueCard.locator('.portal-hoteles-dashboard-card__value')).toHaveText('$8,350');
   });
 
   test('shows live check-in and check-out counts', async ({ page }) => {
     await page.goto('/dashboard');
-    await page.waitForLoadState('networkidle');
 
     const checkinsCard = page.locator('portal-hoteles-grid-card').filter({ hasText: "Today's Check-ins" });
-    await expect(checkinsCard.getByText('2')).toBeVisible();
+    await expect(checkinsCard.locator('.portal-hoteles-dashboard-card__value')).toHaveText('2');
 
     const checkoutsCard = page.locator('portal-hoteles-grid-card').filter({ hasText: "Today's Check-outs" });
-    await expect(checkoutsCard.getByText('1')).toBeVisible();
+    await expect(checkoutsCard.locator('.portal-hoteles-dashboard-card__value')).toHaveText('1');
   });
 
   test('shows dash placeholders when metrics API fails', async ({ page }) => {
@@ -241,18 +244,10 @@ test.describe('Portal Hoteles — dashboard KPI metrics', () => {
     });
 
     await page.goto('/dashboard');
-    await page.waitForLoadState('networkidle');
 
-    const metricValues = page.locator('.portal-hoteles-dashboard-card__value');
-    const count = await metricValues.count();
-    let foundDash = false;
-    for (let i = 0; i < count; i++) {
-      const text = await metricValues.nth(i).textContent();
-      if (text?.trim() === '—') {
-        foundDash = true;
-        break;
-      }
-    }
-    expect(foundDash).toBe(true);
+    const reservationsCard = page
+      .locator('portal-hoteles-grid-card')
+      .filter({ hasText: 'Total Reservations' });
+    await expect(reservationsCard.locator('.portal-hoteles-dashboard-card__value')).toHaveText('—');
   });
 });
