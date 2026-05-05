@@ -232,4 +232,41 @@ describe('PortalHotelesRevenueChartCardComponent', () => {
     // Assert
     expect(trackId).toBe('Feb');
   });
+
+  describe('a11y', () => {
+    it('falls back to "Revenue overview chart" aria-label when ariaDescription is empty (AC-12)', () => {
+      // Arrange
+      component.categories = ['Jan', 'Feb'];
+      component.values = [100, 200];
+      component.ariaDescription = '';
+
+      // Act
+      fixture.detectChanges();
+      const element = fixture.nativeElement as HTMLElement;
+      const chart = element.querySelector('.portal-hoteles-revenue-chart-card__chart');
+
+      // Assert
+      expect(chart).not.toBeNull();
+      expect(chart?.getAttribute('aria-label')).toBe('Revenue overview chart');
+    });
+
+    it('marks each focusable bar with role="img" so SR announces the aria-label (AC-13)', () => {
+      // Arrange
+      component.categories = ['Jan', 'Feb', 'Mar'];
+      component.values = [100, 200, 300];
+
+      // Act
+      fixture.detectChanges();
+      const element = fixture.nativeElement as HTMLElement;
+      const bars = element.querySelectorAll('.portal-hoteles-revenue-chart-card__bar');
+
+      // Assert
+      expect(bars.length).toBe(3);
+      bars.forEach((bar) => {
+        expect(bar.getAttribute('role')).toBe('img');
+        expect(bar.getAttribute('tabindex')).toBe('0');
+        expect(bar.getAttribute('aria-label')).toMatch(/^[A-Za-z]+: /);
+      });
+    });
+  });
 });

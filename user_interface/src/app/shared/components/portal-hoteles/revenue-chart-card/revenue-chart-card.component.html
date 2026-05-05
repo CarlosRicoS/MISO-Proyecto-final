@@ -15,7 +15,7 @@
     </ion-select>
   </div>
 
-  <div class="portal-hoteles-revenue-chart-card__chart" [attr.aria-label]="ariaDescription" role="img" *ngIf="hasData; else emptyChart">
+  <div class="portal-hoteles-revenue-chart-card__chart" [attr.aria-label]="ariaDescription || 'Revenue overview chart'" role="img" *ngIf="hasData; else emptyChart">
     <ol class="portal-hoteles-revenue-chart-card__y-axis" aria-hidden="true">
       <li *ngFor="let tick of resolvedTicks">{{ formatCurrency(tick) }}</li>
     </ol>
@@ -26,6 +26,7 @@
           class="portal-hoteles-revenue-chart-card__bar"
           [style.height.%]="getBarHeight(point.value)"
           [attr.aria-label]="getBarAriaLabel(point)"
+          role="img"
           tabindex="0"
         ></div>
         <span class="portal-hoteles-revenue-chart-card__bar-label">{{ point.category }}</span>

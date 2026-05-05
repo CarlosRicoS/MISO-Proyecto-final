@@ -150,4 +150,79 @@ describe('PortalHotelesReportsPage', () => {
     expect(emptyComponent.hasRows).toBeFalse();
     expect(emptyComponent.rangeLabel).toBe('Showing 0-0 of 0 transactions');
   });
+
+  describe('a11y', () => {
+    it('renders the loading paragraph with aria-live and aria-atomic when isLoadingReport=true (AC-9)', () => {
+      // Arrange
+      component.isLoadingReport = true;
+
+      // Act
+      fixture.detectChanges();
+      const element = fixture.nativeElement as HTMLElement;
+      const loadingMessages = Array.from(
+        element.querySelectorAll('p.portal-hoteles-reports-table__message'),
+      ).filter((p) => p.textContent?.includes('Loading reports'));
+
+      // Assert
+      expect(loadingMessages.length).toBe(1);
+      const loading = loadingMessages[0];
+      expect(loading.getAttribute('aria-live')).toBe('polite');
+      expect(loading.getAttribute('aria-atomic')).toBe('true');
+    });
+
+    it('does not render the loading paragraph when isLoadingReport=false (AC-9)', () => {
+      // Arrange
+      component.isLoadingReport = false;
+
+      // Act
+      fixture.detectChanges();
+      const element = fixture.nativeElement as HTMLElement;
+      const loadingMessages = Array.from(
+        element.querySelectorAll('p.portal-hoteles-reports-table__message'),
+      ).filter((p) => p.textContent?.includes('Loading reports'));
+
+      // Assert
+      expect(loadingMessages.length).toBe(0);
+    });
+
+    it('exposes accessible names on the PDF and Excel export buttons (AC-10)', () => {
+      // Arrange
+
+      // Act
+      const element = fixture.nativeElement as HTMLElement;
+      const exportButtons = element.querySelectorAll(
+        '.portal-hoteles-reports-toolbar-header__export-button',
+      );
+
+      // Assert
+      expect(exportButtons.length).toBe(2);
+      const pdfButton = Array.from(exportButtons).find(
+        (btn) => btn.textContent?.trim() === 'PDF',
+      ) as HTMLElement | undefined;
+      const excelButton = Array.from(exportButtons).find(
+        (btn) => btn.textContent?.trim() === 'Excel',
+      ) as HTMLElement | undefined;
+
+      expect(pdfButton).toBeTruthy();
+      expect(excelButton).toBeTruthy();
+      expect(pdfButton?.getAttribute('aria-label')).toBe('Export report as PDF');
+      expect(excelButton?.getAttribute('aria-label')).toBe('Download report as Excel');
+    });
+
+    it('keeps decorative KPI badge containers aria-hidden (AC-11)', () => {
+      // Arrange
+      component.kpiCards = kpiFixture as never;
+
+      // Act
+      fixture.detectChanges();
+      const element = fixture.nativeElement as HTMLElement;
+      const badges = element.querySelectorAll('.portal-hoteles-reports-kpi__badge');
+
+      // Assert
+      expect(badges.length).toBeGreaterThan(0);
+      badges.forEach((badge) => {
+        expect(badge.getAttribute('aria-hidden')).toBe('true');
+      });
+    });
+  });
 });
