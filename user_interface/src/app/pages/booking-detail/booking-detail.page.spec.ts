@@ -9,6 +9,7 @@ import { BookingService } from '../../core/services/booking.service';
 import { PropertyDetailService } from '../../core/services/property-detail.service';
 import { PricingService } from '../../core/services/pricing.service';
 import { ImageCacheService } from '../../core/services/image-cache.service';
+import { translateTestingModule } from '../../testing/translate-testing.module';
 
 describe('BookingDetailPage', () => {
   let component: BookingDetailPage;
@@ -117,7 +118,7 @@ describe('BookingDetailPage', () => {
     };
 
     await TestBed.configureTestingModule({
-      imports: [BookingDetailPage, IonicModule.forRoot()],
+      imports: [BookingDetailPage, IonicModule.forRoot(), translateTestingModule()],
       providers: [
         { provide: Router, useClass: RouterMock },
         { provide: ActivatedRoute, useValue: routeMock },

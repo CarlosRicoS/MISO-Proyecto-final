@@ -1,8 +1,11 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { IonicModule } from '@ionic/angular';
-import { firstValueFrom } from 'rxjs';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { Subject, firstValueFrom } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { AuthSessionService } from '@travelhub/core/services/auth-session.service';
+import { LocaleService } from '@travelhub/core/services/locale.service';
 import { ReportsService, IncomingReportRecord, DashboardMetricsResponse } from '@travelhub/core/services/reports.service';
 import { PortalHotelesGridCardComponent } from '@travelhub/shared/components/portal-hoteles/grid-card/grid-card.component';
 import { PortalHotelesRevenueChartCardComponent } from '@travelhub/shared/components/portal-hoteles/revenue-chart-card/revenue-chart-card.component';
@@ -15,20 +18,25 @@ import { PortalHotelesRevenueChartCardComponent } from '@travelhub/shared/compon
   imports: [
     CommonModule,
     IonicModule,
+    TranslateModule,
     PortalHotelesGridCardComponent,
     PortalHotelesRevenueChartCardComponent,
   ],
 })
-export class PortalHotelesReportsPage {
+export class PortalHotelesReportsPage implements OnInit, OnDestroy {
   private readonly pageSize = 5;
   private currentPage = 1;
 
-  readonly chartPeriodOptions = ['Last 6 months', 'Last 12 months'];
-  readonly tablePeriodOptions = ['Last 7 days', 'Last 30 days'];
+  private readonly translate = inject(TranslateService);
+  private readonly localeService = inject(LocaleService);
+  private readonly destroy$ = new Subject<void>();
+
+  chartPeriodOptions: string[] = [];
+  tablePeriodOptions: string[] = [];
   readonly currencyOptions = ['USD', 'EUR', 'COP'];
 
-  chartPeriod = 'Last 6 months';
-  selectedTablePeriod = 'Last 7 days';
+  chartPeriod = '';
+  selectedTablePeriod = '';
   selectedCurrency = 'USD';
 
   kpiCards: ReportKpiCard[] = [];
@@ -42,10 +50,62 @@ export class PortalHotelesReportsPage {
   constructor(
     private readonly authSession: AuthSessionService,
     private readonly reportsService: ReportsService,
-  ) {}
+  ) {
+    this.refreshLocalizedOptions();
+  }
+
+  ngOnInit(): void {
+    this.localeService.currentLang$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.refreshLocalizedOptions();
+        if (this.kpiCards.length) {
+          // Re-translate trend labels on language change.
+          this.kpiCards = this.kpiCards.map((card) => ({
+            ...card,
+            value: this.formatAmount(this.parseAmount(card.value)),
+          }));
+        }
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
 
   ionViewWillEnter(): void {
     void this.loadReportData();
+  }
+
+  private refreshLocalizedOptions(): void {
+    const last6 = this.translate.instant('REPORTS.PERIOD_LAST_6');
+    const last12 = this.translate.instant('REPORTS.PERIOD_LAST_12');
+    const last7Days = this.translate.instant('REPORTS.PERIOD_LAST_7_DAYS');
+    const last30Days = this.translate.instant('REPORTS.PERIOD_LAST_30_DAYS');
+
+    this.chartPeriodOptions = [last6, last12];
+    this.tablePeriodOptions = [last7Days, last30Days];
+    this.chartPeriod = this.chartPeriod
+      ? (this.chartPeriod === last12 || this.isLast12Period(this.chartPeriod) ? last12 : last6)
+      : last6;
+    this.selectedTablePeriod = this.selectedTablePeriod
+      ? (this.selectedTablePeriod === last30Days || this.isLast30Period(this.selectedTablePeriod) ? last30Days : last7Days)
+      : last7Days;
+  }
+
+  private isLast12Period(value: string): boolean {
+    return value.toLowerCase().includes('12');
+  }
+
+  private isLast30Period(value: string): boolean {
+    return value.toLowerCase().includes('30');
+  }
+
+  private parseAmount(formatted: string): number {
+    const numeric = (formatted || '').replace(/[^\d.,-]/g, '').replace(/\./g, '').replace(',', '.');
+    const parsed = Number.parseFloat(numeric);
+    return Number.isFinite(parsed) ? parsed : 0;
   }
 
   get visibleRows(): IncomingReportRow[] {
@@ -74,16 +134,27 @@ export class PortalHotelesReportsPage {
   }
 
   get paginationLabel(): string {
-    return `Page ${this.currentPage} of ${this.totalPages}`;
+    return this.translate.instant('REPORTS.PAGE_OF', {
+      current: this.currentPage,
+      total: this.totalPages,
+    });
+  }
+
+  get chartAriaDescription(): string {
+    return this.translate.instant('REPORTS.ARIA_REVENUE_CHART', { period: this.chartPeriod });
   }
 
   get rangeLabel(): string {
     if (!this.totalRows) {
-      return 'Showing 0-0 of 0 transactions';
+      return this.translate.instant('REPORTS.SHOWING_NONE');
     }
     const start = (this.currentPage - 1) * this.pageSize + 1;
     const end = start + this.visibleRows.length - 1;
-    return `Showing ${start}-${end} of ${this.totalRows} transactions`;
+    return this.translate.instant('REPORTS.SHOWING_RANGE', {
+      start,
+      end,
+      total: this.totalRows,
+    });
   }
 
   get shouldShowPagination(): boolean {
@@ -130,11 +201,7 @@ export class PortalHotelesReportsPage {
   }
 
   formatAmount(value: number): string {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      maximumFractionDigits: 0,
-    }).format(value || 0);
+    return this.localeService.formatCurrency(value || 0);
   }
 
   getPaymentStatusClass(status: string): string {
@@ -160,7 +227,7 @@ export class PortalHotelesReportsPage {
     this.isLoadingReport = true;
     this.reportErrorMessage = '';
     const token = this.authSession.idToken;
-    const months = this.chartPeriod === 'Last 12 months' ? 12 : 6;
+    const months = this.isLast12Period(this.chartPeriod) ? 12 : 6;
 
     try {
       const [incomingResp, overviewResp, metricsResp] = await Promise.all([
@@ -179,7 +246,7 @@ export class PortalHotelesReportsPage {
 
       this.kpiCards = this.buildKpiCards(metricsResp);
     } catch {
-      this.reportErrorMessage = 'Unable to load report data.';
+      this.reportErrorMessage = this.translate.instant('REPORTS.ERROR');
     } finally {
       this.isLoadingReport = false;
     }
@@ -187,7 +254,7 @@ export class PortalHotelesReportsPage {
 
   private async loadChartData(): Promise<void> {
     const token = this.authSession.idToken;
-    const months = this.chartPeriod === 'Last 12 months' ? 12 : 6;
+    const months = this.isLast12Period(this.chartPeriod) ? 12 : 6;
     try {
       const overviewResp = await firstValueFrom(this.reportsService.getRevenueOverview(token, months));
       const overview = overviewResp.data || [];
@@ -218,21 +285,24 @@ export class PortalHotelesReportsPage {
   private buildKpiCards(metrics: DashboardMetricsResponse): ReportKpiCard[] {
     const trendPct = metrics.revenue_trend_pct ?? 0;
     const trendSign = trendPct >= 0 ? '+' : '';
-    const trendLabel = `${trendSign}${trendPct.toFixed(1)}% from previous month`;
+    const trendLabel = this.translate.instant('REPORTS.TREND_FROM_PREVIOUS', {
+      sign: trendSign,
+      percent: trendPct.toFixed(1),
+    });
     const trendClass = trendPct >= 0
       ? 'portal-hoteles-reports-kpi__trend--positive'
       : 'portal-hoteles-reports-kpi__trend--negative';
 
     return [
       {
-        label: 'Avg. Daily Revenue',
+        label: this.translate.instant('REPORTS.AVG_DAILY_REVENUE'),
         value: this.formatAmount(metrics.avg_daily_revenue),
         trend: trendLabel,
         trendClass,
         icon: 'analytics-outline',
       },
       {
-        label: 'Monthly Revenue',
+        label: this.translate.instant('REPORTS.MONTHLY_REVENUE'),
         value: this.formatAmount(metrics.monthly_revenue),
         trend: trendLabel,
         trendClass,
@@ -243,7 +313,7 @@ export class PortalHotelesReportsPage {
 
   private toRow(record: IncomingReportRecord): IncomingReportRow {
     const dateLabel = record.payment_date
-      ? new Date(record.payment_date).toLocaleDateString('en-US', {
+      ? new Date(record.payment_date).toLocaleDateString(this.localeService.localeCode, {
           month: 'short',
           day: 'numeric',
           year: 'numeric',

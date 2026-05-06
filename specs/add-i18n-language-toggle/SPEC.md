@@ -1,7 +1,8 @@
 # Feature: i18n — Runtime Language Toggle (English / Spanish)
 
-**Status:** Draft  
+**Status:** Implemented  
 **Created:** 2026-05-05  
+**Implemented:** 2026-05-05  
 **Author:** Angel Henao  
 **Slug:** `add-i18n-language-toggle`
 
@@ -27,18 +28,18 @@ Add runtime internationalization (i18n) to both Angular apps in `user_interface/
 
 ## Acceptance Criteria
 
-1. [ ] `@ngx-translate/core` and `@ngx-translate/http-loader` are installed in `user_interface/`.
-2. [ ] `TranslateModule` is imported in `AppModule` (traveler app) and in `portal-hoteles/AppModule` with `HttpLoaderFactory` pointing to `assets/i18n/`.
-3. [ ] Translation JSON files exist at `src/assets/i18n/en.json` and `src/assets/i18n/es.json` for the traveler app, covering all pages: `login`, `register`, `home`, `search-results`, `propertydetail`, `booking-list`, `booking-detail`, `notifications`.
-4. [ ] Translation JSON files exist at `projects/portal-hoteles/src/assets/i18n/en.json` and `projects/portal-hoteles/src/assets/i18n/es.json`, covering all pages: `login`, `dashboard`, `dashboard-reservation`, `pricing-configuration`, `reports`.
-5. [ ] All hardcoded user-visible strings in HTML templates of both apps are replaced with `{{ 'key' | translate }}` (or `[attr]="'key' | translate"` for attribute bindings).
-6. [ ] A language toggle chip (`ES | EN`) is added to `th-navbar` component — visible on desktop layout — that calls `TranslateService.use()` and persists the selection to `localStorage` under key `th_locale`.
-7. [ ] On app startup, the active locale is restored from `localStorage['th_locale']`; if absent, defaults to `es` (Spanish).
-8. [ ] The `ion-datetime` `locale` binding in `th-datetime-modal` is driven by the active `TranslateService` locale (e.g., `es-ES` for `es`, `en-US` for `en`).
-9. [ ] Currency amounts displayed in `search-results` and `booking-list` are formatted using Angular `CurrencyPipe` with the active locale: COP-style (`$780.000`) for `es`, USD-style (`$780.00`) for `en`.
-10. [ ] Playwright E2E test verifies that clicking the language toggle in the traveler app switches the home page hero title from Spanish to English (and back).
-11. [ ] All existing Karma/Jest unit tests continue to pass after the translation pipe is introduced (translate module configured in test bed).
-12. [ ] `portal-hoteles` header bar (`PortalHotelesHeaderBarComponent`) includes a language toggle following the same pattern as `th-navbar`.
+1. [x] `@ngx-translate/core` and `@ngx-translate/http-loader` are installed in `user_interface/`.
+2. [x] `TranslateModule` is imported in `AppModule` (traveler app) and in `portal-hoteles/AppModule` with `HttpLoaderFactory` pointing to `assets/i18n/`.
+3. [x] Translation JSON files exist at `src/assets/i18n/en.json` and `src/assets/i18n/es.json` for the traveler app, covering all pages: `login`, `register`, `home`, `search-results`, `propertydetail`, `booking-list`, `booking-detail`, `notifications`.
+4. [x] Translation JSON files exist at `projects/portal-hoteles/src/assets/i18n/en.json` and `projects/portal-hoteles/src/assets/i18n/es.json`, covering all pages: `login`, `dashboard`, `dashboard-reservation`, `pricing-configuration`, `reports`.
+5. [x] All hardcoded user-visible strings in HTML templates of both apps are replaced with `{{ 'key' | translate }}` (or `[attr]="'key' | translate"` for attribute bindings).
+6. [x] A language toggle chip (`ES | EN`) is added to `th-navbar` component — visible on desktop layout — that calls `TranslateService.use()` and persists the selection to `localStorage` under key `th_locale`.
+7. [x] On app startup, the active locale is restored from `localStorage['th_locale']`; if absent, defaults to `es` (Spanish).
+8. [x] The `ion-datetime` `locale` binding in `th-datetime-modal` is driven by the active `TranslateService` locale (e.g., `es-ES` for `es`, `en-US` for `en`).
+9. [x] Currency amounts displayed in `search-results` and `booking-list` are formatted using Angular `CurrencyPipe` with the active locale: COP-style (`$780.000`) for `es`, USD-style (`$780.00`) for `en`.
+10. [x] Playwright E2E test verifies that clicking the language toggle in the traveler app switches the home page hero title from Spanish to English (and back).
+11. [x] All existing Karma/Jest unit tests continue to pass after the translation pipe is introduced (translate module configured in test bed).
+12. [x] `portal-hoteles` header bar (`PortalHotelesHeaderBarComponent`) includes a language toggle following the same pattern as `th-navbar`.
 
 ---
 
@@ -187,6 +188,10 @@ Replace manual `\`${currency}${price}\`` with Angular `CurrencyPipe`:
 
 A `LocaleService` wraps `TranslateService` and exposes `currencyCode$` and `localeCode$` observables for use in components.
 
+### ngx-translate v17 wiring (delta vs PLAN.md)
+
+The implementation uses `@ngx-translate/core` v17, which replaces the v15 `HttpLoaderFactory` factory function (originally described in PLAN.md) with the standalone provider `provideTranslateHttpLoader({ prefix: './assets/i18n/', suffix: '.json' })`. Both `AppModule`s wire `TranslateModule.forRoot({ defaultLanguage: 'es' })` plus a second `APP_INITIALIZER` that calls `LocaleService.init()` (after `registerLocaleData(localeEsCO)`).
+
 ---
 
 ## Out of Scope
@@ -205,9 +210,9 @@ A `LocaleService` wraps `TranslateService` and exposes `currencyCode$` and `loca
 
 | # | Question | Resolution |
 |---|---|---|
-| 1 | Should the default locale be `es` (Spanish) even when the browser signals `en-US`? | Defaulting to `es` (Spanish) per the Colombian market target — `localStorage` overrides on first visit. |
-| 2 | Should `portal-hoteles` header bar show the language toggle on mobile too, or only desktop? | Pending — default to desktop-only, matching `th-navbar` behavior. |
-| 3 | Dynamic strings generated in `.ts` (e.g., `alertTitle`, `cancelConfirmMessage`) — translate via `TranslateService.instant()` or leave in English for v1? | Pending — translate critical user-facing alerts; leave internal/dev strings in English. |
+| 1 | Should the default locale be `es` (Spanish) even when the browser signals `en-US`? | RESOLVED: Default is `es`. `localStorage['th_locale']` overrides on first toggle. |
+| 2 | Should `portal-hoteles` header bar show the language toggle on mobile too, or only desktop? | RESOLVED: Desktop-only, matching `th-navbar` behavior. |
+| 3 | Dynamic strings generated in `.ts` (e.g., `alertTitle`, `cancelConfirmMessage`) — translate via `TranslateService.instant()` or leave in English for v1? | RESOLVED: Critical user-facing alerts translated via `TranslateService.instant()`; internal/dev strings left in English. |
 
 ---
 

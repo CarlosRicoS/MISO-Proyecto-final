@@ -138,6 +138,14 @@ npm run lint                  # Run ESLint
 - `/search-results` — Search with filtering (city, guests, check-in/check-out dates)
 - `/propertydetail` — Full property details, booking initiation
 
+**Internationalization (i18n):**
+- Runtime English/Spanish toggle via `@ngx-translate/core` v17 (no page reload).
+- `LocaleService` (`src/app/core/services/locale.service.ts`) is the single locale state manager — exposes `init()`, `toggle()`, `formatCurrency(amount)`, `currentLang$`, and getters `localeCode` (`'es-CO' | 'en-US'`), `currencyCode` (`'COP' | 'USD'`), `currentLang` (`'es' | 'en'`).
+- Translation JSONs live under `src/assets/i18n/{en,es}.json` (traveler) and `projects/portal-hoteles/src/assets/i18n/{en,es}.json` (portal).
+- Default lang is `es` (Spanish, Colombian market); user choice persisted to `localStorage['th_locale']`.
+- Language toggle chip rendered by `ThNavbarComponent` (traveler desktop) and `PortalHotelesHeaderBarComponent` (portal desktop).
+- Currency adapts automatically via `LocaleService.formatCurrency()` (COP/`es-CO` ↔ USD/`en-US`).
+
 ### Terraform — via Makefile
 
 ```bash

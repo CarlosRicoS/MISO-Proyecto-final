@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { IonicModule, Platform } from '@ionic/angular';
 
 import { PortalHotelesHeaderBarComponent } from './portal-hoteles-header-bar.component';
+import { translateTestingModule } from '../../../../testing/translate-testing.module';
 
 class PlatformMock {
   is(platform: string): boolean {
@@ -15,7 +16,7 @@ describe('PortalHotelesHeaderBarComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [IonicModule.forRoot(), PortalHotelesHeaderBarComponent],
+      imports: [IonicModule.forRoot(), PortalHotelesHeaderBarComponent, translateTestingModule()],
       providers: [{ provide: Platform, useClass: PlatformMock }],
     }).compileComponents();
 

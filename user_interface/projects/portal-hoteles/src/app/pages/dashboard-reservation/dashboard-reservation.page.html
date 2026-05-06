@@ -25,10 +25,10 @@
           [guestsValue]="paymentSummary.guestsValue"
           [roomTypeValue]="paymentSummary.roomTypeValue"
           [items]="summaryItems"
-          totalLabel="Total"
+          [totalLabel]="'DASHBOARD_RESERVATION.TOTAL_LABEL' | translate"
           [totalAmount]="paymentSummary.totalAmount"
-          [adminAcceptLabel]="'Accept'"
-          [adminRejectLabel]="'Reject'"
+          [adminAcceptLabel]="'DASHBOARD_RESERVATION.ACCEPT' | translate"
+          [adminRejectLabel]="'DASHBOARD_RESERVATION.REJECT' | translate"
           [adminActionsDisabled]="isLoading"
           [adminAcceptDisabled]="isAcceptButtonDisabled"
           [adminRejectDisabled]="isRejectButtonDisabled"
@@ -43,7 +43,7 @@
   }
 
   @if (isLoading) {
-    <p class="portal-hoteles-dashboard-reservation__state" aria-live="polite" aria-atomic="true">Loading reservation detail...</p>
+    <p class="portal-hoteles-dashboard-reservation__state" aria-live="polite" aria-atomic="true">{{ 'DASHBOARD_RESERVATION.LOADING' | translate }}</p>
   }
 
   @if (!isLoading && errorMessage) {

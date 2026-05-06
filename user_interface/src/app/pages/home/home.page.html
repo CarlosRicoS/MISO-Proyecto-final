@@ -1,33 +1,33 @@
 <ion-content class="home-content">
 	<section class="home-hero">
 		<div class="home-hero__inner">
-			<h1 class="home-hero__title">Find Your Perfect Stay</h1>
+			<h1 class="home-hero__title">{{ 'HOME.HERO_TITLE' | translate }}</h1>
 			<p
 				class="home-hero__subtitle"
 				appPlatformText
-				[appPlatformTextWeb]="'Discover amazing hotels worldwide with the best prices and instant booking'"
-				[appPlatformTextMobile]="'Discover amazing hotels worldwide'"
+				[appPlatformTextWeb]="heroSubtitleWeb"
+				[appPlatformTextMobile]="heroSubtitleMobile"
 			></p>
 			<div class="home-hero__card">
 				<th-filter
 					class="home-filter"
-					locationLabel="Destination"
-					locationPlaceholder="Where are you going?"
+					[locationLabel]="'HOME.DESTINATION_LABEL' | translate"
+					[locationPlaceholder]="'HOME.DESTINATION_PLACEHOLDER' | translate"
 					[locationValue]="searchCity"
 					(locationValueChange)="onLocationChanged($event)"
-					checkInLabel="Check-in"
-					checkInPlaceholder="mm/dd/yyyy"
+					[checkInLabel]="'HOME.CHECKIN_LABEL' | translate"
+					[checkInPlaceholder]="'HOME.CHECKIN_PLACEHOLDER' | translate"
 					[checkInValue]="searchStartDate"
 					(checkInClicked)="onCheckInClicked()"
-					checkOutLabel="Check-out"
-					checkOutPlaceholder="mm/dd/yyyy"
+					[checkOutLabel]="'HOME.CHECKOUT_LABEL' | translate"
+					[checkOutPlaceholder]="'HOME.CHECKOUT_PLACEHOLDER' | translate"
 					[checkOutValue]="searchEndDate"
 					(checkOutClicked)="onCheckOutClicked()"
-					guestsLabel="Guests"
-					guestsPlaceholder="1 Guest"
+					[guestsLabel]="'HOME.GUESTS_LABEL' | translate"
+					[guestsPlaceholder]="'HOME.GUESTS_PLACEHOLDER' | translate"
 					[guestsValue]="guestsInputValue"
 					(guestsValueChange)="onGuestsChanged($event)"
-					actionLabel="Search Hotels"
+					[actionLabel]="'HOME.SEARCH_ACTION' | translate"
 					[actionDisabled]="isSearchDisabled"
 					(action)="onSearchHotels()"
 				></th-filter>
@@ -36,11 +36,11 @@
 			<!-- Check-in Date Picker Modal -->
 			<th-datetime-modal
 				[isOpen]="showCheckInModal"
-				title="Select Check-in Date"
+				[title]="'HOME.SELECT_CHECKIN_TITLE' | translate"
 				[selectedDate]="tempDate"
 				[minDate]="checkInMinDate"
-				confirmLabel="Confirm"
-				cancelLabel="Cancel"
+				[confirmLabel]="'HOME.CONFIRM' | translate"
+				[cancelLabel]="'HOME.CANCEL' | translate"
 				(dateSelected)="onCheckInConfirmed($event)"
 				(cancelled)="onCheckInCancelled()"
 			></th-datetime-modal>
@@ -48,11 +48,11 @@
 			<!-- Check-out Date Picker Modal with min date validation -->
 			<th-datetime-modal
 				[isOpen]="showCheckOutModal"
-				title="Select Check-out Date"
+				[title]="'HOME.SELECT_CHECKOUT_TITLE' | translate"
 				[selectedDate]="tempDate"
 				[minDate]="convertDDMMYYYYToISO(searchStartDate) || checkInMinDate"
-				confirmLabel="Confirm"
-				cancelLabel="Cancel"
+				[confirmLabel]="'HOME.CONFIRM' | translate"
+				[cancelLabel]="'HOME.CANCEL' | translate"
 				(dateSelected)="onCheckOutConfirmed($event)"
 				(cancelled)="onCheckOutCancelled()"
 			></th-datetime-modal>
@@ -61,8 +61,8 @@
 
 	<section class="home-section">
 		<div class="home-section__inner">
-			<h2 class="home-section__title">Recommended Hotels</h2>
-			<p class="home-section__subtitle">Discover our hand-picked selection of exceptional hotels around the world</p>
+			<h2 class="home-section__title">{{ 'HOME.RECOMMENDED_TITLE' | translate }}</h2>
+			<p class="home-section__subtitle">{{ 'HOME.RECOMMENDED_SUBTITLE' | translate }}</p>
 
 			<div class="home-grid">
 				<ng-container *ngIf="!isLoading && hotels.length">
@@ -73,16 +73,16 @@
 						[title]="hotel.name || 'Hotel'"
 						[location]="getHotelLocation(hotel)"
 						[price]="getHotelPrice(hotel)"
-						priceSuffix="/night"
-						ctaLabel="Book Now"
+						[priceSuffix]="'HOME.PRICE_SUFFIX' | translate"
+						[ctaLabel]="'HOME.BOOK_NOW' | translate"
 						[rating]="getHotelRating(hotel)"
 						[imageUrl]="hotel.photos[0] || ''"
 						[ctaRouterLink]="['/propertydetail', hotel.id]"
 					></th-hotel-card>
 				</ng-container>
-				<p class="home-empty" *ngIf="isLoading" aria-live="polite" aria-atomic="true">Loading hotels...</p>
+				<p class="home-empty" *ngIf="isLoading" aria-live="polite" aria-atomic="true">{{ 'HOME.LOADING' | translate }}</p>
 				<p class="home-empty" *ngIf="!isLoading && errorMessage" role="alert" aria-live="assertive">{{ errorMessage }}</p>
-				<p class="home-empty" *ngIf="!isLoading && !errorMessage && !hotels.length" aria-live="polite" aria-atomic="true">No hotels available.</p>
+				<p class="home-empty" *ngIf="!isLoading && !errorMessage && !hotels.length" aria-live="polite" aria-atomic="true">{{ 'HOME.EMPTY' | translate }}</p>
 			</div>
 		</div>
 	</section>

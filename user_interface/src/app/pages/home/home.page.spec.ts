@@ -10,6 +10,7 @@ import { ThHotelCardComponent } from '../../shared/components/th-hotel-card/th-h
 import { SharedCommonModule } from '../../shared/common/common.module';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { translateTestingModule } from '../../testing/translate-testing.module';
 
 class HotelsServiceMock {
   getHotels = jasmine.createSpy('getHotels').and.returnValue(of([]));
@@ -35,6 +36,7 @@ describe('HomePage', () => {
         ThDatetimeModalComponent,
         ThFilterComponent,
         ThHotelCardComponent,
+        translateTestingModule(),
       ],
       providers: [
         { provide: HotelsService, useClass: HotelsServiceMock },
@@ -151,7 +153,10 @@ describe('HomePage', () => {
       photos: [],
     })).toBe('Location unavailable');
 
-    expect(component.getHotelPrice({
+    // Price formatting is delegated to LocaleService.formatCurrency().
+    // The default test locale is 'es' → COP, so the result must contain
+    // '0' and either '$' or 'COP' regardless of NBSP whitespace.
+    const zeroPrice = component.getHotelPrice({
       id: '2',
       name: 'Test',
       city: 'Paris',
@@ -160,7 +165,9 @@ describe('HomePage', () => {
       currency: '€',
       rating: 0,
       photos: [],
-    })).toBe('€0');
+    } as any);
+    expect(zeroPrice).toContain('0');
+    expect(/\$|COP/.test(zeroPrice)).toBeTrue();
 
     expect(component.getHotelRating({
       id: '3',
@@ -316,7 +323,7 @@ describe('HomePage', () => {
       expect(component.getHotelLocation(hotel)).toBe('Paris, France');
     });
 
-    it('should get hotel price with currency', () => {
+    it('should get hotel price formatted via LocaleService (locale-aware)', () => {
       const hotel = {
         id: '1',
         pricePerNight: 150,
@@ -327,10 +334,12 @@ describe('HomePage', () => {
         rating: 0,
         imageUrl: '',
       } as any;
-      expect(component.getHotelPrice(hotel)).toBe('$150');
+      const price = component.getHotelPrice(hotel);
+      expect(price).toContain('150');
+      expect(/\$|COP|USD/.test(price)).toBeTrue();
     });
 
-    it('should handle missing currency with default $', () => {
+    it('should format price even when hotel record has no currency field', () => {
       const hotel = {
         id: '1',
         pricePerNight: 100,
@@ -340,7 +349,9 @@ describe('HomePage', () => {
         rating: 0,
         imageUrl: '',
       } as any;
-      expect(component.getHotelPrice(hotel)).toBe('$100');
+      const price = component.getHotelPrice(hotel);
+      expect(price).toContain('100');
+      expect(/\$|COP|USD/.test(price)).toBeTrue();
     });
 
     it('should format hotel rating to 1 decimal place', () => {

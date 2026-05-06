@@ -114,6 +114,9 @@ async function triggerInfiniteScrollLoad(page: Page): Promise<void> {
 
 test.describe('TravelHub core journeys', () => {
   test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => {
+      window.localStorage.setItem('th_locale', 'en');
+    });
     await mockPropertyApis(page);
   });
 

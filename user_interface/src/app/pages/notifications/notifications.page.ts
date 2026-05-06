@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { IonicModule } from '@ionic/angular';
+import { TranslateModule } from '@ngx-translate/core';
 import { Observable, tap } from 'rxjs';
 import { NotificationGroup, NotificationService } from '../../core/services/notification.service';
 import { ThNotificationsListComponent } from '../../shared/components/th-notifications-list/th-notifications-list.component';
@@ -8,7 +9,7 @@ import { ThNotificationsListComponent } from '../../shared/components/th-notific
 @Component({
   selector: 'app-notifications',
   standalone: true,
-  imports: [CommonModule, IonicModule, ThNotificationsListComponent],
+  imports: [CommonModule, IonicModule, TranslateModule, ThNotificationsListComponent],
   templateUrl: './notifications.page.html',
   styleUrls: ['./notifications.page.scss'],
 })

@@ -7,6 +7,7 @@ import { LoginPage } from './login.page';
 import { AuthService, LoginResponse } from '../../core/services/auth.service';
 import { NavController } from '@ionic/angular';
 import { AuthSessionService } from '../../core/services/auth-session.service';
+import { translateTestingModule } from '../../testing/translate-testing.module';
 
 describe('LoginPage', () => {
   let component: LoginPage;
@@ -43,7 +44,7 @@ describe('LoginPage', () => {
     spyOn(console, 'warn').and.stub();
 
     await TestBed.configureTestingModule({
-      imports: [LoginPage, HttpClientTestingModule, RouterTestingModule],
+      imports: [LoginPage, HttpClientTestingModule, RouterTestingModule, translateTestingModule()],
       providers: [
         { provide: AuthService, useValue: authServiceSpy },
         { provide: AuthSessionService, useValue: authSessionServiceSpy },

@@ -1,10 +1,13 @@
-import { Component } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { InfiniteScrollCustomEvent } from '@ionic/angular';
-import { firstValueFrom } from 'rxjs';
+import { Subject, firstValueFrom } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
+import { TranslateService } from '@ngx-translate/core';
 import { AuthSessionService } from '../../core/services/auth-session.service';
 import { BookingService, Reservation } from '../../core/services/booking.service';
 import { PropertyDetail } from '../../core/models/property-detail.model';
+import { LocaleService } from '../../core/services/locale.service';
 import { PropertyDetailService } from '../../core/services/property-detail.service';
 import { ImageCacheService } from '../../core/services/image-cache.service';
 import { FilterSummaryParams } from '../../shared/components/th-filter-summary/th-filter-summary.component';
@@ -15,8 +18,9 @@ import { FilterSummaryParams } from '../../shared/components/th-filter-summary/t
   styleUrls: ['./booking-list.page.scss'],
   standalone: false,
 })
-export class BookingListPage {
+export class BookingListPage implements OnInit, OnDestroy {
   private readonly pageSize = 10;
+  private readonly destroy$ = new Subject<void>();
 
   reservations: BookingListReservation[] = [];
   visibleReservations: BookingListReservation[] = [];
@@ -43,6 +47,8 @@ export class BookingListPage {
     private propertyDetailService: PropertyDetailService,
     private router: Router,
     private imageCache: ImageCacheService,
+    private translate: TranslateService,
+    private localeService: LocaleService,
   ) {
     this.filterSummaryParams = {
       ...this.filterSummaryParams,
@@ -50,12 +56,29 @@ export class BookingListPage {
     };
   }
 
+  ngOnInit(): void {
+    // Refresh price labels and counters when the language switches.
+    this.localeService.currentLang$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.reservations = [...this.reservations];
+        this.visibleReservations = [...this.visibleReservations];
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
   ionViewWillEnter(): void {
     void this.loadReservations();
   }
 
   get countLabel(): string {
-    return `${this.filteredReservations.length} ${this.filteredReservations.length === 1 ? 'reservation' : 'reservations'} found`;
+    const count = this.filteredReservations.length;
+    const key = count === 1 ? 'BOOKING_LIST.RESERVATION_ONE' : 'BOOKING_LIST.RESERVATIONS_FOUND';
+    return `${count} ${this.translate.instant(key)}`;
   }
 
   get filteredReservations(): BookingListReservation[] {
@@ -76,22 +99,22 @@ export class BookingListPage {
     return [
       {
         key: 'all',
-        label: 'All',
+        label: this.translate.instant('BOOKING_LIST.FILTER_ALL'),
         count: this.reservations.length,
       },
       {
         key: 'upcoming',
-        label: 'Upcoming',
+        label: this.translate.instant('BOOKING_LIST.FILTER_UPCOMING'),
         count: this.reservations.filter((reservation) => this.isUpcoming(reservation)).length,
       },
       {
         key: 'completed',
-        label: 'Completed',
+        label: this.translate.instant('BOOKING_LIST.FILTER_COMPLETED'),
         count: this.reservations.filter((reservation) => this.isCompleted(reservation)).length,
       },
       {
         key: 'cancelled',
-        label: 'Cancelled',
+        label: this.translate.instant('BOOKING_LIST.FILTER_CANCELLED'),
         count: this.reservations.filter((reservation) => this.isCancelled(reservation)).length,
       },
     ];
@@ -99,10 +122,25 @@ export class BookingListPage {
 
   get emptyLabel(): string {
     if (this.selectedFilter === 'all') {
-      return 'No reservations available.';
+      return this.translate.instant('BOOKING_LIST.EMPTY_ALL');
     }
 
-    return `No ${this.selectedFilter} reservations available.`;
+    const filterKey = this.selectedFilter;
+    const filterLabel = this.translate.instant(this.getFilterLabelKey(filterKey)).toLowerCase();
+    return this.translate.instant('BOOKING_LIST.EMPTY_FILTERED', { filter: filterLabel });
+  }
+
+  private getFilterLabelKey(filter: BookingFilterKey): string {
+    switch (filter) {
+      case 'upcoming':
+        return 'BOOKING_LIST.FILTER_UPCOMING';
+      case 'completed':
+        return 'BOOKING_LIST.FILTER_COMPLETED';
+      case 'cancelled':
+        return 'BOOKING_LIST.FILTER_CANCELLED';
+      default:
+        return 'BOOKING_LIST.FILTER_ALL';
+    }
   }
 
   get checkInLabel(): string {
@@ -183,19 +221,12 @@ export class BookingListPage {
     const endUtc = Date.UTC(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
     const nights = Math.max(0, Math.round((endUtc - startUtc) / (1000 * 60 * 60 * 24)));
 
-    return `${nights} ${nights === 1 ? 'night' : 'nights'}`;
+    const key = nights === 1 ? 'BOOKING_LIST.NIGHT_ONE' : 'BOOKING_LIST.NIGHTS';
+    return `${nights} ${this.translate.instant(key)}`;
   }
 
   formatPrice(value: number): string {
-    if (!Number.isFinite(value)) {
-      return '$0';
-    }
-
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      maximumFractionDigits: 2,
-    }).format(value);
+    return this.localeService.formatCurrency(value);
   }
 
   getStatusClass(status: string): string {
@@ -276,7 +307,7 @@ export class BookingListPage {
 
       void this.enrichReservationsWithPropertyDetails();
     } catch (error) {
-      this.errorMessage = 'Unable to load reservations.';
+      this.errorMessage = this.translate.instant('BOOKING_LIST.ERROR');
       this.visibleReservations = [];
       this.canLoadNext = false;
     } finally {

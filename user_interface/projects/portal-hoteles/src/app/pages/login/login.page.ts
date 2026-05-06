@@ -12,6 +12,7 @@ import {
   IonRow,
   IonSpinner,
 } from '@ionic/angular/standalone';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { firstValueFrom } from 'rxjs';
 import { AuthService } from '@travelhub/core/services/auth.service';
 import { AuthSessionService } from '@travelhub/core/services/auth-session.service';
@@ -38,6 +39,7 @@ import {
     IonGrid,
     IonRow,
     IonSpinner,
+    TranslateModule,
     ThInputComponent,
     ThButtonComponent,
     ThPopupComponent,
@@ -47,6 +49,7 @@ export class PortalHotelesLoginPage {
   private readonly authService = inject(AuthService);
   private readonly authSessionService = inject(AuthSessionService);
   private readonly router = inject(Router);
+  private readonly translate = inject(TranslateService);
 
   email = '';
   password = '';
@@ -87,11 +90,11 @@ export class PortalHotelesLoginPage {
 
   get emailHelper(): string {
     if (!this.email.trim() && this.hasSubmitted) {
-      return 'Email is required';
+      return this.translate.instant('LOGIN.EMAIL_REQUIRED');
     }
 
     if (this.email.trim() && !this.isValidEmail(this.email)) {
-      return 'Please enter a valid email format';
+      return this.translate.instant('LOGIN.EMAIL_INVALID');
     }
 
     return '';
@@ -99,7 +102,7 @@ export class PortalHotelesLoginPage {
 
   get passwordHelper(): string {
     if (!this.password.trim() && this.hasSubmitted) {
-      return 'Password is required';
+      return this.translate.instant('LOGIN.PASSWORD_REQUIRED');
     }
 
     return '';
@@ -140,9 +143,9 @@ export class PortalHotelesLoginPage {
     } catch (error) {
       const httpError = error as HttpErrorResponse;
       if (httpError.status === 401) {
-        this.showErrorAlert('Invalid email or password.');
+        this.showErrorAlert(this.translate.instant('LOGIN.INVALID_CREDENTIALS'));
       } else {
-        this.showErrorAlert('An error occurred. Please try again.');
+        this.showErrorAlert(this.translate.instant('LOGIN.GENERIC_ERROR'));
       }
     } finally {
       this.isLoading = false;
@@ -150,7 +153,7 @@ export class PortalHotelesLoginPage {
   }
 
   private showErrorAlert(message: string): void {
-    this.alertTitle = 'Login Failed';
+    this.alertTitle = this.translate.instant('LOGIN.ALERT_TITLE');
     this.alertMessage = message;
     this.isAlertOpen = true;
   }

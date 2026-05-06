@@ -1,8 +1,8 @@
 <ion-content class="booking-list-content">
-  <h1 class="sr-only">My Reservations</h1>
+  <h1 class="sr-only">{{ 'BOOKING_LIST.TITLE' | translate }}</h1>
   <section class="booking-list">
     <div class="booking-list__inner">
-      <div class="booking-filters" role="tablist" aria-label="Reservation filters">
+      <div class="booking-filters" role="tablist" [attr.aria-label]="'BOOKING_LIST.FILTERS_LABEL' | translate">
         <button
           type="button"
           class="booking-filters__button"
@@ -18,7 +18,7 @@
       </div>
     </div>
 
-    <div class="booking-list__inner" role="tabpanel" aria-label="Filtered reservations">
+    <div class="booking-list__inner" role="tabpanel" [attr.aria-label]="'BOOKING_LIST.PANEL_LABEL' | translate">
       <div class="booking-list__cards" *ngIf="!isLoading && visibleReservations.length">
         <th-hotel-card
           *ngFor="let reservation of visibleReservations"
@@ -27,12 +27,12 @@
           [title]="reservation.propertyName"
           [location]="reservation.location"
           [price]="formatPrice(reservation.price)"
-          pricePrefix="Total"
+          [pricePrefix]="'BOOKING_LIST.TOTAL_PREFIX' | translate"
           priceSuffix=""
           [rating]="getReservationRating(reservation)"
           [imageUrl]="reservation.photoUrl"
           [ctaRouterLink]="null"
-          ctaLabel="See Details"
+          [ctaLabel]="'BOOKING_LIST.SEE_DETAILS' | translate"
           [showFavorite]="false"
           (ctaClick)="openBookingDetail(reservation)"
         >
@@ -60,11 +60,11 @@
       >
         <ion-infinite-scroll-content
           loadingSpinner="bubbles"
-          loadingText="Loading more reservations..."
+          [loadingText]="'BOOKING_LIST.LOADING_MORE' | translate"
         ></ion-infinite-scroll-content>
       </ion-infinite-scroll>
 
-      <p class="booking-list-empty" *ngIf="isLoading" aria-live="polite" aria-atomic="true">Loading reservations...</p>
+      <p class="booking-list-empty" *ngIf="isLoading" aria-live="polite" aria-atomic="true">{{ 'BOOKING_LIST.LOADING' | translate }}</p>
       <p class="booking-list-empty" *ngIf="!isLoading && errorMessage" role="alert" aria-live="assertive">{{ errorMessage }}</p>
       <p class="booking-list-empty" *ngIf="!isLoading && !errorMessage && !visibleReservations.length" aria-live="polite" aria-atomic="true">{{ emptyLabel }}</p>
     </div>

@@ -6,11 +6,13 @@ import { BookingListPageRoutingModule } from './booking-list-routing.module';
 import { BookingListPage } from './booking-list.page';
 import { ThFilterSummaryComponent } from '../../shared/components/th-filter-summary/th-filter-summary.component';
 import { ThHotelCardComponent } from '../../shared/components/th-hotel-card/th-hotel-card.component';
+import { SharedCommonModule } from '../../shared/common/common.module';
 
 @NgModule({
   imports: [
     CommonModule,
     IonicModule,
+    SharedCommonModule,
     ThFilterSummaryComponent,
     ThHotelCardComponent,
     BookingListPageRoutingModule,

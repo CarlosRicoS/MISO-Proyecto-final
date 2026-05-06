@@ -1,13 +1,15 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input } from '@angular/core';
+import { Component, Input, inject } from '@angular/core';
 import { IonicModule, Platform } from '@ionic/angular';
+import { TranslateModule } from '@ngx-translate/core';
+import { LocaleService } from '../../../../core/services/locale.service';
 
 @Component({
   selector: 'portal-hoteles-header-bar',
   templateUrl: './portal-hoteles-header-bar.component.html',
   styleUrls: ['./portal-hoteles-header-bar.component.scss'],
   standalone: true,
-  imports: [CommonModule, IonicModule],
+  imports: [CommonModule, IonicModule, TranslateModule],
 })
 export class PortalHotelesHeaderBarComponent {
   @Input() hotelName = 'Grand Plaza Hotel';
@@ -15,6 +17,8 @@ export class PortalHotelesHeaderBarComponent {
   @Input() userName = 'John Smith';
   @Input() userRole = 'Hotel Manager';
   @Input() notificationCount = 3;
+
+  private readonly localeService = inject(LocaleService);
 
   constructor(private platform: Platform) {}
 
@@ -30,5 +34,13 @@ export class PortalHotelesHeaderBarComponent {
 
   get isMobileNative(): boolean {
     return this.platform.is('capacitor');
+  }
+
+  get currentLang(): string {
+    return this.localeService.currentLang;
+  }
+
+  toggleLanguage(): void {
+    this.localeService.toggle();
   }
 }

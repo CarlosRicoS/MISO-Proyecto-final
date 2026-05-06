@@ -1,8 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { firstValueFrom } from 'rxjs';
+import { Subject, firstValueFrom } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
+import { TranslateService } from '@ngx-translate/core';
 import { Hotel } from '../../core/models/hotel.model';
 import { HotelsService } from '../../core/services/hotels.service';
+import { LocaleService } from '../../core/services/locale.service';
 
 @Component({
   selector: 'app-home',
@@ -10,7 +13,7 @@ import { HotelsService } from '../../core/services/hotels.service';
   styleUrls: ['home.page.scss'],
   standalone: false,
 })
-export class HomePage implements OnInit {
+export class HomePage implements OnInit, OnDestroy {
   hotels: Hotel[] = [];
   isLoading = false;
   errorMessage = '';
@@ -24,13 +27,33 @@ export class HomePage implements OnInit {
   tempDate: string | null = null;
   readonly checkInMinDate = this.getTodayIsoDate();
 
+  // PlatformTextDirective inputs receive raw strings, so they cannot rely on
+  // the translate pipe. We resolve them via TranslateService.instant() and
+  // refresh on every language change.
+  heroSubtitleWeb = '';
+  heroSubtitleMobile = '';
+
+  private readonly destroy$ = new Subject<void>();
+
   constructor(
     private hotelsService: HotelsService,
     private router: Router,
+    private translate: TranslateService,
+    private localeService: LocaleService,
   ) {}
 
   ngOnInit(): void {
+    this.refreshHeroSubtitles();
+    this.localeService.currentLang$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.refreshHeroSubtitles());
+
     void this.loadHotels();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   get guestsLabelValue(): string {
@@ -52,7 +75,7 @@ export class HomePage implements OnInit {
     try {
       this.hotels = await firstValueFrom(this.hotelsService.getHotelsWithPricing());
     } catch (error) {
-      this.errorMessage = 'Unable to load hotels.';
+      this.errorMessage = this.translate.instant('HOME.ERROR');
       this.hotels = [];
     } finally {
       this.isLoading = false;
@@ -168,7 +191,7 @@ export class HomePage implements OnInit {
         },
       });
     } catch (error) {
-      this.errorMessage = 'Unable to load hotels.';
+      this.errorMessage = this.translate.instant('HOME.ERROR');
     } finally {
       this.isLoading = false;
     }
@@ -180,12 +203,15 @@ export class HomePage implements OnInit {
   }
 
   getHotelPrice(hotel: Hotel): string {
-    const currency = hotel.currency || '$';
-    const price = hotel.pricePerNight ?? 0;
-    return `${currency}${price}`;
+    return this.localeService.formatCurrency(hotel.pricePerNight ?? 0);
   }
 
   getHotelRating(hotel: Hotel): string {
     return Number.isFinite(hotel.rating) ? hotel.rating.toFixed(1) : 'N/A';
+  }
+
+  private refreshHeroSubtitles(): void {
+    this.heroSubtitleWeb = this.translate.instant('HOME.HERO_SUBTITLE_WEB');
+    this.heroSubtitleMobile = this.translate.instant('HOME.HERO_SUBTITLE_MOBILE');
   }
 }

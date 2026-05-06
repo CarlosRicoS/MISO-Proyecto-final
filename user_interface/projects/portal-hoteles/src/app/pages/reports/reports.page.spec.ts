@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 
 import { PortalHotelesReportsPage } from './reports.page';
+import { translateTestingModule } from '../../testing/translate-testing.module';
 
 describe('PortalHotelesReportsPage', () => {
   let component: PortalHotelesReportsPage;
@@ -35,7 +36,7 @@ describe('PortalHotelesReportsPage', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [PortalHotelesReportsPage, HttpClientTestingModule],
+      imports: [PortalHotelesReportsPage, HttpClientTestingModule, translateTestingModule()],
     }).compileComponents();
 
     fixture = TestBed.createComponent(PortalHotelesReportsPage);

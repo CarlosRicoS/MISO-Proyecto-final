@@ -221,6 +221,36 @@ Comportamiento en CI:
   `FRONTEND_GUARDRAILS_ENABLED=true`
 - Puedes definir esa variable a nivel workflow/job/step para encender o apagar la validación según el pipeline.
 
+## Internationalization (i18n)
+
+La aplicación soporta cambio de idioma en tiempo de ejecución (Español / Inglés) usando `@ngx-translate/core` v17.
+
+- Servicio central: `src/app/core/services/locale.service.ts` (`LocaleService`)
+  - `init()` se invoca desde un `APP_INITIALIZER` y restaura el idioma persistido.
+  - `toggle()` alterna entre `'es'` y `'en'` y persiste la elección.
+  - `formatCurrency(amount)` formatea importes con `Intl.NumberFormat` según el locale activo (`COP` / `es-CO` ↔ `USD` / `en-US`).
+  - Observables/getters: `currentLang$`, `currentLang`, `localeCode`, `currencyCode`.
+- Archivos de traducción:
+  - Traveler app: `src/assets/i18n/en.json` y `src/assets/i18n/es.json`
+  - Portal hoteles: `projects/portal-hoteles/src/assets/i18n/en.json` y `projects/portal-hoteles/src/assets/i18n/es.json`
+- Persistencia: `localStorage['th_locale']` (valores `'es'` o `'en'`). Idioma por defecto: `es`.
+- Toggle UI: chip ES/EN en `ThNavbarComponent` (desktop) y `PortalHotelesHeaderBarComponent` (desktop).
+
+### Cómo agregar una nueva clave de traducción
+
+1. Agregar la clave bajo el mismo path en **ambos** archivos `en.json` y `es.json` del proyecto correspondiente. Ej.:
+   ```json
+   { "BOOKING_LIST": { "EMPTY_STATE": "No reservations yet" } }
+   ```
+2. Usarla en plantillas con el pipe `translate`:
+   ```html
+   <p>{{ 'BOOKING_LIST.EMPTY_STATE' | translate }}</p>
+   ```
+3. O en código TypeScript con `TranslateService.instant()` (preferir para alertas/strings dinámicos):
+   ```ts
+   const msg = this.translate.instant('BOOKING_LIST.EMPTY_STATE');
+   ```
+
 ## Notas
 
 - Si falta Gradle wrapper en android/gradle/wrapper, restáuralo antes de ejecutar pruebas Android.

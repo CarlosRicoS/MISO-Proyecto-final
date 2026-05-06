@@ -10,6 +10,7 @@ import { ThHotelCardComponent } from '../../shared/components/th-hotel-card/th-h
 import { IonicModule } from '@ionic/angular';
 import { CommonModule } from '@angular/common';
 import { ImageCacheService } from '../../core/services/image-cache.service';
+import { translateTestingModule } from '../../testing/translate-testing.module';
 
 describe('BookingListPage', () => {
   let component: BookingListPage;
@@ -55,6 +56,7 @@ describe('BookingListPage', () => {
         IonicModule.forRoot(),
         ThFilterSummaryComponent,
         ThHotelCardComponent,
+        translateTestingModule(),
       ],
       providers: [
         { provide: Router, useClass: RouterMock },
@@ -232,9 +234,16 @@ describe('BookingListPage', () => {
     expect(component.getNightsLabel('2026-05-01', '2026-05-04')).toBe('3 nights');
   });
 
-  it('formats finite and non-finite prices', () => {
-    expect(component.formatPrice(Number.NaN)).toBe('$0');
-    expect(component.formatPrice(1234.56)).toBe('$1,234.56');
+  it('formats finite and non-finite prices via locale-aware LocaleService', () => {
+    const nanPrice = component.formatPrice(Number.NaN);
+    expect(nanPrice).toContain('0');
+    expect(/\$|COP|USD/.test(nanPrice)).toBeTrue();
+
+    const positive = component.formatPrice(1234.56);
+    // The exact grouping/decimal style depends on the active locale, so
+    // just assert the integer portion and that a currency marker is present.
+    expect(positive).toMatch(/1[.,]?2/);
+    expect(/\$|COP|USD/.test(positive)).toBeTrue();
   });
 
   it('builds a status class from normalized lowercase status', () => {

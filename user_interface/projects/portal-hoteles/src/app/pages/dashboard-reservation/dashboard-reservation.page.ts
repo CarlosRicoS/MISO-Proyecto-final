@@ -1,11 +1,13 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { IonicModule } from '@ionic/angular';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { firstValueFrom } from 'rxjs';
 import { PropertyDetailService } from '@travelhub/core/services/property-detail.service';
 import { AuthSessionService } from '@travelhub/core/services/auth-session.service';
 import { BookingService, Reservation, ReservationAdminActionRequest, ReservationAdminRejectRequest } from '@travelhub/core/services/booking.service';
+import { LocaleService } from '@travelhub/core/services/locale.service';
 import { ThDetailsMosaicImage } from '@travelhub/shared/components/th-details-mosaic/th-details-mosaic.component';
 import {
   ThPaymentSummaryComponent,
@@ -21,6 +23,7 @@ import { PortalHotelesReservationOverviewCardComponent } from '@travelhub/shared
   imports: [
     CommonModule,
     IonicModule,
+    TranslateModule,
     ThPaymentSummaryComponent,
     PortalHotelesReservationOverviewCardComponent,
   ],
@@ -75,6 +78,9 @@ export class PortalHotelesDashboardReservationPage {
     return this.isRejectedOrCanceledStatus(normalizedStatus);
   }
 
+  private readonly translate = inject(TranslateService);
+  private readonly localeService = inject(LocaleService);
+
   constructor(
     private readonly route: ActivatedRoute,
     private readonly router: Router,
@@ -103,7 +109,7 @@ export class PortalHotelesDashboardReservationPage {
       );
       await this.router.navigate(['/dashboard']);
     } catch {
-      this.errorMessage = 'Unable to accept reservation.';
+      this.errorMessage = this.translate.instant('DASHBOARD_RESERVATION.ERROR_ACCEPT');
     }
   }
 
@@ -115,20 +121,20 @@ export class PortalHotelesDashboardReservationPage {
     try {
       const payload: ReservationAdminRejectRequest = {
         traveler_email: this.authSession.userEmail || '',
-        reason: 'Rejected from dashboard',
+        reason: this.translate.instant('DASHBOARD_RESERVATION.REJECT_REASON_DEFAULT'),
       };
       await firstValueFrom(
         this.bookingService.adminRejectReservation(this.reservationId, payload, this.authSession.idToken),
       );
       await this.router.navigate(['/dashboard']);
     } catch {
-      this.errorMessage = 'Unable to reject reservation.';
+      this.errorMessage = this.translate.instant('DASHBOARD_RESERVATION.ERROR_REJECT');
     }
   }
 
   private async loadReservationDetail(): Promise<void> {
     if (!this.reservationId) {
-      this.errorMessage = 'Invalid reservation id.';
+      this.errorMessage = this.translate.instant('DASHBOARD_RESERVATION.ERROR_INVALID_ID');
       return;
     }
 
@@ -156,7 +162,7 @@ export class PortalHotelesDashboardReservationPage {
 
       this.updatePaymentSummary(reservation);
     } catch {
-      this.errorMessage = 'Unable to load reservation detail.';
+      this.errorMessage = this.translate.instant('DASHBOARD_RESERVATION.ERROR_LOAD');
     } finally {
       this.isLoading = false;
     }
@@ -171,12 +177,12 @@ export class PortalHotelesDashboardReservationPage {
     const finalTotal = total + serviceFee + taxes;
 
     this.paymentSummary = {
-      title: `$${nightlyRate}`,
-      subtitle: 'per night',
+      title: this.localeService.formatCurrency(nightlyRate),
+      subtitle: this.translate.instant('DASHBOARD_RESERVATION.PER_NIGHT'),
       checkInValue: this.toIsoDate(reservation.period_start),
       checkOutValue: this.toIsoDate(reservation.period_end),
       guestsValue: `${reservation.guests || 1}`,
-      roomTypeValue: 'Standard Room',
+      roomTypeValue: this.translate.instant('DASHBOARD_RESERVATION.STANDARD_ROOM'),
       totalAmount: this.formatCurrency(finalTotal),
     };
 
@@ -211,7 +217,7 @@ export class PortalHotelesDashboardReservationPage {
       .map((value) => (value || '').trim())
       .filter((value) => Boolean(value));
 
-    return parts.length ? parts.join(', ') : 'Location unavailable';
+    return parts.length ? parts.join(', ') : this.translate.instant('DASHBOARD_RESERVATION.LOCATION_UNAVAILABLE');
   }
 
   private getDateRangeLabel(start: string, end: string): string {
@@ -220,7 +226,8 @@ export class PortalHotelesDashboardReservationPage {
 
   private getNightsLabel(start: string, end: string): string {
     const nights = this.getNightsCount(start, end);
-    return `${nights} ${nights === 1 ? 'night' : 'nights'}`;
+    const key = nights === 1 ? 'DASHBOARD_RESERVATION.NIGHT_ONE' : 'DASHBOARD_RESERVATION.NIGHTS';
+    return `${nights} ${this.translate.instant(key)}`;
   }
 
   private getNightsCount(start: string, end: string): number {
@@ -293,11 +300,7 @@ export class PortalHotelesDashboardReservationPage {
   }
 
   private formatCurrency(value: number): string {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      maximumFractionDigits: 0,
-    }).format(value);
+    return this.localeService.formatCurrency(value);
   }
 
   private getNormalizedStatus(): string {
