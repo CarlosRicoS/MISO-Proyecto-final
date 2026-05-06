@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, firstValueFrom, isObservable, Observable } from 'rxjs';
 
 /**
  * Single source of truth for the active UI locale.
@@ -46,9 +46,11 @@ export class LocaleService {
   /**
    * Restores the persisted language from `localStorage` and applies it to
    * `TranslateService`. Called from an `APP_INITIALIZER` so the choice is
-   * active before the first render.
+   * active before the first render. Returns a promise that resolves once the
+   * translation file for the active language has finished loading, so the
+   * initializer blocks bootstrap until the strings are ready.
    */
-  init(): void {
+  init(): Promise<void> {
     const lang = this.readPersistedLang() ?? this.DEFAULT_LANG;
     this.translate.addLangs([...this.SUPPORTED_LANGS]);
     // Use the new fallback API in ngx-translate v17+ if available, fall back to setDefaultLang.
@@ -61,7 +63,7 @@ export class LocaleService {
     } else if (typeof translateAny.setDefaultLang === 'function') {
       translateAny.setDefaultLang(this.DEFAULT_LANG);
     }
-    this.applyLang(lang);
+    return this.applyLang(lang);
   }
 
   /**
@@ -70,7 +72,7 @@ export class LocaleService {
    */
   toggle(): void {
     const next: SupportedLang = this.currentLang === 'es' ? 'en' : 'es';
-    this.applyLang(next);
+    void this.applyLang(next);
     this.persistLang(next);
   }
 
@@ -98,9 +100,25 @@ export class LocaleService {
     }
   }
 
-  private applyLang(lang: SupportedLang): void {
-    this.translate.use(lang);
+  private applyLang(lang: SupportedLang): Promise<void> {
+    const result = this.translate.use(lang);
+    // Notify subscribers synchronously so consumers reading currentLang right
+    // after init()/toggle() observe the new value without awaiting the HTTP fetch.
     this.currentLangSubject.next(lang);
+    if (isObservable(result)) {
+      // Swallow HTTP errors so app boot is not blocked by a missing JSON file.
+      return firstValueFrom(result).then(
+        () => undefined,
+        () => undefined,
+      );
+    }
+    if (result && typeof (result as Promise<unknown>).then === 'function') {
+      return (result as Promise<unknown>).then(
+        () => undefined,
+        () => undefined,
+      );
+    }
+    return Promise.resolve();
   }
 
   private persistLang(lang: SupportedLang): void {
