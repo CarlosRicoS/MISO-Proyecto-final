@@ -226,7 +226,7 @@ test.describe('Portal Hoteles — dashboard KPI metrics', () => {
     const revenueCard = page
       .locator('portal-hoteles-grid-card')
       .filter({ hasText: 'Monthly Revenue' });
-    await expect(revenueCard.locator('.portal-hoteles-dashboard-card__value')).toHaveText('$8,350');
+    await expect(revenueCard.locator('.portal-hoteles-dashboard-card__value')).toHaveText('$8,350.00');
   });
 
   test('shows live check-in and check-out counts', async ({ page }) => {
