@@ -6,6 +6,7 @@ import { AuthSessionService } from '@travelhub/core/services/auth-session.servic
 import { PricingEngineService } from '@travelhub/core/services/pricing-engine.service';
 import { PricingPropertyResponse } from '@travelhub/core/models/platform-api.model';
 import { PortalHotelesPricingConfigurationPage } from './pricing-configuration.page';
+import { translateTestingModule } from '../../testing/translate-testing.module';
 
 describe('PortalHotelesPricingConfigurationPage', () => {
   let component: PortalHotelesPricingConfigurationPage;
@@ -34,7 +35,7 @@ describe('PortalHotelesPricingConfigurationPage', () => {
     pricingEngineServiceSpy = jasmine.createSpyObj<PricingEngineService>('PricingEngineService', ['getPropertyPricing']);
 
     await TestBed.configureTestingModule({
-      imports: [PortalHotelesPricingConfigurationPage],
+      imports: [PortalHotelesPricingConfigurationPage, translateTestingModule()],
       providers: [
         { provide: AuthSessionService, useValue: mockAuthSession },
         { provide: PricingEngineService, useValue: pricingEngineServiceSpy },

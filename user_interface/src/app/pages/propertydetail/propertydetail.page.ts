@@ -3,6 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { firstValueFrom, Subject, of, EMPTY } from 'rxjs';
 import { switchMap, takeUntil, tap, catchError } from 'rxjs/operators';
+import { TranslateService } from '@ngx-translate/core';
 import { ThAmenityItem } from '../../shared/components/th-amenities-summary/th-amenities-summary.component';
 import { ThDetailsMosaicImage } from '../../shared/components/th-details-mosaic/th-details-mosaic.component';
 import { ThPaymentSummaryBadge, ThPaymentSummaryItem } from '../../shared/components/th-payment-summary/th-payment-summary.component';
@@ -100,6 +101,7 @@ export class PropertydetailPage implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private router: Router,
     private imageCache: ImageCacheService,
+    private translate: TranslateService,
   ) {
     this.priceTrigger$.pipe(
       takeUntil(this.destroy$),
@@ -148,7 +150,7 @@ export class PropertydetailPage implements OnInit, OnDestroy {
           catchError((error) => {
             this.isPricingLoading = false;
             this.priceForStay = null;
-            this.pricingError = 'Unable to calculate price. Please try again.';
+            this.pricingError = this.translate.instant('PROPERTY.PRICING_ERROR');
             return of(null);
           }),
         );
@@ -169,7 +171,7 @@ export class PropertydetailPage implements OnInit, OnDestroy {
 
     const propertyId = this.route.snapshot.paramMap.get('id') || stateHotel?.id;
     if (!propertyId) {
-      this.errorMessage = 'Unable to load property details.';
+      this.errorMessage = this.translate.instant('PROPERTY.ERROR');
       return;
     }
 
@@ -180,7 +182,7 @@ export class PropertydetailPage implements OnInit, OnDestroy {
       const detail = await firstValueFrom(this.propertyDetailService.getPropertyDetail(propertyId));
       this.applyPropertyDetail(detail, stateHotel, search);
     } catch (error) {
-      this.errorMessage = 'Unable to load property details.';
+      this.errorMessage = this.translate.instant('PROPERTY.ERROR');
     } finally {
       this.isLoading = false;
     }
@@ -287,23 +289,23 @@ export class PropertydetailPage implements OnInit, OnDestroy {
     const guests = Number.parseInt(this.paymentSummary.guestsValue, 10);
 
     if (!normalizedCheckIn) {
-      this.bookingErrors.checkIn = 'Check-in date is required';
+      this.bookingErrors.checkIn = this.translate.instant('PROPERTY.ERR_CHECKIN_REQUIRED');
     }
 
     if (!normalizedCheckOut) {
-      this.bookingErrors.checkOut = 'Check-out date is required';
+      this.bookingErrors.checkOut = this.translate.instant('PROPERTY.ERR_CHECKOUT_REQUIRED');
     }
 
     if (normalizedCheckIn && normalizedCheckOut) {
       const checkInDate = new Date(normalizedCheckIn);
       const checkOutDate = new Date(normalizedCheckOut);
       if (checkOutDate.getTime() <= checkInDate.getTime()) {
-        this.bookingErrors.checkOut = 'Check-out must be after check-in';
+        this.bookingErrors.checkOut = this.translate.instant('PROPERTY.ERR_CHECKOUT_AFTER_CHECKIN');
       }
     }
 
     if (!Number.isFinite(guests) || guests <= 0) {
-      this.bookingErrors.guests = 'Guests must be at least 1';
+      this.bookingErrors.guests = this.translate.instant('PROPERTY.ERR_GUESTS_MIN');
     }
 
     if (this.hasBookingErrors()) {
@@ -311,13 +313,21 @@ export class PropertydetailPage implements OnInit, OnDestroy {
     }
 
     if (this.priceForStay === null && normalizedCheckIn && normalizedCheckOut) {
-      this.showAlert('Booking Error', 'Please wait for price calculation.', 'error');
+      this.showAlert(
+        this.translate.instant('PROPERTY.BOOKING_ERROR_TITLE'),
+        this.translate.instant('PROPERTY.BOOKING_ERROR_PRICE'),
+        'error',
+      );
       return;
     }
 
     const propertyId = this.currentPropertyDetail?.id || this.route.snapshot.paramMap.get('id') || '';
     if (!propertyId) {
-      this.showAlert('Booking Error', 'Unable to identify the selected property.', 'error');
+      this.showAlert(
+        this.translate.instant('PROPERTY.BOOKING_ERROR_TITLE'),
+        this.translate.instant('PROPERTY.BOOKING_ERROR_PROPERTY'),
+        'error',
+      );
       return;
     }
 
@@ -342,7 +352,11 @@ export class PropertydetailPage implements OnInit, OnDestroy {
     const userEmail = this.authSessionService.userEmail;
 
     if (!userId || !userEmail) {
-      this.showAlert('Booking Error', 'User information is missing. Please sign in again.', 'error');
+      this.showAlert(
+        this.translate.instant('PROPERTY.BOOKING_ERROR_TITLE'),
+        this.translate.instant('PROPERTY.BOOKING_ERROR_USER'),
+        'error',
+      );
       return;
     }
 
@@ -367,22 +381,26 @@ export class PropertydetailPage implements OnInit, OnDestroy {
       );
 
       this.bookingSuccess = true;
-  this.showAlert('Reservation Created', 'Your booking request was sent successfully.', 'success');
+      this.showAlert(
+        this.translate.instant('PROPERTY.RESERVATION_CREATED_TITLE'),
+        this.translate.instant('PROPERTY.RESERVATION_CREATED_MESSAGE'),
+        'success',
+      );
       this.pendingBookingService.clearPendingBooking();
     } catch (error) {
       this.bookingSuccess = false;
       const httpError = error as HttpErrorResponse;
-      let message = 'Unable to create reservation. Please try again.';
+      let message = this.translate.instant('PROPERTY.BOOKING_ERROR_GENERIC');
 
       if (httpError.status === 409 && httpError.error?.detail === 'property_unavailable') {
-        message = 'This property is no longer available. Please select another property.';
+        message = this.translate.instant('PROPERTY.BOOKING_ERROR_UNAVAILABLE');
       } else if (typeof httpError.error?.message === 'string') {
         message = httpError.error.message;
       } else if (typeof httpError.error?.detail === 'string') {
         message = httpError.error.detail;
       }
 
-      this.showAlert('Booking Error', message, 'error');
+      this.showAlert(this.translate.instant('PROPERTY.BOOKING_ERROR_TITLE'), message, 'error');
     } finally {
       this.isBooking = false;
     }

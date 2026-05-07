@@ -3,7 +3,7 @@
   [variant]="alertVariant"
   [title]="alertTitle"
   [message]="alertMessage"
-  primaryButtonText="Accept"
+  [primaryButtonText]="'COMMON.ACCEPT' | translate"
   (primaryAction)="onAlertDismiss()"
 ></th-popup>
 
@@ -18,11 +18,11 @@
                 fill="clear"
                 class="register-mobile-bar__back"
                 routerLink="/login"
-                aria-label="Back"
+                [attr.aria-label]="'REGISTER.BACK' | translate"
               >
                 <ion-icon name="arrow-back-outline"></ion-icon>
               </ion-button>
-              <h1 class="register-mobile-bar__title">Create Account</h1>
+              <h1 class="register-mobile-bar__title">{{ 'REGISTER.TITLE' | translate }}</h1>
             </div>
 
             <div class="register-layout">
@@ -31,16 +31,16 @@
                   <span class="register-form__logo" aria-hidden="true">
                     <ion-icon name="airplane-outline" aria-hidden="true"></ion-icon>
                   </span>
-                  <h2 class="register-form__title">Welcome to TravelHub</h2>
+                  <h2 class="register-form__title">{{ 'REGISTER.WELCOME_TITLE' | translate }}</h2>
                   <p class="register-form__subtitle">
-                    Create your account to start booking amazing hotels worldwide
+                    {{ 'REGISTER.SUBTITLE' | translate }}
                   </p>
                 </div>
 
                 <div class="register-form__fields">
                   <th-input
-                    label="Full Name"
-                    placeholder="Enter your full name"
+                    [label]="'REGISTER.FULL_NAME_LABEL' | translate"
+                    [placeholder]="'REGISTER.FULL_NAME_PLACEHOLDER' | translate"
                     type="text"
                     startIcon="person-outline"
                     [value]="fullName"
@@ -50,8 +50,8 @@
                   ></th-input>
 
                   <th-input
-                    label="Email Address"
-                    placeholder="Enter your email"
+                    [label]="'REGISTER.EMAIL_LABEL' | translate"
+                    [placeholder]="'REGISTER.EMAIL_PLACEHOLDER' | translate"
                     type="email"
                     startIcon="mail-outline"
                     [value]="email"
@@ -61,12 +61,12 @@
                   ></th-input>
 
                   <th-input
-                    label="Password"
-                    placeholder="Create a password"
+                    [label]="'REGISTER.PASSWORD_LABEL' | translate"
+                    [placeholder]="'REGISTER.PASSWORD_PLACEHOLDER' | translate"
                     [type]="passwordInputType"
                     startIcon="lock-closed-outline"
                     [endIcon]="passwordTrailIcon"
-                    [endIconAriaLabel]="isPasswordVisible ? 'Hide password' : 'Show password'"
+                    [endIconAriaLabel]="(isPasswordVisible ? 'REGISTER.HIDE_PASSWORD' : 'REGISTER.SHOW_PASSWORD') | translate"
                     [value]="password"
                     [state]="passwordState"
                     [helper]="passwordHelper"
@@ -75,12 +75,12 @@
                   ></th-input>
 
                   <th-input
-                    label="Confirm Password"
-                    placeholder="Confirm your password"
+                    [label]="'REGISTER.CONFIRM_PASSWORD_LABEL' | translate"
+                    [placeholder]="'REGISTER.CONFIRM_PASSWORD_PLACEHOLDER' | translate"
                     [type]="confirmPasswordInputType"
                     startIcon="lock-closed-outline"
                     [endIcon]="confirmPasswordTrailIcon"
-                    [endIconAriaLabel]="isConfirmPasswordVisible ? 'Hide password' : 'Show password'"
+                    [endIconAriaLabel]="(isConfirmPasswordVisible ? 'REGISTER.HIDE_PASSWORD' : 'REGISTER.SHOW_PASSWORD') | translate"
                     [value]="confirmPassword"
                     [state]="confirmPasswordState"
                     [helper]="confirmPasswordHelper"
@@ -93,13 +93,13 @@
                   <ion-checkbox
                     [checked]="acceptedTerms"
                     (ionChange)="onAcceptedTermsChange($event.detail.checked)"
-                    aria-label="Accept terms"
+                    [attr.aria-label]="'REGISTER.ACCEPT_TERMS_ARIA' | translate"
                   ></ion-checkbox>
                   <p>
-                    I agree to the
-                    <a href="javascript:void(0)">Terms of Service</a>
-                    and
-                    <a href="javascript:void(0)">Privacy Policy</a>
+                    {{ 'REGISTER.TERMS_PREFIX' | translate }}
+                    <a href="javascript:void(0)">{{ 'REGISTER.TERMS_OF_SERVICE' | translate }}</a>
+                    {{ 'REGISTER.TERMS_AND' | translate }}
+                    <a href="javascript:void(0)">{{ 'REGISTER.PRIVACY_POLICY' | translate }}</a>
                   </p>
                 </div>
                 <p class="register-form__terms-helper" *ngIf="termsHelper">{{ termsHelper }}</p>
@@ -111,16 +111,16 @@
                         *ngIf="isLoading"
                         name="crescent"
                         class="register-form__spinner"
-                        aria-label="Creating account, please wait"
+                        [attr.aria-label]="'REGISTER.SUBMITTING_ARIA' | translate"
                       ></ion-spinner>
-                      <span>Create Account</span>
+                      <span>{{ 'REGISTER.SUBMIT' | translate }}</span>
                     </span>
                   </th-button>
                 </div>
               </section>
 
               <div class="register-layout__divider" aria-hidden="true">
-                <span>Or continue with</span>
+                <span>{{ 'REGISTER.OR_CONTINUE_WITH' | translate }}</span>
               </div>
 
               <aside class="register-social" aria-label="Social sign up options">
@@ -136,9 +136,9 @@
                 </div>
 
                 <p class="register-social__signin">
-                  Already have an account?
+                  {{ 'REGISTER.HAVE_ACCOUNT' | translate }}
                   <ion-button fill="clear" routerLink="/login" class="register-social__signin-link">
-                    Sign In
+                    {{ 'REGISTER.LOGIN_LINK' | translate }}
                   </ion-button>
                 </p>
               </aside>

@@ -95,6 +95,12 @@ const reservations = [
 ];
 
 test.describe('Portal Hoteles — authentication flow', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => {
+      window.localStorage.setItem('th_locale', 'en');
+    });
+  });
+
   test('redirects unauthenticated users from dashboard to login', async ({ page }) => {
     await mockLoginApi(page);
     await mockBookingListApi(page);

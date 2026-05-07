@@ -1,7 +1,8 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input, Output, EventEmitter, ViewChild } from '@angular/core';
+import { Component, Input, Output, EventEmitter, ViewChild, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { IonDatetime, IonicModule } from '@ionic/angular';
+import { LocaleService } from '../../../core/services/locale.service';
 
 @Component({
   selector: 'th-datetime-modal',
@@ -20,10 +21,17 @@ export class ThDatetimeModalComponent {
   @Input() maxDate: string | null = null;  // ISO format YYYY-MM-DD, blocks later dates
   @Input() confirmLabel = 'Confirm';
   @Input() cancelLabel = 'Cancel';
-  
+
   @Output() confirmed = new EventEmitter<Date>();
   @Output() dateSelected = new EventEmitter<Date>();
   @Output() cancelled = new EventEmitter<void>();
+
+  private readonly localeService = inject(LocaleService);
+
+  /** Locale string for `ion-datetime`, derived from the active app language. */
+  get dateLocale(): string {
+    return this.localeService.localeCode;
+  }
 
   onConfirm(): void {
     if (this.selectedDate) {

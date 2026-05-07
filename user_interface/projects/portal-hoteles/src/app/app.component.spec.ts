@@ -6,6 +6,7 @@ import { Subject } from 'rxjs';
 import { AuthSessionService } from '@travelhub/core/services/auth-session.service';
 
 import { AppComponent } from './app.component';
+import { translateTestingModule } from './testing/translate-testing.module';
 
 describe('AppComponent', () => {
   let component: AppComponent;
@@ -31,7 +32,7 @@ describe('AppComponent', () => {
 
     TestBed.configureTestingModule({
       declarations: [ AppComponent ],
-      imports: [IonicModule.forRoot()],
+      imports: [IonicModule.forRoot(), translateTestingModule()],
       providers: [
         { provide: AuthSessionService, useValue: authSessionMock },
         { provide: ActivatedRoute, useValue: activatedRouteMock },

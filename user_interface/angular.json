@@ -155,6 +155,11 @@
                 "output": "assets"
               },
               {
+                "glob": "**/*",
+                "input": "projects/portal-hoteles/src/assets/i18n",
+                "output": "assets/i18n"
+              },
+              {
                 "glob": "**/*.svg",
                 "input": "node_modules/ionicons/dist/ionicons/svg",
                 "output": "./svg"
@@ -230,6 +235,11 @@
                 "glob": "**/*",
                 "input": "src/assets",
                 "output": "assets"
+              },
+              {
+                "glob": "**/*",
+                "input": "projects/portal-hoteles/src/assets/i18n",
+                "output": "assets/i18n"
               },
               {
                 "glob": "**/*.svg",

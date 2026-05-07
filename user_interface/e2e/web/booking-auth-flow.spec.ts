@@ -146,6 +146,12 @@ async function fillLoginForm(page: Page, email: string, password: string): Promi
 }
 
 test.describe('Booking auth and booking-list journeys', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => {
+      window.localStorage.setItem('th_locale', 'en');
+    });
+  });
+
   test('redirects unauthenticated users from booking-list to login with returnUrl', async ({ page }) => {
     const requestStats = await mockAuthAndBookingApis(page);
 

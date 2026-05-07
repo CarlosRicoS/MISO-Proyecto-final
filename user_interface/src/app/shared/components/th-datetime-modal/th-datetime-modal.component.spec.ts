@@ -1,10 +1,11 @@
 import { TestBed } from '@angular/core/testing';
 import { ThDatetimeModalComponent } from './th-datetime-modal.component';
+import { translateTestingModule } from '../../../testing/translate-testing.module';
 
 describe('ThDatetimeModalComponent', () => {
   it('emits confirmed date on confirm', () => {
     TestBed.configureTestingModule({
-      imports: [ThDatetimeModalComponent],
+      imports: [ThDatetimeModalComponent, translateTestingModule()],
     });
 
     const fixture = TestBed.createComponent(ThDatetimeModalComponent);
@@ -19,7 +20,7 @@ describe('ThDatetimeModalComponent', () => {
 
   it('does not emit confirm when date is missing', () => {
     TestBed.configureTestingModule({
-      imports: [ThDatetimeModalComponent],
+      imports: [ThDatetimeModalComponent, translateTestingModule()],
     });
 
     const fixture = TestBed.createComponent(ThDatetimeModalComponent);
@@ -34,7 +35,7 @@ describe('ThDatetimeModalComponent', () => {
 
   it('emits on date change', () => {
     TestBed.configureTestingModule({
-      imports: [ThDatetimeModalComponent],
+      imports: [ThDatetimeModalComponent, translateTestingModule()],
     });
 
     const fixture = TestBed.createComponent(ThDatetimeModalComponent);
@@ -50,7 +51,7 @@ describe('ThDatetimeModalComponent', () => {
 
   it('handles date change when passed an array', () => {
     TestBed.configureTestingModule({
-      imports: [ThDatetimeModalComponent],
+      imports: [ThDatetimeModalComponent, translateTestingModule()],
     });
 
     const fixture = TestBed.createComponent(ThDatetimeModalComponent);
@@ -64,7 +65,7 @@ describe('ThDatetimeModalComponent', () => {
 
   it('ignores empty or invalid date change', () => {
     TestBed.configureTestingModule({
-      imports: [ThDatetimeModalComponent],
+      imports: [ThDatetimeModalComponent, translateTestingModule()],
     });
 
     const fixture = TestBed.createComponent(ThDatetimeModalComponent);
@@ -79,7 +80,7 @@ describe('ThDatetimeModalComponent', () => {
 
   it('emits cancel on backdrop click', () => {
     TestBed.configureTestingModule({
-      imports: [ThDatetimeModalComponent],
+      imports: [ThDatetimeModalComponent, translateTestingModule()],
     });
 
     const fixture = TestBed.createComponent(ThDatetimeModalComponent);

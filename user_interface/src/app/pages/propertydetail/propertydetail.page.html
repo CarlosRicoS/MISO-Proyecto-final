@@ -3,7 +3,7 @@
   [variant]="alertVariant"
   [title]="alertTitle"
   [message]="alertMessage"
-  primaryButtonText="Accept"
+  [primaryButtonText]="'PROPERTY.ACCEPT' | translate"
   (primaryAction)="onAlertDismissed()"
 ></th-popup>
 
@@ -17,7 +17,7 @@
               [hotelName]="property.title"
               [images]="property.images"
               [totalPhotos]="property.totalPhotos"
-              [viewAllLabel]="'View all ' + property.totalPhotos + ' photos'"
+              [viewAllLabel]="'PROPERTY.VIEW_ALL_PHOTOS' | translate: { count: property.totalPhotos }"
             ></th-details-mosaic>
           </div>
         </section>
@@ -41,21 +41,21 @@
               <th-amenities-summary
                 [amenities]="amenities"
                 [totalAmenities]="amenities.length"
-                viewAllLabel="View All Amenities"
+                [viewAllLabel]="'PROPERTY.AMENITIES' | translate"
               ></th-amenities-summary>
 
               <th-property-description-summary
-                title="About This Hotel"
+                [title]="'PROPERTY.ABOUT' | translate"
                 [paragraphs]="descriptionParagraphs"
-                readMoreLabel="Read More"
-                readLessLabel="Read Less"
+                [readMoreLabel]="'PROPERTY.READ_MORE' | translate"
+                [readLessLabel]="'PROPERTY.READ_LESS' | translate"
               ></th-property-description-summary>
 
               <th-property-review-summary
-                title="Guest Reviews"
-                desktopActionLabel="Write a review"
-                mobileActionLabel="See All"
-                loadMoreLabel="Load more reviews"
+                [title]="'PROPERTY.REVIEWS' | translate"
+                [desktopActionLabel]="'PROPERTY.WRITE_REVIEW' | translate"
+                [mobileActionLabel]="'PROPERTY.SEE_ALL_REVIEWS' | translate"
+                [loadMoreLabel]="'PROPERTY.LOAD_MORE_REVIEWS' | translate"
                 [categoryScores]="reviewCategoryScores"
                 [reviews]="guestReviews"
               ></th-property-review-summary>
@@ -67,41 +67,41 @@
       <aside class="propertydetail-main__right">
         <th-payment-summary
           [title]="paymentSummary.title"
-          subtitle="per night"
+          [subtitle]="'PROPERTY.PER_NIGHT' | translate"
           [promoText]="paymentSummary.promoText"
-          checkInLabel="Check-in"
+          [checkInLabel]="'PROPERTY.CHECKIN_LABEL' | translate"
           [checkInValue]="paymentSummary.checkInValue"
           [checkInError]="bookingErrors.checkIn"
           (checkInValueChange)="onCheckInChanged($event)"
-          checkOutLabel="Check-out"
+          [checkOutLabel]="'PROPERTY.CHECKOUT_LABEL' | translate"
           [checkOutValue]="paymentSummary.checkOutValue"
           [checkOutError]="bookingErrors.checkOut"
           (checkOutValueChange)="onCheckOutChanged($event)"
-          guestsLabel="Guests"
+          [guestsLabel]="'PROPERTY.GUESTS_LABEL' | translate"
           [guestsValue]="paymentSummary.guestsValue"
           [guestsError]="bookingErrors.guests"
           (guestsValueChange)="onGuestsChanged($event)"
-          roomTypeLabel="Room Type"
+          [roomTypeLabel]="'PROPERTY.ROOM_TYPE_LABEL' | translate"
           [roomTypeValue]="paymentSummary.roomTypeValue"
           [items]="summaryItems"
           [badges]="summaryBadges"
-          totalLabel="Total"
+          [totalLabel]="'PROPERTY.TOTAL_LABEL' | translate"
           [totalAmount]="paymentSummary.totalAmount"
-          actionLabel="Book Now"
+          [actionLabel]="'PROPERTY.BOOK_NOW' | translate"
           [actionDisabled]="isBooking || isPricingLoading || (priceForStay === null && !!paymentSummary.checkInValue && !!paymentSummary.checkOutValue)"
           [isLoading]="isBooking || isPricingLoading"
           (actionClick)="onBookNow()"
-          [footnote]="pricingError || 'You won\'t be charged yet'"
-          trustLeftLabel="Secure booking"
-          trustRightLabel="Free cancellation"
+          [footnote]="pricingError || ('PROPERTY.FOOTNOTE_NO_CHARGE' | translate)"
+          [trustLeftLabel]="'PROPERTY.TRUST_SECURE' | translate"
+          [trustRightLabel]="'PROPERTY.TRUST_FREE_CANCELLATION' | translate"
           [mobileSticky]="true"
           [editorResetTrigger]="paymentSummaryResetVersion"
-          compactSuffix="/night"
-          compactNote="Taxes and fees included"
+          [compactSuffix]="'PROPERTY.COMPACT_SUFFIX' | translate"
+          [compactNote]="'PROPERTY.COMPACT_NOTE' | translate"
         ></th-payment-summary>
       </aside>
     </div>
   </section>
-  <p class="propertydetail-empty" *ngIf="isLoading" aria-live="polite" aria-atomic="true">Loading property details...</p>
+  <p class="propertydetail-empty" *ngIf="isLoading" aria-live="polite" aria-atomic="true">{{ 'PROPERTY.LOADING' | translate }}</p>
   <p class="propertydetail-empty" *ngIf="!isLoading && errorMessage" role="alert" aria-live="assertive">{{ errorMessage }}</p>
 </ion-content>

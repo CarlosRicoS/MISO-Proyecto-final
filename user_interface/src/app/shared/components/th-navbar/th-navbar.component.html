@@ -16,49 +16,57 @@
       <nav class="th-navbar__links">
         <ion-button class="th-navbar__link" fill="clear" routerLink="/home">
           <ion-icon name="search" aria-hidden="true" slot="start"></ion-icon>
-          Search
+          {{ 'NAV.SEARCH' | translate }}
         </ion-button>
         <ion-button class="th-navbar__link" fill="clear" routerLink="/booking-list">
           <ion-icon name="calendar-outline" aria-hidden="true" slot="start"></ion-icon>
-          Bookings
+          {{ 'NAV.BOOKINGS' | translate }}
         </ion-button>
       </nav>
 
       <div class="th-navbar__actions" *ngIf="mode === 'full'">
+        <ion-chip class="th-navbar__chip th-navbar__chip--lang" (click)="toggleLanguage()" [attr.aria-label]="'NAV.LANGUAGE_TOGGLE_' + (currentLang === 'es' ? 'ES' : 'EN') | translate">
+          <ion-icon name="language-outline" aria-hidden="true"></ion-icon>
+          <ion-label>{{ currentLang === 'es' ? 'ES' : 'EN' }}</ion-label>
+        </ion-chip>
         <ion-chip class="th-navbar__chip" *ngIf="showCurrency">
           <ion-icon name="globe-outline" aria-hidden="true"></ion-icon>
           <ion-label>USD</ion-label>
         </ion-chip>
         <ion-chip class="th-navbar__chip">
           <ion-icon name="person-circle-outline" aria-hidden="true"></ion-icon>
-          <ion-label>Account</ion-label>
+          <ion-label>{{ 'NAV.ACCOUNT' | translate }}</ion-label>
         </ion-chip>
-        <ion-button *ngIf="isMobileNative" class="th-navbar__icon-btn" fill="clear" aria-label="Notifications" (click)="onNotificationsClick($event)">
+        <ion-button *ngIf="isMobileNative" class="th-navbar__icon-btn" fill="clear" [attr.aria-label]="'NAV.NOTIFICATIONS' | translate" (click)="onNotificationsClick($event)">
           <ion-icon name="notifications-outline" aria-hidden="true"></ion-icon>
         </ion-button>
       </div>
 
       <div class="th-navbar__actions" *ngIf="mode === 'auth'">
-        <ion-button class="th-navbar__text-btn" fill="clear" routerLink="/login">Sign In</ion-button>
-        <ion-button class="th-navbar__primary-btn" routerLink="/register">Sign Up</ion-button>
+        <ion-chip class="th-navbar__chip th-navbar__chip--lang" (click)="toggleLanguage()" [attr.aria-label]="'NAV.LANGUAGE_TOGGLE_' + (currentLang === 'es' ? 'ES' : 'EN') | translate">
+          <ion-icon name="language-outline" aria-hidden="true"></ion-icon>
+          <ion-label>{{ currentLang === 'es' ? 'ES' : 'EN' }}</ion-label>
+        </ion-chip>
+        <ion-button class="th-navbar__text-btn" fill="clear" routerLink="/login">{{ 'NAV.SIGN_IN' | translate }}</ion-button>
+        <ion-button class="th-navbar__primary-btn" routerLink="/register">{{ 'NAV.SIGN_UP' | translate }}</ion-button>
       </div>
     </div>
 
     <div class="th-navbar__inner th-navbar__inner--mobile" *ngIf="layout !== 'desktop'">
       <ng-container *ngIf="isDetailRoute; else mobileSearchOrDefault">
-        <ion-button class="th-navbar__mobile-action th-navbar__mobile-action--detail" fill="clear" aria-label="Back" [routerLink]="detailBackLink">
+        <ion-button class="th-navbar__mobile-action th-navbar__mobile-action--detail" fill="clear" [attr.aria-label]="'NAV.BACK' | translate" [routerLink]="detailBackLink">
           <ion-icon name="arrow-back" aria-hidden="true"></ion-icon>
         </ion-button>
         <div class="th-navbar__mobile-actions-right">
           <ion-button
             class="th-navbar__mobile-action th-navbar__mobile-action--detail"
             fill="clear"
-            aria-label="Favorite"
+            [attr.aria-label]="'COMMON.FAVORITE' | translate"
             *ngIf="showDetailFavoriteAction"
           >
             <ion-icon name="heart-outline" aria-hidden="true"></ion-icon>
           </ion-button>
-          <ion-button class="th-navbar__mobile-action th-navbar__mobile-action--detail" fill="clear" aria-label="Share">
+          <ion-button class="th-navbar__mobile-action th-navbar__mobile-action--detail" fill="clear" [attr.aria-label]="'COMMON.SHARE' | translate">
             <ion-icon name="share-social" aria-hidden="true"></ion-icon>
           </ion-button>
         </div>
@@ -66,7 +74,7 @@
 
       <ng-template #mobileSearchOrDefault>
       <ng-container *ngIf="isSearchLikeRoute; else defaultMobile">
-        <ion-button class="th-navbar__mobile-action" fill="clear" aria-label="Back" routerLink="/home">
+        <ion-button class="th-navbar__mobile-action" fill="clear" [attr.aria-label]="'NAV.BACK' | translate" routerLink="/home">
           <ion-icon name="arrow-back" aria-hidden="true"></ion-icon>
         </ion-button>
         <div class="th-navbar__mobile-title">{{ mobileTitle }}</div>
@@ -74,7 +82,7 @@
           *ngIf="isBookingList"
           class="th-navbar__mobile-action"
           fill="clear"
-          aria-label="More options"
+          [attr.aria-label]="'COMMON.MORE_OPTIONS' | translate"
         >
           <ion-icon name="ellipsis-vertical" aria-hidden="true"></ion-icon>
         </ion-button>
@@ -85,7 +93,7 @@
         <div class="th-navbar__brand">
           <img class="th-navbar__logo" [src]="logoSrc" [alt]="logoAlt" />
         </div>
-        <ion-button *ngIf="isMobileNative" class="th-navbar__icon-btn" fill="clear" aria-label="Notifications" (click)="onNotificationsClick($event)">
+        <ion-button *ngIf="isMobileNative" class="th-navbar__icon-btn" fill="clear" [attr.aria-label]="'NAV.NOTIFICATIONS' | translate" (click)="onNotificationsClick($event)">
           <ion-icon name="notifications-outline" aria-hidden="true"></ion-icon>
         </ion-button>
       </ng-template>

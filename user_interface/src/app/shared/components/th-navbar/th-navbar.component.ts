@@ -1,9 +1,11 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input } from '@angular/core';
+import { Component, Input, inject } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { IonicModule, PopoverController, Platform } from '@ionic/angular';
 import { Router } from '@angular/router';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ThNotificationsListComponent } from '../th-notifications-list/th-notifications-list.component';
+import { LocaleService } from '../../../core/services/locale.service';
 
 export type ThNavbarMode = 'full' | 'auth';
 export type ThNavbarLayout = 'auto' | 'desktop' | 'mobile';
@@ -13,7 +15,7 @@ export type ThNavbarLayout = 'auto' | 'desktop' | 'mobile';
   templateUrl: './th-navbar.component.html',
   styleUrls: ['./th-navbar.component.scss'],
   standalone: true,
-  imports: [CommonModule, RouterModule, IonicModule]
+  imports: [CommonModule, RouterModule, IonicModule, TranslateModule]
 })
 export class ThNavbarComponent {
   @Input() mode: ThNavbarMode = 'auth';
@@ -21,6 +23,9 @@ export class ThNavbarComponent {
   @Input() logoSrc = 'assets/logos/portal_web.svg';
   @Input() logoAlt = 'TravelHub';
   @Input() showCurrency = true;
+
+  private readonly localeService = inject(LocaleService);
+  private readonly translate = inject(TranslateService);
 
   constructor(private router: Router, private popoverController: PopoverController, private platform: Platform) {}
 
@@ -40,16 +45,24 @@ export class ThNavbarComponent {
     return this.router.url.startsWith('/notifications');
   }
 
+  get currentLang(): string {
+    return this.localeService.currentLang;
+  }
+
+  toggleLanguage(): void {
+    this.localeService.toggle();
+  }
+
   get mobileTitle(): string {
     if (this.isNotificationsRoute) {
-      return 'Notifications';
+      return this.translate.instant('NAV.MOBILE_TITLE_NOTIFICATIONS');
     }
 
     if (this.isBookingList) {
-      return 'My Reservations';
+      return this.translate.instant('NAV.MOBILE_TITLE_BOOKINGS');
     }
 
-    return 'Search Results';
+    return this.translate.instant('NAV.MOBILE_TITLE_SEARCH');
   }
 
   async onNotificationsClick(event: Event): Promise<void> {

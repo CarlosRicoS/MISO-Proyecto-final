@@ -4,7 +4,10 @@
     "outDir": "./out-tsc/portal-hoteles-spec",
     "types": [
       "jasmine"
-    ]
+    ],
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true
   },
   "files": [
     "projects/portal-hoteles/src/test.ts",

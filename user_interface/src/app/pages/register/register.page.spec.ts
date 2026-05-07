@@ -4,6 +4,7 @@ import { of, throwError } from 'rxjs';
 import { ActivatedRoute, Router } from '@angular/router';
 import { RegisterPage } from './register.page';
 import { AuthService } from '../../core/services/auth.service';
+import { translateTestingModule } from '../../testing/translate-testing.module';
 
 describe('RegisterPage', () => {
   let component: RegisterPage;
@@ -43,7 +44,7 @@ describe('RegisterPage', () => {
     routerSpy.serializeUrl.and.returnValue('/login');
 
     await TestBed.configureTestingModule({
-      imports: [RegisterPage],
+      imports: [RegisterPage, translateTestingModule()],
       providers: [
         { provide: AuthService, useValue: authServiceSpy },
         { provide: Router, useValue: routerSpy },

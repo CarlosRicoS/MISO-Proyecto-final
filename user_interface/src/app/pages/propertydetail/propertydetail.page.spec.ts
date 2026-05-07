@@ -19,6 +19,7 @@ import { PendingBookingService } from '../../core/services/pending-booking.servi
 import { PricingService } from '../../core/services/pricing.service';
 import { ImageCacheService } from '../../core/services/image-cache.service';
 import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import { translateTestingModule } from '../../testing/translate-testing.module';
 
 describe('PropertydetailPage', () => {
   let component: PropertydetailPage;
@@ -117,6 +118,7 @@ describe('PropertydetailPage', () => {
         ThDetailsMosaicComponent,
         ThPropertyDescriptionSummaryComponent,
         ThPropertyReviewSummaryComponent,
+        translateTestingModule(),
       ],
       providers: [
         {

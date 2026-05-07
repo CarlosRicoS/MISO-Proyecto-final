@@ -1,13 +1,14 @@
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute } from '@angular/router';
 import { ThPaymentSummaryComponent } from './th-payment-summary.component';
+import { translateTestingModule } from '../../../testing/translate-testing.module';
 
 describe('ThPaymentSummaryComponent', () => {
   // ----- Accessibility: spinners have aria-label (AC-15) -----
 
   it('ion-spinner inside the primary action button has aria-label="Loading, please wait"', () => {
     TestBed.configureTestingModule({
-      imports: [ThPaymentSummaryComponent],
+      imports: [ThPaymentSummaryComponent, translateTestingModule()],
       providers: [{ provide: ActivatedRoute, useValue: {} }],
     });
 
@@ -26,7 +27,7 @@ describe('ThPaymentSummaryComponent', () => {
 
   it('ion-spinner inside the admin accept button has aria-label="Loading, please wait"', () => {
     TestBed.configureTestingModule({
-      imports: [ThPaymentSummaryComponent],
+      imports: [ThPaymentSummaryComponent, translateTestingModule()],
       providers: [{ provide: ActivatedRoute, useValue: {} }],
     });
 
@@ -47,7 +48,7 @@ describe('ThPaymentSummaryComponent', () => {
 
   it('guests label span has id="th-ps-guests-label" in editable mode', () => {
     TestBed.configureTestingModule({
-      imports: [ThPaymentSummaryComponent],
+      imports: [ThPaymentSummaryComponent, translateTestingModule()],
       providers: [{ provide: ActivatedRoute, useValue: {} }],
     });
 
@@ -62,7 +63,7 @@ describe('ThPaymentSummaryComponent', () => {
 
   it('guests ion-input has aria-labelledby="th-ps-guests-label" in editable mode', () => {
     TestBed.configureTestingModule({
-      imports: [ThPaymentSummaryComponent],
+      imports: [ThPaymentSummaryComponent, translateTestingModule()],
       providers: [{ provide: ActivatedRoute, useValue: {} }],
     });
 
@@ -80,7 +81,7 @@ describe('ThPaymentSummaryComponent', () => {
 
   it('renders defaults', () => {
     TestBed.configureTestingModule({
-      imports: [ThPaymentSummaryComponent],
+      imports: [ThPaymentSummaryComponent, translateTestingModule()],
       providers: [
         {
           provide: ActivatedRoute,
@@ -99,7 +100,7 @@ describe('ThPaymentSummaryComponent', () => {
 
   it('accepts custom data', () => {
     TestBed.configureTestingModule({
-      imports: [ThPaymentSummaryComponent],
+      imports: [ThPaymentSummaryComponent, translateTestingModule()],
       providers: [
         {
           provide: ActivatedRoute,
@@ -122,7 +123,7 @@ describe('ThPaymentSummaryComponent', () => {
 
   it('supports mobile sticky compact settings', () => {
     TestBed.configureTestingModule({
-      imports: [ThPaymentSummaryComponent],
+      imports: [ThPaymentSummaryComponent, translateTestingModule()],
       providers: [
         {
           provide: ActivatedRoute,
@@ -145,7 +146,7 @@ describe('ThPaymentSummaryComponent', () => {
 
   it('opens the check-in calendar when activated', () => {
     TestBed.configureTestingModule({
-      imports: [ThPaymentSummaryComponent],
+      imports: [ThPaymentSummaryComponent, translateTestingModule()],
       providers: [
         {
           provide: ActivatedRoute,
@@ -166,7 +167,7 @@ describe('ThPaymentSummaryComponent', () => {
 
   it('sets check-in minimum date to today', () => {
     TestBed.configureTestingModule({
-      imports: [ThPaymentSummaryComponent],
+      imports: [ThPaymentSummaryComponent, translateTestingModule()],
       providers: [
         {
           provide: ActivatedRoute,
@@ -188,7 +189,7 @@ describe('ThPaymentSummaryComponent', () => {
 
   it('emits updated date values when a date is confirmed', () => {
     TestBed.configureTestingModule({
-      imports: [ThPaymentSummaryComponent],
+      imports: [ThPaymentSummaryComponent, translateTestingModule()],
       providers: [
         {
           provide: ActivatedRoute,
@@ -210,7 +211,7 @@ describe('ThPaymentSummaryComponent', () => {
 
   it('auto-sets checkout to check-in + 1 day when checkout is empty', () => {
     TestBed.configureTestingModule({
-      imports: [ThPaymentSummaryComponent],
+      imports: [ThPaymentSummaryComponent, translateTestingModule()],
       providers: [
         {
           provide: ActivatedRoute,
@@ -232,7 +233,7 @@ describe('ThPaymentSummaryComponent', () => {
 
   it('sanitizes guests input to digits only', () => {
     TestBed.configureTestingModule({
-      imports: [ThPaymentSummaryComponent],
+      imports: [ThPaymentSummaryComponent, translateTestingModule()],
       providers: [
         {
           provide: ActivatedRoute,
@@ -253,7 +254,7 @@ describe('ThPaymentSummaryComponent', () => {
 
   it('emits action click when booking button is triggered', () => {
     TestBed.configureTestingModule({
-      imports: [ThPaymentSummaryComponent],
+      imports: [ThPaymentSummaryComponent, translateTestingModule()],
       providers: [
         {
           provide: ActivatedRoute,
@@ -273,7 +274,7 @@ describe('ThPaymentSummaryComponent', () => {
 
   it('resets mobile editor when sticky mode is disabled', () => {
     TestBed.configureTestingModule({
-      imports: [ThPaymentSummaryComponent],
+      imports: [ThPaymentSummaryComponent, translateTestingModule()],
       providers: [
         {
           provide: ActivatedRoute,
@@ -302,7 +303,7 @@ describe('ThPaymentSummaryComponent', () => {
 
   it('resets mobile editor when reset trigger changes in sticky mode', () => {
     TestBed.configureTestingModule({
-      imports: [ThPaymentSummaryComponent],
+      imports: [ThPaymentSummaryComponent, translateTestingModule()],
       providers: [
         {
           provide: ActivatedRoute,
@@ -331,7 +332,7 @@ describe('ThPaymentSummaryComponent', () => {
 
   it('opens mobile editor when errors are present in sticky mode', () => {
     TestBed.configureTestingModule({
-      imports: [ThPaymentSummaryComponent],
+      imports: [ThPaymentSummaryComponent, translateTestingModule()],
       providers: [
         {
           provide: ActivatedRoute,
@@ -361,7 +362,7 @@ describe('ThPaymentSummaryComponent', () => {
 
   it('normalizes guests value on input changes', () => {
     TestBed.configureTestingModule({
-      imports: [ThPaymentSummaryComponent],
+      imports: [ThPaymentSummaryComponent, translateTestingModule()],
       providers: [
         {
           provide: ActivatedRoute,
@@ -389,7 +390,7 @@ describe('ThPaymentSummaryComponent', () => {
 
   it('closes check-out modal when cancelled and confirms checkout date', () => {
     TestBed.configureTestingModule({
-      imports: [ThPaymentSummaryComponent],
+      imports: [ThPaymentSummaryComponent, translateTestingModule()],
       providers: [
         {
           provide: ActivatedRoute,
@@ -416,7 +417,7 @@ describe('ThPaymentSummaryComponent', () => {
 
   it('opens mobile editor when action is clicked and errors exist', () => {
     TestBed.configureTestingModule({
-      imports: [ThPaymentSummaryComponent],
+      imports: [ThPaymentSummaryComponent, translateTestingModule()],
       providers: [
         {
           provide: ActivatedRoute,
@@ -439,7 +440,7 @@ describe('ThPaymentSummaryComponent', () => {
 
   it('accepts ISO format dates and returns them unchanged', () => {
     TestBed.configureTestingModule({
-      imports: [ThPaymentSummaryComponent],
+      imports: [ThPaymentSummaryComponent, translateTestingModule()],
       providers: [
         {
           provide: ActivatedRoute,
@@ -458,7 +459,7 @@ describe('ThPaymentSummaryComponent', () => {
   it('emits admin accept and reject events when admin variant buttons are clicked', () => {
     // Arrange
     TestBed.configureTestingModule({
-      imports: [ThPaymentSummaryComponent],
+      imports: [ThPaymentSummaryComponent, translateTestingModule()],
       providers: [
         {
           provide: ActivatedRoute,
@@ -486,7 +487,7 @@ describe('ThPaymentSummaryComponent', () => {
   it('does not emit admin actions when disabled or loading', () => {
     // Arrange
     TestBed.configureTestingModule({
-      imports: [ThPaymentSummaryComponent],
+      imports: [ThPaymentSummaryComponent, translateTestingModule()],
       providers: [
         {
           provide: ActivatedRoute,
@@ -514,7 +515,7 @@ describe('ThPaymentSummaryComponent', () => {
   it('disables only the accept admin action when adminAcceptDisabled is true', () => {
     // Arrange
     TestBed.configureTestingModule({
-      imports: [ThPaymentSummaryComponent],
+      imports: [ThPaymentSummaryComponent, translateTestingModule()],
       providers: [
         {
           provide: ActivatedRoute,
@@ -543,7 +544,7 @@ describe('ThPaymentSummaryComponent', () => {
   it('disables only the reject admin action when adminRejectDisabled is true', () => {
     // Arrange
     TestBed.configureTestingModule({
-      imports: [ThPaymentSummaryComponent],
+      imports: [ThPaymentSummaryComponent, translateTestingModule()],
       providers: [
         {
           provide: ActivatedRoute,
@@ -572,7 +573,7 @@ describe('ThPaymentSummaryComponent', () => {
   it('treats admin variant fields as readonly by skipping field editing handlers', () => {
     // Arrange
     TestBed.configureTestingModule({
-      imports: [ThPaymentSummaryComponent],
+      imports: [ThPaymentSummaryComponent, translateTestingModule()],
       providers: [
         {
           provide: ActivatedRoute,
@@ -604,7 +605,7 @@ describe('ThPaymentSummaryComponent', () => {
   describe('checkOutMinDate calculation', () => {
     it('returns tomorrow when no check-in date is set', () => {
       TestBed.configureTestingModule({
-        imports: [ThPaymentSummaryComponent],
+        imports: [ThPaymentSummaryComponent, translateTestingModule()],
         providers: [
           {
             provide: ActivatedRoute,
@@ -628,7 +629,7 @@ describe('ThPaymentSummaryComponent', () => {
 
     // it('returns check-in + 1 day when check-in is in the future', () => {
     //   TestBed.configureTestingModule({
-    //     imports: [ThPaymentSummaryComponent],
+    //     imports: [ThPaymentSummaryComponent, translateTestingModule()],
     //     providers: [
     //       {
     //         provide: ActivatedRoute,
@@ -648,7 +649,7 @@ describe('ThPaymentSummaryComponent', () => {
 
     it('returns greater of today+1 or check-in+1 when check-in is today', () => {
       TestBed.configureTestingModule({
-        imports: [ThPaymentSummaryComponent],
+        imports: [ThPaymentSummaryComponent, translateTestingModule()],
         providers: [
           {
             provide: ActivatedRoute,
@@ -677,7 +678,7 @@ describe('ThPaymentSummaryComponent', () => {
 
     // it('prevents same-day check-in and check-out', () => {
     //   TestBed.configureTestingModule({
-    //     imports: [ThPaymentSummaryComponent],
+    //     imports: [ThPaymentSummaryComponent, translateTestingModule()],
     //     providers: [
     //       {
     //         provide: ActivatedRoute,
@@ -702,7 +703,7 @@ describe('ThPaymentSummaryComponent', () => {
   describe('convertDDMMYYYYToISO', () => {
     it('accepts and passes through yyyy-mm-dd format', () => {
       TestBed.configureTestingModule({
-        imports: [ThPaymentSummaryComponent],
+        imports: [ThPaymentSummaryComponent, translateTestingModule()],
         providers: [
           {
             provide: ActivatedRoute,
@@ -719,7 +720,7 @@ describe('ThPaymentSummaryComponent', () => {
 
     it('converts dd/mm/yyyy to yyyy-mm-dd format', () => {
       TestBed.configureTestingModule({
-        imports: [ThPaymentSummaryComponent],
+        imports: [ThPaymentSummaryComponent, translateTestingModule()],
         providers: [
           {
             provide: ActivatedRoute,
@@ -736,7 +737,7 @@ describe('ThPaymentSummaryComponent', () => {
 
     it('returns null for empty string', () => {
       TestBed.configureTestingModule({
-        imports: [ThPaymentSummaryComponent],
+        imports: [ThPaymentSummaryComponent, translateTestingModule()],
         providers: [
           {
             provide: ActivatedRoute,
@@ -753,7 +754,7 @@ describe('ThPaymentSummaryComponent', () => {
 
     it('returns null for invalid format', () => {
       TestBed.configureTestingModule({
-        imports: [ThPaymentSummaryComponent],
+        imports: [ThPaymentSummaryComponent, translateTestingModule()],
         providers: [
           {
             provide: ActivatedRoute,
@@ -773,7 +774,7 @@ describe('ThPaymentSummaryComponent', () => {
   describe('date confirmation and adjustment', () => {
     it('auto-adjusts checkout when it becomes earlier than check-in after check-in changes', () => {
       TestBed.configureTestingModule({
-        imports: [ThPaymentSummaryComponent],
+        imports: [ThPaymentSummaryComponent, translateTestingModule()],
         providers: [
           {
             provide: ActivatedRoute,
@@ -796,7 +797,7 @@ describe('ThPaymentSummaryComponent', () => {
 
     it('does not adjust checkout if it is already after check-in', () => {
       TestBed.configureTestingModule({
-        imports: [ThPaymentSummaryComponent],
+        imports: [ThPaymentSummaryComponent, translateTestingModule()],
         providers: [
           {
             provide: ActivatedRoute,
@@ -821,7 +822,7 @@ describe('ThPaymentSummaryComponent', () => {
   describe('compact tabs', () => {
     it('emits compactTabChange event when tab is selected', () => {
       TestBed.configureTestingModule({
-        imports: [ThPaymentSummaryComponent],
+        imports: [ThPaymentSummaryComponent, translateTestingModule()],
         providers: [
           {
             provide: ActivatedRoute,
@@ -846,7 +847,7 @@ describe('ThPaymentSummaryComponent', () => {
 
     it('initializes compactActiveTabId to first tab when provided', () => {
       TestBed.configureTestingModule({
-        imports: [ThPaymentSummaryComponent],
+        imports: [ThPaymentSummaryComponent, translateTestingModule()],
         providers: [
           {
             provide: ActivatedRoute,
@@ -871,7 +872,7 @@ describe('ThPaymentSummaryComponent', () => {
   describe('edge cases and error branches', () => {
     it('handles null checkInValue when calculating checkOutMinDate', () => {
       TestBed.configureTestingModule({
-        imports: [ThPaymentSummaryComponent],
+        imports: [ThPaymentSummaryComponent, translateTestingModule()],
         providers: [
           {
             provide: ActivatedRoute,
@@ -892,7 +893,7 @@ describe('ThPaymentSummaryComponent', () => {
 
     it('handles checkInValue with whitespace when calculating checkOutMinDate', () => {
       TestBed.configureTestingModule({
-        imports: [ThPaymentSummaryComponent],
+        imports: [ThPaymentSummaryComponent, translateTestingModule()],
         providers: [
           {
             provide: ActivatedRoute,
@@ -913,7 +914,7 @@ describe('ThPaymentSummaryComponent', () => {
 
     it('sanitizes guests value with multiple non-numeric characters', () => {
       TestBed.configureTestingModule({
-        imports: [ThPaymentSummaryComponent],
+        imports: [ThPaymentSummaryComponent, translateTestingModule()],
         providers: [
           {
             provide: ActivatedRoute,
@@ -934,7 +935,7 @@ describe('ThPaymentSummaryComponent', () => {
 
     it('handles empty guests input', () => {
       TestBed.configureTestingModule({
-        imports: [ThPaymentSummaryComponent],
+        imports: [ThPaymentSummaryComponent, translateTestingModule()],
         providers: [
           {
             provide: ActivatedRoute,
@@ -955,7 +956,7 @@ describe('ThPaymentSummaryComponent', () => {
 
     it('closes check-in modal when cancelled', () => {
       TestBed.configureTestingModule({
-        imports: [ThPaymentSummaryComponent],
+        imports: [ThPaymentSummaryComponent, translateTestingModule()],
         providers: [
           {
             provide: ActivatedRoute,
@@ -977,7 +978,7 @@ describe('ThPaymentSummaryComponent', () => {
 
     it('converts partial date components correctly', () => {
       TestBed.configureTestingModule({
-        imports: [ThPaymentSummaryComponent],
+        imports: [ThPaymentSummaryComponent, translateTestingModule()],
         providers: [
           {
             provide: ActivatedRoute,
@@ -995,7 +996,7 @@ describe('ThPaymentSummaryComponent', () => {
 
     it('does not auto-adjust checkout when it equals check-in', () => {
       TestBed.configureTestingModule({
-        imports: [ThPaymentSummaryComponent],
+        imports: [ThPaymentSummaryComponent, translateTestingModule()],
         providers: [
           {
             provide: ActivatedRoute,
@@ -1017,7 +1018,7 @@ describe('ThPaymentSummaryComponent', () => {
 
     it('handles check-in modal with existing checkInValue', () => {
       TestBed.configureTestingModule({
-        imports: [ThPaymentSummaryComponent],
+        imports: [ThPaymentSummaryComponent, translateTestingModule()],
         providers: [
           {
             provide: ActivatedRoute,
@@ -1038,7 +1039,7 @@ describe('ThPaymentSummaryComponent', () => {
 
     it('handles check-out modal opening', () => {
       TestBed.configureTestingModule({
-        imports: [ThPaymentSummaryComponent],
+        imports: [ThPaymentSummaryComponent, translateTestingModule()],
         providers: [
           {
             provide: ActivatedRoute,
@@ -1059,7 +1060,7 @@ describe('ThPaymentSummaryComponent', () => {
 
     it('handles ngOnChanges with multiple conditions', () => {
       TestBed.configureTestingModule({
-        imports: [ThPaymentSummaryComponent],
+        imports: [ThPaymentSummaryComponent, translateTestingModule()],
         providers: [
           {
             provide: ActivatedRoute,
@@ -1088,7 +1089,7 @@ describe('ThPaymentSummaryComponent', () => {
 
     it('does not open mobile editor if errors are empty in sticky mode', () => {
       TestBed.configureTestingModule({
-        imports: [ThPaymentSummaryComponent],
+        imports: [ThPaymentSummaryComponent, translateTestingModule()],
         providers: [
           {
             provide: ActivatedRoute,
@@ -1118,7 +1119,7 @@ describe('ThPaymentSummaryComponent', () => {
 
     it('handles date conversion with leading zeros', () => {
       TestBed.configureTestingModule({
-        imports: [ThPaymentSummaryComponent],
+        imports: [ThPaymentSummaryComponent, translateTestingModule()],
         providers: [
           {
             provide: ActivatedRoute,
@@ -1136,7 +1137,7 @@ describe('ThPaymentSummaryComponent', () => {
 
     it('rejects date conversion with mismatched separators', () => {
       TestBed.configureTestingModule({
-        imports: [ThPaymentSummaryComponent],
+        imports: [ThPaymentSummaryComponent, translateTestingModule()],
         providers: [
           {
             provide: ActivatedRoute,
@@ -1154,7 +1155,7 @@ describe('ThPaymentSummaryComponent', () => {
 
     it('handles checkOutMinDate when both dates are same', () => {
       TestBed.configureTestingModule({
-        imports: [ThPaymentSummaryComponent],
+        imports: [ThPaymentSummaryComponent, translateTestingModule()],
         providers: [
           {
             provide: ActivatedRoute,
@@ -1185,7 +1186,7 @@ describe('ThPaymentSummaryComponent', () => {
 
     it('applies admin variant to all input fields simultaneously', () => {
       TestBed.configureTestingModule({
-        imports: [ThPaymentSummaryComponent],
+        imports: [ThPaymentSummaryComponent, translateTestingModule()],
         providers: [
           {
             provide: ActivatedRoute,

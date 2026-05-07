@@ -6,6 +6,7 @@ import { HotelsService } from '../../core/services/hotels.service';
 import { PropertyDetailService } from '../../core/services/property-detail.service';
 import { ThFilterSummaryComponent } from '../../shared/components/th-filter-summary/th-filter-summary.component';
 import { SearchResultsPage } from './search-results.page';
+import { translateTestingModule } from '../../testing/translate-testing.module';
 
 class HotelsServiceMock {
   getHotels = jasmine.createSpy('getHotels').and.returnValue(of([]));
@@ -41,7 +42,7 @@ describe('SearchResultsPage', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       declarations: [SearchResultsPage],
-      imports: [IonicModule.forRoot(), ThFilterSummaryComponent],
+      imports: [IonicModule.forRoot(), ThFilterSummaryComponent, translateTestingModule()],
       providers: [
         { provide: HotelsService, useClass: HotelsServiceMock },
         { provide: PropertyDetailService, useClass: PropertyDetailServiceMock },
@@ -275,9 +276,14 @@ describe('SearchResultsPage', () => {
     expect(component.getHotelLocation({ id: '3', city: 'Lima', country: 'PE' } as any)).toBe('Lima, PE');
   });
 
-  it('formats hotel price with defaults', () => {
-    expect(component.getHotelPrice({ id: '1' } as any)).toBe('$0');
-    expect(component.getHotelPrice({ id: '2', currency: 'USD', pricePerNight: 120 } as any)).toBe('USD120');
+  it('formats hotel price via locale-aware LocaleService.formatCurrency', () => {
+    const zero = component.getHotelPrice({ id: '1' } as any);
+    expect(zero).toContain('0');
+    expect(/\$|COP|USD/.test(zero)).toBeTrue();
+
+    const positive = component.getHotelPrice({ id: '2', currency: 'USD', pricePerNight: 120 } as any);
+    expect(positive).toContain('120');
+    expect(/\$|COP|USD/.test(positive)).toBeTrue();
   });
 
   it('formats hotel rating with fallback', () => {

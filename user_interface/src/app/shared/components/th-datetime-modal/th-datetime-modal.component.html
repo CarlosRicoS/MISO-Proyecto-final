@@ -10,7 +10,7 @@
         #datetimePicker
         [(ngModel)]="selectedDate"
         presentation="date"
-        locale="es-ES"
+        [locale]="dateLocale"
         [firstDayOfWeek]="0"
         [min]="minDate"
         [max]="maxDate"

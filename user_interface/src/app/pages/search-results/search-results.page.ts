@@ -1,9 +1,12 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { InfiniteScrollCustomEvent, IonContent, ScrollCustomEvent } from '@ionic/angular';
-import { firstValueFrom } from 'rxjs';
+import { Subject, firstValueFrom } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
+import { TranslateService } from '@ngx-translate/core';
 import { Hotel } from '../../core/models/hotel.model';
 import { HotelsService } from '../../core/services/hotels.service';
+import { LocaleService } from '../../core/services/locale.service';
 import { PropertyDetailService } from '../../core/services/property-detail.service';
 import { FilterSummaryParams } from '../../shared/components/th-filter-summary/th-filter-summary.component';
 
@@ -13,12 +16,13 @@ import { FilterSummaryParams } from '../../shared/components/th-filter-summary/t
   styleUrls: ['./search-results.page.scss'],
   standalone: false,
 })
-export class SearchResultsPage implements OnInit {
+export class SearchResultsPage implements OnInit, OnDestroy {
   private readonly pageSize = 10;
   private readonly windowSize = 20;
   private readonly topScrollThreshold = 24;
   private readonly bottomScrollThreshold = 120;
   private windowStartPage = 0;
+  private readonly destroy$ = new Subject<void>();
 
   @ViewChild(IonContent) content?: IonContent;
   hotels: Hotel[] = [];
@@ -55,9 +59,23 @@ export class SearchResultsPage implements OnInit {
     private propertyDetailService: PropertyDetailService,
     private route: ActivatedRoute,
     private router: Router,
+    private translate: TranslateService,
+    private localeService: LocaleService,
   ) {}
 
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
   async ngOnInit(): Promise<void> {
+    // Force change detection on language switch so getHotelPrice() re-emits.
+    this.localeService.currentLang$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.hotels = [...this.hotels];
+      });
+
     this.readSearchParamsFromQuery();
 
     const navState = this.router.getCurrentNavigation()?.extras.state ?? history.state;
@@ -86,7 +104,7 @@ export class SearchResultsPage implements OnInit {
       this.hotels = hotels;
       this.canLoadNext = hotels.length === this.pageSize;
     } catch (error) {
-      this.errorMessage = 'Unable to load hotels.';
+      this.errorMessage = this.translate.instant('SEARCH.ERROR');
       this.canLoadNext = false;
     } finally {
       this.isLoading = false;
@@ -147,7 +165,7 @@ export class SearchResultsPage implements OnInit {
         }
       }
     } catch (error) {
-      this.errorMessage = 'Unable to load hotels.';
+      this.errorMessage = this.translate.instant('SEARCH.ERROR');
     } finally {
       this.isPaging = false;
     }
@@ -183,7 +201,7 @@ export class SearchResultsPage implements OnInit {
         }
       }
     } catch (error) {
-      this.errorMessage = 'Unable to load hotels.';
+      this.errorMessage = this.translate.instant('SEARCH.ERROR');
     } finally {
       this.isPaging = false;
     }
@@ -195,9 +213,7 @@ export class SearchResultsPage implements OnInit {
   }
 
   getHotelPrice(hotel: Hotel): string {
-    const currency = hotel.currency || '$';
-    const price = hotel.pricePerNight ?? 0;
-    return `${currency}${price}`;
+    return this.localeService.formatCurrency(hotel.pricePerNight ?? 0);
   }
 
   getHotelRating(hotel: Hotel): string {
@@ -216,7 +232,7 @@ export class SearchResultsPage implements OnInit {
 
   async viewDetails(hotel: Hotel): Promise<void> {
     if (!hotel?.id) {
-      this.errorMessage = 'Unable to load property details.';
+      this.errorMessage = this.translate.instant('PROPERTY.ERROR');
       return;
     }
 
@@ -240,7 +256,7 @@ export class SearchResultsPage implements OnInit {
         },
       });
     } catch (error) {
-      this.errorMessage = 'Unable to load property details.';
+      this.errorMessage = this.translate.instant('PROPERTY.ERROR');
     } finally {
       this.isLoading = false;
     }

@@ -11,12 +11,14 @@ import { ThDetailsMosaicComponent } from '../../shared/components/th-details-mos
 import { ThPopupComponent } from '../../shared/components/th-popup/th-popup.component';
 import { ThPropertyDescriptionSummaryComponent } from '../../shared/components/th-property-description-summary/th-property-description-summary.component';
 import { ThPropertyReviewSummaryComponent } from '../../shared/components/th-property-review-summary/th-property-review-summary.component';
+import { SharedCommonModule } from '../../shared/common/common.module';
 
 @NgModule({
   declarations: [PropertydetailPage],
   imports: [
     CommonModule,
     IonicModule,
+    SharedCommonModule,
     ThAmenitiesSummaryComponent,
     ThBadgeComponent,
     ThDetailSummaryComponent,
