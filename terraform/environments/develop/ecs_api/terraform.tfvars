@@ -340,6 +340,22 @@ services = {
       {
         name      = "BOOKING_SERVICE_URL"
         valueFrom = "/final-project-miso/booking/service_url"
+      },
+      {
+        name      = "DB_USERNAME"
+        valueFrom = "/final-project-miso/checkin/db_username"
+      },
+      {
+        name      = "DB_PASSWORD"
+        valueFrom = "/final-project-miso/checkin/db_password"
+      },
+      {
+        name      = "DB_HOST"
+        valueFrom = "/final-project-miso/checkin/db_host"
+      },
+      {
+        name      = "DB_NAME"
+        valueFrom = "/final-project-miso/checkin/db_name"
       }
     ]
   }
