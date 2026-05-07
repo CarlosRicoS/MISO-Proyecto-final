@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { IonicModule } from '@ionic/angular';
 import { Capacitor } from '@capacitor/core';
+import { TranslateModule } from '@ngx-translate/core';
 
 export type ThDetailSummaryStatusVariant =
   | 'default'
@@ -16,7 +17,7 @@ export type ThDetailSummaryStatusVariant =
   templateUrl: './th-detail-summary.component.html',
   styleUrls: ['./th-detail-summary.component.scss'],
   standalone: true,
-  imports: [CommonModule, IonicModule],
+  imports: [CommonModule, IonicModule, TranslateModule],
 })
 export class ThDetailSummaryComponent {
   @Input() title = '';
@@ -33,6 +34,8 @@ export class ThDetailSummaryComponent {
   @Input() statusVariant: ThDetailSummaryStatusVariant = 'default';
   @Input() metaPrimary = '';
   @Input() metaSecondary = '';
+  @Input() isCheckInAvailable: boolean | null = null;
+  @Input() isCheckInSubmitting: boolean | null = null;
 
   isPlatformNative = Capacitor.isNativePlatform();
 

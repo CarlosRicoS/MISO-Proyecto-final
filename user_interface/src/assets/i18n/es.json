@@ -235,7 +235,19 @@
     "POLICY_PAID_REFUND": "La cancelación no es gratuita. El monto del reembolso será de {{refund}}. ¿Deseas continuar?",
     "POLICY_PAID_NONE": "La cancelación no es gratuita y no se emitirá reembolso. ¿Deseas continuar?",
     "ACCEPT": "Aceptar",
-    "CANCEL": "Cancelar"
+    "CANCEL": "Cancelar",
+    "CHECKIN_LABEL": "Registrarse",
+    "CHECKIN_ARIA": "Registrarse con cámara",
+    "CHECKIN_TITLE": "Registrarse",
+    "CHECKIN_NO_CODE_BODY": "No se detectó un código QR.",
+    "CHECKIN_NO_BOOKING_BODY": "No se pudo identificar la reserva. Por favor intenta de nuevo.",
+    "CHECKIN_SUCCESS_TITLE": "Registro completado",
+    "CHECKIN_SUCCESS_BODY": "¡Registro completado!",
+    "CHECKIN_FAILED_BODY": "No se pudo completar el registro. Por favor intenta de nuevo.",
+    "CHECKIN_ERROR_TITLE": "Error de registro",
+    "CHECKIN_ERROR_BODY": "No se pudo completar el registro. Por favor intenta de nuevo.",
+    "CHECKIN_SCANNER_ERROR_TITLE": "Error del escáner",
+    "CHECKIN_SCANNER_ERROR_BODY": "No se pudo acceder al escáner. Por favor intenta de nuevo."
   },
   "NOTIFICATIONS": {
     "EMPTY_TITLE": "Aún no tienes notificaciones",

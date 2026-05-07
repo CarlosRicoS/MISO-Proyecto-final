@@ -235,7 +235,19 @@
     "POLICY_PAID_REFUND": "Cancellation is not free. Your refund amount will be {{refund}}. Would you like to continue?",
     "POLICY_PAID_NONE": "Cancellation is not free and no refund will be issued. Would you like to continue?",
     "ACCEPT": "Accept",
-    "CANCEL": "Cancel"
+    "CANCEL": "Cancel",
+    "CHECKIN_LABEL": "Check in",
+    "CHECKIN_ARIA": "Check in with camera",
+    "CHECKIN_TITLE": "Check-in",
+    "CHECKIN_NO_CODE_BODY": "No QR code detected.",
+    "CHECKIN_NO_BOOKING_BODY": "Unable to determine booking. Please try again.",
+    "CHECKIN_SUCCESS_TITLE": "Check-in completed",
+    "CHECKIN_SUCCESS_BODY": "Check-in completed!",
+    "CHECKIN_FAILED_BODY": "Unable to complete check-in. Please try again.",
+    "CHECKIN_ERROR_TITLE": "Check-in Error",
+    "CHECKIN_ERROR_BODY": "Unable to complete check-in. Please try again.",
+    "CHECKIN_SCANNER_ERROR_TITLE": "Scanner Error",
+    "CHECKIN_SCANNER_ERROR_BODY": "Unable to access the scanner. Please try again."
   },
   "NOTIFICATIONS": {
     "EMPTY_TITLE": "No notifications yet",

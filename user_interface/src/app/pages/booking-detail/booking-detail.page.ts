@@ -1,4 +1,4 @@
-import { HttpErrorResponse } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { Component, HostListener, OnDestroy, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -75,6 +75,10 @@ export class BookingDetailPage implements OnInit, OnDestroy {
   isCancelling = false;
   errorMessage = '';
 
+  isCheckInAvailable: boolean | null = null;
+  isCheckInAvailabilityLoading = false;
+  isCheckInSubmitting = false;
+
   isAlertOpen = false;
   alertTitle = '';
   alertMessage = '';
@@ -130,6 +134,7 @@ export class BookingDetailPage implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private router: Router,
     private imageCache: ImageCacheService,
+    private httpClient: HttpClient,
   ) {
     this.priceTrigger$.pipe(
       takeUntil(this.destroy$),
@@ -198,6 +203,27 @@ export class BookingDetailPage implements OnInit, OnDestroy {
     void this.refreshPageData();
   }
 
+  private async fetchCheckInAvailability(propertyId: string): Promise<void> {
+    if (!propertyId) {
+      return;
+    }
+
+    this.isCheckInAvailabilityLoading = true;
+    this.isCheckInAvailable = null;
+
+    try {
+      const response = await firstValueFrom(
+        this.httpClient.get<{ available: boolean }>(`/api/check-in/available?property_id=${propertyId}`),
+      );
+      this.isCheckInAvailable = response.available;
+    } catch (error) {
+      console.error('Error fetching check-in availability:', error);
+      this.isCheckInAvailable = null;
+    } finally {
+      this.isCheckInAvailabilityLoading = false;
+    }
+  }
+
   private async refreshPageData(): Promise<void> {
     if (this.isRefreshingPageData) {
       return;
@@ -231,6 +257,23 @@ export class BookingDetailPage implements OnInit, OnDestroy {
     this.errorMessage = '';
 
     try {
+      // Determine property ID and fetch check-in availability
+      let propertyId: string | undefined;
+      
+      if (stateReservation) {
+        propertyId = stateReservation.property_id;
+      } else if (bookingId) {
+        const reservation = await firstValueFrom(
+          this.bookingService.getReservation(bookingId, this.authSessionService.idToken),
+        );
+        propertyId = reservation.property_id;
+      }
+
+      // Fetch check-in availability before loading page content
+      if (propertyId) {
+        await this.fetchCheckInAvailability(propertyId);
+      }
+
       if (stateReservation && statePropertyDetail) {
         this.applyBookingDetail(stateReservation, statePropertyDetail, stateHotel);
         return;
@@ -1147,16 +1190,61 @@ export class BookingDetailPage implements OnInit, OnDestroy {
         hint: CapacitorBarcodeScannerTypeHint.QR_CODE,
       });
 
-      if (result && result.ScanResult) {
-        const qrData = result.ScanResult;
-        // TODO: Validate QR data against reservation
-        // Extract booking info from QR code and verify match
-        this.showAlert('Check-in', `QR code scanned: ${qrData}`, 'success');
-      } else {
-        this.showAlert('Check-in', 'No QR code detected.', 'warning');
+      if (!result || !result.ScanResult) {
+        this.showAlert(this.translate.instant('BOOKING_DETAIL.CHECKIN_TITLE'), this.translate.instant('BOOKING_DETAIL.CHECKIN_NO_CODE_BODY'), 'warning');
+        return;
+      }
+
+      const qrData = result.ScanResult;
+
+      const bookingId = this.currentReservation?.id || this.getBookingId(undefined);
+      if (!bookingId) {
+        this.showAlert(this.translate.instant('BOOKING_DETAIL.CHECKIN_TITLE'), this.translate.instant('BOOKING_DETAIL.CHECKIN_NO_BOOKING_BODY'), 'error');
+        return;
+      }
+
+      try {
+        this.isCheckInSubmitting = true;
+        const response = await firstValueFrom(
+          this.httpClient.post<{ status?: string }>(
+            '/api/check-in',
+            { booking_id: bookingId, qr_code: qrData },
+            {
+              headers: {
+                Authorization: `Bearer ${this.authSessionService.idToken}`,
+              },
+            },
+          ),
+        );
+
+        if (response && String(response.status).toUpperCase() === 'COMPLETED') {
+          this.showAlert(
+            this.translate.instant('BOOKING_DETAIL.CHECKIN_SUCCESS_TITLE'),
+            this.translate.instant('BOOKING_DETAIL.CHECKIN_SUCCESS_BODY'),
+            'success',
+          );
+        } else {
+          this.showAlert(
+            this.translate.instant('BOOKING_DETAIL.CHECKIN_TITLE'),
+            this.translate.instant('BOOKING_DETAIL.CHECKIN_FAILED_BODY'),
+            'error',
+          );
+        }
+      } catch (httpErr) {
+        const httpError = httpErr as any;
+        let message = this.translate.instant('BOOKING_DETAIL.CHECKIN_ERROR_BODY');
+        if (httpError?.error?.message) {
+          message = httpError.error.message;
+        } else if (httpError?.message) {
+          message = httpError.message;
+        }
+
+        this.showAlert(this.translate.instant('BOOKING_DETAIL.CHECKIN_ERROR_TITLE'), message, 'error');
+      } finally {
+        this.isCheckInSubmitting = false;
       }
     } catch (err) {
-      this.showAlert('Scanner error', 'Unable to scan QR code.', 'error');
+      this.showAlert(this.translate.instant('BOOKING_DETAIL.CHECKIN_SCANNER_ERROR_TITLE'), this.translate.instant('BOOKING_DETAIL.CHECKIN_SCANNER_ERROR_BODY'), 'error');
     }
   }
 }

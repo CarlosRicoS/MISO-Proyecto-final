@@ -17,16 +17,21 @@
           </p>
         </div>
         <!-- Mobile check-in control: aligned to the right on the same line as location/status -->
-        <div class="th-detail-summary__checkin" role="group" *ngIf="isPlatformNative">
-          <button
-            class="th-detail-summary__checkin-button"
-            type="button"
-            (click)="onCheckinClick()"
-            aria-label="Check in with camera"
-          >
-            <ion-icon name="qr-code" aria-hidden="true"></ion-icon>
-          </button>
-          <div class="th-detail-summary__checkin-label">Check in</div>
+        <div class="th-detail-summary__checkin" role="group" *ngIf="isCheckInAvailable && isPlatformNative">
+          <div *ngIf="isCheckInSubmitting; else scanButton" class="th-detail-summary__checkin-loading" aria-live="polite">
+            <ion-spinner name="crescent"></ion-spinner>
+          </div>
+          <ng-template #scanButton>
+            <button
+              class="th-detail-summary__checkin-button"
+              type="button"
+              (click)="onCheckinClick()"
+              aria-label="{{ 'BOOKING_DETAIL.CHECKIN_ARIA' | translate }}"
+            >
+              <ion-icon name="qr-code" aria-hidden="true"></ion-icon>
+            </button>
+          </ng-template>
+          <div class="th-detail-summary__checkin-label">{{ 'BOOKING_DETAIL.CHECKIN_LABEL' | translate }}</div>
         </div>
       </div>
     </div>
