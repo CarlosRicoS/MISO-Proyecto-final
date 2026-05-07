@@ -1,4 +1,4 @@
 region  = "us-east-1"
 key     = "ecs_cluster/terraform.tfstate"
 encrypt = true
-bucket  = "miso-final-project-team3-terraform"
+bucket  = "miso-final-project-2-team3-terraform"
