@@ -19,5 +19,12 @@ namespace PricingEngine.Database
 		Task<List<PricingRuleResponse>> GetPricingRulesByPricingId(Guid pricingId);
 		Task<PricingRuleResponse> UpdatePricingRule(Guid pricingId, Guid ruleId, UpdatePricingRuleRequest request);
 		Task<bool> DeletePricingRule(Guid pricingId, Guid ruleId);
+
+		// Discount CRUD operations
+		Task<DiscountResponse> CreateDiscount(CreateDiscountRequest request);
+		Task<DiscountResponse> GetDiscountById(Guid id);
+		Task<List<DiscountResponse>> GetAllDiscounts();
+		Task<DiscountResponse> UpdateDiscount(Guid id, UpdateDiscountRequest request);
+		Task<bool> DeleteDiscount(Guid id);
 	}
 }
