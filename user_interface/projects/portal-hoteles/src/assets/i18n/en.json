@@ -128,7 +128,11 @@
     "NO_SEASONAL": "No seasonal rules available.",
     "SHOWING_ROWS": "Showing 1-{{rows}} of 12 room types",
     "VISIBLE_NONE": "No pricing data available",
-    "VISIBLE_ONE": "Showing 1-1 of 1 pricing record"
+    "VISIBLE_ONE": "Showing 1-1 of 1 pricing record",
+    "SEARCH_LABEL": "Search room types",
+    "ROW_ACTIONS": "Row actions",
+    "PREV_PAGE": "Previous page",
+    "NEXT_PAGE": "Next page"
   },
   "REPORTS": {
     "TITLE": "Incoming Report",

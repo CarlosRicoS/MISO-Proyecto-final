@@ -302,5 +302,116 @@ namespace PricingEngine.Database
 
 			return true;
 		}
+
+		// Discount CRUD Operations
+
+		public async Task<DiscountResponse> CreateDiscount(CreateDiscountRequest request)
+		{
+			if (string.IsNullOrWhiteSpace(request.Code))
+				throw new ArgumentException("Code is required");
+
+			if (request.DiscountValue < 0 || request.DiscountValue > 100)
+				throw new ArgumentException("DiscountValue must be between 0 and 100");
+
+			var discount = new Discount
+			{
+				Id = Guid.NewGuid(),
+				Code = request.Code,
+				CreationDate = DateTime.Now,
+				ExpirationDate = request.ExpirationDate,
+				DiscountValue = request.DiscountValue,
+				Used = false,
+				BookingId = request.BookingId
+			};
+
+			context.Discounts.Add(discount);
+			await context.SaveChangesAsync();
+
+			return new DiscountResponse
+			{
+				Id = discount.Id,
+				Code = discount.Code,
+				CreationDate = discount.CreationDate,
+				ExpirationDate = discount.ExpirationDate,
+				DiscountValue = discount.DiscountValue,
+				Used = discount.Used,
+				BookingId = discount.BookingId
+			};
+		}
+
+		public async Task<DiscountResponse> GetDiscountById(Guid id)
+		{
+			var discount = await context.Discounts.FindAsync(id)
+				?? throw new KeyNotFoundException($"Discount with id {id} not found");
+
+			return new DiscountResponse
+			{
+				Id = discount.Id,
+				Code = discount.Code,
+				CreationDate = discount.CreationDate,
+				ExpirationDate = discount.ExpirationDate,
+				DiscountValue = discount.DiscountValue,
+				Used = discount.Used,
+				BookingId = discount.BookingId
+			};
+		}
+
+		public async Task<List<DiscountResponse>> GetAllDiscounts()
+		{
+			var discounts = await context.Discounts
+				.Select(d => new DiscountResponse
+				{
+					Id = d.Id,
+					Code = d.Code,
+					CreationDate = d.CreationDate,
+					ExpirationDate = d.ExpirationDate,
+					DiscountValue = d.DiscountValue,
+					Used = d.Used,
+					BookingId = d.BookingId
+				})
+				.ToListAsync();
+
+			return discounts;
+		}
+
+		public async Task<DiscountResponse> UpdateDiscount(Guid id, UpdateDiscountRequest request)
+		{
+			if (request.DiscountValue < 0 || request.DiscountValue > 100)
+				throw new ArgumentException("DiscountValue must be between 0 and 100");
+
+			var discount = await context.Discounts.FindAsync(id)
+				?? throw new KeyNotFoundException($"Discount with id {id} not found");
+
+			discount.Code = request.Code;
+			discount.ExpirationDate = request.ExpirationDate;
+			discount.DiscountValue = request.DiscountValue;
+			discount.Used = request.Used;
+			discount.BookingId = request.BookingId;
+
+			context.Discounts.Update(discount);
+			await context.SaveChangesAsync();
+
+			return new DiscountResponse
+			{
+				Id = discount.Id,
+				Code = discount.Code,
+				CreationDate = discount.CreationDate,
+				ExpirationDate = discount.ExpirationDate,
+				DiscountValue = discount.DiscountValue,
+				Used = discount.Used,
+				BookingId = discount.BookingId
+			};
+		}
+
+		public async Task<bool> DeleteDiscount(Guid id)
+		{
+			var discount = await context.Discounts.FindAsync(id)
+				?? throw new KeyNotFoundException($"Discount with id {id} not found");
+
+			context.Discounts.Remove(discount);
+			await context.SaveChangesAsync();
+
+			return true;
+		}
 	}
 }

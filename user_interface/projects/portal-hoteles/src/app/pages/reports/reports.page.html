@@ -68,6 +68,7 @@
             size="small"
             fill="outline"
             class="portal-hoteles-reports-toolbar-header__export-button portal-hoteles-reports-toolbar-header__export-button--secondary"
+            aria-label="Export report as PDF"
           >
             {{ 'REPORTS.EXPORT_PDF' | translate }}
           </ion-button>
@@ -75,6 +76,7 @@
             size="small"
             fill="solid"
             class="portal-hoteles-reports-toolbar-header__export-button portal-hoteles-reports-toolbar-header__export-button--primary"
+            aria-label="Download report as Excel"
             (click)="onDownloadCsv()"
           >
             {{ 'REPORTS.EXPORT_EXCEL' | translate }}
@@ -82,7 +84,16 @@
         </div>
       </div>
 
-      <table class="portal-hoteles-reports-table" *ngIf="hasRows; else noRowsTemplate">
+      <p
+        class="portal-hoteles-reports-table__message"
+        *ngIf="isLoadingReport"
+        aria-live="polite"
+        aria-atomic="true"
+      >
+        Loading reports...
+      </p>
+
+      <table class="portal-hoteles-reports-table" *ngIf="!isLoadingReport && hasRows; else noRowsTemplate">
         <thead>
           <tr class="portal-hoteles-reports-table__header">
             <th scope="col">{{ 'REPORTS.TABLE_DATE' | translate }}</th>
@@ -136,8 +147,8 @@
       </table>
 
       <ng-template #noRowsTemplate>
-        <p *ngIf="reportErrorMessage" class="portal-hoteles-reports-table__message" role="alert">{{ reportErrorMessage }}</p>
-        <p *ngIf="!reportErrorMessage" class="portal-hoteles-reports-table__message" aria-live="polite" aria-atomic="true">{{ 'REPORTS.EMPTY' | translate }}</p>
+        <p *ngIf="!isLoadingReport && reportErrorMessage" class="portal-hoteles-reports-table__message" role="alert">{{ reportErrorMessage }}</p>
+        <p *ngIf="!isLoadingReport && !reportErrorMessage" class="portal-hoteles-reports-table__message" aria-live="polite" aria-atomic="true">{{ 'REPORTS.EMPTY' | translate }}</p>
       </ng-template>
     </portal-hoteles-grid-card>
   </section>

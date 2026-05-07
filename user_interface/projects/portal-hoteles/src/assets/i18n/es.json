@@ -128,7 +128,11 @@
     "NO_SEASONAL": "No hay reglas estacionales disponibles.",
     "SHOWING_ROWS": "Mostrando 1-{{rows}} de 12 tipos de habitación",
     "VISIBLE_NONE": "No hay datos de precios disponibles",
-    "VISIBLE_ONE": "Mostrando 1-1 de 1 registro de precios"
+    "VISIBLE_ONE": "Mostrando 1-1 de 1 registro de precios",
+    "SEARCH_LABEL": "Buscar tipos de habitación",
+    "ROW_ACTIONS": "Acciones de fila",
+    "PREV_PAGE": "Página anterior",
+    "NEXT_PAGE": "Página siguiente"
   },
   "REPORTS": {
     "TITLE": "Reporte de ingresos",
