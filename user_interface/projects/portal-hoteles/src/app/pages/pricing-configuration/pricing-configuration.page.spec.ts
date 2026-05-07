@@ -1,6 +1,6 @@
 /// <reference types="jasmine" />
 
-import { TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import { AuthSessionService } from '@travelhub/core/services/auth-session.service';
 import { PricingEngineService } from '@travelhub/core/services/pricing-engine.service';
@@ -9,6 +9,7 @@ import { PortalHotelesPricingConfigurationPage } from './pricing-configuration.p
 
 describe('PortalHotelesPricingConfigurationPage', () => {
   let component: PortalHotelesPricingConfigurationPage;
+  let fixture: ComponentFixture<PortalHotelesPricingConfigurationPage>;
   let pricingEngineServiceSpy: jasmine.SpyObj<PricingEngineService>;
 
   const mockAuthSession = {
@@ -40,8 +41,11 @@ describe('PortalHotelesPricingConfigurationPage', () => {
       ],
     }).compileComponents();
 
-    const fixture = TestBed.createComponent(PortalHotelesPricingConfigurationPage);
+    fixture = TestBed.createComponent(PortalHotelesPricingConfigurationPage);
     component = fixture.componentInstance;
+
+    // Default behaviour for getPropertyPricing — overridden in specific tests as needed.
+    pricingEngineServiceSpy.getPropertyPricing.and.returnValue(of(emptyPricingResponse));
   });
 
   describe('Initial State', () => {
@@ -249,6 +253,206 @@ describe('PortalHotelesPricingConfigurationPage', () => {
 
       // Assert
       expect(operator).toBe('test@example.com');
+    });
+  });
+
+  describe('a11y', () => {
+    it('renders a single sr-only <h1>Pricing Management</h1> before any card (AC-1)', () => {
+      // Arrange
+
+      // Act
+      fixture.detectChanges();
+      const element = fixture.nativeElement as HTMLElement;
+      const headings = element.querySelectorAll('h1');
+
+      // Assert
+      expect(headings.length).toBe(1);
+      const h1 = headings[0] as HTMLHeadingElement;
+      expect(h1.textContent?.trim()).toBe('Pricing Management');
+      expect(h1.classList.contains('sr-only')).toBeTrue();
+    });
+
+    it('renders the room-rate listing as a semantic <table> with thead/tbody and th[scope="col"] (AC-2)', () => {
+      // Arrange
+
+      // Act
+      fixture.detectChanges();
+      const element = fixture.nativeElement as HTMLElement;
+      const tables = element.querySelectorAll('table.portal-hoteles-pricing-table');
+      const roomRateTable = tables[0] as HTMLTableElement;
+
+      // Assert
+      expect(tables.length).toBeGreaterThanOrEqual(1);
+      expect(roomRateTable.tagName).toBe('TABLE');
+      expect(roomRateTable.querySelector('thead')).not.toBeNull();
+      expect(roomRateTable.querySelector('tbody')).not.toBeNull();
+
+      const headerCells = roomRateTable.querySelectorAll('thead th');
+      expect(headerCells.length).toBeGreaterThan(0);
+      headerCells.forEach((th) => {
+        expect(th.getAttribute('scope')).toBe('col');
+      });
+    });
+
+    it('renders the seasonal-rules listing as a semantic <table> with thead/tbody and th[scope="col"] (AC-3)', () => {
+      // Arrange
+
+      // Act
+      fixture.detectChanges();
+      const element = fixture.nativeElement as HTMLElement;
+      const tables = element.querySelectorAll('table.portal-hoteles-pricing-table');
+
+      // Assert — the second pricing table is the seasonal-rules table.
+      expect(tables.length).toBeGreaterThanOrEqual(2);
+      const seasonalTable = tables[1] as HTMLTableElement;
+      expect(seasonalTable.tagName).toBe('TABLE');
+
+      const seasonalHead = seasonalTable.querySelector('thead');
+      const seasonalBody = seasonalTable.querySelector('tbody');
+      expect(seasonalHead).not.toBeNull();
+      expect(seasonalBody).not.toBeNull();
+
+      const headerCells = seasonalTable.querySelectorAll('thead th');
+      expect(headerCells.length).toBeGreaterThan(0);
+      headerCells.forEach((th) => {
+        expect(th.getAttribute('scope')).toBe('col');
+      });
+    });
+
+    it('labels pagination glyph buttons and marks the active page with aria-current (AC-4)', () => {
+      // Arrange
+
+      // Act
+      fixture.detectChanges();
+      const element = fixture.nativeElement as HTMLElement;
+      const paginationButtons = element.querySelectorAll(
+        '.portal-hoteles-pricing-table__pagination ion-button',
+      );
+      const activePage = element.querySelector(
+        '.portal-hoteles-pricing-table__page--active',
+      );
+
+      // Assert
+      expect(paginationButtons.length).toBe(2);
+      const previousButton = paginationButtons[0] as HTMLElement & { disabled?: boolean };
+      const nextButton = paginationButtons[1] as HTMLElement & { disabled?: boolean };
+      expect(previousButton.getAttribute('aria-label')).toBe('Previous page');
+      expect(nextButton.getAttribute('aria-label')).toBe('Next page');
+      // Ionic reflects [disabled]="true" via its `disabled` property; the host-element
+      // attribute is mirrored asynchronously inside the web component's shadow DOM.
+      expect(previousButton.disabled === true || previousButton.hasAttribute('disabled')).toBeTrue();
+      expect(activePage).not.toBeNull();
+      expect(activePage?.getAttribute('aria-current')).toBe('page');
+    });
+
+    it('labels every "⋮" row-actions ion-button with aria-label="Row actions" (AC-5)', () => {
+      // Arrange
+
+      // Act
+      fixture.detectChanges();
+      const element = fixture.nativeElement as HTMLElement;
+      const rowActionButtons = element.querySelectorAll(
+        '.portal-hoteles-pricing-table__actions-button',
+      );
+
+      // Assert — both room-rate rows (4) and seasonal-rule rows (2) expose row actions.
+      expect(rowActionButtons.length).toBeGreaterThanOrEqual(2);
+      rowActionButtons.forEach((button) => {
+        expect(button.getAttribute('aria-label')).toBe('Row actions');
+      });
+    });
+
+    it('shows a polite live-region loading paragraph when isLoading=true (AC-6)', () => {
+      // Arrange
+      component.isLoading = true;
+      component.errorMessage = '';
+
+      // Act
+      fixture.detectChanges();
+      const element = fixture.nativeElement as HTMLElement;
+      const loadingMessages = Array.from(
+        element.querySelectorAll('p.portal-hoteles-pricing-table__message'),
+      ).filter((p) => p.textContent?.includes('Loading pricing data'));
+
+      // Assert
+      expect(loadingMessages.length).toBe(1);
+      const loading = loadingMessages[0];
+      expect(loading.getAttribute('aria-live')).toBe('polite');
+      expect(loading.getAttribute('aria-atomic')).toBe('true');
+    });
+
+    it('shows the error paragraph with role="alert" when errorMessage is set (AC-6)', () => {
+      // Arrange — set state BEFORE the first detectChanges so ngOnInit's defaults can
+      // be overridden. The test stubs loadPricingData entirely so it never overwrites
+      // our values.
+      spyOn<{ loadPricingData: () => Promise<void> }>(
+        component as unknown as { loadPricingData: () => Promise<void> },
+        'loadPricingData',
+      ).and.returnValue(Promise.resolve());
+      component.isLoading = false;
+      component.errorMessage = 'Unable to load pricing data.';
+      component.roomRateRows = [];
+
+      // Act — first detectChanges renders the template; ngOnInit runs but loadPricingData
+      // is stubbed so errorMessage and roomRateRows stay as set above.
+      fixture.detectChanges();
+      const element = fixture.nativeElement as HTMLElement;
+      const errorMessage = Array.from(
+        element.querySelectorAll('p.portal-hoteles-pricing-table__message'),
+      ).find((p) => p.textContent?.includes('Unable to load pricing data'));
+
+      // Assert
+      expect(errorMessage).toBeTruthy();
+      expect(errorMessage?.getAttribute('role')).toBe('alert');
+    });
+
+    it('renders only one empty-state paragraph for the room-rate table (AC-6)', () => {
+      // Arrange — override loadPricingData so it does not rebuild roomRateRows from
+      // the default base rate (which would always produce 4 rows).
+      spyOn<{ loadPricingData: () => Promise<void> }>(
+        component as unknown as { loadPricingData: () => Promise<void> },
+        'loadPricingData',
+      ).and.returnValue(Promise.resolve());
+      // Override refreshRoomRateRows (called from ngOnInit) so roomRateRows stays empty.
+      spyOn<{ refreshRoomRateRows: () => void }>(
+        component as unknown as { refreshRoomRateRows: () => void },
+        'refreshRoomRateRows' as never,
+      ).and.callFake(() => {
+        component.roomRateRows = [];
+      });
+      component.isLoading = false;
+      component.errorMessage = '';
+      component.roomRateRows = [];
+
+      // Act
+      fixture.detectChanges();
+      const element = fixture.nativeElement as HTMLElement;
+      const emptyMessages = Array.from(
+        element.querySelectorAll('p.portal-hoteles-pricing-table__message'),
+      ).filter((p) => p.textContent?.includes('No pricing data available'));
+
+      // Assert — exactly one empty paragraph (the duplicate has been removed).
+      expect(component.roomRateRows.length).toBe(0);
+      expect(emptyMessages.length).toBe(1);
+      const emptyMessage = emptyMessages[0];
+      expect(emptyMessage.getAttribute('aria-live')).toBe('polite');
+      expect(emptyMessage.getAttribute('aria-atomic')).toBe('true');
+    });
+
+    it('associates the search input with a sr-only label via [id]/[for] (AC-7)', () => {
+      // Arrange
+
+      // Act
+      fixture.detectChanges();
+      const element = fixture.nativeElement as HTMLElement;
+      const searchInput = element.querySelector('ion-input.portal-hoteles-pricing-content-toolbar__search');
+      const searchLabel = element.querySelector('label[for="pricing-search-input"]');
+
+      // Assert
+      expect(searchInput).not.toBeNull();
+      expect(searchInput?.getAttribute('id')).toBe('pricing-search-input');
+      expect(searchLabel).not.toBeNull();
+      expect(searchLabel?.classList.contains('sr-only')).toBeTrue();
     });
   });
 });
