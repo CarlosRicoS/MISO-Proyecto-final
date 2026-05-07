@@ -1,5 +1,5 @@
 import calendar
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 
 from sqlalchemy import extract, func, select
@@ -157,35 +157,31 @@ class SqlAlchemyReportRepository:
     async def get_dashboard_metrics(self) -> dict:
         now = datetime.now(tz=timezone.utc)
         today = now.date()
-        current_month = today.month
-        current_year = today.year
-        days_in_month = calendar.monthrange(current_year, current_month)[1]
 
-        # Previous month
-        if current_month == 1:
-            prev_month = 12
-            prev_year = current_year - 1
-        else:
-            prev_month = current_month - 1
-            prev_year = current_year
+        # Use rolling 30-day windows so metrics don't reset to $0 at month boundaries.
+        # "current period"  = last 30 days  (today-30 .. today)
+        # "previous period" = prior 30 days (today-60 .. today-31)
+        period_start = today - timedelta(days=30)
+        prev_period_start = today - timedelta(days=60)
+        prev_period_end = today - timedelta(days=31)
 
-        # Total reservations
+        # Total reservations (all time)
         count_stmt = select(func.count()).select_from(ReportModel)
         count_result = await self._reports_session.execute(count_stmt)
         total_reservations = count_result.scalar_one() or 0
 
-        # Monthly revenue (current month)
+        # Revenue for the last 30 days
         monthly_stmt = select(func.sum(ReportModel.gross_value)).where(
-            extract("year", ReportModel.payment_date) == current_year,
-            extract("month", ReportModel.payment_date) == current_month,
+            func.date(ReportModel.payment_date) >= period_start,
+            func.date(ReportModel.payment_date) <= today,
         )
         monthly_result = await self._reports_session.execute(monthly_stmt)
         monthly_revenue = Decimal(str(monthly_result.scalar_one() or "0"))
 
-        # Previous month revenue
+        # Revenue for the previous 30-day window (for trend comparison)
         prev_stmt = select(func.sum(ReportModel.gross_value)).where(
-            extract("year", ReportModel.payment_date) == prev_year,
-            extract("month", ReportModel.payment_date) == prev_month,
+            func.date(ReportModel.payment_date) >= prev_period_start,
+            func.date(ReportModel.payment_date) <= prev_period_end,
         )
         prev_result = await self._reports_session.execute(prev_stmt)
         prev_revenue = Decimal(str(prev_result.scalar_one() or "0"))
@@ -198,8 +194,8 @@ class SqlAlchemyReportRepository:
                 float((monthly_revenue - prev_revenue) / prev_revenue * 100), 1
             )
 
-        # Avg daily revenue
-        avg_daily_revenue = round(float(monthly_revenue) / days_in_month, 2)
+        # Avg daily revenue over the 30-day window
+        avg_daily_revenue = round(float(monthly_revenue) / 30, 2)
 
         # Today's check-ins (payment_date == today)
         checkins_stmt = select(func.count()).select_from(ReportModel).where(

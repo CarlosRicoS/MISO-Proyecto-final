@@ -1,14 +1,42 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
 
 import { PortalHotelesReportsPage } from './reports.page';
+import { translateTestingModule } from '../../testing/translate-testing.module';
 
 describe('PortalHotelesReportsPage', () => {
   let component: PortalHotelesReportsPage;
   let fixture: ComponentFixture<PortalHotelesReportsPage>;
 
+  const kpiFixture = [
+    {
+      label: 'Avg. Daily Revenue',
+      value: '$278',
+      trend: '+23.0% from previous month',
+      trendClass: 'portal-hoteles-reports-kpi__trend--positive',
+      icon: 'analytics-outline',
+    },
+    {
+      label: 'Monthly Revenue',
+      value: '$8,350',
+      trend: '+23.0% from previous month',
+      trendClass: 'portal-hoteles-reports-kpi__trend--positive',
+      icon: 'cash-outline',
+    },
+  ];
+
+  const rowFixture = Array.from({ length: 6 }, (_, i) => ({
+    dateLabel: `Apr ${i + 1}, 2026`,
+    bookingId: `bk00000${i + 1}`,
+    paymentRef: `PAY-${i + 1}`,
+    grossValue: 1000 + i * 100,
+    netIncome: 800 + i * 80,
+    status: 'CONFIRMED',
+  }));
+
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [PortalHotelesReportsPage],
+      imports: [PortalHotelesReportsPage, HttpClientTestingModule, translateTestingModule()],
     }).compileComponents();
 
     fixture = TestBed.createComponent(PortalHotelesReportsPage);
@@ -37,10 +65,13 @@ describe('PortalHotelesReportsPage', () => {
     expect(element.textContent).toContain("Welcome back! Here's what's happening at your hotel today.");
   });
 
-  it('renders kpi cards and first page rows', () => {
-    // Arrange
+  it('renders kpi cards and first page rows when data is set', () => {
+    // Arrange — set data directly (component loads via ionViewWillEnter in production)
+    component.kpiCards = kpiFixture as never;
+    component.reportRows = rowFixture.slice(0, 5) as never;
 
     // Act
+    fixture.detectChanges();
     const element = fixture.nativeElement as HTMLElement;
     const kpiCards = element.querySelectorAll('.portal-hoteles-reports-kpi');
     const rows = element.querySelectorAll('.portal-hoteles-reports-table__row');
@@ -55,7 +86,9 @@ describe('PortalHotelesReportsPage', () => {
   });
 
   it('moves to next page and updates range/pagination labels', () => {
-    // Arrange
+    // Arrange — 6 rows so totalPages = 2 (pageSize = 5)
+    component.reportRows = rowFixture as never;
+    fixture.detectChanges();
 
     // Act
     component.onNextPage();
@@ -117,5 +150,80 @@ describe('PortalHotelesReportsPage', () => {
     expect(element.textContent).toContain('No revenue transactions available.');
     expect(emptyComponent.hasRows).toBeFalse();
     expect(emptyComponent.rangeLabel).toBe('Showing 0-0 of 0 transactions');
+  });
+
+  describe('a11y', () => {
+    it('renders the loading paragraph with aria-live and aria-atomic when isLoadingReport=true (AC-9)', () => {
+      // Arrange
+      component.isLoadingReport = true;
+
+      // Act
+      fixture.detectChanges();
+      const element = fixture.nativeElement as HTMLElement;
+      const loadingMessages = Array.from(
+        element.querySelectorAll('p.portal-hoteles-reports-table__message'),
+      ).filter((p) => p.textContent?.includes('Loading reports'));
+
+      // Assert
+      expect(loadingMessages.length).toBe(1);
+      const loading = loadingMessages[0];
+      expect(loading.getAttribute('aria-live')).toBe('polite');
+      expect(loading.getAttribute('aria-atomic')).toBe('true');
+    });
+
+    it('does not render the loading paragraph when isLoadingReport=false (AC-9)', () => {
+      // Arrange
+      component.isLoadingReport = false;
+
+      // Act
+      fixture.detectChanges();
+      const element = fixture.nativeElement as HTMLElement;
+      const loadingMessages = Array.from(
+        element.querySelectorAll('p.portal-hoteles-reports-table__message'),
+      ).filter((p) => p.textContent?.includes('Loading reports'));
+
+      // Assert
+      expect(loadingMessages.length).toBe(0);
+    });
+
+    it('exposes accessible names on the PDF and Excel export buttons (AC-10)', () => {
+      // Arrange
+
+      // Act
+      const element = fixture.nativeElement as HTMLElement;
+      const exportButtons = element.querySelectorAll(
+        '.portal-hoteles-reports-toolbar-header__export-button',
+      );
+
+      // Assert
+      expect(exportButtons.length).toBe(2);
+      const pdfButton = Array.from(exportButtons).find(
+        (btn) => btn.textContent?.trim() === 'PDF',
+      ) as HTMLElement | undefined;
+      const excelButton = Array.from(exportButtons).find(
+        (btn) => btn.textContent?.trim() === 'Excel',
+      ) as HTMLElement | undefined;
+
+      expect(pdfButton).toBeTruthy();
+      expect(excelButton).toBeTruthy();
+      expect(pdfButton?.getAttribute('aria-label')).toBe('Export report as PDF');
+      expect(excelButton?.getAttribute('aria-label')).toBe('Download report as Excel');
+    });
+
+    it('keeps decorative KPI badge containers aria-hidden (AC-11)', () => {
+      // Arrange
+      component.kpiCards = kpiFixture as never;
+
+      // Act
+      fixture.detectChanges();
+      const element = fixture.nativeElement as HTMLElement;
+      const badges = element.querySelectorAll('.portal-hoteles-reports-kpi__badge');
+
+      // Assert
+      expect(badges.length).toBeGreaterThan(0);
+      badges.forEach((badge) => {
+        expect(badge.getAttribute('aria-hidden')).toBe('true');
+      });
+    });
   });
 });

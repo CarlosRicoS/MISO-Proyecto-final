@@ -1,9 +1,10 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
 import { Router } from '@angular/router';
 import { IonicModule } from '@ionic/angular';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { firstValueFrom } from 'rxjs';
 import { ThButtonComponent } from '../../shared/components/th-button/th-button.component';
 import { ThPopupComponent, ThPopupVariant } from '../../shared/components/th-popup/th-popup.component';
@@ -23,6 +24,7 @@ import { AuthService } from '../../core/services/auth.service';
     CommonModule,
     RouterLink,
     IonicModule,
+    TranslateModule,
     ThInputComponent,
     ThButtonComponent,
     ThPopupComponent,
@@ -31,6 +33,7 @@ import { AuthService } from '../../core/services/auth.service';
 export class RegisterPage {
   private readonly authService: AuthService;
   private readonly router: Router;
+  private readonly translate = inject(TranslateService);
 
   fullName = '';
   email = '';
@@ -110,7 +113,7 @@ export class RegisterPage {
 
   get fullNameHelper(): string {
     if (!this.fullName.trim() && this.hasSubmitted) {
-      return 'Full name is required';
+      return this.translate.instant('REGISTER.FULL_NAME_REQUIRED');
     }
 
     return '';
@@ -118,11 +121,11 @@ export class RegisterPage {
 
   get emailHelper(): string {
     if (!this.email.trim() && this.hasSubmitted) {
-      return 'Email is required';
+      return this.translate.instant('REGISTER.EMAIL_REQUIRED');
     }
 
     if (this.email.trim() && !this.isValidEmail(this.email)) {
-      return 'Please enter a valid email format';
+      return this.translate.instant('REGISTER.EMAIL_INVALID');
     }
 
     return '';
@@ -130,7 +133,7 @@ export class RegisterPage {
 
   get passwordHelper(): string {
     if (!this.password.trim() && this.hasSubmitted) {
-      return 'Password is required';
+      return this.translate.instant('REGISTER.PASSWORD_REQUIRED');
     }
 
     return '';
@@ -138,11 +141,11 @@ export class RegisterPage {
 
   get confirmPasswordHelper(): string {
     if (!this.confirmPassword.trim() && this.hasSubmitted) {
-      return 'Confirm password is required';
+      return this.translate.instant('REGISTER.CONFIRM_PASSWORD_REQUIRED');
     }
 
     if (this.confirmPassword && this.password !== this.confirmPassword) {
-      return 'Passwords do not match';
+      return this.translate.instant('REGISTER.PASSWORDS_MISMATCH');
     }
 
     return '';
@@ -150,7 +153,7 @@ export class RegisterPage {
 
   get termsHelper(): string {
     if (this.hasSubmitted && !this.acceptedTerms) {
-      return 'You must accept Terms of Service and Privacy Policy';
+      return this.translate.instant('REGISTER.TERMS_REQUIRED');
     }
 
     return '';
@@ -202,18 +205,23 @@ export class RegisterPage {
       const response = await firstValueFrom(
         this.authService.register(this.fullName.trim(), this.email.trim(), this.password)
       );
-      this.showAlert('Account Created', response.message, 'success');
+      this.showAlert(
+        this.translate.instant('REGISTER.ALERT_TITLE_SUCCESS'),
+        response.message,
+        'success',
+      );
       this.shouldNavigateToLogin = true;
     } catch (error) {
       const httpError = error as HttpErrorResponse;
       const detail = this.resolveBackendDetailMessage(httpError);
+      const failedTitle = this.translate.instant('REGISTER.ALERT_TITLE_FAILED');
 
       if (httpError.status === 409) {
-        this.showAlert('Registration Failed', detail || 'Email is already in use.', 'error');
+        this.showAlert(failedTitle, detail || this.translate.instant('REGISTER.EMAIL_IN_USE'), 'error');
       } else if (httpError.status === 400) {
-        this.showAlert('Registration Failed', detail || 'Password does not meet criteria.', 'error');
+        this.showAlert(failedTitle, detail || this.translate.instant('REGISTER.PASSWORD_CRITERIA'), 'error');
       } else {
-        this.showAlert('Registration Failed', detail || 'An error occurred. Please try again.', 'error');
+        this.showAlert(failedTitle, detail || this.translate.instant('REGISTER.GENERIC_ERROR'), 'error');
       }
       this.shouldNavigateToLogin = false;
     } finally {

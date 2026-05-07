@@ -1,8 +1,33 @@
 /// <reference types="jasmine" />
 
+import { TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import { convertToParamMap } from '@angular/router';
 import { PortalHotelesDashboardReservationPage } from './dashboard-reservation.page';
+import { translateTestingModule } from '../../testing/translate-testing.module';
+
+/**
+ * The page now uses `inject(TranslateService)` so we have to construct it
+ * inside an injection context (otherwise NG0203 fires before tests start).
+ */
+function createReservationPage(
+  route: unknown,
+  router: unknown,
+  authSession: unknown,
+  bookingService: unknown,
+  propertyService: unknown,
+): PortalHotelesDashboardReservationPage {
+  return TestBed.runInInjectionContext(
+    () =>
+      new PortalHotelesDashboardReservationPage(
+        route as never,
+        router as never,
+        authSession as never,
+        bookingService as never,
+        propertyService as never,
+      ),
+  );
+}
 
 type RouteStub = {
   snapshot: {
@@ -30,6 +55,12 @@ type PropertyDetailServiceStub = {
 };
 
 describe('PortalHotelesDashboardReservationPage', () => {
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      imports: [translateTestingModule()],
+    });
+  });
+
   function createRouteStub(reservationId = 'BK-2047'): RouteStub {
     return {
       snapshot: {
@@ -106,12 +137,12 @@ describe('PortalHotelesDashboardReservationPage', () => {
     const bookingServiceStub = createBookingServiceStub();
     const propertyServiceStub = createPropertyServiceStub();
 
-    const component = new PortalHotelesDashboardReservationPage(
-      routeStub as never,
-      routerStub as never,
-      authSessionStub as never,
-      bookingServiceStub as never,
-      propertyServiceStub as never,
+    const component = createReservationPage(
+      routeStub,
+      routerStub,
+      authSessionStub,
+      bookingServiceStub,
+      propertyServiceStub,
     );
 
     // Act
@@ -124,7 +155,10 @@ describe('PortalHotelesDashboardReservationPage', () => {
     expect(propertyServiceStub.getPropertyDetail).toHaveBeenCalledWith('prop-10', 'id-token');
     expect(component.overview.hotelName).toBe('The Grand Plaza Hotel');
     expect(component.overview.statusLabel).toBe('Pending');
-    expect(component.paymentSummary.totalAmount).toBe('$1,009');
+    // Currency formatting is locale-aware now; just check it has the
+    // integer part and a currency marker (regardless of grouping/NBSPs).
+    expect(component.paymentSummary.totalAmount).toMatch(/1[.,]?009/);
+    expect(/\$|COP|USD/.test(component.paymentSummary.totalAmount)).toBeTrue();
     expect(component.summaryItems.length).toBe(3);
   });
 
@@ -137,12 +171,12 @@ describe('PortalHotelesDashboardReservationPage', () => {
     bookingServiceStub.getReservation.and.returnValue(throwError(() => new Error('fail')));
     const propertyServiceStub = createPropertyServiceStub();
 
-    const component = new PortalHotelesDashboardReservationPage(
-      routeStub as never,
-      routerStub as never,
-      authSessionStub as never,
-      bookingServiceStub as never,
-      propertyServiceStub as never,
+    const component = createReservationPage(
+      routeStub,
+      routerStub,
+      authSessionStub,
+      bookingServiceStub,
+      propertyServiceStub,
     );
 
     // Act
@@ -161,12 +195,12 @@ describe('PortalHotelesDashboardReservationPage', () => {
     const bookingServiceStub = createBookingServiceStub();
     const propertyServiceStub = createPropertyServiceStub();
 
-    const component = new PortalHotelesDashboardReservationPage(
-      routeStub as never,
-      routerStub as never,
-      authSessionStub as never,
-      bookingServiceStub as never,
-      propertyServiceStub as never,
+    const component = createReservationPage(
+      routeStub,
+      routerStub,
+      authSessionStub,
+      bookingServiceStub,
+      propertyServiceStub,
     );
 
     component.reservationId = 'BK-2047';
@@ -191,12 +225,12 @@ describe('PortalHotelesDashboardReservationPage', () => {
     const bookingServiceStub = createBookingServiceStub();
     const propertyServiceStub = createPropertyServiceStub();
 
-    const component = new PortalHotelesDashboardReservationPage(
-      routeStub as never,
-      routerStub as never,
-      authSessionStub as never,
-      bookingServiceStub as never,
-      propertyServiceStub as never,
+    const component = createReservationPage(
+      routeStub,
+      routerStub,
+      authSessionStub,
+      bookingServiceStub,
+      propertyServiceStub,
     );
 
     component.reservationId = 'BK-2047';
@@ -221,12 +255,12 @@ describe('PortalHotelesDashboardReservationPage', () => {
     const bookingServiceStub = createBookingServiceStub();
     const propertyServiceStub = createPropertyServiceStub();
 
-    const component = new PortalHotelesDashboardReservationPage(
-      routeStub as never,
-      routerStub as never,
-      authSessionStub as never,
-      bookingServiceStub as never,
-      propertyServiceStub as never,
+    const component = createReservationPage(
+      routeStub,
+      routerStub,
+      authSessionStub,
+      bookingServiceStub,
+      propertyServiceStub,
     );
 
     component.overview.statusLabel = 'Confirmed';
@@ -248,12 +282,12 @@ describe('PortalHotelesDashboardReservationPage', () => {
     const bookingServiceStub = createBookingServiceStub();
     const propertyServiceStub = createPropertyServiceStub();
 
-    const component = new PortalHotelesDashboardReservationPage(
-      routeStub as never,
-      routerStub as never,
-      authSessionStub as never,
-      bookingServiceStub as never,
-      propertyServiceStub as never,
+    const component = createReservationPage(
+      routeStub,
+      routerStub,
+      authSessionStub,
+      bookingServiceStub,
+      propertyServiceStub,
     );
 
     component.overview.statusLabel = 'Rejected';
@@ -275,12 +309,12 @@ describe('PortalHotelesDashboardReservationPage', () => {
     const bookingServiceStub = createBookingServiceStub();
     const propertyServiceStub = createPropertyServiceStub();
 
-    const component = new PortalHotelesDashboardReservationPage(
-      routeStub as never,
-      routerStub as never,
-      authSessionStub as never,
-      bookingServiceStub as never,
-      propertyServiceStub as never,
+    const component = createReservationPage(
+      routeStub,
+      routerStub,
+      authSessionStub,
+      bookingServiceStub,
+      propertyServiceStub,
     );
 
     component.reservationId = 'BK-2047';
@@ -302,12 +336,12 @@ describe('PortalHotelesDashboardReservationPage', () => {
     const bookingServiceStub = createBookingServiceStub();
     const propertyServiceStub = createPropertyServiceStub();
 
-    const component = new PortalHotelesDashboardReservationPage(
-      routeStub as never,
-      routerStub as never,
-      authSessionStub as never,
-      bookingServiceStub as never,
-      propertyServiceStub as never,
+    const component = createReservationPage(
+      routeStub,
+      routerStub,
+      authSessionStub,
+      bookingServiceStub,
+      propertyServiceStub,
     );
 
     component.reservationId = 'BK-2047';
@@ -328,12 +362,12 @@ describe('PortalHotelesDashboardReservationPage', () => {
     const routerStub = createRouterStub();
     const bookingServiceStub = createBookingServiceStub();
     const propertyServiceStub = createPropertyServiceStub();
-    const component = new PortalHotelesDashboardReservationPage(
-      routeStub as never,
-      routerStub as never,
-      authSessionStub as never,
-      bookingServiceStub as never,
-      propertyServiceStub as never,
+    const component = createReservationPage(
+      routeStub,
+      routerStub,
+      authSessionStub,
+      bookingServiceStub,
+      propertyServiceStub,
     );
 
     // Act
@@ -346,12 +380,12 @@ describe('PortalHotelesDashboardReservationPage', () => {
 
   it('shows accept/reject disabled while loading', () => {
     // Arrange
-    const component = new PortalHotelesDashboardReservationPage(
-      createRouteStub() as never,
-      createRouterStub() as never,
-      createAuthSessionStub() as never,
-      createBookingServiceStub() as never,
-      createPropertyServiceStub() as never,
+    const component = createReservationPage(
+      createRouteStub(),
+      createRouterStub(),
+      createAuthSessionStub(),
+      createBookingServiceStub(),
+      createPropertyServiceStub(),
     );
     component.isLoading = true;
     component.overview.statusLabel = 'Pending';
@@ -367,12 +401,12 @@ describe('PortalHotelesDashboardReservationPage', () => {
 
   it('disables both actions for cancelled spelling variant', () => {
     // Arrange
-    const component = new PortalHotelesDashboardReservationPage(
-      createRouteStub() as never,
-      createRouterStub() as never,
-      createAuthSessionStub() as never,
-      createBookingServiceStub() as never,
-      createPropertyServiceStub() as never,
+    const component = createReservationPage(
+      createRouteStub(),
+      createRouterStub(),
+      createAuthSessionStub(),
+      createBookingServiceStub(),
+      createPropertyServiceStub(),
     );
     component.overview.statusLabel = 'Cancelled';
 
@@ -392,12 +426,12 @@ describe('PortalHotelesDashboardReservationPage', () => {
     const routerStub = createRouterStub();
     const bookingServiceStub = createBookingServiceStub();
     const propertyServiceStub = createPropertyServiceStub();
-    const component = new PortalHotelesDashboardReservationPage(
-      routeStub as never,
-      routerStub as never,
-      authSessionStub as never,
-      bookingServiceStub as never,
-      propertyServiceStub as never,
+    const component = createReservationPage(
+      routeStub,
+      routerStub,
+      authSessionStub,
+      bookingServiceStub,
+      propertyServiceStub,
     );
     component.reservationId = '';
 
@@ -420,12 +454,12 @@ describe('PortalHotelesDashboardReservationPage', () => {
     bookingServiceStub.adminConfirmReservation.and.returnValue(throwError(() => new Error('confirm fail')));
     bookingServiceStub.adminRejectReservation.and.returnValue(throwError(() => new Error('reject fail')));
     const propertyServiceStub = createPropertyServiceStub();
-    const component = new PortalHotelesDashboardReservationPage(
-      routeStub as never,
-      routerStub as never,
-      authSessionStub as never,
-      bookingServiceStub as never,
-      propertyServiceStub as never,
+    const component = createReservationPage(
+      routeStub,
+      routerStub,
+      authSessionStub,
+      bookingServiceStub,
+      propertyServiceStub,
     );
     component.reservationId = 'BK-2047';
 
@@ -441,12 +475,12 @@ describe('PortalHotelesDashboardReservationPage', () => {
 
   it('covers helper branches for invalid values and fallbacks', () => {
     // Arrange
-    const component = new PortalHotelesDashboardReservationPage(
-      createRouteStub() as never,
-      createRouterStub() as never,
-      createAuthSessionStub() as never,
-      createBookingServiceStub() as never,
-      createPropertyServiceStub() as never,
+    const component = createReservationPage(
+      createRouteStub(),
+      createRouterStub(),
+      createAuthSessionStub(),
+      createBookingServiceStub(),
+      createPropertyServiceStub(),
     );
 
     // Act
@@ -497,12 +531,12 @@ describe('PortalHotelesDashboardReservationPage', () => {
 
   it('limits mosaic images to six and supports empty arrays', () => {
     // Arrange
-    const component = new PortalHotelesDashboardReservationPage(
-      createRouteStub() as never,
-      createRouterStub() as never,
-      createAuthSessionStub() as never,
-      createBookingServiceStub() as never,
-      createPropertyServiceStub() as never,
+    const component = createReservationPage(
+      createRouteStub(),
+      createRouterStub(),
+      createAuthSessionStub(),
+      createBookingServiceStub(),
+      createPropertyServiceStub(),
     );
     const photos = [
       '1.jpg',
@@ -532,12 +566,12 @@ describe('PortalHotelesDashboardReservationPage', () => {
 
   it('generates date range and nights label through helper paths', () => {
     // Arrange
-    const component = new PortalHotelesDashboardReservationPage(
-      createRouteStub() as never,
-      createRouterStub() as never,
-      createAuthSessionStub() as never,
-      createBookingServiceStub() as never,
-      createPropertyServiceStub() as never,
+    const component = createReservationPage(
+      createRouteStub(),
+      createRouterStub(),
+      createAuthSessionStub(),
+      createBookingServiceStub(),
+      createPropertyServiceStub(),
     );
 
     // Act

@@ -1,5 +1,5 @@
 <header class="portal-hoteles-header-bar">
-  <button type="button" class="portal-hoteles-header-bar__property" aria-label="Select hotel">
+  <button type="button" class="portal-hoteles-header-bar__property" [attr.aria-label]="'NAV.SELECT_HOTEL' | translate">
     <div class="portal-hoteles-header-bar__property-copy">
       <span class="portal-hoteles-header-bar__hotel-name">{{ hotelName }}</span>
       <span class="portal-hoteles-header-bar__location">{{ location }}</span>
@@ -8,12 +8,17 @@
   </button>
 
   <div class="portal-hoteles-header-bar__actions">
-    <button *ngIf="isMobileNative" type="button" class="portal-hoteles-header-bar__notification" aria-label="Notifications">
+    <ion-chip class="portal-hoteles-header-bar__chip portal-hoteles-header-bar__chip--lang" (click)="toggleLanguage()" [attr.aria-label]="'NAV.LANGUAGE_TOGGLE_' + (currentLang === 'es' ? 'ES' : 'EN') | translate">
+      <ion-icon name="language-outline" aria-hidden="true"></ion-icon>
+      <ion-label>{{ currentLang === 'es' ? 'ES' : 'EN' }}</ion-label>
+    </ion-chip>
+
+    <button *ngIf="isMobileNative" type="button" class="portal-hoteles-header-bar__notification" [attr.aria-label]="'NAV.NOTIFICATIONS' | translate">
       <ion-icon name="notifications-outline" aria-hidden="true"></ion-icon>
       <span *ngIf="notificationCount > 0" class="portal-hoteles-header-bar__badge">{{ notificationCount }}</span>
     </button>
 
-    <button type="button" class="portal-hoteles-header-bar__profile" aria-label="User profile">
+    <button type="button" class="portal-hoteles-header-bar__profile" [attr.aria-label]="'NAV.USER_PROFILE' | translate">
       <span class="portal-hoteles-header-bar__avatar">{{ avatarInitials }}</span>
       <span class="portal-hoteles-header-bar__user-meta">
         <span class="portal-hoteles-header-bar__user-name">{{ userName }}</span>

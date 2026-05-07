@@ -1,52 +1,52 @@
 <ion-content class="portal-hoteles-dashboard-content">
   <section class="portal-hoteles-dashboard-hero">
-    <p class="portal-hoteles-dashboard-hero__kicker">Dashboard Overview</p>
-    <h1>Welcome back. Here&apos;s what&apos;s happening at your hotel today.</h1>
+    <p class="portal-hoteles-dashboard-hero__kicker">{{ 'DASHBOARD.OVERVIEW_KICKER' | translate }}</p>
+    <h1>{{ 'DASHBOARD.WELCOME_TITLE' | translate }}</h1>
     <p>
-      Current operator: <strong>{{ operatorEmail }}</strong>
+      {{ 'DASHBOARD.CURRENT_OPERATOR' | translate }} <strong>{{ operatorEmail }}</strong>
     </p>
   </section>
 
   <section class="portal-hoteles-dashboard-grid portal-hoteles-dashboard-grid--stats">
     <portal-hoteles-grid-card cardClass="portal-hoteles-grid-card--metric">
-      <span class="portal-hoteles-dashboard-card__label">Total Reservations</span>
-      <strong class="portal-hoteles-dashboard-card__value">247</strong>
-      <p class="portal-hoteles-dashboard-card__hint portal-hoteles-dashboard-card__hint--positive">+12% from last month</p>
+      <span class="portal-hoteles-dashboard-card__label">{{ 'DASHBOARD.TOTAL_RESERVATIONS' | translate }}</span>
+      <strong class="portal-hoteles-dashboard-card__value">{{ totalReservationsLabel }}</strong>
+      <p [class]="revenueTrendClass">{{ revenueTrendLabel }}</p>
     </portal-hoteles-grid-card>
 
     <portal-hoteles-grid-card cardClass="portal-hoteles-grid-card--metric">
-      <span class="portal-hoteles-dashboard-card__label">Monthly Revenue</span>
-      <strong class="portal-hoteles-dashboard-card__value">$89,240</strong>
-      <p class="portal-hoteles-dashboard-card__hint portal-hoteles-dashboard-card__hint--positive">+18% from last month</p>
+      <span class="portal-hoteles-dashboard-card__label">{{ 'DASHBOARD.MONTHLY_REVENUE' | translate }}</span>
+      <strong class="portal-hoteles-dashboard-card__value">{{ monthlyRevenueLabel }}</strong>
+      <p [class]="revenueTrendClass">{{ revenueTrendLabel }}</p>
     </portal-hoteles-grid-card>
 
     <portal-hoteles-grid-card cardClass="portal-hoteles-grid-card--metric">
-      <span class="portal-hoteles-dashboard-card__label">Today&apos;s Check-ins</span>
-      <strong class="portal-hoteles-dashboard-card__value">28</strong>
-      <p class="portal-hoteles-dashboard-card__hint portal-hoteles-dashboard-card__hint--info">6 pending confirmation</p>
+      <span class="portal-hoteles-dashboard-card__label">{{ 'DASHBOARD.TODAY_CHECKINS' | translate }}</span>
+      <strong class="portal-hoteles-dashboard-card__value">{{ todayCheckinsLabel }}</strong>
+      <p class="portal-hoteles-dashboard-card__hint portal-hoteles-dashboard-card__hint--info">{{ 'DASHBOARD.FROM_PAYMENT_RECORDS' | translate }}</p>
     </portal-hoteles-grid-card>
 
     <portal-hoteles-grid-card cardClass="portal-hoteles-grid-card--metric">
-      <span class="portal-hoteles-dashboard-card__label">Today&apos;s Check-outs</span>
-      <strong class="portal-hoteles-dashboard-card__value">22</strong>
-      <p class="portal-hoteles-dashboard-card__hint portal-hoteles-dashboard-card__hint--warning">4 late check-outs</p>
+      <span class="portal-hoteles-dashboard-card__label">{{ 'DASHBOARD.TODAY_CHECKOUTS' | translate }}</span>
+      <strong class="portal-hoteles-dashboard-card__value">{{ todayCheckoutsLabel }}</strong>
+      <p class="portal-hoteles-dashboard-card__hint portal-hoteles-dashboard-card__hint--info">{{ 'DASHBOARD.FROM_PAYMENT_RECORDS' | translate }}</p>
     </portal-hoteles-grid-card>
   </section>
 
   <section class="portal-hoteles-dashboard-grid portal-hoteles-dashboard-grid--body">
     <portal-hoteles-grid-card
       cardClass="portal-hoteles-grid-card--panel portal-hoteles-grid-card--wide"
-      title="Reservations"
-      subtitle="Manage and track all your hotel bookings"
+      [title]="'DASHBOARD.RESERVATIONS_TITLE' | translate"
+      [subtitle]="'DASHBOARD.RESERVATIONS_SUBTITLE' | translate"
     >
       <table class="portal-hoteles-dashboard-table" *ngIf="!isLoadingReservations && hasReservations; else reservationsFallback">
         <thead>
           <tr class="portal-hoteles-dashboard-table__header">
-            <th scope="col">Booking ID</th>
-            <th scope="col">Guest Name</th>
-            <th scope="col">Check-in</th>
-            <th scope="col">Check-out</th>
-            <th scope="col">Status</th>
+            <th scope="col">{{ 'DASHBOARD.TABLE_BOOKING_ID' | translate }}</th>
+            <th scope="col">{{ 'DASHBOARD.TABLE_GUEST_NAME' | translate }}</th>
+            <th scope="col">{{ 'DASHBOARD.TABLE_CHECKIN' | translate }}</th>
+            <th scope="col">{{ 'DASHBOARD.TABLE_CHECKOUT' | translate }}</th>
+            <th scope="col">{{ 'DASHBOARD.TABLE_STATUS' | translate }}</th>
           </tr>
         </thead>
         <tbody>
@@ -55,7 +55,7 @@
               <a
                 class="portal-hoteles-dashboard-table__booking-link"
                 [routerLink]="reservation.bookingRoute"
-                [attr.aria-label]="'Open booking ' + reservation.bookingId"
+                [attr.aria-label]="'DASHBOARD.OPEN_BOOKING' | translate: { id: reservation.bookingId }"
               >
                 #{{ reservation.bookingId }}
               </a>
@@ -81,7 +81,7 @@
                   [disabled]="!canGoToPreviousPage"
                   (click)="onPreviousPage()"
                 >
-                  Previous
+                  {{ 'DASHBOARD.PREVIOUS' | translate }}
                 </ion-button>
                 <span class="portal-hoteles-dashboard-table__pagination-label">{{ paginationLabel }}</span>
                 <ion-button
@@ -91,7 +91,7 @@
                   [disabled]="!canGoToNextPage"
                   (click)="onNextPage()"
                 >
-                  Next
+                  {{ 'DASHBOARD.NEXT' | translate }}
                 </ion-button>
               </div>
             </td>
@@ -102,23 +102,23 @@
 
     <portal-hoteles-grid-card
       cardClass="portal-hoteles-grid-card--panel portal-hoteles-grid-card--sidebar"
-      title="Quick Stats"
-      subtitle="Snapshot of hotel performance"
+      [title]="'DASHBOARD.QUICK_STATS_TITLE' | translate"
+      [subtitle]="'DASHBOARD.QUICK_STATS_SUBTITLE' | translate"
     >
       <div class="portal-hoteles-dashboard-placeholder portal-hoteles-dashboard-placeholder--list"></div>
       <div class="portal-hoteles-dashboard-placeholder portal-hoteles-dashboard-placeholder--list"></div>
       <div class="portal-hoteles-dashboard-placeholder portal-hoteles-dashboard-placeholder--list"></div>
-      <portal-hoteles-generic-card emptyLabel="Today's highlights" aria-live="polite" aria-atomic="true"></portal-hoteles-generic-card>
+      <portal-hoteles-generic-card [emptyLabel]="'DASHBOARD.TODAYS_HIGHLIGHTS' | translate" aria-live="polite" aria-atomic="true"></portal-hoteles-generic-card>
     </portal-hoteles-grid-card>
   </section>
 
   <ng-template #reservationsFallback>
-    <p class="portal-hoteles-dashboard-table__message" *ngIf="isLoadingReservations" aria-live="polite" aria-atomic="true">Loading reservations...</p>
+    <p class="portal-hoteles-dashboard-table__message" *ngIf="isLoadingReservations" aria-live="polite" aria-atomic="true">{{ 'DASHBOARD.LOADING_RESERVATIONS' | translate }}</p>
     <p class="portal-hoteles-dashboard-table__message" *ngIf="!isLoadingReservations && reservationsErrorMessage" role="alert" aria-live="assertive">
       {{ reservationsErrorMessage }}
     </p>
     <p class="portal-hoteles-dashboard-table__message" *ngIf="!isLoadingReservations && !reservationsErrorMessage && !hasReservations" aria-live="polite" aria-atomic="true">
-      No reservations available.
+      {{ 'DASHBOARD.NO_RESERVATIONS' | translate }}
     </p>
   </ng-template>
 </ion-content>

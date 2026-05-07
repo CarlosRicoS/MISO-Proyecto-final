@@ -14,6 +14,7 @@ import androidx.test.filters.LargeTest;
 import androidx.test.rule.GrantPermissionRule;
 
 import org.hamcrest.Matchers;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -35,6 +36,79 @@ public class TravelHubEspressoTest {
     @Rule
     public ActivityScenarioRule<MainActivity> activityScenarioRule =
             new ActivityScenarioRule<>(MainActivity.class);
+
+    /**
+     * Seed the active UI locale to English before each test so existing assertions
+     * that match English copy ("Find Your Perfect Stay", "Welcome Back",
+     * "Recommended Hotels", etc.) still work after the i18n feature switched the
+     * default locale to Spanish (es-CO). Mirrors the Playwright `addInitScript`
+     * pattern used by the web E2E suites.
+     */
+    @Before
+    public void seedEnglishLocale() {
+        onWebView().forceJavascriptEnabled();
+        executeJavascript("localStorage.setItem('th_locale', 'en');");
+        executeJavascript("window.location.replace('/');");
+        // Allow Angular to re-bootstrap and ngx-translate to load en.json
+        // before any test assertion runs.
+        waitForLanguageReady("en");
+    }
+
+    private void waitForLanguageReady(String expectedLang) {
+        long start = System.currentTimeMillis();
+        long timeoutMs = 15000;
+        while (System.currentTimeMillis() - start < timeoutMs) {
+            CountDownLatch latch = new CountDownLatch(1);
+            AtomicReference<String> result = new AtomicReference<>("");
+            activityScenarioRule
+                    .getScenario()
+                    .onActivity(
+                            activity -> {
+                                if (activity.getBridge() == null
+                                        || activity.getBridge().getWebView() == null) {
+                                    latch.countDown();
+                                    return;
+                                }
+                                activity
+                                        .getBridge()
+                                        .getWebView()
+                                        .post(
+                                                () ->
+                                                        activity
+                                                                .getBridge()
+                                                                .getWebView()
+                                                                .evaluateJavascript(
+                                                                        "localStorage.getItem('th_locale')",
+                                                                        value -> {
+                                                                            result.set(value == null ? "" : value);
+                                                                            latch.countDown();
+                                                                        }));
+                            });
+            try {
+                latch.await(2, TimeUnit.SECONDS);
+            } catch (InterruptedException interruptedException) {
+                Thread.currentThread().interrupt();
+                throw new AssertionError("Interrupted while waiting for locale", interruptedException);
+            }
+            if (result.get() != null && result.get().contains(expectedLang)) {
+                // localStorage is set; give Angular a moment to render with the new lang.
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException interruptedException) {
+                    Thread.currentThread().interrupt();
+                }
+                return;
+            }
+            try {
+                Thread.sleep(300);
+            } catch (InterruptedException interruptedException) {
+                Thread.currentThread().interrupt();
+                throw new AssertionError("Interrupted while waiting for locale", interruptedException);
+            }
+        }
+        throw new AssertionError(
+                "Locale did not reach expected value '" + expectedLang + "' within timeout");
+    }
 
     @Test
     public void homePageShowsHeroAndRecommendedHotels() {
@@ -131,7 +205,9 @@ public class TravelHubEspressoTest {
 
     @Test
     public void bookingListRouteRedirectsToLoginForAnonymousSession() {
-        executeJavascript("sessionStorage.clear(); window.location.href='/booking-list';");
+        executeJavascript(
+                "localStorage.removeItem('th_auth_session'); sessionStorage.clear();"
+                        + " window.location.href='/booking-list';");
 
         waitForUrlContains("/login");
         assertCurrentUrlContains("returnUrl=%2Fbooking-list");
@@ -157,7 +233,9 @@ public class TravelHubEspressoTest {
                         + "\\\"token_type\\\":\\\"Bearer\\\""
                         + "}";
 
-        executeJavascript("sessionStorage.setItem('th_auth_session', '" + loginResponse + "');");
+        // AuthSessionService persists the session in localStorage (key: 'th_auth_session').
+        // Mirror that storage so the auth guard sees an authenticated user on the next nav.
+        executeJavascript("localStorage.setItem('th_auth_session', '" + loginResponse + "');");
     }
 
     private void executeJavascript(String jsCode) {

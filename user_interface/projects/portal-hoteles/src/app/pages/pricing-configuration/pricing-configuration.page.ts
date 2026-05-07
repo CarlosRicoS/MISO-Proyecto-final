@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, Input, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, OnInit, inject } from '@angular/core';
 import { IonicModule } from '@ionic/angular';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { firstValueFrom } from 'rxjs';
 import { AuthSessionService } from '@travelhub/core/services/auth-session.service';
 import { PortalHotelesGridCardComponent } from '@travelhub/shared/components/portal-hoteles/grid-card/grid-card.component';
@@ -14,10 +15,12 @@ import { PricingPropertyResponse } from '@travelhub/core/models/platform-api.mod
   styleUrls: ['./pricing-configuration.page.scss'],
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, IonicModule, RouterModule, PortalHotelesGridCardComponent],
+  imports: [CommonModule, IonicModule, RouterModule, TranslateModule, PortalHotelesGridCardComponent],
 })
 export class PortalHotelesPricingConfigurationPage implements OnInit {
   private readonly defaultPropertyId = '7b2f2f2f-8a9b-4f25-ae6d-1d2a1f0c1c33';
+
+  private readonly translate = inject(TranslateService);
 
   @Input() propertyId = '';
   @Input() guests = 1;
@@ -43,7 +46,7 @@ export class PortalHotelesPricingConfigurationPage implements OnInit {
   errorMessage = '';
 
   roomRateRows: RoomRateRow[] = [];
-  seasonalRulesRows: SeasonalRuleRow[] = this.buildSeasonalRuleRows();
+  seasonalRulesRows: SeasonalRuleRow[] = [];
 
   constructor(
     private readonly authSession: AuthSessionService,
@@ -52,6 +55,7 @@ export class PortalHotelesPricingConfigurationPage implements OnInit {
 
   ngOnInit(): void {
     this.refreshRoomRateRows();
+    this.seasonalRulesRows = this.buildSeasonalRuleRows();
     this.loadPricingData();
   }
 
@@ -61,10 +65,10 @@ export class PortalHotelesPricingConfigurationPage implements OnInit {
 
   get visibleRangeLabel(): string {
     if (!this.hasPricingData) {
-      return 'No pricing data available';
+      return this.translate.instant('PRICING.VISIBLE_NONE');
     }
 
-    return 'Showing 1-1 of 1 pricing record';
+    return this.translate.instant('PRICING.VISIBLE_ONE');
   }
 
   get hasPricingData(): boolean {
@@ -73,7 +77,8 @@ export class PortalHotelesPricingConfigurationPage implements OnInit {
 
   getStatusClass(status: string): string {
     const normalizedStatus = (status || '').trim().toLowerCase();
-    if (normalizedStatus === 'active') {
+    const activeLabel = this.translate.instant('PRICING.STATUS_ACTIVE').toLowerCase();
+    if (normalizedStatus === 'active' || normalizedStatus === activeLabel) {
       return 'portal-hoteles-pricing-status portal-hoteles-pricing-status--active';
     }
     return 'portal-hoteles-pricing-status portal-hoteles-pricing-status--inactive';
@@ -90,12 +95,12 @@ export class PortalHotelesPricingConfigurationPage implements OnInit {
 
   formatDiscount(discount: number | undefined): string {
     if (discount == null || discount === 0) {
-      return 'No discount';
+      return this.translate.instant('PRICING.DISCOUNT_NONE');
     }
 
     const percentage = Math.abs(discount).toFixed(2);
     const sign = discount < 0 ? '-' : '+';
-    return `${sign}${percentage}% OFF`;
+    return this.translate.instant('PRICING.DISCOUNT_OFF', { sign, percent: percentage });
   }
 
   formatModifier(modifier: number): string {
@@ -121,81 +126,84 @@ export class PortalHotelesPricingConfigurationPage implements OnInit {
 
   private buildRoomRateRows(): RoomRateRow[] {
     const baseRate = this.pricingData.price && this.pricingData.price > 0 ? this.pricingData.price : 240;
+    const activeStatus = this.translate.instant('PRICING.STATUS_ACTIVE');
 
     return [
       {
-        roomType: 'Superior Double',
+        roomType: this.translate.instant('PRICING.ROOM_SUPERIOR_DOUBLE'),
         roomTypeId: 'Room Type 101',
-        capacityLabel: '2 guests',
+        capacityLabel: this.translate.instant('PRICING.CAPACITY_LABEL', { count: 2 }),
         baseRateLabel: this.formatRate(baseRate, this.currencyFilter),
         discount: -15,
         discountLabel: this.formatDiscount(-15),
         discountClass: this.getModifierClass(-15),
         finalRateLabel: this.formatRate(this.calculateFinalRate(baseRate, -15), this.currencyFilter),
-        status: 'Active',
+        status: activeStatus,
         statusClass: this.getStatusClass('Active'),
       },
       {
-        roomType: 'Deluxe Suite',
+        roomType: this.translate.instant('PRICING.ROOM_DELUXE_SUITE'),
         roomTypeId: 'Room Type 201',
-        capacityLabel: '4 guests',
+        capacityLabel: this.translate.instant('PRICING.CAPACITY_LABEL', { count: 4 }),
         baseRateLabel: this.formatRate(420, this.currencyFilter),
         discount: 0,
         discountLabel: this.formatDiscount(0),
         discountClass: this.getModifierClass(0),
         finalRateLabel: this.formatRate(420, this.currencyFilter),
-        status: 'Active',
+        status: activeStatus,
         statusClass: this.getStatusClass('Active'),
       },
       {
-        roomType: 'Standard Room',
+        roomType: this.translate.instant('PRICING.ROOM_STANDARD'),
         roomTypeId: 'Room Type 001',
-        capacityLabel: '2 guests',
+        capacityLabel: this.translate.instant('PRICING.CAPACITY_LABEL', { count: 2 }),
         baseRateLabel: this.formatRate(180, this.currencyFilter),
         discount: -10,
         discountLabel: this.formatDiscount(-10),
         discountClass: this.getModifierClass(-10),
         finalRateLabel: this.formatRate(this.calculateFinalRate(180, -10), this.currencyFilter),
-        status: 'Active',
+        status: activeStatus,
         statusClass: this.getStatusClass('Active'),
       },
       {
-        roomType: 'Junior Suite',
+        roomType: this.translate.instant('PRICING.ROOM_JUNIOR_SUITE'),
         roomTypeId: 'Room Type 301',
-        capacityLabel: '3 guests',
+        capacityLabel: this.translate.instant('PRICING.CAPACITY_LABEL', { count: 3 }),
         baseRateLabel: this.formatRate(320, this.currencyFilter),
         discount: -20,
         discountLabel: this.formatDiscount(-20),
         discountClass: this.getModifierClass(-20),
         finalRateLabel: this.formatRate(this.calculateFinalRate(320, -20), this.currencyFilter),
-        status: 'Active',
+        status: activeStatus,
         statusClass: this.getStatusClass('Active'),
       },
     ];
   }
 
   private buildSeasonalRuleRows(): SeasonalRuleRow[] {
+    const activeStatus = this.translate.instant('PRICING.STATUS_ACTIVE');
+
     return [
       {
-        season: 'High Season',
-        description: 'Summer & Holidays',
+        season: this.translate.instant('PRICING.HIGH_SEASON'),
+        description: this.translate.instant('PRICING.SEASON_HIGH_DESC'),
         dateRange: 'Dec 15 - Jan 15',
         helperDateRange: 'Jun 15 - Aug 31',
         modifier: 35,
         modifierLabel: this.formatModifier(35),
         modifierClass: this.getModifierClass(35),
-        status: 'Active',
+        status: activeStatus,
         statusClass: this.getStatusClass('Active'),
       },
       {
-        season: 'Low Season',
-        description: 'Off-peak periods',
+        season: this.translate.instant('PRICING.LOW_SEASON'),
+        description: this.translate.instant('PRICING.SEASON_LOW_DESC'),
         dateRange: 'Feb 1 - May 31',
         helperDateRange: 'Sep 15 - Nov 30',
         modifier: -20,
         modifierLabel: this.formatModifier(-20),
         modifierClass: this.getModifierClass(-20),
-        status: 'Active',
+        status: activeStatus,
         statusClass: this.getStatusClass('Active'),
       },
     ];
@@ -247,7 +255,7 @@ export class PortalHotelesPricingConfigurationPage implements OnInit {
       this.pricingData = data as PricingPropertyResponse;
       this.refreshRoomRateRows();
     } catch {
-      this.errorMessage = 'Unable to load pricing data.';
+      this.errorMessage = this.translate.instant('PRICING.ERROR');
       this.pricingData = {
         id: '',
         name: '',

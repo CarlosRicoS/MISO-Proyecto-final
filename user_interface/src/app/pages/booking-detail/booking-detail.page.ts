@@ -1,8 +1,9 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
-import { Component, HostListener, OnDestroy, OnInit } from '@angular/core';
+import { Component, HostListener, OnDestroy, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { IonicModule } from '@ionic/angular';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { firstValueFrom, Subject, of, EMPTY } from 'rxjs';
 import { switchMap, takeUntil, tap, catchError } from 'rxjs/operators';
 import { Hotel } from '../../core/models/hotel.model';
@@ -34,6 +35,7 @@ import { CapacitorBarcodeScanner, CapacitorBarcodeScannerTypeHint } from '@capac
   imports: [
     CommonModule,
     IonicModule,
+    TranslateModule,
     ThAmenitiesSummaryComponent,
     ThDetailSummaryComponent,
     ThDetailsMosaicComponent,
@@ -44,6 +46,7 @@ import { CapacitorBarcodeScanner, CapacitorBarcodeScannerTypeHint } from '@capac
   ],
 })
 export class BookingDetailPage implements OnInit, OnDestroy {
+  private readonly translate = inject(TranslateService);
   property = {
     title: 'Property',
     location: '',
@@ -174,7 +177,7 @@ export class BookingDetailPage implements OnInit, OnDestroy {
           catchError(() => {
             this.isPricingLoading = false;
             this.previewedNewPrice = null;
-            this.pricingError = 'Unable to calculate price. Please try again.';
+            this.pricingError = this.translate.instant('PROPERTY.PRICING_ERROR');
             return of(null);
           }),
         );
@@ -239,7 +242,7 @@ export class BookingDetailPage implements OnInit, OnDestroy {
       }
 
       if (!bookingId) {
-        this.errorMessage = 'Unable to load booking details.';
+        this.errorMessage = this.translate.instant('BOOKING_DETAIL.ERROR');
         return;
       }
 
@@ -248,7 +251,7 @@ export class BookingDetailPage implements OnInit, OnDestroy {
       );
       await this.loadPropertyDetail(reservation.property_id, reservation, stateHotel);
     } catch (error) {
-      this.errorMessage = 'Unable to load booking details.';
+      this.errorMessage = this.translate.instant('BOOKING_DETAIL.ERROR');
     } finally {
       this.isLoading = false;
       this.isRefreshingPageData = false;
@@ -301,8 +304,8 @@ export class BookingDetailPage implements OnInit, OnDestroy {
   get mobilePanelTabs(): ThPaymentSummaryCompactTab[] {
     if (this.isAccordionLayout) {
       return [
-        { id: 'cancel', label: 'Cancel Reservation' },
-        { id: 'change-dates', label: 'Change Dates' },
+        { id: 'cancel', label: this.translate.instant('BOOKING_DETAIL.CANCEL_RESERVATION') },
+        { id: 'change-dates', label: this.translate.instant('BOOKING_DETAIL.CHANGE_DATES') },
       ];
     }
 
@@ -329,18 +332,20 @@ export class BookingDetailPage implements OnInit, OnDestroy {
   get mobilePanelActionLabel(): string {
     const normalizedStatus = (this.bookingStatus || '').trim().toUpperCase();
     if (normalizedStatus === 'UPCOMING') {
-      return 'Cancel Reservation';
+      return this.translate.instant('BOOKING_DETAIL.CANCEL_RESERVATION');
     }
 
     if (normalizedStatus === 'CONFIRMED') {
-      return this.mobileConfirmedTab === 'change-dates' ? 'Recalculate Price' : 'Cancel Reservation';
+      return this.mobileConfirmedTab === 'change-dates'
+        ? this.translate.instant('BOOKING_DETAIL.RECALCULATE_PRICE')
+        : this.translate.instant('BOOKING_DETAIL.CANCEL_RESERVATION');
     }
 
     if (normalizedStatus === 'REJECTED') {
-      return 'Recalculate Price';
+      return this.translate.instant('BOOKING_DETAIL.RECALCULATE_PRICE');
     }
 
-    return 'Cancel';
+    return this.translate.instant('BOOKING_DETAIL.CANCEL');
   }
 
   get mobilePanelActionDisabled(): boolean {
@@ -384,10 +389,14 @@ export class BookingDetailPage implements OnInit, OnDestroy {
   get mobilePanelPromoText(): string {
     const normalizedStatus = (this.bookingStatus || '').trim().toUpperCase();
     if (normalizedStatus === 'CONFIRMED') {
-      return this.mobileConfirmedTab === 'change-dates' ? 'Update Your Dates' : 'Reservation details';
+      return this.mobileConfirmedTab === 'change-dates'
+        ? this.translate.instant('BOOKING_DETAIL.UPDATE_DATES_PROMO')
+        : this.translate.instant('BOOKING_DETAIL.RESERVATION_DETAILS_PROMO');
     }
 
-    return this.mobilePanelEditable ? 'Update Your Dates' : 'Reservation details';
+    return this.mobilePanelEditable
+      ? this.translate.instant('BOOKING_DETAIL.UPDATE_DATES_PROMO')
+      : this.translate.instant('BOOKING_DETAIL.RESERVATION_DETAILS_PROMO');
   }
 
   get mobilePanelFootnote(): string {
@@ -396,14 +405,16 @@ export class BookingDetailPage implements OnInit, OnDestroy {
     }
 
     if (this.isAccordionLayout && this.mobileConfirmedTab === 'cancel') {
-      return 'Cancellation policies may apply';
+      return this.translate.instant('BOOKING_DETAIL.CANCELLATION_POLICIES_APPLY');
     }
 
     if (this.mobilePanelEditable) {
-      return this.hasDateChanges ? '✓ Dates updated - ready to recalculate' : 'Select new dates to update';
+      return this.hasDateChanges
+        ? `✓ ${this.translate.instant('BOOKING_DETAIL.DATES_UPDATED_READY')}`
+        : this.translate.instant('BOOKING_DETAIL.SELECT_NEW_DATES');
     }
 
-    return 'Cancellation policies may apply';
+    return this.translate.instant('BOOKING_DETAIL.CANCELLATION_POLICIES_APPLY');
   }
 
   toggleCancelAccordion(): void {
@@ -422,7 +433,11 @@ export class BookingDetailPage implements OnInit, OnDestroy {
 
   async onCancelBooking(): Promise<void> {
     if (!this.currentReservation || this.isReservationCancellationBlocked()) {
-      this.showAlert('Cancellation unavailable', 'This reservation can no longer be cancelled.', 'warning');
+      this.showAlert(
+        this.translate.instant('BOOKING_DETAIL.ALERT_CANCELLATION_UNAVAILABLE_TITLE'),
+        this.translate.instant('BOOKING_DETAIL.ALERT_CANCELLATION_UNAVAILABLE_BODY'),
+        'warning',
+      );
       return;
     }
 
@@ -435,8 +450,8 @@ export class BookingDetailPage implements OnInit, OnDestroy {
 
       if (this.isCancellationDeadlineExpired(policy.cancellation_deadline)) {
         this.showAlert(
-          'Cancellation unavailable',
-          'The cancellation deadline has passed. This reservation can no longer be cancelled.',
+          this.translate.instant('BOOKING_DETAIL.ALERT_CANCELLATION_UNAVAILABLE_TITLE'),
+          this.translate.instant('BOOKING_DETAIL.ALERT_DEADLINE_EXPIRED_BODY'),
           'warning',
         );
         return;
@@ -446,7 +461,7 @@ export class BookingDetailPage implements OnInit, OnDestroy {
       this.isCancelConfirmOpen = true;
     } catch (error) {
       const httpError = error as HttpErrorResponse;
-      let message = 'Unable to retrieve cancellation policy. Please try again.';
+      let message = this.translate.instant('BOOKING_DETAIL.ALERT_CANCELLATION_FETCH_ERROR');
 
       if (typeof httpError.error?.message === 'string') {
         message = httpError.error.message;
@@ -454,7 +469,11 @@ export class BookingDetailPage implements OnInit, OnDestroy {
         message = httpError.error.detail;
       }
 
-      this.showAlert('Cancellation unavailable', message, 'error');
+      this.showAlert(
+        this.translate.instant('BOOKING_DETAIL.ALERT_CANCELLATION_UNAVAILABLE_TITLE'),
+        message,
+        'error',
+      );
     } finally {
       this.isCancellationPolicyLoading = false;
     }
@@ -474,10 +493,14 @@ export class BookingDetailPage implements OnInit, OnDestroy {
       );
 
       this.shouldNavigateToBookingList = true;
-      this.showAlert('Reservation Cancelled', 'Your reservation has been cancelled successfully.', 'success');
+      this.showAlert(
+        this.translate.instant('BOOKING_DETAIL.ALERT_RESERVATION_CANCELLED_TITLE'),
+        this.translate.instant('BOOKING_DETAIL.ALERT_RESERVATION_CANCELLED_BODY'),
+        'success',
+      );
     } catch (error) {
       const httpError = error as HttpErrorResponse;
-      let message = 'Unable to cancel reservation. Please try again.';
+      let message = this.translate.instant('BOOKING_DETAIL.ALERT_CANCELLATION_GENERIC_ERROR');
 
       if (typeof httpError.error?.message === 'string') {
         message = httpError.error.message;
@@ -485,7 +508,11 @@ export class BookingDetailPage implements OnInit, OnDestroy {
         message = httpError.error.detail;
       }
 
-      this.showAlert('Cancellation Error', message, 'error');
+      this.showAlert(
+        this.translate.instant('BOOKING_DETAIL.ALERT_CANCELLATION_ERROR_TITLE'),
+        message,
+        'error',
+      );
     } finally {
       this.isCancelling = false;
     }
@@ -493,7 +520,11 @@ export class BookingDetailPage implements OnInit, OnDestroy {
 
   async onRecalculatePrice(): Promise<void> {
     if (!this.currentReservation) {
-      this.showAlert('Error', 'Unable to recalculate price. Reservation data is missing.', 'error');
+      this.showAlert(
+        this.translate.instant('BOOKING_DETAIL.ALERT_RECALCULATE_ERROR_TITLE'),
+        this.translate.instant('BOOKING_DETAIL.ALERT_RECALCULATE_MISSING'),
+        'error',
+      );
       return;
     }
 
@@ -501,25 +532,37 @@ export class BookingDetailPage implements OnInit, OnDestroy {
     const newPeriodEnd = this.normalizeDateForApi(this.paymentSummary.checkOutValue);
 
     if (!newPeriodStart || !newPeriodEnd) {
-      this.showAlert('Invalid dates', 'Please select valid check-in and check-out dates.', 'warning');
+      this.showAlert(
+        this.translate.instant('BOOKING_DETAIL.ALERT_INVALID_DATES_TITLE'),
+        this.translate.instant('BOOKING_DETAIL.ALERT_INVALID_DATES_BODY'),
+        'warning',
+      );
       return;
     }
 
     if (newPeriodEnd <= newPeriodStart) {
-      this.showAlert('Invalid date range', 'Check-out date must be later than check-in date.', 'warning');
+      this.showAlert(
+        this.translate.instant('BOOKING_DETAIL.ALERT_INVALID_RANGE_TITLE'),
+        this.translate.instant('BOOKING_DETAIL.ALERT_INVALID_RANGE_BODY'),
+        'warning',
+      );
       return;
     }
 
     const updatedGuests = Number.parseInt(String(this.paymentSummary.guestsValue || '').trim(), 10);
     if (!Number.isFinite(updatedGuests) || updatedGuests <= 0) {
-      this.showAlert('Invalid guests', 'Please enter a valid number of guests.', 'warning');
+      this.showAlert(
+        this.translate.instant('BOOKING_DETAIL.ALERT_INVALID_GUESTS_TITLE'),
+        this.translate.instant('BOOKING_DETAIL.ALERT_INVALID_GUESTS_BODY'),
+        'warning',
+      );
       return;
     }
 
     if (!this.hasReservationChanges(newPeriodStart, newPeriodEnd, updatedGuests)) {
       this.showAlert(
-        'No changes detected',
-        'Please change check-in, check-out, or guests before updating the reservation.',
+        this.translate.instant('BOOKING_DETAIL.ALERT_NO_CHANGES_TITLE'),
+        this.translate.instant('BOOKING_DETAIL.ALERT_NO_CHANGES_BODY'),
         'info',
       );
       return;
@@ -554,25 +597,27 @@ export class BookingDetailPage implements OnInit, OnDestroy {
 
       this.shouldNavigateToBookingList = true;
       this.showAlert(
-        'Dates Updated',
-        `Reservation dates updated successfully. Price difference: ${this.formatAmountWithDecimals(priceDifference, '$')}.`,
+        this.translate.instant('BOOKING_DETAIL.ALERT_DATES_UPDATED_TITLE'),
+        this.translate.instant('BOOKING_DETAIL.ALERT_DATES_UPDATED_BODY', {
+          difference: this.formatAmountWithDecimals(priceDifference, '$'),
+        }),
         'success',
       );
       this.hasDateChanges = false;
       this.isChangeDatesAccordionOpen = false;
     } catch (error: unknown) {
       const httpError = error as HttpErrorResponse;
-      let message = 'Unable to recalculate price. Please try again.';
+      let message = this.translate.instant('BOOKING_DETAIL.ALERT_RECALCULATE_GENERIC');
 
       if (httpError.status === 409) {
-        message = 'The property is not available for the selected dates. Please choose different dates.';
+        message = this.translate.instant('BOOKING_DETAIL.ALERT_RECALCULATE_CONFLICT');
       } else if (typeof httpError.error?.message === 'string') {
         message = httpError.error.message;
       } else if (typeof httpError.error?.detail === 'string') {
         message = httpError.error.detail;
       }
 
-      this.showAlert('Error', message, 'error');
+      this.showAlert(this.translate.instant('BOOKING_DETAIL.ALERT_RECALCULATE_ERROR_TITLE'), message, 'error');
     } finally {
       this.isRecalculating = false;
     }
@@ -1016,33 +1061,32 @@ export class BookingDetailPage implements OnInit, OnDestroy {
     const currency = this.getCurrencySymbol();
     const penaltyText = this.formatMoneyAmount(penalty, currency);
     const refundText = this.formatMoneyAmount(refund, currency);
-    const deadlineText = this.formatCancellationDeadline(policy.cancellation_deadline);
 
     if (policy.is_free_cancellation) {
       if (penalty > 0) {
-        return `Cancellation is free according to your policy. A penalty of ${penaltyText} is reported and your refund will be ${refundText}. Would you like to continue?`;
+        return this.translate.instant('BOOKING_DETAIL.POLICY_FREE_PENALTY', { penalty: penaltyText, refund: refundText });
       }
 
       if (refund > 0) {
-        return `Cancellation is free. You will receive a refund of ${refundText}. Would you like to continue?`;
+        return this.translate.instant('BOOKING_DETAIL.POLICY_FREE_REFUND', { refund: refundText });
       }
 
-      return `Cancellation is free. Would you like to continue?`;
+      return this.translate.instant('BOOKING_DETAIL.POLICY_FREE_NONE');
     }
 
     if (penalty > 0 && refund > 0) {
-      return `Cancellation is not free. A penalty of ${penaltyText} will be applied and your refund will be ${refundText}. Would you like to continue?`;
+      return this.translate.instant('BOOKING_DETAIL.POLICY_PAID_BOTH', { penalty: penaltyText, refund: refundText });
     }
 
     if (penalty > 0) {
-      return `Cancellation is not free. A penalty of ${penaltyText} will be applied and no refund will be issued. Would you like to continue?`;
+      return this.translate.instant('BOOKING_DETAIL.POLICY_PAID_PENALTY', { penalty: penaltyText });
     }
 
     if (refund > 0) {
-      return `Cancellation is not free. Your refund amount will be ${refundText}. Would you like to continue?`;
+      return this.translate.instant('BOOKING_DETAIL.POLICY_PAID_REFUND', { refund: refundText });
     }
 
-    return `Cancellation is not free and no refund will be issued. Would you like to continue?`;
+    return this.translate.instant('BOOKING_DETAIL.POLICY_PAID_NONE');
   }
 
   private isCancellationDeadlineExpired(deadline: string): boolean {

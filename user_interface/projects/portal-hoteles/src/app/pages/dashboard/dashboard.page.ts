@@ -1,9 +1,12 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { IonicModule } from '@ionic/angular';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { firstValueFrom } from 'rxjs';
 import { AuthSessionService } from '@travelhub/core/services/auth-session.service';
 import { BookingService, Reservation } from '@travelhub/core/services/booking.service';
+import { LocaleService } from '@travelhub/core/services/locale.service';
+import { ReportsService, DashboardMetricsResponse } from '@travelhub/core/services/reports.service';
 import { PortalHotelesGenericCardComponent } from '@travelhub/shared/components/portal-hoteles/generic-card/generic-card.component';
 import { PortalHotelesGridCardComponent } from '@travelhub/shared/components/portal-hoteles/grid-card/grid-card.component';
 import { RouterModule } from '@angular/router';
@@ -13,7 +16,7 @@ import { RouterModule } from '@angular/router';
   templateUrl: './dashboard.page.html',
   styleUrls: ['./dashboard.page.scss'],
   standalone: true,
-  imports: [CommonModule, IonicModule, RouterModule, PortalHotelesGenericCardComponent, PortalHotelesGridCardComponent],
+  imports: [CommonModule, IonicModule, RouterModule, TranslateModule, PortalHotelesGenericCardComponent, PortalHotelesGridCardComponent],
 })
 export class PortalHotelesDashboardPage {
   private readonly pageSize = 4;
@@ -24,13 +27,54 @@ export class PortalHotelesDashboardPage {
   isLoadingReservations = false;
   reservationsErrorMessage = '';
 
+  metrics: DashboardMetricsResponse | null = null;
+
+  private readonly translate = inject(TranslateService);
+  private readonly localeService = inject(LocaleService);
+
   constructor(
     private readonly authSession: AuthSessionService,
     private readonly bookingService: BookingService,
+    private readonly reportsService: ReportsService,
   ) {}
 
   ionViewWillEnter(): void {
     void this.loadReservations();
+    void this.loadMetrics();
+  }
+
+  get totalReservationsLabel(): string {
+    return this.metrics ? String(this.metrics.total_reservations) : '—';
+  }
+
+  get monthlyRevenueLabel(): string {
+    if (!this.metrics) return '—';
+    return this.localeService.formatCurrency(this.metrics.monthly_revenue);
+  }
+
+  get revenueTrendLabel(): string {
+    if (!this.metrics) return '';
+    const pct = this.metrics.revenue_trend_pct ?? 0;
+    return this.translate.instant('DASHBOARD.TREND_FROM_LAST_MONTH', {
+      sign: pct >= 0 ? '+' : '',
+      percent: pct.toFixed(1),
+    });
+  }
+
+  get revenueTrendClass(): string {
+    if (!this.metrics) return 'portal-hoteles-dashboard-card__hint';
+    const pct = this.metrics.revenue_trend_pct ?? 0;
+    return pct >= 0
+      ? 'portal-hoteles-dashboard-card__hint portal-hoteles-dashboard-card__hint--positive'
+      : 'portal-hoteles-dashboard-card__hint portal-hoteles-dashboard-card__hint--warning';
+  }
+
+  get todayCheckinsLabel(): string {
+    return this.metrics ? String(this.metrics.today_checkins) : '—';
+  }
+
+  get todayCheckoutsLabel(): string {
+    return this.metrics ? String(this.metrics.today_checkouts) : '—';
   }
 
   get operatorEmail(): string {
@@ -43,12 +87,16 @@ export class PortalHotelesDashboardPage {
 
   get visibleRangeLabel(): string {
     if (!this.totalReservations) {
-      return 'Showing 0-0 of 0 reservations';
+      return this.translate.instant('DASHBOARD.SHOWING_NONE');
     }
 
     const rangeStart = (this.currentPage - 1) * this.pageSize + 1;
     const rangeEnd = rangeStart + this.visibleReservations.length - 1;
-    return `Showing ${rangeStart}-${rangeEnd} of ${this.totalReservations} reservations`;
+    return this.translate.instant('DASHBOARD.SHOWING_RANGE', {
+      start: rangeStart,
+      end: rangeEnd,
+      total: this.totalReservations,
+    });
   }
 
   get hasReservations(): boolean {
@@ -72,7 +120,10 @@ export class PortalHotelesDashboardPage {
   }
 
   get paginationLabel(): string {
-    return `Page ${this.currentPage} of ${this.totalPages}`;
+    return this.translate.instant('DASHBOARD.PAGE_OF', {
+      current: this.currentPage,
+      total: this.totalPages,
+    });
   }
 
   get shouldShowPagination(): boolean {
@@ -118,6 +169,16 @@ export class PortalHotelesDashboardPage {
     }
   }
 
+  private async loadMetrics(): Promise<void> {
+    try {
+      this.metrics = await firstValueFrom(
+        this.reportsService.getDashboardMetrics(this.authSession.idToken),
+      );
+    } catch {
+      this.metrics = null;
+    }
+  }
+
   private async loadReservations(): Promise<void> {
     this.isLoadingReservations = true;
     this.reservationsErrorMessage = '';
@@ -134,7 +195,7 @@ export class PortalHotelesDashboardPage {
       this.reservations = [];
       this.visibleReservations = [];
       this.currentPage = 1;
-      this.reservationsErrorMessage = 'Unable to load reservations.';
+      this.reservationsErrorMessage = this.translate.instant('DASHBOARD.RESERVATIONS_ERROR');
     } finally {
       this.isLoadingReservations = false;
     }
@@ -229,12 +290,28 @@ export class PortalHotelesDashboardPage {
   }
 
   private formatStatusLabel(status: string): string {
-    const normalizedValue = (status || '').trim();
+    const normalizedValue = (status || '').trim().toUpperCase();
     if (!normalizedValue) {
-      return 'Unknown';
+      return this.translate.instant('DASHBOARD.STATUS_UNKNOWN');
     }
 
-    return normalizedValue.charAt(0).toUpperCase() + normalizedValue.slice(1).toLowerCase();
+    switch (normalizedValue) {
+      case 'CONFIRMED':
+        return this.translate.instant('DASHBOARD.STATUS_CONFIRMED');
+      case 'PENDING':
+        return this.translate.instant('DASHBOARD.STATUS_PENDING');
+      case 'APPROVED':
+        return this.translate.instant('DASHBOARD.STATUS_APPROVED');
+      case 'CANCELED':
+      case 'CANCELLED':
+        return this.translate.instant('DASHBOARD.STATUS_CANCELED');
+      case 'REJECTED':
+        return this.translate.instant('DASHBOARD.STATUS_REJECTED');
+      case 'COMPLETED':
+        return this.translate.instant('DASHBOARD.STATUS_COMPLETED');
+      default:
+        return normalizedValue.charAt(0).toUpperCase() + normalizedValue.slice(1).toLowerCase();
+    }
   }
 }
 

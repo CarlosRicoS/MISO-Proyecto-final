@@ -3,7 +3,7 @@
   variant="error"
   [title]="alertTitle"
   [message]="alertMessage"
-  primaryButtonText="Accept"
+  [primaryButtonText]="'COMMON.ACCEPT' | translate"
   (primaryAction)="isAlertOpen = false"
 ></th-popup>
 
@@ -21,16 +21,16 @@
         <ion-card class="login-card">
           <ion-card-content class="login-card__content">
             <div class="login-card__header">
-              <h1 class="login-card__title">Welcome Back</h1>
+              <h1 class="login-card__title">{{ 'LOGIN.TITLE' | translate }}</h1>
               <p class="login-card__subtitle">
-                Sign in to your TravelHub account
+                {{ 'LOGIN.SUBTITLE' | translate }}
               </p>
             </div>
 
             <div class="login-card__fields">
               <th-input
-                label="Email"
-                placeholder="Enter your email"
+                [label]="'LOGIN.EMAIL_LABEL' | translate"
+                [placeholder]="'LOGIN.EMAIL_PLACEHOLDER' | translate"
                 type="email"
                 startIcon="mail-outline"
                 [value]="email"
@@ -40,12 +40,12 @@
                 (enterPress)="onSignIn()"
               ></th-input>
               <th-input
-                label="Password"
-                placeholder="Enter your password"
+                [label]="'LOGIN.PASSWORD_LABEL' | translate"
+                [placeholder]="'LOGIN.PASSWORD_PLACEHOLDER' | translate"
                 [type]="passwordInputType"
                 startIcon="lock-closed-outline"
                 [endIcon]="passwordTrailIcon"
-                [endIconAriaLabel]="isPasswordVisible ? 'Hide password' : 'Show password'"
+                [endIconAriaLabel]="(isPasswordVisible ? 'LOGIN.HIDE_PASSWORD' : 'LOGIN.SHOW_PASSWORD') | translate"
                 [value]="password"
                 [state]="passwordState"
                 [helper]="passwordHelper"
@@ -62,21 +62,21 @@
                     *ngIf="isLoading"
                     name="crescent"
                     class="login-card__spinner"
-                    aria-label="Signing in, please wait"
+                    [attr.aria-label]="'LOGIN.SUBMITTING_ARIA' | translate"
                   ></ion-spinner>
-                  <span>Sign In</span>
+                  <span>{{ 'LOGIN.SUBMIT' | translate }}</span>
                 </span>
               </th-button>
             </div>
 
             <ion-button fill="clear" size="small" class="login-card__link">
-              Forgot Password?
+              {{ 'LOGIN.FORGOT_PASSWORD' | translate }}
             </ion-button>
 
             <p class="login-card__signup">
-              Don't have an account?
+              {{ 'LOGIN.NO_ACCOUNT' | translate }}
               <ion-button fill="clear" class="login-card__link-inline" (click)="onGoToRegister()">
-                Sign Up
+                {{ 'LOGIN.REGISTER_LINK' | translate }}
               </ion-button>
             </p>
           </ion-card-content>

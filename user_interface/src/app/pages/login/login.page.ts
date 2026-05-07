@@ -13,6 +13,7 @@ import {
   IonRow,
   IonSpinner,
 } from '@ionic/angular/standalone';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { firstValueFrom } from 'rxjs';
 import { ThButtonComponent } from '../../shared/components/th-button/th-button.component';
 import { ThPopupComponent } from '../../shared/components/th-popup/th-popup.component';
@@ -39,6 +40,7 @@ import { AuthSessionService } from '../../core/services/auth-session.service';
     IonCard,
     IonButton,
     IonSpinner,
+    TranslateModule,
     ThInputComponent,
     ThButtonComponent,
     ThPopupComponent,
@@ -49,6 +51,7 @@ export class LoginPage {
   private readonly authSessionService = inject(AuthSessionService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
+  private readonly translate = inject(TranslateService);
 
   email = '';
   password = '';
@@ -89,11 +92,11 @@ export class LoginPage {
 
   get emailHelper(): string {
     if (!this.email.trim() && this.hasSubmitted) {
-      return 'Email is required';
+      return this.translate.instant('LOGIN.EMAIL_REQUIRED');
     }
 
     if (this.email.trim() && !this.isValidEmail(this.email)) {
-      return 'Please enter a valid email format';
+      return this.translate.instant('LOGIN.EMAIL_INVALID');
     }
 
     return '';
@@ -101,7 +104,7 @@ export class LoginPage {
 
   get passwordHelper(): string {
     if (!this.password.trim() && this.hasSubmitted) {
-      return 'Password is required';
+      return this.translate.instant('LOGIN.PASSWORD_REQUIRED');
     }
 
     return '';
@@ -156,9 +159,9 @@ export class LoginPage {
         }, null, 2)
       );
       if (httpError.status === 401) {
-        this.showErrorAlert('Invalid email or password.');
+        this.showErrorAlert(this.translate.instant('LOGIN.INVALID_CREDENTIALS'));
       } else {
-        this.showErrorAlert('An error occurred. Please try again.');
+        this.showErrorAlert(this.translate.instant('LOGIN.GENERIC_ERROR'));
       }
     } finally {
       this.isLoading = false;
@@ -166,7 +169,7 @@ export class LoginPage {
   }
 
   private showErrorAlert(message: string): void {
-    this.alertTitle = 'Login Failed';
+    this.alertTitle = this.translate.instant('LOGIN.ALERT_TITLE');
     this.alertMessage = message;
     this.isAlertOpen = true;
   }

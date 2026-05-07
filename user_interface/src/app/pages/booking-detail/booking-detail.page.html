@@ -2,10 +2,10 @@
   <th-popup
     [isOpen]="isCancelConfirmOpen"
     variant="warning"
-    title="Cancel booking"
+    [title]="'BOOKING_DETAIL.CANCEL_BOOKING' | translate"
     [message]="cancelConfirmMessage"
-    primaryButtonText="Accept"
-    secondaryButtonText="Cancel"
+    [primaryButtonText]="'BOOKING_DETAIL.ACCEPT' | translate"
+    [secondaryButtonText]="'BOOKING_DETAIL.CANCEL' | translate"
     primaryButtonVariant="secondary"
     secondaryButtonVariant="primary"
     (primaryAction)="onCancelConfirmed()"
@@ -17,7 +17,7 @@
     [variant]="alertVariant"
     [title]="alertTitle"
     [message]="alertMessage"
-    primaryButtonText="Accept"
+    [primaryButtonText]="'BOOKING_DETAIL.ACCEPT' | translate"
     [closeOnBackdrop]="false"
     (primaryAction)="onAlertDismissed()"
   ></th-popup>
@@ -31,7 +31,7 @@
               [hotelName]="property.title"
               [images]="property.images"
               [totalPhotos]="property.totalPhotos"
-              [viewAllLabel]="'View all ' + property.totalPhotos + ' photos'"
+              [viewAllLabel]="'PROPERTY.VIEW_ALL_PHOTOS' | translate: { count: property.totalPhotos }"
             ></th-details-mosaic>
           </div>
         </section>
@@ -58,21 +58,21 @@
               <th-amenities-summary
                 [amenities]="amenities"
                 [totalAmenities]="amenities.length"
-                viewAllLabel="View All Amenities"
+                [viewAllLabel]="'PROPERTY.AMENITIES' | translate"
               ></th-amenities-summary>
 
               <th-property-description-summary
-                title="About This Hotel"
+                [title]="'PROPERTY.ABOUT' | translate"
                 [paragraphs]="descriptionParagraphs"
-                readMoreLabel="Read More"
-                readLessLabel="Read Less"
+                [readMoreLabel]="'PROPERTY.READ_MORE' | translate"
+                [readLessLabel]="'PROPERTY.READ_LESS' | translate"
               ></th-property-description-summary>
 
               <th-property-review-summary
-                title="Guest Reviews"
-                desktopActionLabel="Write a review"
-                mobileActionLabel="See All"
-                loadMoreLabel="Load more reviews"
+                [title]="'PROPERTY.REVIEWS' | translate"
+                [desktopActionLabel]="'PROPERTY.WRITE_REVIEW' | translate"
+                [mobileActionLabel]="'PROPERTY.SEE_ALL_REVIEWS' | translate"
+                [loadMoreLabel]="'PROPERTY.LOAD_MORE_REVIEWS' | translate"
                 [categoryScores]="reviewCategoryScores"
                 [reviews]="guestReviews"
               ></th-property-review-summary>
@@ -93,7 +93,7 @@
             >
               <span class="bookingdetail-accordion__title bookingdetail-accordion__title--danger">
                 <ion-icon name="close-circle-outline" aria-hidden="true"></ion-icon>
-                Cancel Reservation
+                {{ 'BOOKING_DETAIL.CANCEL_RESERVATION' | translate }}
               </span>
               <ion-icon
                 name="chevron-down-outline"
@@ -108,22 +108,22 @@
             >
               <th-payment-summary
                 [title]="paymentSummary.title"
-                subtitle="per night"
-                promoText="Reservation details"
+                [subtitle]="'BOOKING_DETAIL.PER_NIGHT' | translate"
+                [promoText]="'BOOKING_DETAIL.RESERVATION_DETAILS_PROMO' | translate"
                 [checkInValue]="paymentSummary.checkInValue"
                 [checkOutValue]="paymentSummary.checkOutValue"
                 [guestsValue]="paymentSummary.guestsValue"
                 [roomTypeValue]="paymentSummary.roomTypeValue"
                 [items]="summaryItems"
-                totalLabel="Total"
+                [totalLabel]="'BOOKING_DETAIL.TOTAL_LABEL' | translate"
                 [totalAmount]="paymentSummary.totalAmount"
-                actionLabel="Cancel Reservation"
+                [actionLabel]="'BOOKING_DETAIL.CANCEL_RESERVATION' | translate"
                 [actionDisabled]="isCancelling || isCancellationPolicyLoading"
                 [isLoading]="isCancelling || isCancellationPolicyLoading"
                 (actionClick)="onCancelBooking()"
-                footnote="Cancellation policies may apply"
-                trustLeftLabel="Secure booking"
-                trustRightLabel="Flexible cancellation"
+                [footnote]="'BOOKING_DETAIL.CANCELLATION_POLICIES_APPLY' | translate"
+                [trustLeftLabel]="'BOOKING_DETAIL.TRUST_SECURE' | translate"
+                [trustRightLabel]="'BOOKING_DETAIL.TRUST_FLEXIBLE_CANCELLATION' | translate"
                 [editable]="false"
                 [mobileSticky]="false"
               ></th-payment-summary>
@@ -139,7 +139,7 @@
             >
               <span class="bookingdetail-accordion__title">
                 <ion-icon name="calendar-outline" aria-hidden="true"></ion-icon>
-                Change Dates
+                {{ 'BOOKING_DETAIL.CHANGE_DATES' | translate }}
               </span>
               <ion-icon
                 name="chevron-down-outline"
@@ -154,23 +154,23 @@
             >
               <th-payment-summary
                 [title]="paymentSummary.title"
-                subtitle="per night"
-                promoText="Update Your Dates"
+                [subtitle]="'BOOKING_DETAIL.PER_NIGHT' | translate"
+                [promoText]="'BOOKING_DETAIL.UPDATE_DATES_PROMO' | translate"
                 [checkInValue]="paymentSummary.checkInValue"
                 [checkOutValue]="paymentSummary.checkOutValue"
                 [guestsValue]="paymentSummary.guestsValue"
                 [roomTypeValue]="paymentSummary.roomTypeValue"
                 [items]="summaryItems"
-                totalLabel="Total"
+                [totalLabel]="'BOOKING_DETAIL.TOTAL_LABEL' | translate"
                 [totalAmount]="paymentSummary.totalAmount"
-                actionLabel="Recalculate Price"
+                [actionLabel]="'BOOKING_DETAIL.RECALCULATE_PRICE' | translate"
                 [actionDisabled]="isRecalculating"
                 [isLoading]="isRecalculating"
                 (actionClick)="onRecalculatePrice()"
                 (checkInValueChange)="onCheckInChanged($event)"
                 (checkOutValueChange)="onCheckOutChanged($event)"
                 (guestsValueChange)="onGuestsChanged($event)"
-                [footnote]="hasDateChanges ? '✓ Dates updated - ready to recalculate' : 'Select new dates to update'"
+                [footnote]="hasDateChanges ? ('✓ ' + ('BOOKING_DETAIL.DATES_UPDATED_READY' | translate)) : ('BOOKING_DETAIL.SELECT_NEW_DATES' | translate)"
                 trustLeftLabel="Secure booking"
                 trustRightLabel="Flexible cancellation"
                 [editable]="true"
@@ -186,22 +186,22 @@
           *ngIf="isFlatCancelLayout && !isMobileViewport"
           class="bookingdetail-flat-cancel-summary"
           [title]="paymentSummary.title"
-          subtitle="per night"
-          promoText="Reservation details"
+          [subtitle]="'BOOKING_DETAIL.PER_NIGHT' | translate"
+          [promoText]="'BOOKING_DETAIL.RESERVATION_DETAILS_PROMO' | translate"
           [checkInValue]="paymentSummary.checkInValue"
           [checkOutValue]="paymentSummary.checkOutValue"
           [guestsValue]="paymentSummary.guestsValue"
           [roomTypeValue]="paymentSummary.roomTypeValue"
           [items]="summaryItems"
-          totalLabel="Total"
+          [totalLabel]="'BOOKING_DETAIL.TOTAL_LABEL' | translate"
           [totalAmount]="paymentSummary.totalAmount"
-          actionLabel="Cancel Reservation"
+          [actionLabel]="'BOOKING_DETAIL.CANCEL_RESERVATION' | translate"
           [actionDisabled]="isCancelling || isCancellationPolicyLoading"
           [isLoading]="isCancelling || isCancellationPolicyLoading"
           (actionClick)="onCancelBooking()"
-          footnote="Cancellation policies may apply"
-          trustLeftLabel="Secure booking"
-          trustRightLabel="Flexible cancellation"
+          [footnote]="'BOOKING_DETAIL.CANCELLATION_POLICIES_APPLY' | translate"
+          [trustLeftLabel]="'BOOKING_DETAIL.TRUST_SECURE' | translate"
+          [trustRightLabel]="'BOOKING_DETAIL.TRUST_FLEXIBLE_CANCELLATION' | translate"
           [editable]="false"
           [mobileSticky]="false"
         ></th-payment-summary>
@@ -210,23 +210,23 @@
         <th-payment-summary
           *ngIf="isFlatChangeDatesLayout && !isMobileViewport"
           [title]="paymentSummary.title"
-          subtitle="per night"
-          promoText="Update Your Dates"
+          [subtitle]="'BOOKING_DETAIL.PER_NIGHT' | translate"
+          [promoText]="'BOOKING_DETAIL.UPDATE_DATES_PROMO' | translate"
           [checkInValue]="paymentSummary.checkInValue"
           [checkOutValue]="paymentSummary.checkOutValue"
           [guestsValue]="paymentSummary.guestsValue"
           [roomTypeValue]="paymentSummary.roomTypeValue"
           [items]="summaryItems"
-          totalLabel="Total"
+          [totalLabel]="'BOOKING_DETAIL.TOTAL_LABEL' | translate"
           [totalAmount]="paymentSummary.totalAmount"
-          actionLabel="Recalculate Price"
+          [actionLabel]="'BOOKING_DETAIL.RECALCULATE_PRICE' | translate"
           [actionDisabled]="isRecalculating"
           [isLoading]="isRecalculating"
           (actionClick)="onRecalculatePrice()"
           (checkInValueChange)="onCheckInChanged($event)"
           (checkOutValueChange)="onCheckOutChanged($event)"
           (guestsValueChange)="onGuestsChanged($event)"
-          [footnote]="hasDateChanges ? '✓ Dates updated - ready to recalculate' : 'Select new dates to update'"
+          [footnote]="hasDateChanges ? ('✓ ' + ('BOOKING_DETAIL.DATES_UPDATED_READY' | translate)) : ('BOOKING_DETAIL.SELECT_NEW_DATES' | translate)"
           trustLeftLabel="Secure booking"
           trustRightLabel="Flexible cancellation"
           [editable]="true"
@@ -238,40 +238,39 @@
         <th-payment-summary
           *ngIf="!isEditableStatus"
           [title]="paymentSummary.title"
-          subtitle="per night"
+          [subtitle]="'BOOKING_DETAIL.PER_NIGHT' | translate"
           [promoText]="paymentSummary.promoText"
           [checkInValue]="paymentSummary.checkInValue"
           [checkOutValue]="paymentSummary.checkOutValue"
           [guestsValue]="paymentSummary.guestsValue"
           [roomTypeValue]="paymentSummary.roomTypeValue"
           [items]="summaryItems"
-          totalLabel="Total"
+          [totalLabel]="'BOOKING_DETAIL.TOTAL_LABEL' | translate"
           [totalAmount]="paymentSummary.totalAmount"
           [hideAfterTotal]="isCancellationHiddenForStatus"
-          actionLabel="Cancel"
+          [actionLabel]="'BOOKING_DETAIL.CANCEL' | translate"
           [showAction]="!isCancellationHiddenForStatus"
           [actionDisabled]="isCancelling || isCancellationPolicyLoading"
           [isLoading]="isCancelling || isCancellationPolicyLoading"
           (actionClick)="onCancelBooking()"
-          footnote="Cancellation policies may apply"
-          trustLeftLabel="Secure booking"
-          trustRightLabel="Flexible cancellation"
+          [footnote]="'BOOKING_DETAIL.CANCELLATION_POLICIES_APPLY' | translate"
+          [trustLeftLabel]="'BOOKING_DETAIL.TRUST_SECURE' | translate"
+          [trustRightLabel]="'BOOKING_DETAIL.TRUST_FLEXIBLE_CANCELLATION' | translate"
           [editable]="false"
           [mobileSticky]="true"
           [editorResetTrigger]="paymentSummaryResetVersion"
-          compactSuffix="/night"
-          compactNote="Taxes and fees included"
+          [compactSuffix]="'PROPERTY.COMPACT_SUFFIX' | translate"
+          [compactNote]="'PROPERTY.COMPACT_NOTE' | translate"
         ></th-payment-summary>
 
         <ion-card class="bookingdetail-cancellation-card" *ngIf="!isCancellationHiddenForStatus">
           <ion-card-content>
             <div class="bookingdetail-cancellation-card__header">
               <ion-icon name="information-circle" aria-hidden="true"></ion-icon>
-              <h3>Flexible Cancellation</h3>
+              <h3>{{ 'BOOKING_DETAIL.FLEXIBLE_CANCELLATION_TITLE' | translate }}</h3>
             </div>
             <p>
-              Free cancellation until 24 hours before check-in. After that, cancellation fees may apply
-              based on the reservation policy.
+              {{ 'BOOKING_DETAIL.FLEXIBLE_CANCELLATION_BODY' | translate }}
             </p>
           </ion-card-content>
         </ion-card>
@@ -280,14 +279,14 @@
           class="bookingdetail-mobile-summary"
           *ngIf="showMobileStickyPanel"
           [title]="paymentSummary.title"
-          subtitle="per night"
+          [subtitle]="'BOOKING_DETAIL.PER_NIGHT' | translate"
           [promoText]="mobilePanelPromoText"
           [checkInValue]="paymentSummary.checkInValue"
           [checkOutValue]="paymentSummary.checkOutValue"
           [guestsValue]="paymentSummary.guestsValue"
           [roomTypeValue]="paymentSummary.roomTypeValue"
           [items]="summaryItems"
-          totalLabel="Total"
+          [totalLabel]="'BOOKING_DETAIL.TOTAL_LABEL' | translate"
           [totalAmount]="paymentSummary.totalAmount"
           [hideAfterTotal]="mobilePanelHideAfterTotal"
           [showAction]="mobilePanelShowAction"
@@ -304,8 +303,8 @@
           [compactTabs]="mobilePanelTabs"
           [compactActiveTabId]="mobileConfirmedTab"
           (compactTabChange)="onMobileConfirmedTabSelected($event)"
-          compactSuffix="/night"
-          compactNote="Taxes and fees included"
+          [compactSuffix]="'PROPERTY.COMPACT_SUFFIX' | translate"
+          [compactNote]="'PROPERTY.COMPACT_NOTE' | translate"
           (checkInValueChange)="onCheckInChanged($event)"
           (checkOutValueChange)="onCheckOutChanged($event)"
           (guestsValueChange)="onGuestsChanged($event)"
@@ -314,6 +313,6 @@
     </div>
   </section>
 
-  <p class="bookingdetail-empty" *ngIf="isLoading" aria-live="polite" aria-atomic="true">Loading booking details...</p>
+  <p class="bookingdetail-empty" *ngIf="isLoading" aria-live="polite" aria-atomic="true">{{ 'BOOKING_DETAIL.LOADING' | translate }}</p>
   <p class="bookingdetail-empty" *ngIf="!isLoading && errorMessage" role="alert" aria-live="assertive">{{ errorMessage }}</p>
 </ion-content>

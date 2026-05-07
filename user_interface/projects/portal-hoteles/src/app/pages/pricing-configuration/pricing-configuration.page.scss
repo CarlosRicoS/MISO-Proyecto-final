@@ -107,10 +107,33 @@
 
 /* Table Styles */
 .portal-hoteles-pricing-table {
+  display: block;
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: var(--th-space-2);
+}
+
+.portal-hoteles-pricing-table thead,
+.portal-hoteles-pricing-table tbody,
+.portal-hoteles-pricing-table tfoot {
   display: flex;
   flex-direction: column;
   gap: var(--th-space-3);
-  margin-top: var(--th-space-2);
+}
+
+.portal-hoteles-pricing-table tbody {
+  margin-top: var(--th-space-3);
+}
+
+.portal-hoteles-pricing-table tfoot {
+  margin-top: var(--th-space-3);
+}
+
+.portal-hoteles-pricing-table tfoot td {
+  display: block;
+  padding: 0;
+  border: 0;
+  background: transparent;
 }
 
 .portal-hoteles-pricing-table__header,
@@ -125,7 +148,17 @@
   background: var(--th-white);
 }
 
-.portal-hoteles-pricing-table__header{
+.portal-hoteles-pricing-table__header > th,
+.portal-hoteles-pricing-table__row > td {
+  text-align: left;
+  font-weight: inherit;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  min-width: 0;
+}
+
+.portal-hoteles-pricing-table__header {
   font-weight: var(--th-font-weight-medium);
 }
 

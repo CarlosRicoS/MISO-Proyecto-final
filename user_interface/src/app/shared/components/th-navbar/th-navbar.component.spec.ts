@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router } from '@angular/router';
 import { IonicModule, Platform } from '@ionic/angular';
 import { ThNavbarComponent } from './th-navbar.component';
+import { translateTestingModule } from '../../../testing/translate-testing.module';
 
 class RouterMock {
   url = '/search-results';
@@ -16,7 +17,7 @@ class PlatformMock {
 describe('ThNavbarComponent', () => {
   it('detects search results route', () => {
     TestBed.configureTestingModule({
-      imports: [IonicModule.forRoot(), ThNavbarComponent],
+      imports: [IonicModule.forRoot(), ThNavbarComponent, translateTestingModule()],
       providers: [
         { provide: Router, useClass: RouterMock },
         { provide: ActivatedRoute, useValue: {} },
@@ -32,7 +33,7 @@ describe('ThNavbarComponent', () => {
 
   it('detects property detail route', () => {
     TestBed.configureTestingModule({
-      imports: [IonicModule.forRoot(), ThNavbarComponent],
+      imports: [IonicModule.forRoot(), ThNavbarComponent, translateTestingModule()],
       providers: [
         { provide: Router, useValue: { url: '/propertydetail/123' } },
         { provide: ActivatedRoute, useValue: {} },
@@ -48,7 +49,7 @@ describe('ThNavbarComponent', () => {
 
   it('returns false for non-results routes', () => {
     TestBed.configureTestingModule({
-      imports: [IonicModule.forRoot(), ThNavbarComponent],
+      imports: [IonicModule.forRoot(), ThNavbarComponent, translateTestingModule()],
       providers: [
         { provide: Router, useValue: { url: '/home' } },
         { provide: ActivatedRoute, useValue: {} },
@@ -64,7 +65,7 @@ describe('ThNavbarComponent', () => {
 
   it('detects booking detail route', () => {
     TestBed.configureTestingModule({
-      imports: [IonicModule.forRoot(), ThNavbarComponent],
+      imports: [IonicModule.forRoot(), ThNavbarComponent, translateTestingModule()],
       providers: [
         { provide: Router, useValue: { url: '/booking-detail?bookingId=res-1' } },
         { provide: ActivatedRoute, useValue: {} },
@@ -83,7 +84,7 @@ describe('ThNavbarComponent', () => {
 
   it('keeps favorite action for property detail route', () => {
     TestBed.configureTestingModule({
-      imports: [IonicModule.forRoot(), ThNavbarComponent],
+      imports: [IonicModule.forRoot(), ThNavbarComponent, translateTestingModule()],
       providers: [
         { provide: Router, useValue: { url: '/propertydetail/123' } },
         { provide: ActivatedRoute, useValue: {} },
@@ -100,7 +101,7 @@ describe('ThNavbarComponent', () => {
 
   it('detects booking list route', () => {
     TestBed.configureTestingModule({
-      imports: [IonicModule.forRoot(), ThNavbarComponent],
+      imports: [IonicModule.forRoot(), ThNavbarComponent, translateTestingModule()],
       providers: [
         { provide: Router, useValue: { url: '/booking-list' } },
         { provide: ActivatedRoute, useValue: {} },
@@ -117,7 +118,7 @@ describe('ThNavbarComponent', () => {
 
   it('returns My Reservations as mobile title for booking list', () => {
     TestBed.configureTestingModule({
-      imports: [IonicModule.forRoot(), ThNavbarComponent],
+      imports: [IonicModule.forRoot(), ThNavbarComponent, translateTestingModule()],
       providers: [
         { provide: Router, useValue: { url: '/booking-list' } },
         { provide: ActivatedRoute, useValue: {} },
@@ -133,7 +134,7 @@ describe('ThNavbarComponent', () => {
 
   it('detects notifications route', () => {
     TestBed.configureTestingModule({
-      imports: [IonicModule.forRoot(), ThNavbarComponent],
+      imports: [IonicModule.forRoot(), ThNavbarComponent, translateTestingModule()],
       providers: [
         { provide: Router, useValue: { url: '/notifications' } },
         { provide: ActivatedRoute, useValue: {} },
@@ -150,7 +151,7 @@ describe('ThNavbarComponent', () => {
 
   it('returns Notifications as mobile title for notifications route', () => {
     TestBed.configureTestingModule({
-      imports: [IonicModule.forRoot(), ThNavbarComponent],
+      imports: [IonicModule.forRoot(), ThNavbarComponent, translateTestingModule()],
       providers: [
         { provide: Router, useValue: { url: '/notifications' } },
         { provide: ActivatedRoute, useValue: {} },
@@ -171,7 +172,7 @@ describe('ThNavbarComponent', () => {
 
   it('isBookingList is true on /booking-list route (drives aria-label="More options")', () => {
     TestBed.configureTestingModule({
-      imports: [IonicModule.forRoot(), ThNavbarComponent],
+      imports: [IonicModule.forRoot(), ThNavbarComponent, translateTestingModule()],
       providers: [
         { provide: Router, useValue: { url: '/booking-list' } },
         { provide: ActivatedRoute, useValue: {} },
@@ -189,7 +190,7 @@ describe('ThNavbarComponent', () => {
 
   it('isBookingList is false on /search-results route (drives aria-label="Add to favorites")', () => {
     TestBed.configureTestingModule({
-      imports: [IonicModule.forRoot(), ThNavbarComponent],
+      imports: [IonicModule.forRoot(), ThNavbarComponent, translateTestingModule()],
       providers: [
         { provide: Router, useValue: { url: '/search-results' } },
         { provide: ActivatedRoute, useValue: {} },
@@ -207,7 +208,7 @@ describe('ThNavbarComponent', () => {
 
   it('returns Search Results as mobile title for search results route', () => {
     TestBed.configureTestingModule({
-      imports: [IonicModule.forRoot(), ThNavbarComponent],
+      imports: [IonicModule.forRoot(), ThNavbarComponent, translateTestingModule()],
       providers: [
         { provide: Router, useValue: { url: '/search-results' } },
         { provide: ActivatedRoute, useValue: {} },

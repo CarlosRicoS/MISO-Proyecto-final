@@ -7,6 +7,7 @@ import { of, throwError } from 'rxjs';
 import { AuthService, LoginResponse } from '@travelhub/core/services/auth.service';
 import { AuthSessionService } from '@travelhub/core/services/auth-session.service';
 import { PortalHotelesLoginPage } from './login.page';
+import { translateTestingModule } from '../../testing/translate-testing.module';
 
 describe('PortalHotelesLoginPage', () => {
   let component: PortalHotelesLoginPage;
@@ -28,7 +29,7 @@ describe('PortalHotelesLoginPage', () => {
     const authSessionServiceSpy = jasmine.createSpyObj('AuthSessionService', ['setLoginResponse']);
 
     await TestBed.configureTestingModule({
-      imports: [PortalHotelesLoginPage, HttpClientTestingModule, RouterTestingModule],
+      imports: [PortalHotelesLoginPage, HttpClientTestingModule, RouterTestingModule, translateTestingModule()],
       providers: [
         { provide: AuthService, useValue: authServiceSpy },
         { provide: AuthSessionService, useValue: authSessionServiceSpy },
