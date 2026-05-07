@@ -1,8 +1,10 @@
 /// <reference types="jasmine" />
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute, convertToParamMap, Router } from '@angular/router';
 import { IonicModule, Platform, NavController } from '@ionic/angular';
 import { of, throwError } from 'rxjs';
+import { CapacitorBarcodeScanner } from '@capacitor/barcode-scanner';
 import { BookingDetailPage } from './booking-detail.page';
 import { AuthSessionService } from '../../core/services/auth-session.service';
 import { BookingService } from '../../core/services/booking.service';
@@ -111,6 +113,11 @@ describe('BookingDetailPage', () => {
     cacheImages = jasmine.createSpy('cacheImages').and.returnValue(Promise.resolve());
   }
 
+  class HttpClientMock {
+    get = jasmine.createSpy('get').and.returnValue(of({ available: true }));
+    post = jasmine.createSpy('post').and.returnValue(of({ status: 'COMPLETED' }));
+  }
+
   beforeEach(async () => {
     const platformMock = {
       is: jasmine.createSpy('is').and.returnValue(true),
@@ -129,6 +136,7 @@ describe('BookingDetailPage', () => {
         { provide: Platform, useValue: platformMock },
         { provide: NavController, useClass: NavControllerMock },
         { provide: ImageCacheService, useClass: ImageCacheServiceMock },
+        { provide: HttpClient, useClass: HttpClientMock },
       ],
     }).compileComponents();
 
@@ -330,6 +338,72 @@ describe('BookingDetailPage', () => {
     await component.ngOnInit();
 
     expect(component.errorMessage).toBe('Unable to load booking details.');
+  });
+
+  it('fetches check-in availability and stores true when the api responds successfully', async () => {
+    const httpClient = TestBed.inject(HttpClient) as unknown as HttpClientMock;
+
+    await (component as unknown as { fetchCheckInAvailability: (propertyId: string) => Promise<void> }).fetchCheckInAvailability('prop-1');
+
+    expect(httpClient.get).toHaveBeenCalledWith('/api/check-in/available?property_id=prop-1');
+    expect((component as unknown as { isCheckInAvailable: boolean | null }).isCheckInAvailable).toBeTrue();
+    expect((component as unknown as { isCheckInAvailabilityLoading: boolean }).isCheckInAvailabilityLoading).toBeFalse();
+  });
+
+  it('clears check-in availability when the api request fails', async () => {
+    const httpClient = TestBed.inject(HttpClient) as unknown as HttpClientMock;
+    httpClient.get.and.returnValue(throwError(() => new Error('availability error')));
+
+    await (component as unknown as { fetchCheckInAvailability: (propertyId: string) => Promise<void> }).fetchCheckInAvailability('prop-1');
+
+    expect((component as unknown as { isCheckInAvailable: boolean | null }).isCheckInAvailable).toBeNull();
+    expect((component as unknown as { isCheckInAvailabilityLoading: boolean }).isCheckInAvailabilityLoading).toBeFalse();
+  });
+
+  it('completes check-in when qr scan and api response succeed', async () => {
+    const httpClient = TestBed.inject(HttpClient) as unknown as HttpClientMock;
+    const scannerSpy = spyOn(CapacitorBarcodeScanner, 'scanBarcode').and.resolveTo({ ScanResult: 'secret-key' } as never);
+    httpClient.post.and.returnValue(of({ status: 'COMPLETED' }));
+    (component as unknown as { currentReservation: typeof mockReservation }).currentReservation = mockReservation;
+
+    await component.openCameraForCheckin();
+
+    expect(scannerSpy).toHaveBeenCalled();
+    expect(httpClient.post).toHaveBeenCalledWith(
+      '/api/check-in',
+      { booking_id: 'res-1', qr_code: 'secret-key' },
+      jasmine.objectContaining({
+        headers: jasmine.objectContaining({ Authorization: 'Bearer id-token' }),
+      }),
+    );
+    expect(component.alertTitle).toBe('Check-in completed');
+    expect(component.alertMessage).toBe('Check-in completed!');
+    expect((component as unknown as { isCheckInSubmitting: boolean }).isCheckInSubmitting).toBeFalse();
+  });
+
+  it('shows scanner warning when no qr code is detected', async () => {
+    const httpClient = TestBed.inject(HttpClient) as unknown as HttpClientMock;
+    spyOn(CapacitorBarcodeScanner, 'scanBarcode').and.resolveTo({} as never);
+    (component as unknown as { currentReservation: typeof mockReservation }).currentReservation = mockReservation;
+
+    await component.openCameraForCheckin();
+
+    expect(httpClient.post).not.toHaveBeenCalled();
+    expect(component.alertTitle).toBe('Check-in');
+    expect(component.alertMessage).toBe('No QR code detected.');
+  });
+
+  it('shows error alert when the check-in api request fails', async () => {
+    const httpClient = TestBed.inject(HttpClient) as unknown as HttpClientMock;
+    spyOn(CapacitorBarcodeScanner, 'scanBarcode').and.resolveTo({ ScanResult: 'secret-key' } as never);
+    httpClient.post.and.returnValue(throwError(() => ({ error: { message: 'Server down' } })));
+    (component as unknown as { currentReservation: typeof mockReservation }).currentReservation = mockReservation;
+
+    await component.openCameraForCheckin();
+
+    expect(component.alertTitle).toBe('Check-in Error');
+    expect(component.alertMessage).toBe('Server down');
+    expect((component as unknown as { isCheckInSubmitting: boolean }).isCheckInSubmitting).toBeFalse();
   });
 
   it('maps helper labels for confirmed, completed and default statuses', () => {
