@@ -114,7 +114,7 @@ describe('BookingDetailPage', () => {
   }
 
   class HttpClientMock {
-    get = jasmine.createSpy('get').and.returnValue(of({ available: true }));
+    get = jasmine.createSpy('get').and.returnValue(of({ property_id: 'prop-1', is_available: true }));
     post = jasmine.createSpy('post').and.returnValue(of({ status: 'COMPLETED' }));
   }
 
@@ -345,7 +345,13 @@ describe('BookingDetailPage', () => {
 
     await (component as unknown as { fetchCheckInAvailability: (propertyId: string) => Promise<void> }).fetchCheckInAvailability('prop-1');
 
-    expect(httpClient.get).toHaveBeenCalledWith('/api/check-in/available?property_id=prop-1');
+    expect(httpClient.get).toHaveBeenCalledWith(
+      '/checkin/api/check-in/available',
+      jasmine.objectContaining({
+        params: jasmine.any(Object),
+        headers: jasmine.objectContaining({ Authorization: 'Bearer id-token' }),
+      }),
+    );
     expect((component as unknown as { isCheckInAvailable: boolean | null }).isCheckInAvailable).toBeTrue();
     expect((component as unknown as { isCheckInAvailabilityLoading: boolean }).isCheckInAvailabilityLoading).toBeFalse();
   });
@@ -370,7 +376,7 @@ describe('BookingDetailPage', () => {
 
     expect(scannerSpy).toHaveBeenCalled();
     expect(httpClient.post).toHaveBeenCalledWith(
-      '/api/check-in',
+      '/checkin/api/check-in',
       { booking_id: 'res-1', qr_code: 'secret-key' },
       jasmine.objectContaining({
         headers: jasmine.objectContaining({ Authorization: 'Bearer id-token' }),

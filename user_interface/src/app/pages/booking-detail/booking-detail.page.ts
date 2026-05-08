@@ -1,4 +1,4 @@
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { Component, HostListener, OnDestroy, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -10,6 +10,7 @@ import { Hotel } from '../../core/models/hotel.model';
 import { PropertyDetail } from '../../core/models/property-detail.model';
 import { AuthSessionService } from '../../core/services/auth-session.service';
 import { BookingService, CancellationPolicyResponse, Reservation } from '../../core/services/booking.service';
+import { ConfigService } from '../../core/services/config.service';
 import { PropertyDetailService } from '../../core/services/property-detail.service';
 import { PricingService } from '../../core/services/pricing.service';
 import { ImageCacheService } from '../../core/services/image-cache.service';
@@ -130,6 +131,7 @@ export class BookingDetailPage implements OnInit, OnDestroy {
     private propertyDetailService: PropertyDetailService,
     private bookingService: BookingService,
     private authSessionService: AuthSessionService,
+    private configService: ConfigService,
     private pricingService: PricingService,
     private route: ActivatedRoute,
     private router: Router,
@@ -212,12 +214,18 @@ export class BookingDetailPage implements OnInit, OnDestroy {
     this.isCheckInAvailable = null;
 
     try {
+      const params = new HttpParams().set('property_id', propertyId);
+      const url = this.getCheckInApiUrl('/checkin/api/check-in/available');
       const response = await firstValueFrom(
-        this.httpClient.get<{ available: boolean }>(`/api/check-in/available?property_id=${propertyId}`),
+        this.httpClient.get<{ property_id?: string; is_available?: boolean }>(url, {
+          params,
+          headers: {
+            Authorization: `Bearer ${this.authSessionService.idToken}`,
+          },
+        }),
       );
-      this.isCheckInAvailable = response.available;
+      this.isCheckInAvailable = Boolean(response.is_available);
     } catch (error) {
-      console.error('Error fetching check-in availability:', error);
       this.isCheckInAvailable = null;
     } finally {
       this.isCheckInAvailabilityLoading = false;
@@ -1007,6 +1015,13 @@ export class BookingDetailPage implements OnInit, OnDestroy {
     return `${year}-${month}-${day}`;
   }
 
+  private getCheckInApiUrl(path: string): string {
+    const baseUrl = this.configService.apiBaseUrl?.replace(/\/$/, '');
+    const normalizedPath = path.replace(/^\//, '');
+
+    return baseUrl ? `${baseUrl}/${normalizedPath}` : `/${normalizedPath}`;
+  }
+
   private hasReservationChanges(newPeriodStart: string, newPeriodEnd: string, newGuests: number): boolean {
     if (!this.currentReservation) {
       return false;
@@ -1141,21 +1156,6 @@ export class BookingDetailPage implements OnInit, OnDestroy {
     return parsed.getTime() < Date.now();
   }
 
-  private formatCancellationDeadline(deadline: string): string {
-    const parsed = new Date(deadline);
-    if (Number.isNaN(parsed.getTime())) {
-      return '';
-    }
-
-    return new Intl.DateTimeFormat('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
-    }).format(parsed);
-  }
-
   private parsePolicyAmount(value: string): number {
     const parsed = Number(value);
     return Number.isFinite(parsed) ? parsed : 0;
@@ -1203,12 +1203,18 @@ export class BookingDetailPage implements OnInit, OnDestroy {
         return;
       }
 
+      if (this.currentReservation?.status?.trim().toUpperCase() !== 'CONFIRMED') {
+        this.showAlert(this.translate.instant('BOOKING_DETAIL.CHECKIN_TITLE'), 'Booking must be CONFIRMED to check in', 'warning');
+        return;
+      }
+
       try {
         this.isCheckInSubmitting = true;
+        const url = this.getCheckInApiUrl('checkin/api/check-in/');
         const response = await firstValueFrom(
           this.httpClient.post<{ status?: string }>(
-            '/api/check-in',
-            { booking_id: bookingId, qr_code: qrData },
+            url,
+            { booking_id: bookingId, qr_token: qrData },
             {
               headers: {
                 Authorization: `Bearer ${this.authSessionService.idToken}`,
@@ -1218,6 +1224,12 @@ export class BookingDetailPage implements OnInit, OnDestroy {
         );
 
         if (response && String(response.status).toUpperCase() === 'COMPLETED') {
+          // Update booking status to COMPLETED on successful check-in
+          if (this.currentReservation) {
+            this.currentReservation.status = 'COMPLETED';
+          }
+          this.bookingStatus = 'Completed';
+          this.bookingStatusVariant = this.getBookingStatusVariant('COMPLETED');
           this.showAlert(
             this.translate.instant('BOOKING_DETAIL.CHECKIN_SUCCESS_TITLE'),
             this.translate.instant('BOOKING_DETAIL.CHECKIN_SUCCESS_BODY'),

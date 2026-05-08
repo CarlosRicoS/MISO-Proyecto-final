@@ -17,7 +17,7 @@
           </p>
         </div>
         <!-- Mobile check-in control: aligned to the right on the same line as location/status -->
-        <div class="th-detail-summary__checkin" role="group" *ngIf="isCheckInAvailable && isPlatformNative">
+        <div class="th-detail-summary__checkin" role="group" *ngIf="isCheckInAvailable && isPlatformNative && isBookingConfirmed">
           <div *ngIf="isCheckInSubmitting; else scanButton" class="th-detail-summary__checkin-loading" aria-live="polite">
             <ion-spinner name="crescent"></ion-spinner>
           </div>

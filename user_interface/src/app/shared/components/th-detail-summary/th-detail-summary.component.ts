@@ -36,8 +36,13 @@ export class ThDetailSummaryComponent {
   @Input() metaSecondary = '';
   @Input() isCheckInAvailable: boolean | null = null;
   @Input() isCheckInSubmitting: boolean | null = null;
+  @Input() bookingStatus = '';
 
   isPlatformNative = Capacitor.isNativePlatform();
+
+  get isBookingConfirmed(): boolean {
+    return this.bookingStatus?.trim().toUpperCase() === 'CONFIRMED';
+  }
 
   get hasBookingMeta(): boolean {
     return Boolean(this.metaPrimary || this.metaSecondary);
