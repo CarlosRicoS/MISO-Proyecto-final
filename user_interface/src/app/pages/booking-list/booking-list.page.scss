@@ -228,6 +228,10 @@ padding: var(--th-space-4);
 
 :host-context(ion-app.app-has-navbar) {
   @media (max-width: 767px) {
+    .booking-list {
+      padding-bottom: calc(100px + var(--ion-safe-area-bottom, 0px));
+    }
+
     .booking-list-content {
       --padding-top: var(--booking-list-navbar-offset);
     }

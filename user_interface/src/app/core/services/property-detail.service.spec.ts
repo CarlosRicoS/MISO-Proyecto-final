@@ -1,7 +1,11 @@
 import { TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import { Capacitor } from '@capacitor/core';
 import { PropertyDetailService } from './property-detail.service';
 import { ConfigService } from './config.service';
+import { AppCacheService } from './app-cache.service';
+import { ConnectivityService } from './connectivity.service';
+import { ImageCacheService } from './image-cache.service';
 
 class ConfigServiceStub {
   private _apiBaseUrl = 'https://api.example.com';
@@ -25,19 +29,30 @@ describe('PropertyDetailService', () => {
   let service: PropertyDetailService;
   let httpMock: HttpTestingController;
   let configService: ConfigService;
+  let cacheService: jasmine.SpyObj<AppCacheService>;
+  let imageCacheService: jasmine.SpyObj<ImageCacheService>;
+  let nativeSpy: jasmine.Spy;
 
   beforeEach(() => {
+    cacheService = jasmine.createSpyObj<AppCacheService>('AppCacheService', ['read', 'write', 'remove']);
+    imageCacheService = jasmine.createSpyObj<ImageCacheService>('ImageCacheService', ['cacheImages']);
+
     TestBed.configureTestingModule({
       imports: [HttpClientTestingModule],
       providers: [
         PropertyDetailService,
         { provide: ConfigService, useClass: ConfigServiceStub },
+        { provide: AppCacheService, useValue: cacheService },
+        { provide: ConnectivityService, useValue: { isOffline: false } },
+        { provide: ImageCacheService, useValue: imageCacheService },
       ],
     });
 
     service = TestBed.inject(PropertyDetailService);
     httpMock = TestBed.inject(HttpTestingController);
     configService = TestBed.inject(ConfigService);
+    nativeSpy = spyOn(Capacitor, 'isNativePlatform').and.returnValue(false);
+    cacheService.read.and.returnValue(null);
   });
 
   afterEach(() => {
@@ -117,5 +132,74 @@ describe('PropertyDetailService', () => {
     const req = httpMock.expectOne('https://api.example.com/poc-properties/api/property/prop-6');
     expect(req.request.headers.has('Authorization')).toBe(false);
     req.flush({});
+  });
+
+  it('uses the access token parameter before the configured token', () => {
+    service.getPropertyDetail('prop-7', 'override-token').subscribe();
+
+    const req = httpMock.expectOne('https://api.example.com/poc-properties/api/property/prop-7');
+    expect(req.request.headers.get('Authorization')).toBe('Bearer override-token');
+    req.flush({});
+  });
+
+  it('falls back to cached detail when the network request fails on native platform', () => {
+    nativeSpy.and.returnValue(true);
+    const cachedDetail = {
+      id: 'prop-8',
+      name: 'Cached Property',
+      city: 'Cartagena',
+      country: 'CO',
+      maxCapacity: 2,
+      description: 'Cached description',
+      photos: [],
+      checkInTime: '',
+      checkOutTime: '',
+      adminGroupId: '',
+      amenities: [],
+      reviews: [],
+    };
+    cacheService.read.and.returnValue(cachedDetail);
+
+    service.getPropertyDetail('prop-8').subscribe((property) => {
+      expect(property).toEqual(cachedDetail);
+    });
+
+    const req = httpMock.expectOne('https://api.example.com/poc-properties/api/property/prop-8');
+    req.flush('boom', { status: 500, statusText: 'Server Error' });
+  });
+
+  it('rethrows network errors when no cached detail is available', (done) => {
+    nativeSpy.and.returnValue(true);
+    cacheService.read.and.returnValue(null);
+
+    service.getPropertyDetail('prop-9').subscribe({
+      next: () => done.fail('Expected error, got success'),
+      error: (error) => {
+        expect(error.status).toBe(500);
+        done();
+      },
+    });
+
+    const req = httpMock.expectOne('https://api.example.com/poc-properties/api/property/prop-9');
+    req.flush('boom', { status: 500, statusText: 'Server Error' });
+  });
+
+  it('caches property detail and prefetches photos on native platform', () => {
+    nativeSpy.and.returnValue(true);
+
+    service.getPropertyDetail('prop-10').subscribe();
+
+    const req = httpMock.expectOne('https://api.example.com/poc-properties/api/property/prop-10');
+    req.flush({
+      id: 'prop-10',
+      name: 'Native Hotel',
+      photos: ['photo-1.jpg', 'photo-2.jpg'],
+    });
+
+    expect(imageCacheService.cacheImages).toHaveBeenCalledWith(['photo-1.jpg', 'photo-2.jpg']);
+    expect(cacheService.write).toHaveBeenCalledWith(
+      'th_property_detail:prop-10',
+      jasmine.objectContaining({ id: 'prop-10', name: 'Native Hotel' }),
+    );
   });
 });

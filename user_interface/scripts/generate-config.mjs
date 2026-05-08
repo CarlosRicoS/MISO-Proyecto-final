@@ -10,7 +10,7 @@ const nextConfig = {
   apiBaseUrl:
     process.env.API_BASE_URL ||
     currentConfig.apiBaseUrl ||
-    'https://n548xflwbl.execute-api.us-east-1.amazonaws.com',
+    'https://s7vkqksp2k.execute-api.us-east-1.amazonaws.com',
   propertyApiPath: process.env.PROPERTY_API_PATH || currentConfig.propertyApiPath || '/poc-properties/api/property',
   propertyApiToken: process.env.PROPERTY_API_TOKEN || currentConfig.propertyApiToken || '',
   bookingApiPath:

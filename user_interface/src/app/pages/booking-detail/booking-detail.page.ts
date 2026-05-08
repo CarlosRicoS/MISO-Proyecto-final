@@ -1,4 +1,4 @@
-import { HttpErrorResponse } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { Component, HostListener, OnDestroy, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -10,6 +10,7 @@ import { Hotel } from '../../core/models/hotel.model';
 import { PropertyDetail } from '../../core/models/property-detail.model';
 import { AuthSessionService } from '../../core/services/auth-session.service';
 import { BookingService, CancellationPolicyResponse, Reservation } from '../../core/services/booking.service';
+import { ConfigService } from '../../core/services/config.service';
 import { PropertyDetailService } from '../../core/services/property-detail.service';
 import { PricingService } from '../../core/services/pricing.service';
 import { ImageCacheService } from '../../core/services/image-cache.service';
@@ -25,6 +26,7 @@ import { ThPaymentSummaryComponent } from '../../shared/components/th-payment-su
 import { ThPopupComponent, ThPopupVariant } from '../../shared/components/th-popup/th-popup.component';
 import { ThPropertyDescriptionSummaryComponent } from '../../shared/components/th-property-description-summary/th-property-description-summary.component';
 import { ThPropertyReviewSummaryComponent } from '../../shared/components/th-property-review-summary/th-property-review-summary.component';
+import { CapacitorBarcodeScanner, CapacitorBarcodeScannerTypeHint } from '@capacitor/barcode-scanner';
 
 @Component({
   selector: 'app-booking-detail',
@@ -73,6 +75,10 @@ export class BookingDetailPage implements OnInit, OnDestroy {
   isLoading = false;
   isCancelling = false;
   errorMessage = '';
+
+  isCheckInAvailable: boolean | null = null;
+  isCheckInAvailabilityLoading = false;
+  isCheckInSubmitting = false;
 
   isAlertOpen = false;
   alertTitle = '';
@@ -125,10 +131,12 @@ export class BookingDetailPage implements OnInit, OnDestroy {
     private propertyDetailService: PropertyDetailService,
     private bookingService: BookingService,
     private authSessionService: AuthSessionService,
+    private configService: ConfigService,
     private pricingService: PricingService,
     private route: ActivatedRoute,
     private router: Router,
     private imageCache: ImageCacheService,
+    private httpClient: HttpClient,
   ) {
     this.priceTrigger$.pipe(
       takeUntil(this.destroy$),
@@ -197,6 +205,33 @@ export class BookingDetailPage implements OnInit, OnDestroy {
     void this.refreshPageData();
   }
 
+  private async fetchCheckInAvailability(propertyId: string): Promise<void> {
+    if (!propertyId) {
+      return;
+    }
+
+    this.isCheckInAvailabilityLoading = true;
+    this.isCheckInAvailable = null;
+
+    try {
+      const params = new HttpParams().set('property_id', propertyId);
+      const url = this.getCheckInApiUrl('/checkin/api/check-in/available');
+      const response = await firstValueFrom(
+        this.httpClient.get<{ property_id?: string; is_available?: boolean }>(url, {
+          params,
+          headers: {
+            Authorization: `Bearer ${this.authSessionService.idToken}`,
+          },
+        }),
+      );
+      this.isCheckInAvailable = Boolean(response.is_available);
+    } catch (error) {
+      this.isCheckInAvailable = null;
+    } finally {
+      this.isCheckInAvailabilityLoading = false;
+    }
+  }
+
   private async refreshPageData(): Promise<void> {
     if (this.isRefreshingPageData) {
       return;
@@ -230,6 +265,23 @@ export class BookingDetailPage implements OnInit, OnDestroy {
     this.errorMessage = '';
 
     try {
+      // Determine property ID and fetch check-in availability
+      let propertyId: string | undefined;
+      
+      if (stateReservation) {
+        propertyId = stateReservation.property_id;
+      } else if (bookingId) {
+        const reservation = await firstValueFrom(
+          this.bookingService.getReservation(bookingId, this.authSessionService.idToken),
+        );
+        propertyId = reservation.property_id;
+      }
+
+      // Fetch check-in availability before loading page content
+      if (propertyId) {
+        await this.fetchCheckInAvailability(propertyId);
+      }
+
       if (stateReservation && statePropertyDetail) {
         this.applyBookingDetail(stateReservation, statePropertyDetail, stateHotel);
         return;
@@ -963,6 +1015,13 @@ export class BookingDetailPage implements OnInit, OnDestroy {
     return `${year}-${month}-${day}`;
   }
 
+  private getCheckInApiUrl(path: string): string {
+    const baseUrl = this.configService.apiBaseUrl?.replace(/\/$/, '');
+    const normalizedPath = path.replace(/^\//, '');
+
+    return baseUrl ? `${baseUrl}/${normalizedPath}` : `/${normalizedPath}`;
+  }
+
   private hasReservationChanges(newPeriodStart: string, newPeriodEnd: string, newGuests: number): boolean {
     if (!this.currentReservation) {
       return false;
@@ -1097,21 +1156,6 @@ export class BookingDetailPage implements OnInit, OnDestroy {
     return parsed.getTime() < Date.now();
   }
 
-  private formatCancellationDeadline(deadline: string): string {
-    const parsed = new Date(deadline);
-    if (Number.isNaN(parsed.getTime())) {
-      return '';
-    }
-
-    return new Intl.DateTimeFormat('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
-    }).format(parsed);
-  }
-
   private parsePolicyAmount(value: string): number {
     const parsed = Number(value);
     return Number.isFinite(parsed) ? parsed : 0;
@@ -1137,5 +1181,82 @@ export class BookingDetailPage implements OnInit, OnDestroy {
     this.alertMessage = message;
     this.alertVariant = variant;
     this.isAlertOpen = true;
+  }
+
+  async openCameraForCheckin(): Promise<void> {
+    try {
+      // Use @capacitor/barcode-scanner to read QR codes for check-in
+      const result = await CapacitorBarcodeScanner.scanBarcode({
+        hint: CapacitorBarcodeScannerTypeHint.QR_CODE,
+      });
+
+      if (!result || !result.ScanResult) {
+        this.showAlert(this.translate.instant('BOOKING_DETAIL.CHECKIN_TITLE'), this.translate.instant('BOOKING_DETAIL.CHECKIN_NO_CODE_BODY'), 'warning');
+        return;
+      }
+
+      const qrData = result.ScanResult;
+
+      const bookingId = this.currentReservation?.id || this.getBookingId(undefined);
+      if (!bookingId) {
+        this.showAlert(this.translate.instant('BOOKING_DETAIL.CHECKIN_TITLE'), this.translate.instant('BOOKING_DETAIL.CHECKIN_NO_BOOKING_BODY'), 'error');
+        return;
+      }
+
+      if (this.currentReservation?.status?.trim().toUpperCase() !== 'CONFIRMED') {
+        this.showAlert(this.translate.instant('BOOKING_DETAIL.CHECKIN_TITLE'), 'Booking must be CONFIRMED to check in', 'warning');
+        return;
+      }
+
+      try {
+        this.isCheckInSubmitting = true;
+        const url = this.getCheckInApiUrl('checkin/api/check-in/');
+        const response = await firstValueFrom(
+          this.httpClient.post<{ status?: string }>(
+            url,
+            { booking_id: bookingId, qr_token: qrData },
+            {
+              headers: {
+                Authorization: `Bearer ${this.authSessionService.idToken}`,
+              },
+            },
+          ),
+        );
+
+        if (response && String(response.status).toUpperCase() === 'COMPLETED') {
+          // Update booking status to COMPLETED on successful check-in
+          if (this.currentReservation) {
+            this.currentReservation.status = 'COMPLETED';
+          }
+          this.bookingStatus = 'Completed';
+          this.bookingStatusVariant = this.getBookingStatusVariant('COMPLETED');
+          this.showAlert(
+            this.translate.instant('BOOKING_DETAIL.CHECKIN_SUCCESS_TITLE'),
+            this.translate.instant('BOOKING_DETAIL.CHECKIN_SUCCESS_BODY'),
+            'success',
+          );
+        } else {
+          this.showAlert(
+            this.translate.instant('BOOKING_DETAIL.CHECKIN_TITLE'),
+            this.translate.instant('BOOKING_DETAIL.CHECKIN_FAILED_BODY'),
+            'error',
+          );
+        }
+      } catch (httpErr) {
+        const httpError = httpErr as any;
+        let message = this.translate.instant('BOOKING_DETAIL.CHECKIN_ERROR_BODY');
+        if (httpError?.error?.message) {
+          message = httpError.error.message;
+        } else if (httpError?.message) {
+          message = httpError.message;
+        }
+
+        this.showAlert(this.translate.instant('BOOKING_DETAIL.CHECKIN_ERROR_TITLE'), message, 'error');
+      } finally {
+        this.isCheckInSubmitting = false;
+      }
+    } catch (err) {
+      this.showAlert(this.translate.instant('BOOKING_DETAIL.CHECKIN_SCANNER_ERROR_TITLE'), this.translate.instant('BOOKING_DETAIL.CHECKIN_SCANNER_ERROR_BODY'), 'error');
+    }
   }
 }
