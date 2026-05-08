@@ -56,6 +56,55 @@ describe('ImageCacheService', () => {
       expect(service.resolveImageUrl('')).toBe('');
     });
 
+    it('should return cached blob url from memory cache when offline', () => {
+      connectivityService.isOnline = false;
+      connectivityService.isOffline = true;
+      isNativeSpy.and.returnValue(true);
+
+      const imageUrl = 'https://example.com/image-memory.jpg';
+      (service as any).blobUrlCache.set(imageUrl, 'blob:memory-url');
+
+      const result = service.resolveImageUrl(imageUrl);
+
+      expect(result).toBe('blob:memory-url');
+      expect(cacheService.read).not.toHaveBeenCalled();
+    });
+
+    it('should return cached blob url from storage when offline and cache is valid', () => {
+      connectivityService.isOnline = false;
+      connectivityService.isOffline = true;
+      isNativeSpy.and.returnValue(true);
+
+      const imageUrl = 'https://example.com/image-storage.jpg';
+      const cachedImage = {
+        url: imageUrl,
+        base64: btoa('cached-image'),
+        mimeType: 'image/jpeg',
+        timestamp: Date.now(),
+      };
+
+      cacheService.read.and.returnValue(cachedImage);
+
+      const result = service.resolveImageUrl(imageUrl);
+
+      expect(result).toContain('blob:');
+      expect(cacheService.read).toHaveBeenCalled();
+      expect((service as any).blobUrlCache.has(imageUrl)).toBeTrue();
+    });
+
+    it('should return original url when offline and cache is missing', () => {
+      connectivityService.isOnline = false;
+      connectivityService.isOffline = true;
+      isNativeSpy.and.returnValue(true);
+      cacheService.read.and.returnValue(null);
+
+      const imageUrl = 'https://example.com/image-miss.jpg';
+
+      const result = service.resolveImageUrl(imageUrl);
+
+      expect(result).toBe(imageUrl);
+    });
+
     it('should return original url when online and not cached', async () => {
       connectivityService.isOnline = true;
       connectivityService.isOffline = false;
@@ -88,6 +137,21 @@ describe('ImageCacheService', () => {
       });
 
       expect(cacheService.write).toHaveBeenCalled();
+    });
+
+    it('should skip background caching when running on web', () => {
+      connectivityService.isOnline = true;
+      connectivityService.isOffline = false;
+      isNativeSpy.and.returnValue(false);
+      cacheService.read.and.returnValue(null);
+
+      const cacheSpy = spyOn(service as any, 'cacheImageInBackground').and.resolveTo();
+      const url = 'https://example.com/web-image.jpg';
+
+      const result = service.resolveImageUrl(url);
+
+      expect(result).toBe(url);
+      expect(cacheSpy).not.toHaveBeenCalled();
     });
 
     it('should return cached blob url when offline and cached', () => {
@@ -134,6 +198,15 @@ describe('ImageCacheService', () => {
   });
 
   describe('cacheImages', () => {
+    it('should skip caching on non-native platforms', async () => {
+      isNativeSpy.and.returnValue(false);
+      const backgroundSpy = spyOn(service as any, 'cacheImageInBackground').and.resolveTo();
+
+      await service.cacheImages(['https://example.com/image.jpg']);
+
+      expect(backgroundSpy).not.toHaveBeenCalled();
+    });
+
     it('should cache multiple images', async () => {
       const imageUrls = [
         'https://example.com/image1.jpg',
@@ -215,6 +288,30 @@ describe('ImageCacheService', () => {
   });
 
   describe('internal helpers and edge branches', () => {
+    it('should use valid cache entries and evict invalid ones', () => {
+      const imageUrl = 'https://example.com/valid.jpg';
+      const validCache = {
+        url: imageUrl,
+        base64: btoa('valid'),
+        mimeType: 'image/jpeg',
+        timestamp: Date.now(),
+      };
+      const expiredCache = {
+        url: imageUrl,
+        base64: btoa('expired'),
+        mimeType: 'image/jpeg',
+        timestamp: Date.now() - 31 * 24 * 60 * 60 * 1000,
+      };
+
+      expect((service as any).isCacheValid(validCache)).toBeTrue();
+      expect((service as any).isCacheValid(expiredCache)).toBeFalse();
+
+      const stableKey = (service as any).getCacheKey('https://example.com/a.jpg');
+      expect(stableKey).toBe((service as any).getCacheKey('https://example.com/a.jpg'));
+      expect(stableKey.startsWith('th_image_cache:')).toBeTrue();
+      expect((service as any).simpleHash('abc')).toEqual((service as any).simpleHash('abc'));
+    });
+
     it('fetchImageBlob delegates to native helper when running on native', async () => {
       isNativeSpy.and.returnValue(true);
       const delegate = spyOn(service as any, 'fetchImageBlobWithCapacitorHttp').and.callFake(async () => new Blob(['x'], { type: 'image/png' }));
@@ -393,6 +490,18 @@ describe('ImageCacheService', () => {
       expect(writeSpy).not.toHaveBeenCalled();
     });
 
+    it('cacheImageInBackground stores optimized content and removes in-flight request on success', async () => {
+      isNativeSpy.and.returnValue(true);
+      const blob = new Blob(['binary'], { type: 'image/png' });
+      spyOn(service as any, 'fetchImageBlob').and.resolveTo(blob);
+      spyOn(service as any, 'optimizeBlobForStorage').and.resolveTo(blob);
+
+      await (service as any).cacheImageInBackground('https://example.com/success.jpg');
+
+      expect(cacheService.write).toHaveBeenCalled();
+      expect((service as any).inFlightCacheRequests.has('https://example.com/success.jpg')).toBeFalse();
+    });
+
     it('cacheImageInBackground logs and clears in-flight requests on fetch error', async () => {
       isNativeSpy.and.returnValue(true);
       spyOn(service as any, 'fetchImageBlob').and.rejectWith(new Error('boom'));
@@ -400,6 +509,100 @@ describe('ImageCacheService', () => {
       await (service as any).cacheImageInBackground('https://example.com/error.jpg');
 
       expect((service as any).inFlightCacheRequests.has('https://example.com/error.jpg')).toBeFalse();
+    });
+
+    it('optimizeBlobForStorage returns original blob when compression does not help', async () => {
+      const blob = new Blob(['text'], { type: 'text/plain' });
+      const optimized = await (service as any).optimizeBlobForStorage(blob);
+
+      expect(optimized).toBe(blob);
+    });
+
+    it('optimizeBlobForStorage returns original blob when image bitmap creation fails', async () => {
+      const blob = new Blob(['binary'], { type: 'image/png' });
+      spyOn(service as any, 'blobToImageBitmap').and.resolveTo(null);
+
+      const optimized = await (service as any).optimizeBlobForStorage(blob);
+
+      expect(optimized).toBe(blob);
+    });
+
+    it('optimizeBlobForStorage returns original blob when canvas context is unavailable', async () => {
+      const blob = new Blob(['binary'], { type: 'image/png' });
+      const closeSpy = jasmine.createSpy('close');
+      spyOn(service as any, 'blobToImageBitmap').and.resolveTo({ width: 800, height: 600, close: closeSpy } as any);
+      const canvas = document.createElement('canvas');
+      spyOn(canvas, 'getContext').and.returnValue(null);
+      spyOn(document, 'createElement').and.returnValue(canvas as HTMLCanvasElement);
+
+      const optimized = await (service as any).optimizeBlobForStorage(blob);
+
+      expect(optimized).toBe(blob);
+    });
+
+    it('optimizeBlobForStorage returns optimized blob when the resized image is smaller', async () => {
+      const blob = new Blob([new Uint8Array(5000)], { type: 'image/png' });
+      const closeSpy = jasmine.createSpy('close');
+      spyOn(service as any, 'blobToImageBitmap').and.resolveTo({ width: 2000, height: 1000, close: closeSpy } as any);
+      const canvas = document.createElement('canvas');
+      const ctx = {
+        drawImage: jasmine.createSpy('drawImage'),
+      };
+      const optimizedBlob = new Blob([new Uint8Array(1000)], { type: 'image/jpeg' });
+      spyOn(canvas, 'getContext').and.returnValue(ctx as any);
+      spyOn(canvas, 'toBlob').and.callFake((callback: BlobCallback | null) => {
+        callback?.(optimizedBlob);
+      });
+      spyOn(document, 'createElement').and.returnValue(canvas as HTMLCanvasElement);
+
+      const optimized = await (service as any).optimizeBlobForStorage(blob);
+
+      expect(ctx.drawImage).toHaveBeenCalled();
+      expect(closeSpy).toHaveBeenCalled();
+      expect(optimized).toBe(optimizedBlob);
+    });
+
+    it('evictOldestCacheEntries removes the oldest cache keys first', () => {
+      const oldestKey = 'th_image_cache:oldest';
+      const middleKey = 'th_image_cache:middle';
+      const newestKey = 'th_image_cache:newest';
+      const unrelatedKey = 'other_key';
+
+      localStorage.setItem(oldestKey, '1');
+      localStorage.setItem(middleKey, '1');
+      localStorage.setItem(newestKey, '1');
+      localStorage.setItem(unrelatedKey, '1');
+
+      cacheService.read.and.callFake((key: string) => {
+        if (key === oldestKey) {
+          return { timestamp: 1 } as any;
+        }
+        if (key === middleKey) {
+          return { timestamp: 2 } as any;
+        }
+        if (key === newestKey) {
+          return { timestamp: 3 } as any;
+        }
+        return null;
+      });
+
+      (service as any).evictOldestCacheEntries(2);
+
+      expect(cacheService.remove).toHaveBeenCalledWith(oldestKey);
+      expect(cacheService.remove).toHaveBeenCalledWith(middleKey);
+      expect(localStorage.getItem(unrelatedKey)).toBe('1');
+
+      localStorage.removeItem(oldestKey);
+      localStorage.removeItem(middleKey);
+      localStorage.removeItem(newestKey);
+      localStorage.removeItem(unrelatedKey);
+    });
+
+    it('isQuotaExceededError detects quota messages and rejects other inputs', () => {
+      expect((service as any).isQuotaExceededError({ name: 'QuotaExceededError' })).toBeTrue();
+      expect((service as any).isQuotaExceededError({ message: 'exceeded the quota' })).toBeTrue();
+      expect((service as any).isQuotaExceededError({ message: 'different error' })).toBeFalse();
+      expect((service as any).isQuotaExceededError('boom')).toBeFalse();
     });
   });
 });

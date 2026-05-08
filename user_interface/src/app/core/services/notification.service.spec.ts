@@ -3,7 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { Capacitor } from '@capacitor/core';
 import { FirebaseMessaging } from '@capacitor-firebase/messaging';
-import { NotificationItem, NotificationService } from './notification.service';
+import { NotificationItem, NotificationService, type NotificationType } from './notification.service';
 
 class RouterMock {
   navigate = jasmine.createSpy('navigate').and.resolveTo(true);
@@ -483,6 +483,71 @@ describe('NotificationService', () => {
 
       (service as any).handleToken('');
       expect(service.currentToken).toBe('token-123');
+    });
+
+    it('reads notification subtitle from subtitle field and returns empty fallback when none is present', () => {
+      expect((service as any).readNotificationSubtitle({ subtitle: 'Manual subtitle' })).toBe('Manual subtitle');
+      expect((service as any).readNotificationSubtitle({})).toBe('');
+    });
+
+    it('reads BOOKING_CREATED when notification type is invalid', () => {
+      expect((service as any).readNotificationType({ type: 'unknown-type' })).toBe('BOOKING_CREATED');
+    });
+
+    it('uses nested payload booking id when direct values are missing', () => {
+      expect((service as any).extractBookingId({ data: { reservationId: 321 } })).toBe('321');
+    });
+
+    it('deduplicates notifications by id and preserves the latest one', () => {
+      const baseNotification = {
+        id: 'notif-1',
+        type: 'BOOKING_CONFIRMED' as const,
+        title: 'First',
+        subtitle: 'Sub',
+        body: 'First message',
+        receivedAt: new Date().toISOString(),
+        iconName: 'checkmark-circle-outline',
+        iconColor: '#16A34A',
+        data: {},
+      };
+
+      (service as any).storeNotificationEvent(baseNotification);
+      (service as any).storeNotificationEvent({ ...baseNotification, body: 'Second message' });
+
+      const notifications = (service as any).notificationsSubject.value as NotificationItem[];
+      expect(notifications.length).toBe(1);
+      expect(notifications[0].message).toBe('Second message');
+    });
+
+    it('reads notification id from numeric candidates', () => {
+      expect((service as any).notificationId({ id: 7 }, {})).toBe('7');
+      expect((service as any).notificationId({ data: { bookingId: 9 } }, { bookingId: 9 })).toBe('9');
+    });
+
+    it('maps every notification type to its default title and icon', () => {
+      const expectations: Array<{
+        type: NotificationType;
+        title: string;
+        iconName: string;
+        iconColor: string;
+      }> = [
+        { type: 'BOOKING_CREATED', title: 'Booking created', iconName: 'receipt-outline', iconColor: '#2563EB' },
+        { type: 'BOOKING_CONFIRMED', title: 'Booking confirmed', iconName: 'checkmark-circle-outline', iconColor: '#16A34A' },
+        { type: 'BOOKING_REJECTED', title: 'Booking rejected', iconName: 'close-circle-outline', iconColor: '#DC2626' },
+        { type: 'BOOKING_CANCELLED', title: 'Booking cancelled', iconName: 'ban-outline', iconColor: '#F59E0B' },
+        { type: 'BOOKING_DATES_CHANGED', title: 'Booking dates changed', iconName: 'calendar-outline', iconColor: '#F97316' },
+        { type: 'PAYMENT_CONFIRMED', title: 'Payment confirmed', iconName: 'card-outline', iconColor: '#14B8A6' },
+      ];
+
+      expectations.forEach(({ type, title, iconName, iconColor }) => {
+        expect((service as any).defaultTitleForType(type)).toBe(title);
+        expect((service as any).iconForType(type)).toEqual({ iconName, iconColor });
+      });
+    });
+
+    it('treats direct payload string ids as trimmed values', () => {
+      expect((service as any).extractBookingId({ bookingId: '  abc  ' })).toBe('abc');
+      expect((service as any).extractBookingId({ id: '  123  ' })).toBe('123');
     });
 
     it('reads notification payload correctly and falls back on invalid JSON or non-object values', () => {
