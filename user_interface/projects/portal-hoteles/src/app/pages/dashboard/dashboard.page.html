@@ -39,6 +39,20 @@
       [title]="'DASHBOARD.RESERVATIONS_TITLE' | translate"
       [subtitle]="'DASHBOARD.RESERVATIONS_SUBTITLE' | translate"
     >
+      <div slot="header-actions" class="portal-hoteles-dashboard-toolbar-header" role="group" [attr.aria-label]="'DASHBOARD.EXPORT_ACTIONS_LABEL' | translate">
+        <div class="portal-hoteles-dashboard-toolbar-header__export">
+          <ion-button
+            fill="clear"
+            class="portal-hoteles-dashboard-toolbar-header__export-button portal-hoteles-dashboard-toolbar-header__export-button--primary"
+            [attr.aria-label]="'DASHBOARD.EXPORT_EXCEL_ARIA' | translate"
+            [disabled]="isLoadingReservations || !reservations.length"
+            (click)="onDownloadCsv()"
+          >
+            {{ 'REPORTS.EXPORT_EXCEL' | translate }}
+          </ion-button>
+        </div>
+      </div>
+
       <table class="portal-hoteles-dashboard-table" *ngIf="!isLoadingReservations && hasReservations; else reservationsFallback">
         <thead>
           <tr class="portal-hoteles-dashboard-table__header">

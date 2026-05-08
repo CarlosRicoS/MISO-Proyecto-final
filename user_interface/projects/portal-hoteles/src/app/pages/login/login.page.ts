@@ -16,6 +16,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { firstValueFrom } from 'rxjs';
 import { AuthService } from '@travelhub/core/services/auth.service';
 import { AuthSessionService } from '@travelhub/core/services/auth-session.service';
+import { CurrencyConversionService } from '@travelhub/core/services/currency-conversion.service';
 import { ThButtonComponent } from '@travelhub/shared/components/th-button/th-button.component';
 import { ThPopupComponent } from '@travelhub/shared/components/th-popup/th-popup.component';
 import {
@@ -48,6 +49,7 @@ import {
 export class PortalHotelesLoginPage {
   private readonly authService = inject(AuthService);
   private readonly authSessionService = inject(AuthSessionService);
+  private readonly currencyConversionService = inject(CurrencyConversionService);
   private readonly router = inject(Router);
   private readonly translate = inject(TranslateService);
 
@@ -138,6 +140,7 @@ export class PortalHotelesLoginPage {
       );
 
       this.authSessionService.setLoginResponse(response);
+      void this.currencyConversionService.ensureRatesLoaded();
 
       await this.router.navigate(['/dashboard']);
     } catch (error) {

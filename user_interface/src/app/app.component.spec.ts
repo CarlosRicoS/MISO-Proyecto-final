@@ -5,11 +5,16 @@ import { of } from 'rxjs';
 
 import { AppComponent } from './app.component';
 import { AuthSessionService } from './core/services/auth-session.service';
+import { CurrencyConversionService } from './core/services/currency-conversion.service';
 import { ConnectivityService } from './core/services/connectivity.service';
 
 class AuthSessionServiceMock {
   isLoggedIn = false;
   state$ = of({ loggedIn: false, loginResponse: null });
+}
+
+class CurrencyConversionServiceMock {
+  ensureRatesLoaded = jasmine.createSpy('ensureRatesLoaded').and.resolveTo();
 }
 
 class ConnectivityServiceMock {
@@ -22,6 +27,7 @@ describe('AppComponent', () => {
   let routerMock: any;
   let activatedRouteMock: any;
   let authSessionServiceMock: AuthSessionServiceMock;
+  let currencyConversionServiceMock: CurrencyConversionServiceMock;
   let connectivityServiceMock: ConnectivityServiceMock;
 
   beforeEach(async () => {
@@ -41,6 +47,7 @@ describe('AppComponent', () => {
     } as Partial<Router>;
 
     authSessionServiceMock = new AuthSessionServiceMock();
+    currencyConversionServiceMock = new CurrencyConversionServiceMock();
     connectivityServiceMock = new ConnectivityServiceMock();
 
     await TestBed.configureTestingModule({
@@ -50,6 +57,7 @@ describe('AppComponent', () => {
         { provide: ActivatedRoute, useValue: activatedRouteMock },
         { provide: Router, useValue: routerMock },
         { provide: AuthSessionService, useValue: authSessionServiceMock },
+        { provide: CurrencyConversionService, useValue: currencyConversionServiceMock },
         { provide: ConnectivityService, useValue: connectivityServiceMock },
       ],
     }).compileComponents();
@@ -127,6 +135,7 @@ describe('AppComponent', () => {
     fixture.detectChanges();
 
     expect(component.navbarMode).toBe('full');
+    expect(currencyConversionServiceMock.ensureRatesLoaded).toHaveBeenCalled();
   });
 
   it('should treat login pages as hidden navbar routes', () => {

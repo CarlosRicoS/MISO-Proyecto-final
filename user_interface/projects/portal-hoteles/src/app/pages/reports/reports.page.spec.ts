@@ -1,7 +1,10 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { of } from 'rxjs';
 
 import { PortalHotelesReportsPage } from './reports.page';
+import { AuthSessionService } from '@travelhub/core/services/auth-session.service';
+import { IncomingReportResponse, ReportsService } from '@travelhub/core/services/reports.service';
 import { translateTestingModule } from '../../testing/translate-testing.module';
 
 describe('PortalHotelesReportsPage', () => {
@@ -83,6 +86,141 @@ describe('PortalHotelesReportsPage', () => {
     expect(element.textContent).toContain('Monthly Revenue');
     expect(element.textContent).toContain('PDF');
     expect(element.textContent).toContain('Excel');
+  });
+
+  it('generates a pdf report from the csv export response', async () => {
+    // Arrange
+    const authSession = TestBed.inject(AuthSessionService);
+    const reportsService = TestBed.inject(ReportsService);
+    spyOnProperty(authSession, 'idToken', 'get').and.returnValue('test-token');
+    spyOn(reportsService, 'downloadCsv').and.returnValue(
+      of(new Blob([
+        'payment_date,booking_id,payment_reference,gross_value,status,net_income\n',
+        '2026-05-01,booking-1,PAY-1,1000,CONFIRMED,900\n',
+        '2026-05-02,booking-2,PAY-2,1200,PAID,1100\n',
+      ], { type: 'text/csv;charset=utf-8' })),
+    );
+    const saveSpy = jasmine.createSpy('save');
+    spyOn(component as never, 'buildRevenuePdf').and.returnValue({ save: saveSpy } as never);
+
+    // Act
+    await (component as never as { onDownloadPdf: () => Promise<void> }).onDownloadPdf();
+
+    // Assert
+    expect(reportsService.downloadCsv).toHaveBeenCalledWith('test-token');
+    expect(saveSpy).toHaveBeenCalled();
+    expect(saveSpy.calls.mostRecent().args[0]).toMatch(/revenue_report_\d{4}-\d{2}-\d{2}\.pdf/);
+  });
+
+  it('parses revenue strings and fits the chart scale to the maximum value', async () => {
+    // Arrange
+    const authSession = TestBed.inject(AuthSessionService);
+    const reportsService = TestBed.inject(ReportsService);
+    spyOnProperty(authSession, 'idToken', 'get').and.returnValue('test-token');
+    spyOn(reportsService, 'getIncomingReport').and.returnValue(
+      of({ records: [], total_records: 0, total_gross: 0, total_net: 0 }),
+    );
+    spyOn(reportsService, 'getRevenueOverview').and.returnValue(
+      of({
+        data: [
+          { month: 12, year: 2025, label: 'Dec', total_revenue: 7000 },
+          { month: 1, year: 2026, label: 'Jan', total_revenue: 4310 },
+          { month: 2, year: 2026, label: 'Feb', total_revenue: 5940 },
+          { month: 3, year: 2026, label: 'Mar', total_revenue: 6790 },
+          { month: 4, year: 2026, label: 'Apr', total_revenue: 6350 },
+        ],
+      }),
+    );
+    spyOn(reportsService, 'getDashboardMetrics').and.returnValue(
+      of({
+        total_reservations: 0,
+        monthly_revenue: 0,
+        avg_daily_revenue: 0,
+        revenue_trend_pct: 0,
+        today_checkins: 0,
+        today_checkouts: 0,
+      }),
+    );
+
+    // Act
+    await (component as never as { loadReportData: () => Promise<void> }).loadReportData();
+
+    // Assert
+    expect(component.chartValues).toEqual([7000, 4310, 5940, 6790, 6350]);
+    expect(component.chartTicks).toEqual([7000, 5250, 3500, 1750, 0]);
+  });
+
+  it('normalizes gross and net income values returned as strings from the api', async () => {
+    // Arrange
+    const authSession = TestBed.inject(AuthSessionService);
+    const reportsService = TestBed.inject(ReportsService);
+    spyOnProperty(authSession, 'idToken', 'get').and.returnValue('test-token');
+    const incomingReportResponse: IncomingReportResponse = {
+      records: [
+        {
+          id: '1',
+          booking_id: 'booking-1',
+          payment_reference: 'PAY-1',
+          payment_date: '2026-05-01',
+          gross_value: '1250.50' as never,
+          taxes: '87.54' as never,
+          commission: '62.53' as never,
+          net_income: '1100.43' as never,
+          status: 'CONFIRMED',
+        } as never,
+      ],
+      total_records: 1,
+      total_gross: '1250.50' as never,
+      total_net: '1100.43' as never,
+    };
+    spyOn(reportsService, 'getIncomingReport').and.returnValue(
+      of(incomingReportResponse),
+    );
+    spyOn(reportsService, 'getRevenueOverview').and.returnValue(
+      of({ data: [] }),
+    );
+    spyOn(reportsService, 'getDashboardMetrics').and.returnValue(
+      of({
+        total_reservations: 0,
+        monthly_revenue: 0,
+        avg_daily_revenue: 0,
+        revenue_trend_pct: 0,
+        today_checkins: 0,
+        today_checkouts: 0,
+      }),
+    );
+
+    // Act
+    await (component as never as { loadReportData: () => Promise<void> }).loadReportData();
+
+    // Assert
+    expect(component.reportRows[0].grossValue).toBe(1250.5);
+    expect(component.reportRows[0].netIncome).toBe(1100.43);
+    expect(component.formatAmount(component.reportRows[0].grossValue)).toContain('1');
+  });
+
+  it('re-renders the grid values when the selected currency changes', () => {
+    // Arrange
+    component.reportRows = [
+      {
+        dateLabel: 'May 1, 2026',
+        bookingId: 'booking-1',
+        paymentRef: 'PAY-1',
+        grossValue: 1250.5,
+        netIncome: 1100.43,
+        status: 'CONFIRMED',
+      },
+    ] as never;
+    component.selectedCurrency = 'USD';
+
+    // Act
+    fixture.detectChanges();
+    component.onCurrencyChange('EUR');
+    fixture.detectChanges();
+
+    // Assert
+    const element = fixture.nativeElement as HTMLElement;
+    expect(element.textContent).toContain('EUR');
   });
 
   it('moves to next page and updates range/pagination labels', () => {

@@ -3,6 +3,7 @@ import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
 import { Capacitor } from '@capacitor/core';
 import { filter, Subscription } from 'rxjs';
 import { AuthSessionService } from './core/services/auth-session.service';
+import { CurrencyConversionService } from './core/services/currency-conversion.service';
 import { ConnectivityService } from './core/services/connectivity.service';
 import { NotificationService } from './core/services/notification.service';
 import { ThNavbarMode } from './shared/components/th-navbar/th-navbar.component';
@@ -29,6 +30,7 @@ export class AppComponent implements OnInit, OnDestroy {
     private router: Router,
     private route: ActivatedRoute,
     private authSessionService: AuthSessionService,
+    private currencyConversionService: CurrencyConversionService,
     private connectivityService: ConnectivityService,
     private notificationService: NotificationService
   ) {}
@@ -38,9 +40,13 @@ export class AppComponent implements OnInit, OnDestroy {
     this.lastLoggedInState = this.authSessionService.isLoggedIn;
     this.updateNavbarVisibility();
     this.navbarMode = this.authSessionService.isLoggedIn ? 'full' : 'auth';
+    if (this.authSessionService.isLoggedIn) {
+      void this.currencyConversionService.ensureRatesLoaded();
+    }
     this.authStateSub = this.authSessionService.state$.subscribe((state) => {
       if (state.loggedIn && !this.lastLoggedInState) {
         this.notificationService.clearNotifications();
+        void this.currencyConversionService.ensureRatesLoaded();
       }
       this.lastLoggedInState = state.loggedIn;
       this.navbarMode = state.loggedIn ? 'full' : 'auth';

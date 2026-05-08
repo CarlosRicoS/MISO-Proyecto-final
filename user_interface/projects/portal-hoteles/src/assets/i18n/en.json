@@ -43,6 +43,8 @@
     "TREND_FROM_LAST_MONTH": "{{sign}}{{percent}}% from last month",
     "RESERVATIONS_TITLE": "Reservations",
     "RESERVATIONS_SUBTITLE": "Manage and track all your hotel bookings",
+    "EXPORT_ACTIONS_LABEL": "Dashboard reservation export",
+    "EXPORT_EXCEL_ARIA": "Download dashboard reservations as Excel",
     "TABLE_BOOKING_ID": "Booking ID",
     "TABLE_GUEST_NAME": "Guest Name",
     "TABLE_CHECKIN": "Check-in",
@@ -166,7 +168,8 @@
     "SHOWING_NONE": "Showing 0-0 of 0 transactions",
     "ARIA_REVENUE_CHART": "Revenue overview chart for period {{period}}",
     "ERROR": "Unable to load report data.",
-    "EMPTY": "No revenue transactions available."
+    "EMPTY": "No revenue transactions available.",
+    "TOTAL_LABEL": "TOTAL"
   },
   "COMMON": {
     "ACCEPT": "Accept",

@@ -24,6 +24,7 @@ import {
 } from '../../shared/components/th-input/th-input.component';
 import { AuthService } from '../../core/services/auth.service';
 import { AuthSessionService } from '../../core/services/auth-session.service';
+import { CurrencyConversionService } from '../../core/services/currency-conversion.service';
 
 @Component({
   selector: 'app-login',
@@ -49,6 +50,7 @@ import { AuthSessionService } from '../../core/services/auth-session.service';
 export class LoginPage {
   private readonly authService = inject(AuthService);
   private readonly authSessionService = inject(AuthSessionService);
+  private readonly currencyConversionService = inject(CurrencyConversionService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly translate = inject(TranslateService);
@@ -140,6 +142,7 @@ export class LoginPage {
       );
 
       this.authSessionService.setLoginResponse(response);
+      void this.currencyConversionService.ensureRatesLoaded();
 
       const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
       if (returnUrl) {

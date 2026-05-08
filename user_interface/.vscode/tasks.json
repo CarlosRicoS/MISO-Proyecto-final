@@ -1,0 +1,15 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Portal Hoteles dashboard test",
+			"type": "shell",
+			"command": "npm run test:portal-hoteles -- --watch=false --browsers=ChromeHeadless",
+			"isBackground": false,
+			"problemMatcher": [
+				"$karma"
+			],
+			"group": "test"
+		}
+	]
+}

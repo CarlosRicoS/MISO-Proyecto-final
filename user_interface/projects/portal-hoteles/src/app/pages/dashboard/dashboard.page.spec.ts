@@ -315,6 +315,53 @@ describe('PortalHotelesDashboardPage', () => {
     expect(mapped.statusLabel).toBe('Unknown');
   });
 
+  it('builds an occupancy CSV that includes completed bookings in the requested month', async () => {
+    // Arrange
+    const authSessionStub = createAuthSessionStub();
+    const bookingServiceStub = createBookingServiceStub([
+      {
+        id: 'BK-2001',
+        user_id: 'guest-one',
+        user_email: 'guest.one@email.com',
+        period_start: '2026-03-10T00:00:00Z',
+        period_end: '2026-03-12T00:00:00Z',
+        status: 'confirmed',
+      },
+      {
+        id: 'BK-2002',
+        user_id: 'guest-two',
+        user_email: 'guest.two@email.com',
+        period_start: '2026-03-11T00:00:00Z',
+        period_end: '2026-03-14T00:00:00Z',
+        status: 'completed',
+      },
+      {
+        id: 'BK-2003',
+        user_id: 'guest-three',
+        user_email: 'guest.three@email.com',
+        period_start: '2026-03-11T00:00:00Z',
+        period_end: '2026-03-14T00:00:00Z',
+        status: 'canceled',
+      },
+    ]);
+    const component = createDashboardPage(authSessionStub, bookingServiceStub, createReportsServiceStub());
+
+    component.ionViewWillEnter();
+    await Promise.resolve();
+
+    // Act
+    const csv = (component as unknown as {
+      buildOccupancyCsvForRange: (start: Date, end: Date) => string;
+    }).buildOccupancyCsvForRange(new Date('2026-03-01T00:00:00Z'), new Date('2026-04-01T00:00:00Z'));
+
+    // Assert
+    expect(csv).toContain('Date,Occupied Rooms,Available Rooms,Occupancy %,Completed Bookings,Included Booking IDs');
+    expect(csv).toContain('2026-03-11');
+    expect(csv).toContain('BK-2001; BK-2002');
+    expect(csv).toContain('BK-2002');
+    expect(csv).not.toContain('BK-2003');
+  });
+
   it('uses dash fallback booking id when no id fields are usable', () => {
     // Arrange
     const authSessionStub = createAuthSessionStub({ userEmail: 'operator@travelhub.com' });
@@ -412,5 +459,40 @@ describe('PortalHotelesDashboardPage', () => {
     // Assert
     expect(known).toBe('Rejected');
     expect(unknown).toBe('Unknown');
+  });
+
+  it('exports reservations as csv using dashboard data', async () => {
+    // Arrange
+    const authSessionStub = createAuthSessionStub();
+    const bookingServiceStub = createBookingServiceStub();
+    const component = createDashboardPage(authSessionStub, bookingServiceStub, createReportsServiceStub());
+
+    component.ionViewWillEnter();
+    await Promise.resolve();
+
+    const anchor = document.createElement('a');
+    spyOn(anchor, 'click').and.stub();
+
+    const originalCreateElement = document.createElement.bind(document);
+    spyOn(document, 'createElement').and.callFake(((tagName: string) => {
+      if (tagName.toLowerCase() === 'a') {
+        return anchor;
+      }
+
+      return originalCreateElement(tagName);
+    }) as typeof document.createElement);
+
+    const createObjectUrlSpy = spyOn(URL, 'createObjectURL').and.returnValue('blob:dashboard-csv');
+    const revokeObjectUrlSpy = spyOn(URL, 'revokeObjectURL').and.callFake(() => undefined);
+
+    // Act
+    component.onDownloadCsv();
+
+    // Assert
+    expect(createObjectUrlSpy).toHaveBeenCalled();
+    expect(anchor.download).toContain('dashboard_reservations_');
+    expect(anchor.href).toBe('blob:dashboard-csv');
+    expect(anchor.click).toHaveBeenCalled();
+    expect(revokeObjectUrlSpy).toHaveBeenCalledWith('blob:dashboard-csv');
   });
 });

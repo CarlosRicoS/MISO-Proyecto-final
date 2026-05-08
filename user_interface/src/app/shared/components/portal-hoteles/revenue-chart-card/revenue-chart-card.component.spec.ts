@@ -1,12 +1,21 @@
 /// <reference types="jasmine" />
 
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import * as echarts from 'echarts';
 
 import { PortalHotelesRevenueChartCardComponent } from './revenue-chart-card.component';
 
 describe('PortalHotelesRevenueChartCardComponent', () => {
   let component: PortalHotelesRevenueChartCardComponent;
   let fixture: ComponentFixture<PortalHotelesRevenueChartCardComponent>;
+
+  function createChartMock(): { setOption: jasmine.Spy; resize: jasmine.Spy; dispose: jasmine.Spy } {
+    return {
+      setOption: jasmine.createSpy('setOption'),
+      resize: jasmine.createSpy('resize'),
+      dispose: jasmine.createSpy('dispose'),
+    };
+  }
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -17,8 +26,10 @@ describe('PortalHotelesRevenueChartCardComponent', () => {
     component = fixture.componentInstance;
   });
 
-  it('creates with minimal defaults', () => {
+  it('creates with minimal defaults and renders the empty ECharts state', () => {
     // Arrange
+    const chartMock = createChartMock();
+    spyOn(echarts, 'init').and.returnValue(chartMock as never);
 
     // Act
     fixture.detectChanges();
@@ -26,10 +37,15 @@ describe('PortalHotelesRevenueChartCardComponent', () => {
     // Assert
     expect(component).toBeTruthy();
     expect(component.hasData).toBeFalse();
+    expect(echarts.init).toHaveBeenCalled();
+    const option = chartMock.setOption.calls.mostRecent().args[0] as any;
+    expect(option.graphic[0].style.text).toBe('No revenue data available.');
   });
 
-  it('renders bars using the shortest categories and values length', () => {
+  it('renders a bar chart using the shortest categories and values length', () => {
     // Arrange
+    const chartMock = createChartMock();
+    spyOn(echarts, 'init').and.returnValue(chartMock as never);
     component.categories = ['Jan', 'Feb', 'Mar'];
     component.values = [1200, 900];
 
@@ -37,9 +53,9 @@ describe('PortalHotelesRevenueChartCardComponent', () => {
     fixture.detectChanges();
 
     // Assert
-    const element = fixture.nativeElement as HTMLElement;
-    const bars = element.querySelectorAll('.portal-hoteles-revenue-chart-card__bar-item');
-    expect(bars.length).toBe(2);
+    const option = chartMock.setOption.calls.mostRecent().args[0] as any;
+    expect(option.xAxis.data).toEqual(['Jan', 'Feb']);
+    expect(option.series[0].type).toBe('bar');
     expect(component.chartPoints[0].category).toBe('Jan');
     expect(component.chartPoints[1].category).toBe('Feb');
   });
@@ -60,8 +76,10 @@ describe('PortalHotelesRevenueChartCardComponent', () => {
     ]);
   });
 
-  it('shows empty fallback when chart input is empty', () => {
+  it('shows the empty chart message through the ECharts graphic layer', () => {
     // Arrange
+    const chartMock = createChartMock();
+    spyOn(echarts, 'init').and.returnValue(chartMock as never);
     component.categories = [];
     component.values = [];
 
@@ -69,8 +87,9 @@ describe('PortalHotelesRevenueChartCardComponent', () => {
     fixture.detectChanges();
 
     // Assert
-    const element = fixture.nativeElement as HTMLElement;
-    expect(element.textContent).toContain('No revenue data available.');
+    const option = chartMock.setOption.calls.mostRecent().args[0] as any;
+    expect(option.graphic[0].style.text).toBe('No revenue data available.');
+    expect(component.chartAriaLabel).toBe('No revenue data available.');
   });
 
   it('computes max scale when maxValue is not provided', () => {
@@ -176,6 +195,8 @@ describe('PortalHotelesRevenueChartCardComponent', () => {
 
   it('applies aria description to chart container', () => {
     // Arrange
+    const chartMock = createChartMock();
+    spyOn(echarts, 'init').and.returnValue(chartMock as never);
     component.categories = ['Jan'];
     component.values = [1000];
     component.ariaDescription = 'Custom chart summary';
@@ -187,6 +208,8 @@ describe('PortalHotelesRevenueChartCardComponent', () => {
     const element = fixture.nativeElement as HTMLElement;
     const chart = element.querySelector('.portal-hoteles-revenue-chart-card__chart');
     expect(chart?.getAttribute('aria-label')).toBe('Custom chart summary');
+    expect(chart?.getAttribute('role')).toBe('img');
+    expect(chart?.getAttribute('tabindex')).toBe('0');
   });
 
   it('emits periodChange when selection changes', () => {
@@ -236,6 +259,8 @@ describe('PortalHotelesRevenueChartCardComponent', () => {
   describe('a11y', () => {
     it('falls back to "Revenue overview chart" aria-label when ariaDescription is empty (AC-12)', () => {
       // Arrange
+      const chartMock = createChartMock();
+      spyOn(echarts, 'init').and.returnValue(chartMock as never);
       component.categories = ['Jan', 'Feb'];
       component.values = [100, 200];
       component.ariaDescription = '';
@@ -250,23 +275,21 @@ describe('PortalHotelesRevenueChartCardComponent', () => {
       expect(chart?.getAttribute('aria-label')).toBe('Revenue overview chart');
     });
 
-    it('marks each focusable bar with role="img" so SR announces the aria-label (AC-13)', () => {
+    it('marks the chart container with role="img" so SR announces the aria-label (AC-13)', () => {
       // Arrange
+      const chartMock = createChartMock();
+      spyOn(echarts, 'init').and.returnValue(chartMock as never);
       component.categories = ['Jan', 'Feb', 'Mar'];
       component.values = [100, 200, 300];
 
       // Act
       fixture.detectChanges();
       const element = fixture.nativeElement as HTMLElement;
-      const bars = element.querySelectorAll('.portal-hoteles-revenue-chart-card__bar');
+      const chart = element.querySelector('.portal-hoteles-revenue-chart-card__chart');
 
       // Assert
-      expect(bars.length).toBe(3);
-      bars.forEach((bar) => {
-        expect(bar.getAttribute('role')).toBe('img');
-        expect(bar.getAttribute('tabindex')).toBe('0');
-        expect(bar.getAttribute('aria-label')).toMatch(/^[A-Za-z]+: /);
-      });
+      expect(chart?.getAttribute('role')).toBe('img');
+      expect(chart?.getAttribute('tabindex')).toBe('0');
     });
   });
 });

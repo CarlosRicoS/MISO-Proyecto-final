@@ -15,26 +15,11 @@
     </ion-select>
   </div>
 
-  <div class="portal-hoteles-revenue-chart-card__chart" [attr.aria-label]="ariaDescription || 'Revenue overview chart'" role="img" *ngIf="hasData; else emptyChart">
-    <ol class="portal-hoteles-revenue-chart-card__y-axis" aria-hidden="true">
-      <li *ngFor="let tick of resolvedTicks">{{ formatCurrency(tick) }}</li>
-    </ol>
-
-    <ul class="portal-hoteles-revenue-chart-card__bars">
-      <li class="portal-hoteles-revenue-chart-card__bar-item" *ngFor="let point of chartPoints; trackBy: trackByCategory">
-        <div
-          class="portal-hoteles-revenue-chart-card__bar"
-          [style.height.%]="getBarHeight(point.value)"
-          [attr.aria-label]="getBarAriaLabel(point)"
-          role="img"
-          tabindex="0"
-        ></div>
-        <span class="portal-hoteles-revenue-chart-card__bar-label">{{ point.category }}</span>
-      </li>
-    </ul>
-  </div>
-
-  <ng-template #emptyChart>
-    <p class="portal-hoteles-revenue-chart-card__empty" aria-live="polite" aria-atomic="true">No revenue data available.</p>
-  </ng-template>
+  <div
+    #chartHost
+    class="portal-hoteles-revenue-chart-card__chart"
+    [attr.aria-label]="chartAriaLabel"
+    role="img"
+    tabindex="0"
+  ></div>
 </portal-hoteles-grid-card>

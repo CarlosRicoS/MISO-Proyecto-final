@@ -43,6 +43,8 @@
     "TREND_FROM_LAST_MONTH": "{{sign}}{{percent}}% respecto al mes anterior",
     "RESERVATIONS_TITLE": "Reservas",
     "RESERVATIONS_SUBTITLE": "Gestiona y rastrea todas las reservas de tu hotel",
+    "EXPORT_ACTIONS_LABEL": "Exportación de reservas del panel",
+    "EXPORT_EXCEL_ARIA": "Descargar reservas del panel como Excel",
     "TABLE_BOOKING_ID": "ID de reserva",
     "TABLE_GUEST_NAME": "Nombre del huésped",
     "TABLE_CHECKIN": "Entrada",
@@ -166,7 +168,8 @@
     "SHOWING_NONE": "Mostrando 0-0 de 0 transacciones",
     "ARIA_REVENUE_CHART": "Gráfico de resumen de ingresos para el período {{period}}",
     "ERROR": "No fue posible cargar los datos del reporte.",
-    "EMPTY": "No hay transacciones de ingresos disponibles."
+    "EMPTY": "No hay transacciones de ingresos disponibles.",
+    "TOTAL_LABEL": "TOTAL"
   },
   "COMMON": {
     "ACCEPT": "Aceptar",

@@ -24,6 +24,7 @@
 
   <section class="portal-hoteles-reports-grid portal-hoteles-reports-grid--content portal-hoteles-reports-grid--full-width">
     <portal-hoteles-revenue-chart-card
+      #chartComponent
       [title]="'REPORTS.REVENUE_OVERVIEW_TITLE' | translate"
       [subtitle]="'REPORTS.REVENUE_OVERVIEW_SUBTITLE' | translate"
       [periodLabel]="chartPeriod"
@@ -69,6 +70,7 @@
             fill="outline"
             class="portal-hoteles-reports-toolbar-header__export-button portal-hoteles-reports-toolbar-header__export-button--secondary"
             aria-label="Export report as PDF"
+            (click)="onDownloadPdf()"
           >
             {{ 'REPORTS.EXPORT_PDF' | translate }}
           </ion-button>
@@ -109,11 +111,11 @@
             <td>{{ row.dateLabel }}</td>
             <td>#{{ row.bookingId }}</td>
             <td>{{ row.paymentRef }}</td>
-            <td>{{ formatAmount(row.grossValue) }}</td>
+            <td>{{ row.grossValue | thCurrency:selectedCurrency }}</td>
             <td>
               <span [class]="getPaymentStatusClass(row.status)">{{ row.status }}</span>
             </td>
-            <td>{{ formatAmount(row.netIncome) }}</td>
+            <td>{{ row.netIncome | thCurrency:selectedCurrency }}</td>
           </tr>
         </tbody>
         <tfoot>
