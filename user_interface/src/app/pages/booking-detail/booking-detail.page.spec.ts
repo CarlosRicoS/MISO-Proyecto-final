@@ -47,7 +47,7 @@ describe('BookingDetailPage', () => {
     period_start: '2026-04-26',
     period_end: '2026-04-29',
     price: 300,
-    status: 'PENDING',
+    status: 'CONFIRMED',
     admin_group_id: 'group-1',
     payment_reference: null,
     created_at: '2026-04-18T00:00:00Z',
@@ -376,8 +376,8 @@ describe('BookingDetailPage', () => {
 
     expect(scannerSpy).toHaveBeenCalled();
     expect(httpClient.post).toHaveBeenCalledWith(
-      '/checkin/api/check-in',
-      { booking_id: 'res-1', qr_code: 'secret-key' },
+      jasmine.stringContaining('checkin/api/check-in'),
+      { booking_id: 'res-1', qr_token: 'secret-key' },
       jasmine.objectContaining({
         headers: jasmine.objectContaining({ Authorization: 'Bearer id-token' }),
       }),
@@ -403,7 +403,8 @@ describe('BookingDetailPage', () => {
     const httpClient = TestBed.inject(HttpClient) as unknown as HttpClientMock;
     spyOn(CapacitorBarcodeScanner, 'scanBarcode').and.resolveTo({ ScanResult: 'secret-key' } as never);
     httpClient.post.and.returnValue(throwError(() => ({ error: { message: 'Server down' } })));
-    (component as unknown as { currentReservation: typeof mockReservation }).currentReservation = mockReservation;
+    const reservation = { ...mockReservation, status: 'CONFIRMED' };
+    (component as unknown as { currentReservation: typeof mockReservation }).currentReservation = reservation;
 
     await component.openCameraForCheckin();
 
