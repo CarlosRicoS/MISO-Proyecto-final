@@ -1,6 +1,6 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { ConfigService } from './config.service';
 
 export interface IncomingReportRecord {
@@ -42,6 +42,15 @@ export interface DashboardMetricsResponse {
   today_checkouts: number;
 }
 
+interface DashboardMetricsApiResponse {
+  total_reservations: number | string;
+  monthly_revenue: number | string;
+  avg_daily_revenue: number | string;
+  revenue_trend_pct: number | string;
+  today_checkins: number | string;
+  today_checkouts: number | string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class ReportsService {
   private readonly basePath = 'incomings-report/api/reports';
@@ -67,16 +76,42 @@ export class ReportsService {
 
   getRevenueOverview(token: string, months = 6): Observable<RevenueOverviewResponse> {
     const url = `${this.baseUrl}/${this.basePath}/revenue-overview?months=${months}`;
-    return this.http.get<RevenueOverviewResponse>(url, { headers: this.buildHeaders(token) });
+    return this.http.get<RevenueOverviewResponse>(url, { headers: this.buildHeaders(token) }).pipe(
+      map((response) => ({
+        data: (response.data || []).map((item) => ({
+          ...item,
+          total_revenue: this.toNumericRevenue(item.total_revenue),
+        })),
+      })),
+    );
   }
 
   getDashboardMetrics(token: string): Observable<DashboardMetricsResponse> {
     const url = `${this.baseUrl}/${this.basePath}/dashboard-metrics`;
-    return this.http.get<DashboardMetricsResponse>(url, { headers: this.buildHeaders(token) });
+    return this.http.get<DashboardMetricsApiResponse>(url, { headers: this.buildHeaders(token) }).pipe(
+      map((response) => ({
+        total_reservations: this.toNumericMetric(response.total_reservations),
+        monthly_revenue: this.toNumericMetric(response.monthly_revenue),
+        avg_daily_revenue: this.toNumericMetric(response.avg_daily_revenue),
+        revenue_trend_pct: this.toNumericMetric(response.revenue_trend_pct),
+        today_checkins: this.toNumericMetric(response.today_checkins),
+        today_checkouts: this.toNumericMetric(response.today_checkouts),
+      })),
+    );
   }
 
   downloadCsv(token: string): Observable<Blob> {
     const url = `${this.baseUrl}/${this.basePath}/incoming/csv`;
     return this.http.get(url, { headers: this.buildHeaders(token), responseType: 'blob' });
+  }
+
+  private toNumericRevenue(value: number | string | null | undefined): number {
+    const parsed = typeof value === 'number' ? value : Number.parseFloat(String(value ?? ''));
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+
+  private toNumericMetric(value: number | string | null | undefined): number {
+    const parsed = typeof value === 'number' ? value : Number.parseFloat(String(value ?? '').replace(/,/g, ''));
+    return Number.isFinite(parsed) ? parsed : 0;
   }
 }

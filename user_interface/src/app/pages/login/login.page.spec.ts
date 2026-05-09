@@ -7,6 +7,7 @@ import { LoginPage } from './login.page';
 import { AuthService, LoginResponse } from '../../core/services/auth.service';
 import { NavController } from '@ionic/angular';
 import { AuthSessionService } from '../../core/services/auth-session.service';
+import { CurrencyConversionService } from '../../core/services/currency-conversion.service';
 import { translateTestingModule } from '../../testing/translate-testing.module';
 
 describe('LoginPage', () => {
@@ -14,6 +15,7 @@ describe('LoginPage', () => {
   let fixture: ComponentFixture<LoginPage>;
   let authService: jasmine.SpyObj<AuthService>;
   let authSessionService: jasmine.SpyObj<AuthSessionService>;
+  let currencyConversionService: jasmine.SpyObj<CurrencyConversionService>;
   let router: Router;
   const activatedRouteMock = {
     snapshot: {
@@ -32,6 +34,8 @@ describe('LoginPage', () => {
   beforeEach(async () => {
     const authServiceSpy = jasmine.createSpyObj('AuthService', ['login']);
     const authSessionServiceSpy = jasmine.createSpyObj('AuthSessionService', ['setLoginResponse']);
+    const currencyConversionServiceSpy = jasmine.createSpyObj('CurrencyConversionService', ['ensureRatesLoaded']);
+    currencyConversionServiceSpy.ensureRatesLoaded.and.resolveTo();
     const navControllerSpy = jasmine.createSpyObj('NavController', [
       'navigateForward',
       'navigateBack',
@@ -48,6 +52,7 @@ describe('LoginPage', () => {
       providers: [
         { provide: AuthService, useValue: authServiceSpy },
         { provide: AuthSessionService, useValue: authSessionServiceSpy },
+        { provide: CurrencyConversionService, useValue: currencyConversionServiceSpy },
         { provide: ActivatedRoute, useValue: activatedRouteMock },
         { provide: NavController, useValue: navControllerSpy },
       ],
@@ -55,6 +60,7 @@ describe('LoginPage', () => {
 
     authService = TestBed.inject(AuthService) as jasmine.SpyObj<AuthService>;
     authSessionService = TestBed.inject(AuthSessionService) as jasmine.SpyObj<AuthSessionService>;
+    currencyConversionService = TestBed.inject(CurrencyConversionService) as jasmine.SpyObj<CurrencyConversionService>;
     router = TestBed.inject(Router);
     spyOn(router, 'navigate').and.resolveTo(true);
     spyOn(router, 'navigateByUrl').and.resolveTo(true);
@@ -287,6 +293,7 @@ describe('LoginPage', () => {
       await component.onSignIn();
 
       expect(authSessionService.setLoginResponse).toHaveBeenCalledWith(mockLoginResponse);
+      expect(currencyConversionService.ensureRatesLoaded).toHaveBeenCalled();
     });
 
     it('should navigate to home after successful login', async () => {

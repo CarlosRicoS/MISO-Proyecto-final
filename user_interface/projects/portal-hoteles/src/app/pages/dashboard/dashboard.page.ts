@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, inject } from '@angular/core';
 import { IonicModule } from '@ionic/angular';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { firstValueFrom } from 'rxjs';
@@ -31,6 +31,7 @@ export class PortalHotelesDashboardPage {
 
   private readonly translate = inject(TranslateService);
   private readonly localeService = inject(LocaleService);
+  private readonly cdr = inject(ChangeDetectorRef);
 
   constructor(
     private readonly authSession: AuthSessionService,
@@ -148,6 +149,22 @@ export class PortalHotelesDashboardPage {
     this.updateVisibleReservations();
   }
 
+  onDownloadCsv(): void {
+    if (!this.reservations.length || typeof document === 'undefined') {
+      return;
+    }
+
+    const csvContent = this.buildOccupancyCsvForCurrentMonth();
+    const blob = new Blob([`\uFEFF${csvContent}`], { type: 'text/csv;charset=utf-8' });
+    const objectUrl = URL.createObjectURL(blob);
+
+    const anchor = document.createElement('a');
+    anchor.href = objectUrl;
+    anchor.download = `dashboard_reservations_${new Date().toISOString().split('T')[0]}.csv`;
+    anchor.click();
+    URL.revokeObjectURL(objectUrl);
+  }
+
   getStatusClass(status: string): string {
     const normalizedStatus = status.trim().toLowerCase();
     switch (normalizedStatus) {
@@ -171,11 +188,20 @@ export class PortalHotelesDashboardPage {
 
   private async loadMetrics(): Promise<void> {
     try {
+      console.log('[Dashboard] Starting to load metrics...');
       this.metrics = await firstValueFrom(
         this.reportsService.getDashboardMetrics(this.authSession.idToken),
       );
-    } catch {
+      console.log('[Dashboard] Metrics loaded successfully:', this.metrics);
+      if (typeof this.cdr.markForCheck === 'function') {
+        this.cdr.markForCheck();
+      }
+    } catch (error) {
+      console.error('[Dashboard] Error loading metrics:', error);
       this.metrics = null;
+      if (typeof this.cdr.markForCheck === 'function') {
+        this.cdr.markForCheck();
+      }
     }
   }
 
@@ -207,6 +233,130 @@ export class PortalHotelesDashboardPage {
     this.visibleReservations = this.reservations.slice(startIndex, endIndex);
   }
 
+  private buildOccupancyCsvForCurrentMonth(): string {
+    const now = new Date();
+    const start = new Date(now.getFullYear(), now.getMonth(), 1);
+    const end = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    return this.buildOccupancyCsvForRange(start, end);
+  }
+
+  private buildOccupancyCsvForRange(startDate: Date, endDate: Date): string {
+    const reservationsInRange = this.reservations.filter(
+      (reservation) => this.isReservationInRange(reservation, startDate, endDate) && this.isOccupancyRelevantStatus(reservation.statusValue),
+    );
+
+    const referenceRoomCount = this.getReferenceRoomCount(reservationsInRange);
+    const headers = [
+      'Date',
+      'Occupied Rooms',
+      'Available Rooms',
+      'Occupancy %',
+      'Completed Bookings',
+      'Included Booking IDs',
+    ];
+    const rows: string[][] = [];
+
+    for (const date of this.getDatesBetween(startDate, endDate)) {
+      const activeReservations = reservationsInRange.filter((reservation) =>
+        this.isReservationActiveOnDate(reservation, date),
+      );
+      const occupiedRooms = activeReservations.length;
+      const completedBookings = activeReservations.filter(
+        (reservation) => this.normalizeStatus(reservation.statusValue) === 'completed',
+      ).length;
+      const availableRooms = Math.max(referenceRoomCount - occupiedRooms, 0);
+      const occupancyPct = referenceRoomCount > 0 ? (occupiedRooms / referenceRoomCount) * 100 : 0;
+      const includedBookingIds = activeReservations.map((reservation) => reservation.bookingId).join('; ');
+
+      rows.push([
+        this.formatReportDate(date),
+        String(occupiedRooms),
+        String(availableRooms),
+        `${occupancyPct.toFixed(2)}%`,
+        String(completedBookings),
+        includedBookingIds,
+      ]);
+    }
+
+    const headerRow = headers.join(',');
+    const dataRows = rows.map((row) => row.map((value) => this.toCsvCell(value)).join(','));
+    return [headerRow, ...dataRows].join('\n');
+  }
+
+  private toCsvCell(value: string): string {
+    const text = String(value ?? '');
+    const escaped = text.replace(/"/g, '""');
+    return `"${escaped}"`;
+  }
+
+  private getDatesBetween(start: Date, end: Date): Date[] {
+    const dates: Date[] = [];
+    const current = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+
+    while (current < end) {
+      dates.push(new Date(current));
+      current.setDate(current.getDate() + 1);
+    }
+
+    return dates;
+  }
+
+  private getReferenceRoomCount(reservations: DashboardReservation[]): number {
+    const propertyIds = new Set(
+      reservations
+        .map((reservation) => (reservation.propertyId || '').trim())
+        .filter((propertyId) => Boolean(propertyId)),
+    );
+
+    return Math.max(propertyIds.size, 1);
+  }
+
+  private isReservationInRange(reservation: DashboardReservation, startDate: Date, endDate: Date): boolean {
+    if (!reservation.periodStart || !reservation.periodEnd) {
+      return false;
+    }
+
+    const reservationStart = this.toDayStart(reservation.periodStart);
+    const reservationEnd = this.toDayStart(reservation.periodEnd);
+
+    return reservationStart < endDate && reservationEnd > startDate;
+  }
+
+  private isReservationActiveOnDate(reservation: DashboardReservation, date: Date): boolean {
+    if (!reservation.periodStart || !reservation.periodEnd) {
+      return false;
+    }
+
+    const dayStart = this.toDayStart(date);
+    const reservationStart = this.toDayStart(reservation.periodStart);
+    const reservationEnd = this.toDayStart(reservation.periodEnd);
+
+    return reservationStart <= dayStart && dayStart < reservationEnd;
+  }
+
+  private isOccupancyRelevantStatus(statusValue: string | undefined): boolean {
+    const normalizedStatus = this.normalizeStatus(statusValue);
+    return normalizedStatus === 'confirmed' || normalizedStatus === 'approved' || normalizedStatus === 'completed';
+  }
+
+  private normalizeStatus(statusValue: string | undefined): string {
+    return (statusValue || '').trim().toLowerCase();
+  }
+
+  private toDayStart(value: string | Date): Date {
+    const date = value instanceof Date ? value : new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+      return new Date(0);
+    }
+
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  }
+
+  private formatReportDate(date: Date): string {
+    return date.toISOString().slice(0, 10);
+  }
+
   private toDashboardReservation(reservation: Reservation): DashboardReservation {
     const reservationLike = reservation as Reservation & {
       user_email?: string;
@@ -228,6 +378,10 @@ export class PortalHotelesDashboardPage {
       checkInLabel: this.formatDate(reservation.period_start),
       checkOutLabel: this.formatDate(reservation.period_end),
       statusLabel: this.formatStatusLabel(reservation.status),
+      statusValue: reservation.status,
+      propertyId: reservation.property_id,
+      periodStart: reservation.period_start,
+      periodEnd: reservation.period_end,
     };
   }
 
@@ -324,4 +478,8 @@ interface DashboardReservation {
   checkInLabel: string;
   checkOutLabel: string;
   statusLabel: string;
+  statusValue?: string;
+  propertyId?: string;
+  periodStart?: string;
+  periodEnd?: string;
 }

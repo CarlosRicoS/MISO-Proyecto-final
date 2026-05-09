@@ -67,8 +67,10 @@
     "@ionic/angular": "^8.0.0",
     "@ngx-translate/core": "^17.0.0",
     "@ngx-translate/http-loader": "^17.0.0",
+    "echarts": "^5.6.0",
     "firebase": "^12.12.1",
     "ionicons": "^7.0.0",
+    "jspdf": "^3.0.4",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
     "zone.js": "~0.15.0"

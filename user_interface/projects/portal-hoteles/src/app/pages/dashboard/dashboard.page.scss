@@ -75,6 +75,38 @@
   color: var(--th-warning-700);
 }
 
+.portal-hoteles-dashboard-toolbar-header {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: var(--th-space-2);
+}
+
+.portal-hoteles-dashboard-toolbar-header__export {
+  display: inline-flex;
+  align-items: stretch;
+  overflow: hidden;
+  border: 1px solid var(--th-neutral-300);
+  border-radius: var(--th-radius-md);
+  background: var(--th-white);
+}
+
+.portal-hoteles-dashboard-toolbar-header__export-button {
+  margin: 0;
+  min-height: 30px;
+  --border-radius: 0;
+  --padding-start: 14px;
+  --padding-end: 14px;
+  text-transform: none;
+  font-size: var(--th-text-body-sm-size);
+}
+
+.portal-hoteles-dashboard-toolbar-header__export-button--primary {
+  --background: var(--th-primary-700);
+  --background-hover: var(--th-primary-800);
+  --color: var(--th-white);
+  --border-color: transparent;
+}
+
 .portal-hoteles-dashboard-table {
   display: flex;
   flex-direction: column;

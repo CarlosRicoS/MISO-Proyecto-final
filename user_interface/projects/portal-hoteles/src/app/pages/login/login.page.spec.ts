@@ -6,6 +6,7 @@ import { of, throwError } from 'rxjs';
 
 import { AuthService, LoginResponse } from '@travelhub/core/services/auth.service';
 import { AuthSessionService } from '@travelhub/core/services/auth-session.service';
+import { CurrencyConversionService } from '@travelhub/core/services/currency-conversion.service';
 import { PortalHotelesLoginPage } from './login.page';
 import { translateTestingModule } from '../../testing/translate-testing.module';
 
@@ -14,6 +15,7 @@ describe('PortalHotelesLoginPage', () => {
   let fixture: ComponentFixture<PortalHotelesLoginPage>;
   let authService: jasmine.SpyObj<AuthService>;
   let authSessionService: jasmine.SpyObj<AuthSessionService>;
+  let currencyConversionService: jasmine.SpyObj<CurrencyConversionService>;
   let router: Router;
 
   const mockLoginResponse: LoginResponse = {
@@ -27,17 +29,21 @@ describe('PortalHotelesLoginPage', () => {
   beforeEach(async () => {
     const authServiceSpy = jasmine.createSpyObj('AuthService', ['login']);
     const authSessionServiceSpy = jasmine.createSpyObj('AuthSessionService', ['setLoginResponse']);
+    const currencyConversionServiceSpy = jasmine.createSpyObj('CurrencyConversionService', ['ensureRatesLoaded']);
+    currencyConversionServiceSpy.ensureRatesLoaded.and.resolveTo();
 
     await TestBed.configureTestingModule({
       imports: [PortalHotelesLoginPage, HttpClientTestingModule, RouterTestingModule, translateTestingModule()],
       providers: [
         { provide: AuthService, useValue: authServiceSpy },
         { provide: AuthSessionService, useValue: authSessionServiceSpy },
+        { provide: CurrencyConversionService, useValue: currencyConversionServiceSpy },
       ],
     }).compileComponents();
 
     authService = TestBed.inject(AuthService) as jasmine.SpyObj<AuthService>;
     authSessionService = TestBed.inject(AuthSessionService) as jasmine.SpyObj<AuthSessionService>;
+    currencyConversionService = TestBed.inject(CurrencyConversionService) as jasmine.SpyObj<CurrencyConversionService>;
     router = TestBed.inject(Router);
     spyOn(router, 'navigate').and.resolveTo(true);
 
@@ -143,6 +149,7 @@ describe('PortalHotelesLoginPage', () => {
     // Assert
     expect(authService.login).toHaveBeenCalledWith('operator@travelhub.com', 'password123');
     expect(authSessionService.setLoginResponse).toHaveBeenCalledWith(mockLoginResponse);
+    expect(currencyConversionService.ensureRatesLoaded).toHaveBeenCalled();
     expect(router.navigate).toHaveBeenCalledWith(['/dashboard']);
   });
 
