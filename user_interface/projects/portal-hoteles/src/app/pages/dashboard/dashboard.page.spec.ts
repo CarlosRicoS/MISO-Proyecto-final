@@ -1,5 +1,6 @@
 /// <reference types="jasmine" />
 
+import { ChangeDetectorRef } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { PortalHotelesDashboardPage } from './dashboard.page';
 import { of, throwError } from 'rxjs';
@@ -54,6 +55,7 @@ describe('PortalHotelesDashboardPage', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [translateTestingModule()],
+      providers: [ChangeDetectorRef],
     });
   });
 

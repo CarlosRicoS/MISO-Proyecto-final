@@ -148,4 +148,46 @@ describe('AppComponent', () => {
     activatedRouteMock.firstChild = null;
     activatedRouteMock.pathFromRoot = [{ snapshot: { data: {} } }];
   });
+
+  it('ignores non-NavigationEnd router events', () => {
+    // Arrange
+    activatedRouteMock.pathFromRoot = [
+      { snapshot: { data: {} } },
+      { snapshot: { data: { hideNavbar: false } } },
+    ];
+    component.ngOnInit();
+    const initialState = component.showNavbar;
+
+    // Act
+    // Emit a non-NavigationEnd event (e.g., NavigationStart)
+    routerEvents$.next({ type: 'NavigationStart' } as any);
+
+    // Assert
+    // showNavbar should not change because the event is not NavigationEnd
+    expect(component.showNavbar).toEqual(initialState);
+  });
+
+  it('handles hideNavbar data when some route has it set to true', () => {
+    // Arrange
+    activatedRouteMock.pathFromRoot = [
+      { snapshot: { data: {} } },
+      { snapshot: { data: { hideNavbar: true } } },
+      { snapshot: { data: {} } },
+    ];
+
+    // Act
+    component.ngOnInit();
+
+    // Assert
+    expect(component.showNavbar).toBeFalse();
+  });
+
+  it('handles case when pathFromRoot is null', () => {
+    // Arrange
+    activatedRouteMock.firstChild = null;
+    activatedRouteMock.pathFromRoot = null;
+
+    // Act - should not throw error
+    expect(() => component.ngOnInit()).not.toThrow();
+  });
 });

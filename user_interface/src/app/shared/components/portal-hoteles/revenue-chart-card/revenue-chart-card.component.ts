@@ -98,12 +98,17 @@ export class PortalHotelesRevenueChartCardComponent implements AfterViewInit, On
   }
 
   get resolvedTicks(): number[] {
-    const explicitTicks = this.yAxisTicks.map((tick) => this.toNumericValue(tick)).filter((tick) => tick >= 0);
+    const explicitTicks = this.yAxisTicks
+      .map((tick) => this.toNumericValue(tick))
+      .filter((tick) => typeof tick === 'number' && tick >= 0 && !Number.isNaN(tick));
     if (explicitTicks.length) {
       return [...explicitTicks].sort((a, b) => b - a);
     }
 
     const max = this.resolvedMaxValue;
+    if (typeof max !== 'number' || Number.isNaN(max) || max <= 0) {
+      return [1, 0];
+    }
     return [max, Math.round(max * 0.75), Math.round(max * 0.5), Math.round(max * 0.25), 0];
   }
 

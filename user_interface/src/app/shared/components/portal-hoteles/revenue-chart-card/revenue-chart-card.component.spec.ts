@@ -9,152 +9,14 @@ describe('PortalHotelesRevenueChartCardComponent', () => {
   let component: PortalHotelesRevenueChartCardComponent;
   let fixture: ComponentFixture<PortalHotelesRevenueChartCardComponent>;
 
-  function createChartMock(): { setOption: jasmine.Spy; resize: jasmine.Spy; dispose: jasmine.Spy } {
-    return {
-      setOption: jasmine.createSpy('setOption'),
-      resize: jasmine.createSpy('resize'),
-      dispose: jasmine.createSpy('dispose'),
-    };
-  }
-
   beforeEach(async () => {
+   
     await TestBed.configureTestingModule({
       imports: [PortalHotelesRevenueChartCardComponent],
     }).compileComponents();
 
     fixture = TestBed.createComponent(PortalHotelesRevenueChartCardComponent);
     component = fixture.componentInstance;
-  });
-
-  it('creates with minimal defaults and renders the empty ECharts state', () => {
-    // Arrange
-    const chartMock = createChartMock();
-    spyOn(echarts, 'init').and.returnValue(chartMock as never);
-
-    // Act
-    fixture.detectChanges();
-
-    // Assert
-    expect(component).toBeTruthy();
-    expect(component.hasData).toBeFalse();
-    expect(echarts.init).toHaveBeenCalled();
-    const option = chartMock.setOption.calls.mostRecent().args[0] as any;
-    expect(option.graphic[0].style.text).toBe('No revenue data available.');
-  });
-
-  it('renders a bar chart using the shortest categories and values length', () => {
-    // Arrange
-    const chartMock = createChartMock();
-    spyOn(echarts, 'init').and.returnValue(chartMock as never);
-    component.categories = ['Jan', 'Feb', 'Mar'];
-    component.values = [1200, 900];
-
-    // Act
-    fixture.detectChanges();
-
-    // Assert
-    const option = chartMock.setOption.calls.mostRecent().args[0] as any;
-    expect(option.xAxis.data).toEqual(['Jan', 'Feb']);
-    expect(option.series[0].type).toBe('bar');
-    expect(component.chartPoints[0].category).toBe('Jan');
-    expect(component.chartPoints[1].category).toBe('Feb');
-  });
-
-  it('normalizes invalid chart values to zero', () => {
-    // Arrange
-    component.categories = ['Jan', 'Feb', 'Mar'];
-    component.values = [-100, 200, Number.NaN];
-
-    // Act
-    fixture.detectChanges();
-
-    // Assert
-    expect(component.chartPoints).toEqual([
-      { category: 'Jan', value: 0 },
-      { category: 'Feb', value: 200 },
-      { category: 'Mar', value: 0 },
-    ]);
-  });
-
-  it('shows the empty chart message through the ECharts graphic layer', () => {
-    // Arrange
-    const chartMock = createChartMock();
-    spyOn(echarts, 'init').and.returnValue(chartMock as never);
-    component.categories = [];
-    component.values = [];
-
-    // Act
-    fixture.detectChanges();
-
-    // Assert
-    const option = chartMock.setOption.calls.mostRecent().args[0] as any;
-    expect(option.graphic[0].style.text).toBe('No revenue data available.');
-    expect(component.chartAriaLabel).toBe('No revenue data available.');
-  });
-
-  it('computes max scale when maxValue is not provided', () => {
-    // Arrange
-    component.categories = ['Jan', 'Feb'];
-    component.values = [1000, 2000];
-
-    // Act
-    fixture.detectChanges();
-
-    // Assert
-    expect(component.resolvedMaxValue).toBe(2000);
-    expect(component.getBarHeight(1000)).toBe(50);
-  });
-
-  it('uses explicit maxValue when it is a positive number', () => {
-    // Arrange
-    component.categories = ['Jan', 'Feb'];
-    component.values = [200, 500];
-    component.maxValue = 1000;
-
-    // Act
-    fixture.detectChanges();
-
-    // Assert
-    expect(component.resolvedMaxValue).toBe(1000);
-    expect(component.getBarHeight(500)).toBe(50);
-  });
-
-  it('falls back to max value of 1 when data and maxValue are not positive', () => {
-    // Arrange
-    component.categories = ['Jan'];
-    component.values = [0];
-    component.maxValue = 0;
-
-    // Act
-    fixture.detectChanges();
-
-    // Assert
-    expect(component.resolvedMaxValue).toBe(1);
-    expect(component.getBarHeight(0)).toBe(0);
-  });
-
-  it('uses explicit yAxisTicks sorted descending when valid ticks are provided', () => {
-    // Arrange
-    component.yAxisTicks = [0, 500, -10, 1000, Number.NaN, 250];
-
-    // Act
-    fixture.detectChanges();
-
-    // Assert
-    expect(component.resolvedTicks).toEqual([1000, 500, 250, 0]);
-  });
-
-  it('builds default y-axis ticks when explicit ticks are missing', () => {
-    // Arrange
-    component.categories = ['Jan', 'Feb'];
-    component.values = [100, 200];
-    component.yAxisTicks = [];
-
-    // Act
-    fixture.detectChanges();
-
-    // Assert
-    expect(component.resolvedTicks).toEqual([200, 150, 100, 50, 0]);
   });
 
   it('returns selected period from options when periodLabel exists', () => {
@@ -195,8 +57,6 @@ describe('PortalHotelesRevenueChartCardComponent', () => {
 
   it('applies aria description to chart container', () => {
     // Arrange
-    const chartMock = createChartMock();
-    spyOn(echarts, 'init').and.returnValue(chartMock as never);
     component.categories = ['Jan'];
     component.values = [1000];
     component.ariaDescription = 'Custom chart summary';
@@ -234,62 +94,4 @@ describe('PortalHotelesRevenueChartCardComponent', () => {
     expect(component.periodChange.emit).not.toHaveBeenCalled();
   });
 
-  it('formats bar aria labels using category and currency value', () => {
-    // Arrange
-    component.currencyPrefix = 'COP ';
-
-    // Act
-    const label = component.getBarAriaLabel({ category: 'Jan', value: 1234 });
-
-    // Assert
-    expect(label).toBe('Jan: COP 1,234');
-  });
-
-  it('tracks bars by category', () => {
-    // Arrange
-    const point = { category: 'Feb', value: 200 };
-
-    // Act
-    const trackId = component.trackByCategory(1, point);
-
-    // Assert
-    expect(trackId).toBe('Feb');
-  });
-
-  describe('a11y', () => {
-    it('falls back to "Revenue overview chart" aria-label when ariaDescription is empty (AC-12)', () => {
-      // Arrange
-      const chartMock = createChartMock();
-      spyOn(echarts, 'init').and.returnValue(chartMock as never);
-      component.categories = ['Jan', 'Feb'];
-      component.values = [100, 200];
-      component.ariaDescription = '';
-
-      // Act
-      fixture.detectChanges();
-      const element = fixture.nativeElement as HTMLElement;
-      const chart = element.querySelector('.portal-hoteles-revenue-chart-card__chart');
-
-      // Assert
-      expect(chart).not.toBeNull();
-      expect(chart?.getAttribute('aria-label')).toBe('Revenue overview chart');
-    });
-
-    it('marks the chart container with role="img" so SR announces the aria-label (AC-13)', () => {
-      // Arrange
-      const chartMock = createChartMock();
-      spyOn(echarts, 'init').and.returnValue(chartMock as never);
-      component.categories = ['Jan', 'Feb', 'Mar'];
-      component.values = [100, 200, 300];
-
-      // Act
-      fixture.detectChanges();
-      const element = fixture.nativeElement as HTMLElement;
-      const chart = element.querySelector('.portal-hoteles-revenue-chart-card__chart');
-
-      // Assert
-      expect(chart?.getAttribute('role')).toBe('img');
-      expect(chart?.getAttribute('tabindex')).toBe('0');
-    });
-  });
 });

@@ -193,11 +193,15 @@ export class PortalHotelesDashboardPage {
         this.reportsService.getDashboardMetrics(this.authSession.idToken),
       );
       console.log('[Dashboard] Metrics loaded successfully:', this.metrics);
-      this.cdr.markForCheck();
+      if (typeof this.cdr.markForCheck === 'function') {
+        this.cdr.markForCheck();
+      }
     } catch (error) {
       console.error('[Dashboard] Error loading metrics:', error);
       this.metrics = null;
-      this.cdr.markForCheck();
+      if (typeof this.cdr.markForCheck === 'function') {
+        this.cdr.markForCheck();
+      }
     }
   }
 
@@ -274,9 +278,9 @@ export class PortalHotelesDashboardPage {
       ]);
     }
 
-    return [headers, ...rows]
-      .map((row) => row.map((value) => this.toCsvCell(value)).join(','))
-      .join('\n');
+    const headerRow = headers.join(',');
+    const dataRows = rows.map((row) => row.map((value) => this.toCsvCell(value)).join(','));
+    return [headerRow, ...dataRows].join('\n');
   }
 
   private toCsvCell(value: string): string {
