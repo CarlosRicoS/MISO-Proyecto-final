@@ -2,6 +2,8 @@
   "NAV": {
     "SEARCH": "Buscar",
     "BOOKINGS": "Reservas",
+    "FAVORITES": "Favoritos",
+    "PROFILE": "Perfil",
     "SIGN_IN": "Iniciar sesión",
     "SIGN_UP": "Registrarse",
     "ACCOUNT": "Cuenta",
@@ -157,6 +159,7 @@
     "ERR_CHECKOUT_REQUIRED": "La fecha de salida es obligatoria",
     "ERR_CHECKOUT_AFTER_CHECKIN": "La salida debe ser después de la entrada",
     "ERR_GUESTS_MIN": "Debe haber al menos 1 huésped",
+    "LOCATION_UNAVAILABLE": "Ubicación no disponible",
     "STATUS_EXCEPTIONAL": "Excepcional",
     "STATUS_EXCELLENT": "Excelente",
     "STATUS_VERY_GOOD": "Muy bueno",
@@ -164,7 +167,16 @@
     "STATUS_FAIR": "Aceptable",
     "STATUS_UNRATED": "Sin calificación",
     "REVIEWS_NONE": "Aún no hay reseñas",
+    "REVIEWS_ONE": "1 reseña",
+    "REVIEWS_MULTIPLE": "{{count}} reseñas",
+    "POPULAR_AMENITIES": "Comodidades populares",
     "VERIFIED_GUEST": "Huésped verificado"
+    ,"EDIT_DETAILS": "Editar detalles"
+    ,"HIDE_DETAILS": "Ocultar detalles"
+    ,"VIEW_DETAILS": "Ver detalles"
+    ,"CHECKIN_PLACEHOLDER": "dd/mm/aaaa"
+    ,"CHECKOUT_PLACEHOLDER": "dd/mm/aaaa"
+    ,"GUESTS_PLACEHOLDER": "1 huésped"
   },
   "BOOKING_LIST": {
     "TITLE": "Mis reservas",
@@ -174,6 +186,10 @@
     "FILTER_UPCOMING": "Próximas",
     "FILTER_COMPLETED": "Completadas",
     "FILTER_CANCELLED": "Canceladas",
+    "STATUS_PENDING": "Próximas",
+    "STATUS_CONFIRMED": "Confirmada",
+    "STATUS_COMPLETED": "Completada",
+    "STATUS_CANCELLED": "Cancelada",
     "LOADING": "Cargando reservas...",
     "LOADING_MORE": "Cargando más reservas...",
     "ERROR": "No fue posible cargar las reservas.",

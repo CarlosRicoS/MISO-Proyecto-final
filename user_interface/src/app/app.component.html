@@ -25,28 +25,28 @@
   <ion-footer slot="fixed" appPlatformText appPlatformShow="mobile" *ngIf="showNavbar && !isDetailRoute && !isSearchResultsRoute">
     <ion-toolbar class="mobile-tab-bar">
       <ion-buttons class="mobile-tab-bar__buttons" slot="start">
-        <ion-button class="mobile-tab-bar__button" fill="clear" routerLink="/home" routerLinkActive="is-active" [routerLinkActiveOptions]="{ exact: true }">
+        <ion-button class="mobile-tab-bar__button" fill="clear" routerLink="/home" routerLinkActive="is-active" [routerLinkActiveOptions]="{ exact: true }" [attr.aria-label]="'NAV.SEARCH' | translate">
           <div class="stack-item">
             <ion-icon name="search" aria-hidden="true"></ion-icon>
-            <span class="mobile-tab-bar__label">Search</span>
+            <span class="mobile-tab-bar__label">{{ 'NAV.SEARCH' | translate }}</span>
           </div>
         </ion-button>
-        <ion-button class="mobile-tab-bar__button" fill="clear" aria-label="Favorites">
+        <ion-button class="mobile-tab-bar__button" fill="clear" [attr.aria-label]="'NAV.FAVORITES' | translate">
           <div class="stack-item">
             <ion-icon name="heart-outline" aria-hidden="true"></ion-icon>
-            <span class="mobile-tab-bar__label">Favorites</span>
+            <span class="mobile-tab-bar__label">{{ 'NAV.FAVORITES' | translate }}</span>
           </div>
         </ion-button>
-        <ion-button class="mobile-tab-bar__button" fill="clear" aria-label="Bookings" routerLink="/booking-list" routerLinkActive="is-active" [routerLinkActiveOptions]="{ exact: true }">
+        <ion-button class="mobile-tab-bar__button" fill="clear" [attr.aria-label]="'NAV.BOOKINGS' | translate" routerLink="/booking-list" routerLinkActive="is-active" [routerLinkActiveOptions]="{ exact: true }">
           <div class="stack-item">
             <ion-icon name="calendar-outline" aria-hidden="true"></ion-icon>
-            <span class="mobile-tab-bar__label">Bookings</span>
+            <span class="mobile-tab-bar__label">{{ 'NAV.BOOKINGS' | translate }}</span>
           </div>
         </ion-button>
-        <ion-button class="mobile-tab-bar__button" fill="clear" aria-label="Profile" (click)="onProfileTabClick()">
+        <ion-button class="mobile-tab-bar__button" fill="clear" [attr.aria-label]="'NAV.PROFILE' | translate" (click)="onProfileTabClick()">
           <div class="stack-item">
             <ion-icon name="person-outline" aria-hidden="true"></ion-icon>
-            <span class="mobile-tab-bar__label">Profile</span>
+            <span class="mobile-tab-bar__label">{{ 'NAV.PROFILE' | translate }}</span>
           </div>
         </ion-button>
       </ion-buttons>

@@ -104,6 +104,7 @@ export class BookingDetailPage implements OnInit, OnDestroy {
   bookingStatusVariant: ThDetailSummaryStatusVariant = 'pending';
   bookingDateRange = '';
   bookingNights = '';
+  private rawBookingStatus = 'PENDING';
 
   paymentSummaryResetVersion = 0;
 
@@ -194,6 +195,16 @@ export class BookingDetailPage implements OnInit, OnDestroy {
 
   async ngOnInit(): Promise<void> {
     this.hasInitialized = true;
+
+    // Subscribe to language changes and re-translate the booking status dynamically
+    this.translate.onLangChange
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        if (this.rawBookingStatus) {
+          this.bookingStatus = this.getBookingStatusLabel(this.rawBookingStatus);
+        }
+      });
+
     await this.refreshPageData();
   }
 
@@ -257,7 +268,11 @@ export class BookingDetailPage implements OnInit, OnDestroy {
     const stateBookingStatus = String(navState?.['bookingStatus'] || '').trim();
     const bookingId = this.getBookingId(navState);
 
-    if (stateBookingStatus) {
+    if (stateReservation?.status) {
+      this.rawBookingStatus = stateReservation.status;
+      this.bookingStatus = this.getBookingStatusLabel(this.rawBookingStatus);
+    } else if (stateBookingStatus) {
+      // Fallback for when only translated status is in state
       this.bookingStatus = stateBookingStatus;
     }
 
@@ -309,14 +324,34 @@ export class BookingDetailPage implements OnInit, OnDestroy {
     }
   }
 
+  private getBookingStatusLabel(status: string): string {
+    const normalizedStatus = (status || '').trim().toUpperCase();
+
+    switch (normalizedStatus) {
+      case 'PENDING':
+        return this.translate.instant('BOOKING_LIST.STATUS_PENDING');
+      case 'CONFIRMED':
+        return this.translate.instant('BOOKING_LIST.STATUS_CONFIRMED');
+      case 'COMPLETED':
+        return this.translate.instant('BOOKING_LIST.STATUS_COMPLETED');
+      case 'CANCELED':
+      case 'CANCELLED':
+        return this.translate.instant('BOOKING_LIST.STATUS_CANCELLED');
+      default:
+        return normalizedStatus
+          ? normalizedStatus.charAt(0) + normalizedStatus.slice(1).toLowerCase()
+          : this.translate.instant('BOOKING_LIST.STATUS_PENDING');
+    }
+  }
+
   get isAccordionLayout(): boolean {
-    const normalizedStatus = (this.bookingStatus || '').trim().toUpperCase();
+    const normalizedStatus = (this.rawBookingStatus || '').trim().toUpperCase();
     return normalizedStatus === 'CONFIRMED';
   }
 
   get isFlatEditableLayout(): boolean {
-    const normalizedStatus = (this.bookingStatus || '').trim().toUpperCase();
-    return normalizedStatus === 'UPCOMING' || normalizedStatus === 'REJECTED';
+    const normalizedStatus = (this.rawBookingStatus || '').trim().toUpperCase();
+    return normalizedStatus === 'UPCOMING' || normalizedStatus === 'PENDING' || normalizedStatus === 'REJECTED';
   }
 
   get isEditableStatus(): boolean {
@@ -324,27 +359,27 @@ export class BookingDetailPage implements OnInit, OnDestroy {
   }
 
   get isFlatCancelLayout(): boolean {
-    const normalizedStatus = (this.bookingStatus || '').trim().toUpperCase();
-    return normalizedStatus === 'UPCOMING';
+    const normalizedStatus = (this.rawBookingStatus || '').trim().toUpperCase();
+    return normalizedStatus === 'UPCOMING' || normalizedStatus === 'PENDING';
   }
 
   get isFlatChangeDatesLayout(): boolean {
-    const normalizedStatus = (this.bookingStatus || '').trim().toUpperCase();
+    const normalizedStatus = (this.rawBookingStatus || '').trim().toUpperCase();
     return normalizedStatus === 'REJECTED';
   }
 
   get showCancelAccordion(): boolean {
-    const normalizedStatus = (this.bookingStatus || '').trim().toUpperCase();
+    const normalizedStatus = (this.rawBookingStatus || '').trim().toUpperCase();
     return normalizedStatus === 'CONFIRMED';
   }
 
   get showChangeDatesAccordion(): boolean {
-    const normalizedStatus = (this.bookingStatus || '').trim().toUpperCase();
+    const normalizedStatus = (this.rawBookingStatus || '').trim().toUpperCase();
     return normalizedStatus === 'CONFIRMED';
   }
 
   get isCancellationHiddenForStatus(): boolean {
-    const normalizedStatus = (this.bookingStatus || '').trim().toUpperCase();
+    const normalizedStatus = (this.rawBookingStatus || '').trim().toUpperCase();
     return normalizedStatus === 'CANCELED' || normalizedStatus === 'CANCELLED' || normalizedStatus === 'COMPLETED';
   }
 
@@ -815,8 +850,9 @@ export class BookingDetailPage implements OnInit, OnDestroy {
       images,
     };
 
-    this.bookingStatus = this.getBookingStatusLabel(detailReservation.status || this.bookingStatus);
-    this.bookingStatusVariant = this.getBookingStatusVariant(detailReservation.status || this.bookingStatus);
+    this.rawBookingStatus = detailReservation.status || this.rawBookingStatus;
+    this.bookingStatus = this.getBookingStatusLabel(this.rawBookingStatus);
+    this.bookingStatusVariant = this.getBookingStatusVariant(this.rawBookingStatus);
     this.bookingDateRange = this.formatBookingDateRange(
       detailReservation.period_start,
       detailReservation.period_end,
@@ -924,24 +960,6 @@ export class BookingDetailPage implements OnInit, OnDestroy {
     }
 
     return `${startMonth} ${startDate.getDate()}, ${startYear} - ${endMonth} ${endDate.getDate()}, ${endYear}`;
-  }
-
-  private getBookingStatusLabel(status: string): string {
-    const normalizedStatus = (status || '').trim().toUpperCase();
-
-    switch (normalizedStatus) {
-      case 'PENDING':
-        return 'Upcoming';
-      case 'CONFIRMED':
-        return 'Confirmed';
-      case 'COMPLETED':
-        return 'Completed';
-      case 'CANCELED':
-      case 'CANCELLED':
-        return 'Canceled';
-      default:
-        return normalizedStatus ? normalizedStatus.charAt(0) + normalizedStatus.slice(1).toLowerCase() : 'Upcoming';
-    }
   }
 
   private getBookingStatusVariant(status: string): ThDetailSummaryStatusVariant {
@@ -1228,7 +1246,8 @@ export class BookingDetailPage implements OnInit, OnDestroy {
           if (this.currentReservation) {
             this.currentReservation.status = 'COMPLETED';
           }
-          this.bookingStatus = 'Completed';
+          this.rawBookingStatus = 'COMPLETED';
+          this.bookingStatus = this.getBookingStatusLabel('COMPLETED');
           this.bookingStatusVariant = this.getBookingStatusVariant('COMPLETED');
           this.showAlert(
             this.translate.instant('BOOKING_DETAIL.CHECKIN_SUCCESS_TITLE'),

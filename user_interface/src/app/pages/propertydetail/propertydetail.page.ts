@@ -4,6 +4,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { firstValueFrom, Subject, of, EMPTY } from 'rxjs';
 import { switchMap, takeUntil, tap, catchError } from 'rxjs/operators';
 import { TranslateService } from '@ngx-translate/core';
+import { AppCacheService } from '../../core/services/app-cache.service';
 import { ThAmenityItem } from '../../shared/components/th-amenities-summary/th-amenities-summary.component';
 import { ThDetailsMosaicImage } from '../../shared/components/th-details-mosaic/th-details-mosaic.component';
 import { ThPaymentSummaryBadge, ThPaymentSummaryItem } from '../../shared/components/th-payment-summary/th-payment-summary.component';
@@ -88,6 +89,8 @@ export class PropertydetailPage implements OnInit, OnDestroy {
   pricingError = '';
 
   private currentPropertyDetail: PropertyDetail | null = null;
+  private lastHotel: Hotel | undefined;
+  private lastSearch: { startDate?: string; endDate?: string; capacity?: number } | undefined;
   private nightlyPrice = 0;
   private priceTrigger$ = new Subject<void>();
   private destroy$ = new Subject<void>();
@@ -102,7 +105,11 @@ export class PropertydetailPage implements OnInit, OnDestroy {
     private router: Router,
     private imageCache: ImageCacheService,
     private translate: TranslateService,
+    private appCache: AppCacheService,
   ) {
+    this.translate.onLangChange.pipe(takeUntil(this.destroy$)).subscribe(() => {
+      this.refreshLangDependentStrings();
+    });
     this.priceTrigger$.pipe(
       takeUntil(this.destroy$),
       switchMap(() => {
@@ -158,6 +165,52 @@ export class PropertydetailPage implements OnInit, OnDestroy {
     ).subscribe();
   }
 
+  private refreshLangDependentStrings(): void {
+    if (!this.currentPropertyDetail) {
+      return;
+    }
+
+    const detail = this.currentPropertyDetail;
+    const hotel = this.lastHotel;
+
+    const locationParts = [hotel?.city, hotel?.country].filter((part) => Boolean(part));
+    const location = locationParts.length ? locationParts.join(', ') : this.translate.instant('PROPERTY.LOCATION_UNAVAILABLE');
+
+    const reviews = Array.isArray(detail.reviews) ? detail.reviews : [];
+    const reviewRatings = reviews
+      .map((review) => Number(review.rating))
+      .filter((rating) => Number.isFinite(rating));
+    const averageReviewRating = reviewRatings.length
+      ? reviewRatings.reduce((sum, value) => sum + value, 0) / reviewRatings.length
+      : null;
+    const ratingValue = (hotel && Number.isFinite(hotel.rating) ? Number(hotel.rating) : null) ?? averageReviewRating;
+    const ratingText = ratingValue !== null ? ratingValue.toFixed(1) : 'N/A';
+    let reviewCountText: string;
+    if (reviews.length === 0) {
+      reviewCountText = this.translate.instant('PROPERTY.REVIEWS_NONE');
+    } else if (reviews.length === 1) {
+      reviewCountText = this.translate.instant('PROPERTY.REVIEWS_ONE');
+    } else {
+      reviewCountText = this.translate.instant('PROPERTY.REVIEWS_MULTIPLE', { count: reviews.length });
+    }
+
+    this.property = {
+      ...this.property,
+      location,
+      rating: ratingText,
+      score: ratingText,
+      scoreLabel: ratingValue !== null ? this.getScoreLabel(ratingValue) : this.translate.instant('PROPERTY.STATUS_UNRATED'),
+      reviewsText: reviewCountText,
+      stars: ratingValue !== null ? Math.round(ratingValue) : 0,
+    };
+
+    this.paymentSummary = {
+      ...this.paymentSummary,
+      subtitle: this.translate.instant('PROPERTY.PER_NIGHT') || this.paymentSummary.subtitle,
+      promoText: this.translate.instant('PROPERTY.PROMO_TEXT') || this.paymentSummary.promoText,
+    };
+  }
+
   async ngOnInit(): Promise<void> {
     const navState = this.router.getCurrentNavigation()?.extras.state ?? history.state;
     const stateHotel = (navState?.['hotel'] as Hotel | undefined) ?? undefined;
@@ -196,7 +249,7 @@ export class PropertydetailPage implements OnInit, OnDestroy {
     this.currentPropertyDetail = detail;
 
     const locationParts = [hotel?.city, hotel?.country].filter((part) => Boolean(part));
-    const location = locationParts.length ? locationParts.join(', ') : 'Location unavailable';
+    const location = locationParts.length ? locationParts.join(', ') : this.translate.instant('PROPERTY.LOCATION_UNAVAILABLE');
     const priceValue = Number.isFinite(hotel?.pricePerNight) ? Number(hotel?.pricePerNight) : 0;
     this.nightlyPrice = priceValue;
     const currency = hotel?.currency || '$';
@@ -221,7 +274,14 @@ export class PropertydetailPage implements OnInit, OnDestroy {
       : null;
     const ratingValue = hotelRating ?? averageReviewRating;
     const ratingText = ratingValue !== null ? ratingValue.toFixed(1) : 'N/A';
-    const reviewCountText = reviews.length ? `${reviews.length} reviews` : 'No reviews yet';
+    let reviewCountText: string;
+    if (reviews.length === 0) {
+      reviewCountText = this.translate.instant('PROPERTY.REVIEWS_NONE');
+    } else if (reviews.length === 1) {
+      reviewCountText = this.translate.instant('PROPERTY.REVIEWS_ONE');
+    } else {
+      reviewCountText = this.translate.instant('PROPERTY.REVIEWS_MULTIPLE', { count: reviews.length });
+    }
 
     this.property = {
       title: detail.name || hotel?.name || 'Property',
@@ -229,7 +289,7 @@ export class PropertydetailPage implements OnInit, OnDestroy {
       price: `${currency}${priceValue}`,
       rating: ratingText,
       score: ratingText,
-      scoreLabel: ratingValue !== null ? this.getScoreLabel(ratingValue) : 'Unrated',
+      scoreLabel: ratingValue !== null ? this.getScoreLabel(ratingValue) : this.translate.instant('PROPERTY.STATUS_UNRATED'),
       reviewsText: reviewCountText,
       stars: ratingValue !== null ? Math.round(ratingValue) : 0,
       imageUrl: this.imageCache.resolveImageUrl(hotel?.photos?.[0] || hotel?.imageUrl || ''),
@@ -257,6 +317,15 @@ export class PropertydetailPage implements OnInit, OnDestroy {
     this.reviewCategoryScores = [];
 
     this.updatePaymentSummary(priceValue, currency, search);
+    this.lastHotel = hotel;
+    this.lastSearch = search;
+
+    try {
+      this.appCache.write('last_hotel', hotel ?? null);
+      this.appCache.write('last_search', search ?? null);
+    } catch {
+      // ignore cache errors
+    }
 
     this.restorePendingBooking(detail.id);
     this.paymentSummaryResetVersion += 1;
@@ -544,18 +613,18 @@ export class PropertydetailPage implements OnInit, OnDestroy {
 
   private getScoreLabel(score: number): string {
     if (score >= 4.7) {
-      return 'Exceptional';
+      return this.translate.instant('PROPERTY.STATUS_EXCEPTIONAL');
     }
     if (score >= 4.2) {
-      return 'Excellent';
+      return this.translate.instant('PROPERTY.STATUS_EXCELLENT');
     }
     if (score >= 3.5) {
-      return 'Very good';
+      return this.translate.instant('PROPERTY.STATUS_VERY_GOOD');
     }
     if (score >= 3.0) {
-      return 'Good';
+      return this.translate.instant('PROPERTY.STATUS_GOOD');
     }
-    return 'Fair';
+    return this.translate.instant('PROPERTY.STATUS_FAIR');
   }
 
   private getAmenityIcon(description?: string): string {

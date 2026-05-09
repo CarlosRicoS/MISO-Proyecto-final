@@ -86,7 +86,7 @@ export class LocaleService {
       return this.formatCurrency(0);
     }
 
-    const fractionDigits = this.currencyCode === 'COP' ? 0 : 2;
+    const fractionDigits = 2;
 
     try {
       return new Intl.NumberFormat(this.localeCode, {
