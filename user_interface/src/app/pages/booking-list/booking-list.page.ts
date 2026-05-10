@@ -267,23 +267,27 @@ export class BookingListPage implements OnInit, OnDestroy {
     });
   }
 
+  getBookingStatusLabelForDisplay(status: string): string {
+    return this.getBookingStatusLabel(status);
+  }
+
   private getBookingStatusLabel(status: string): string {
     const normalizedStatus = (status || '').trim().toUpperCase();
 
     switch (normalizedStatus) {
       case 'PENDING':
-        return 'Upcoming';
+        return this.translate.instant('BOOKING_LIST.STATUS_PENDING');
       case 'CONFIRMED':
-        return 'Confirmed';
+        return this.translate.instant('BOOKING_LIST.STATUS_CONFIRMED');
       case 'COMPLETED':
-        return 'Completed';
+        return this.translate.instant('BOOKING_LIST.STATUS_COMPLETED');
       case 'CANCELED':
       case 'CANCELLED':
-        return 'Canceled';
+        return this.translate.instant('BOOKING_LIST.STATUS_CANCELLED');
       default:
         return normalizedStatus
           ? normalizedStatus.charAt(0) + normalizedStatus.slice(1).toLowerCase()
-          : 'Upcoming';
+          : this.translate.instant('BOOKING_LIST.STATUS_PENDING');
     }
   }
 

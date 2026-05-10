@@ -58,6 +58,9 @@
           <ion-icon name="arrow-back" aria-hidden="true"></ion-icon>
         </ion-button>
         <div class="th-navbar__mobile-actions-right">
+          <ion-button class="th-navbar__mobile-action th-navbar__mobile-action--detail" fill="clear" [attr.aria-label]="'NAV.LANGUAGE_TOGGLE_' + (currentLang === 'es' ? 'ES' : 'EN') | translate" (click)="toggleLanguage()">
+            <ion-icon name="language-outline" aria-hidden="true"></ion-icon>
+          </ion-button>
           <ion-button
             class="th-navbar__mobile-action th-navbar__mobile-action--detail"
             fill="clear"
@@ -78,14 +81,19 @@
           <ion-icon name="arrow-back" aria-hidden="true"></ion-icon>
         </ion-button>
         <div class="th-navbar__mobile-title">{{ mobileTitle }}</div>
-        <ion-button
-          *ngIf="isBookingList"
-          class="th-navbar__mobile-action"
-          fill="clear"
-          [attr.aria-label]="'COMMON.MORE_OPTIONS' | translate"
-        >
-          <ion-icon name="ellipsis-vertical" aria-hidden="true"></ion-icon>
-        </ion-button>
+        <div class="th-navbar__mobile-actions-right">
+          <ion-button class="th-navbar__mobile-action" fill="clear" [attr.aria-label]="'NAV.LANGUAGE_TOGGLE_' + (currentLang === 'es' ? 'ES' : 'EN') | translate" (click)="toggleLanguage()">
+            <ion-icon name="language-outline" aria-hidden="true"></ion-icon>
+          </ion-button>
+          <ion-button
+            *ngIf="isBookingList"
+            class="th-navbar__mobile-action"
+            fill="clear"
+            [attr.aria-label]="'COMMON.MORE_OPTIONS' | translate"
+          >
+            <ion-icon name="ellipsis-vertical" aria-hidden="true"></ion-icon>
+          </ion-button>
+        </div>
       </ng-container>
       </ng-template>
 
@@ -93,9 +101,14 @@
         <div class="th-navbar__brand">
           <img class="th-navbar__logo" [src]="logoSrc" [alt]="logoAlt" />
         </div>
-        <ion-button *ngIf="isMobileNative" class="th-navbar__icon-btn" fill="clear" [attr.aria-label]="'NAV.NOTIFICATIONS' | translate" (click)="onNotificationsClick($event)">
-          <ion-icon name="notifications-outline" aria-hidden="true"></ion-icon>
-        </ion-button>
+        <div class="th-navbar__mobile-actions-right">
+          <ion-button class="th-navbar__icon-btn" fill="clear" [attr.aria-label]="'NAV.LANGUAGE_TOGGLE_' + (currentLang === 'es' ? 'ES' : 'EN') | translate" (click)="toggleLanguage()">
+            <ion-icon name="language-outline" aria-hidden="true"></ion-icon>
+          </ion-button>
+          <ion-button *ngIf="isMobileNative" class="th-navbar__icon-btn" fill="clear" [attr.aria-label]="'NAV.NOTIFICATIONS' | translate" (click)="onNotificationsClick($event)">
+            <ion-icon name="notifications-outline" aria-hidden="true"></ion-icon>
+          </ion-button>
+        </div>
       </ng-template>
     </div>
   </ion-toolbar>

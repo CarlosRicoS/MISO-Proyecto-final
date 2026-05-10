@@ -2,6 +2,8 @@
   "NAV": {
     "SEARCH": "Search",
     "BOOKINGS": "Bookings",
+    "FAVORITES": "Favorites",
+    "PROFILE": "Profile",
     "SIGN_IN": "Sign In",
     "SIGN_UP": "Sign Up",
     "ACCOUNT": "Account",
@@ -110,7 +112,14 @@
     "FILTER_DESTINATION": "Destination",
     "FILTER_CHECKIN": "Check-in",
     "FILTER_CHECKOUT": "Check-out",
-    "FILTER_GUESTS": "Guests"
+    "FILTER_GUESTS": "Guests",
+    "FILTER_ACTION": "Filter",
+    "SORT_ACTION": "Sort",
+    "FILTERS_ACTION": "Filters",
+    "PRICE_ACTION": "Price",
+    "RATING_ACTION": "Rating",
+    "GUEST_ONE": "{{count}} guest",
+    "GUESTS": "{{count}} guests"
   },
   "PROPERTY": {
     "VIEW_ALL_PHOTOS": "View all {{count}} photos",
@@ -157,6 +166,7 @@
     "ERR_CHECKOUT_REQUIRED": "Check-out date is required",
     "ERR_CHECKOUT_AFTER_CHECKIN": "Check-out must be after check-in",
     "ERR_GUESTS_MIN": "Guests must be at least 1",
+    "LOCATION_UNAVAILABLE": "Location unavailable",
     "STATUS_EXCEPTIONAL": "Exceptional",
     "STATUS_EXCELLENT": "Excellent",
     "STATUS_VERY_GOOD": "Very good",
@@ -164,7 +174,16 @@
     "STATUS_FAIR": "Fair",
     "STATUS_UNRATED": "Unrated",
     "REVIEWS_NONE": "No reviews yet",
+    "REVIEWS_ONE": "1 review",
+    "REVIEWS_MULTIPLE": "{{count}} reviews",
+    "POPULAR_AMENITIES": "Popular Amenities",
     "VERIFIED_GUEST": "Verified guest"
+    ,"EDIT_DETAILS": "Edit details"
+    ,"HIDE_DETAILS": "Hide details"
+    ,"VIEW_DETAILS": "View details"
+    ,"CHECKIN_PLACEHOLDER": "mm/dd/yyyy"
+    ,"CHECKOUT_PLACEHOLDER": "mm/dd/yyyy"
+    ,"GUESTS_PLACEHOLDER": "1 Guest"
   },
   "BOOKING_LIST": {
     "TITLE": "My Reservations",
@@ -173,7 +192,11 @@
     "FILTER_ALL": "All",
     "FILTER_UPCOMING": "Upcoming",
     "FILTER_COMPLETED": "Completed",
-    "FILTER_CANCELLED": "Cancelled",
+    "FILTER_CANCELLED": "Canceled",
+    "STATUS_PENDING": "Upcoming",
+    "STATUS_CONFIRMED": "Confirmed",
+    "STATUS_COMPLETED": "Completed",
+    "STATUS_CANCELLED": "Canceled",
     "LOADING": "Loading reservations...",
     "LOADING_MORE": "Loading more reservations...",
     "ERROR": "Unable to load reservations.",
@@ -203,6 +226,12 @@
     "PER_NIGHT": "per night",
     "TOTAL_LABEL": "Total",
     "STANDARD_ROOM": "Standard Room",
+    "CHECKIN_LABEL": "Check-in",
+    "CHECKOUT_LABEL": "Check-out",
+    "GUESTS_LABEL": "Guests",
+    "ROOM_TYPE_LABEL": "Room Type",
+    "SERVICE_FEE": "Service fee",
+    "TAXES": "Taxes",
     "LOADING": "Loading booking details...",
     "ERROR": "Unable to load booking details.",
     "ALERT_CANCELLATION_UNAVAILABLE_TITLE": "Cancellation unavailable",
@@ -236,8 +265,8 @@
     "POLICY_PAID_NONE": "Cancellation is not free and no refund will be issued. Would you like to continue?",
     "ACCEPT": "Accept",
     "CANCEL": "Cancel",
-    "CHECKIN_LABEL": "Check in",
-    "CHECKIN_ARIA": "Check in with camera",
+    "MOBILE_CHECKIN_LABEL": "Check in",
+    "MOBILE_CHECKIN_ARIA": "Check in with camera",
     "CHECKIN_TITLE": "Check-in",
     "CHECKIN_NO_CODE_BODY": "No QR code detected.",
     "CHECKIN_NO_BOOKING_BODY": "Unable to determine booking. Please try again.",

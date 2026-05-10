@@ -27,11 +27,10 @@ export class ThDatetimeModalComponent {
   @Output() cancelled = new EventEmitter<void>();
 
   private readonly localeService = inject(LocaleService);
-
-  /** Locale string for `ion-datetime`, derived from the active app language. */
-  get dateLocale(): string {
-    return this.localeService.localeCode;
-  }
+  dateLocale: string = this.localeService.localeCode;
+  private langSub = this.localeService.currentLang$.subscribe(() => {
+    this.dateLocale = this.localeService.localeCode;
+  });
 
   onConfirm(): void {
     if (this.selectedDate) {

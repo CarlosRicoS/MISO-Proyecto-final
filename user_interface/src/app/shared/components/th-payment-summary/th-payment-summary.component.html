@@ -9,7 +9,7 @@
         <div class="th-payment-summary__field">
           <span class="th-payment-summary__field-label">{{ checkInLabel }}</span>
           <div class="th-payment-summary__field-value">
-            <span>{{ checkInValue || checkInPlaceholder }}</span>
+            <span>{{ checkInValue || (checkInPlaceholder | translate) }}</span>
             <ion-icon [name]="checkInIcon" aria-hidden="true"></ion-icon>
           </div>
         </div>
@@ -17,7 +17,7 @@
         <div class="th-payment-summary__field">
           <span class="th-payment-summary__field-label">{{ checkOutLabel }}</span>
           <div class="th-payment-summary__field-value">
-            <span>{{ checkOutValue || checkOutPlaceholder }}</span>
+            <span>{{ checkOutValue || (checkOutPlaceholder | translate) }}</span>
             <ion-icon [name]="checkOutIcon" aria-hidden="true"></ion-icon>
           </div>
         </div>
@@ -25,7 +25,7 @@
         <div class="th-payment-summary__field">
           <span class="th-payment-summary__field-label">{{ guestsLabel }}</span>
           <div class="th-payment-summary__field-value">
-            <span>{{ guestsValue || guestsPlaceholder }}</span>
+            <span>{{ guestsValue || (guestsPlaceholder | translate) }}</span>
             <ion-icon name="people-outline" class="th-payment-summary__field-icon" aria-hidden="true"></ion-icon>
           </div>
         </div>
@@ -56,14 +56,14 @@
             class="th-payment-summary__field-value"
             [class.th-payment-summary__field-value--error]="!!checkInError"
           >
-            <span>{{ checkInValue || checkInPlaceholder }}</span>
+            <span>{{ checkInValue || (checkInPlaceholder | translate) }}</span>
             <ion-icon [name]="checkInIcon" aria-hidden="true"></ion-icon>
           </div>
         </button>
         <div *ngIf="!editable" class="th-payment-summary__field th-payment-summary__field--static">
           <span class="th-payment-summary__field-label">{{ checkInLabel }}</span>
           <div class="th-payment-summary__field-value">
-            <span>{{ checkInValue || checkInPlaceholder }}</span>
+            <span>{{ checkInValue || (checkInPlaceholder | translate) }}</span>
             <ion-icon [name]="checkInIcon" aria-hidden="true"></ion-icon>
           </div>
         </div>
@@ -87,14 +87,14 @@
             class="th-payment-summary__field-value"
             [class.th-payment-summary__field-value--error]="!!checkOutError"
           >
-            <span>{{ checkOutValue || checkOutPlaceholder }}</span>
+            <span>{{ checkOutValue || (checkOutPlaceholder | translate) }}</span>
             <ion-icon [name]="checkOutIcon" aria-hidden="true"></ion-icon>
           </div>
         </button>
         <div *ngIf="!editable" class="th-payment-summary__field th-payment-summary__field--static">
           <span class="th-payment-summary__field-label">{{ checkOutLabel }}</span>
           <div class="th-payment-summary__field-value">
-            <span>{{ checkOutValue || checkOutPlaceholder }}</span>
+            <span>{{ checkOutValue || (checkOutPlaceholder | translate) }}</span>
             <ion-icon [name]="checkOutIcon" aria-hidden="true"></ion-icon>
           </div>
         </div>
@@ -113,7 +113,7 @@
               type="number"
               inputmode="numeric"
               pattern="[0-9]*"
-              [placeholder]="guestsPlaceholder"
+              [placeholder]="guestsPlaceholder | translate"
               [value]="guestsValue"
               aria-labelledby="th-ps-guests-label"
               (ionInput)="onGuestsInput($event.detail.value)"
@@ -128,7 +128,7 @@
         <div *ngIf="!editable" class="th-payment-summary__field th-payment-summary__field--static">
           <span class="th-payment-summary__field-label">{{ guestsLabel }}</span>
           <div class="th-payment-summary__field-value">
-            <span>{{ guestsValue || guestsPlaceholder }}</span>
+            <span>{{ guestsValue || (guestsPlaceholder | translate) }}</span>
             <ion-icon
               name="people-outline"
               class="th-payment-summary__field-icon"
@@ -286,7 +286,7 @@
         (click)="toggleMobileEditor()"
       >
         <ion-icon [name]="isMobileEditorOpen ? 'chevron-up-outline' : 'create-outline'" aria-hidden="true"></ion-icon>
-        <span>{{ isMobileEditorOpen ? 'Hide details' : (editable ? 'Edit details' : 'View details') }}</span>
+        <span>{{ isMobileEditorOpen ? ('PROPERTY.HIDE_DETAILS' | translate) : (editable ? ('PROPERTY.EDIT_DETAILS' | translate) : ('PROPERTY.VIEW_DETAILS' | translate)) }}</span>
       </button>
     </div>
 

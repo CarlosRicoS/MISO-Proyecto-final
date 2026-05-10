@@ -3,14 +3,16 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute, convertToParamMap, Router } from '@angular/router';
 import { IonicModule, Platform, NavController } from '@ionic/angular';
-import { of, throwError } from 'rxjs';
+import { firstValueFrom, of, throwError } from 'rxjs';
 import { CapacitorBarcodeScanner } from '@capacitor/barcode-scanner';
+import { TranslateService } from '@ngx-translate/core';
 import { BookingDetailPage } from './booking-detail.page';
 import { AuthSessionService } from '../../core/services/auth-session.service';
 import { BookingService } from '../../core/services/booking.service';
 import { PropertyDetailService } from '../../core/services/property-detail.service';
 import { PricingService } from '../../core/services/pricing.service';
 import { ImageCacheService } from '../../core/services/image-cache.service';
+import { LocaleService } from '../../core/services/locale.service';
 import { translateTestingModule } from '../../testing/translate-testing.module';
 
 describe('BookingDetailPage', () => {
@@ -118,6 +120,12 @@ describe('BookingDetailPage', () => {
     post = jasmine.createSpy('post').and.returnValue(of({ status: 'COMPLETED' }));
   }
 
+  class LocaleServiceMock {
+    localeCode = 'en-US';
+    currencyCode = 'USD';
+    currentLang$ = of('en');
+  }
+
   beforeEach(async () => {
     const platformMock = {
       is: jasmine.createSpy('is').and.returnValue(true),
@@ -137,6 +145,7 @@ describe('BookingDetailPage', () => {
         { provide: NavController, useClass: NavControllerMock },
         { provide: ImageCacheService, useClass: ImageCacheServiceMock },
         { provide: HttpClient, useClass: HttpClientMock },
+        { provide: LocaleService, useClass: LocaleServiceMock },
       ],
     }).compileComponents();
 
@@ -189,6 +198,25 @@ describe('BookingDetailPage', () => {
 
     expect(component.bookingStatus).toBe('Canceled');
     expect(component.bookingStatusVariant).toBe('canceled');
+  });
+
+  it('rebuilds the booking summary labels when the language switches to Spanish', async () => {
+    routerMock.navigationState = {
+      reservation: { ...mockReservation, status: 'CONFIRMED' },
+      propertyDetail: mockPropertyDetail,
+    };
+
+    const translate = TestBed.inject(TranslateService);
+
+    await component.ngOnInit();
+    await firstValueFrom(translate.use('es'));
+
+    expect(component.bookingNights).toBe('3 noches');
+    expect(component.paymentSummary.subtitle).toBe('por noche');
+    expect(component.paymentSummary.promoText).toBe('Detalles de la reserva');
+    expect(component.paymentSummary.roomTypeValue).toBe('Habitación estándar');
+    expect(component.summaryItems[1].label).toBe('Cargo por servicio');
+    expect(component.summaryItems[2].label).toBe('Impuestos');
   });
 
   it('redirects to login when session is logged out', async () => {
@@ -1758,7 +1786,7 @@ describe('BookingDetailPage', () => {
     });
 
     it('isCancellationHiddenForStatus returns true for CANCELLED variant', () => {
-      component.bookingStatus = 'Cancelled';
+      (component as unknown as { rawBookingStatus: string }).rawBookingStatus = 'CANCELLED';
       expect(component.isCancellationHiddenForStatus).toBeTrue();
     });
 

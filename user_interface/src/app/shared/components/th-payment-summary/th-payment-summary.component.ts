@@ -3,6 +3,7 @@ import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from
 import { IonicModule } from '@ionic/angular';
 import { ThButtonComponent } from '../th-button/th-button.component';
 import { ThDatetimeModalComponent } from '../th-datetime-modal/th-datetime-modal.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 export interface ThPaymentSummaryItem {
   label: string;
@@ -29,7 +30,7 @@ export type ThPaymentSummaryVariant = 'default' | 'admin';
   templateUrl: './th-payment-summary.component.html',
   styleUrls: ['./th-payment-summary.component.scss'],
   standalone: true,
-  imports: [CommonModule, IonicModule, ThButtonComponent, ThDatetimeModalComponent],
+  imports: [CommonModule, IonicModule, ThButtonComponent, ThDatetimeModalComponent, TranslateModule],
 })
 export class ThPaymentSummaryComponent implements OnChanges {
   @Input() variant: ThPaymentSummaryVariant = 'default';
@@ -43,11 +44,11 @@ export class ThPaymentSummaryComponent implements OnChanges {
   @Input() checkOutLabel = 'Check-out';
   @Input() checkOutValue = '2024-12-23';
   @Input() checkOutIcon = 'calendar-outline';
-  @Input() checkInPlaceholder = 'mm/dd/yyyy';
-  @Input() checkOutPlaceholder = 'mm/dd/yyyy';
+  @Input() checkInPlaceholder = 'PROPERTY.CHECKIN_PLACEHOLDER';
+  @Input() checkOutPlaceholder = 'PROPERTY.CHECKOUT_PLACEHOLDER';
   @Input() guestsLabel = 'Guests';
   @Input() guestsValue = '1';
-  @Input() guestsPlaceholder = '1 Guest';
+  @Input() guestsPlaceholder = 'PROPERTY.GUESTS_PLACEHOLDER';
   @Input() guestsIcon = 'chevron-down-outline';
   @Input() roomTypeLabel = 'Room Type';
   @Input() roomTypeValue = 'Standard Room';

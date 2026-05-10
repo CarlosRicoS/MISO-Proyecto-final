@@ -5,10 +5,13 @@
         <ion-icon name="location" class="th-filter-summary__icon"></ion-icon>
       </span>
       <span class="th-filter-summary__top-text">
-        <span class="th-filter-summary__top-title">{{ filterParams?.locationValue || 'Destination' }}</span>
+        <span class="th-filter-summary__top-title">
+          {{ filterParams?.locationValue || filterParams?.locationLabel || 'Destination' }}
+        </span>
         <span class="th-filter-summary__top-subtitle">
-          {{ filterParams?.checkInValue || 'Check-in' }} - {{ filterParams?.checkOutValue || 'Check-out' }}
-          | {{ filterParams?.guestsValue || 'Guests' }}
+          {{ filterParams?.checkInValue || filterParams?.checkInLabel || 'Check-in' }} -
+          {{ filterParams?.checkOutValue || filterParams?.checkOutLabel || 'Check-out' }}
+          | {{ filterParams?.guestsValue || filterParams?.guestsLabel || 'Guests' }}
         </span>
       </span>
       <span class="th-filter-summary__icon-box" aria-hidden="true">
@@ -19,11 +22,11 @@
     <div class="th-filter-summary__desktop-actions" aria-label="Desktop quick filters">
       <button class="th-filter-summary__desktop-pill" type="button">
         <ion-icon name="options-outline" class="th-filter-summary__desktop-pill-icon" aria-hidden="true"></ion-icon>
-        <span>Filter</span>
+        <span>{{ topActionLabel }}</span>
       </button>
       <button class="th-filter-summary__desktop-pill" type="button">
         <ion-icon name="swap-vertical-outline" class="th-filter-summary__desktop-pill-icon" aria-hidden="true"></ion-icon>
-        <span>Sort</span>
+        <span>{{ sortActionLabel }}</span>
       </button>
     </div>
 
@@ -32,16 +35,16 @@
 <nav class="th-filter-summary__mobile-actions" aria-label="Quick filters">
   <button class="th-filter-summary__pill th-filter-summary__pill-active" type="button">
     <ion-icon name="options-outline" class="th-filter-summary__pill-icon" aria-hidden="true"></ion-icon>
-    <span>Filters</span>
+    <span>{{ mobileFiltersLabel }}</span>
   </button>
   <button class="th-filter-summary__pill" type="button">
     <ion-icon name="swap-vertical-outline" class="th-filter-summary__pill-icon" aria-hidden="true"></ion-icon>
-    <span>Sort</span>
+    <span>{{ sortActionLabel }}</span>
   </button>
   <button class="th-filter-summary__pill" type="button">
-    <span>Price</span>
+    <span>{{ mobilePriceLabel }}</span>
   </button>
   <button class="th-filter-summary__pill" type="button">
-    <span>Rating</span>
+    <span>{{ mobileRatingLabel }}</span>
   </button>
 </nav>

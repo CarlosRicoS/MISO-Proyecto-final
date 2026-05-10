@@ -4,6 +4,7 @@ import { TestBed } from '@angular/core/testing';
 import { CommonModule } from '@angular/common';
 import { IonicModule } from '@ionic/angular';
 import { ThAmenitiesSummaryComponent } from './th-amenities-summary.component';
+import { translateTestingModule } from '../../../testing/translate-testing.module';
 
 describe('ThAmenitiesSummaryComponent', () => {
   let component: ThAmenitiesSummaryComponent;
@@ -11,7 +12,7 @@ describe('ThAmenitiesSummaryComponent', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [CommonModule, IonicModule.forRoot(), ThAmenitiesSummaryComponent],
+      imports: [CommonModule, IonicModule.forRoot(), ThAmenitiesSummaryComponent, translateTestingModule()],
     });
 
     fixture = TestBed.createComponent(ThAmenitiesSummaryComponent);

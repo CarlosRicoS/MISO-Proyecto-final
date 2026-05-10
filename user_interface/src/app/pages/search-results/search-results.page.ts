@@ -44,15 +44,21 @@ export class SearchResultsPage implements OnInit, OnDestroy {
   } = {};
 
   filterSummaryParams: FilterSummaryParams = {
-    locationLabel: 'Destination',
+    locationLabel: '',
     locationValue: '',
-    checkInLabel: 'Check-in',
+    checkInLabel: '',
     checkInValue: '',
-    checkOutLabel: 'Check-out',
+    checkOutLabel: '',
     checkOutValue: '',
-    guestsLabel: 'Guests',
+    guestsLabel: '',
     guestsValue: '',
   };
+
+  filterSummaryTopActionLabel = '';
+  filterSummarySortLabel = '';
+  filterSummaryMobileFiltersLabel = '';
+  filterSummaryMobilePriceLabel = '';
+  filterSummaryMobileRatingLabel = '';
 
   constructor(
     private hotelsService: HotelsService,
@@ -69,11 +75,14 @@ export class SearchResultsPage implements OnInit, OnDestroy {
   }
 
   async ngOnInit(): Promise<void> {
+    this.refreshFilterSummaryLabels();
+
     // Force change detection on language switch so getHotelPrice() re-emits.
     this.localeService.currentLang$
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => {
         this.hotels = [...this.hotels];
+        this.refreshFilterSummaryLabels();
       });
 
     this.readSearchParamsFromQuery();
@@ -291,7 +300,9 @@ export class SearchResultsPage implements OnInit, OnDestroy {
         checkInValue: this.searchStartDate,
         checkOutValue: this.searchEndDate,
         guestsValue: this.searchCapacity
-          ? `${this.searchCapacity} ${this.searchCapacity === 1 ? 'Guest' : 'Guests'}`
+          ? this.translate.instant(this.searchCapacity === 1 ? 'SEARCH.GUEST_ONE' : 'SEARCH.GUESTS', {
+              count: this.searchCapacity,
+            })
           : '',
       };
     }
@@ -325,5 +336,20 @@ export class SearchResultsPage implements OnInit, OnDestroy {
     }
 
     return currentScrollTop + scrollElement.clientHeight >= scrollElement.scrollHeight - this.bottomScrollThreshold;
+  }
+
+  private refreshFilterSummaryLabels(): void {
+    this.filterSummaryParams = {
+      ...this.filterSummaryParams,
+      locationLabel: this.translate.instant('SEARCH.FILTER_DESTINATION'),
+      checkInLabel: this.translate.instant('SEARCH.FILTER_CHECKIN'),
+      checkOutLabel: this.translate.instant('SEARCH.FILTER_CHECKOUT'),
+      guestsLabel: this.translate.instant('SEARCH.FILTER_GUESTS'),
+    };
+    this.filterSummaryTopActionLabel = this.translate.instant('SEARCH.FILTER_ACTION');
+    this.filterSummarySortLabel = this.translate.instant('SEARCH.SORT_ACTION');
+    this.filterSummaryMobileFiltersLabel = this.translate.instant('SEARCH.FILTERS_ACTION');
+    this.filterSummaryMobilePriceLabel = this.translate.instant('SEARCH.PRICE_ACTION');
+    this.filterSummaryMobileRatingLabel = this.translate.instant('SEARCH.RATING_ACTION');
   }
 }

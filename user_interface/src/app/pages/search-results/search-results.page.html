@@ -6,7 +6,15 @@
   <section class="search-results-list">
     <h1 class="sr-only">{{ 'SEARCH.HEADING' | translate }}</h1>
     <div class="search-results-list__sticky-header">
-      <th-filter-summary class="search-results-list__summary" [filterParams]="filterSummaryParams"></th-filter-summary>
+      <th-filter-summary
+        class="search-results-list__summary"
+        [filterParams]="filterSummaryParams"
+        [topActionLabel]="filterSummaryTopActionLabel"
+        [sortActionLabel]="filterSummarySortLabel"
+        [mobileFiltersLabel]="filterSummaryMobileFiltersLabel"
+        [mobilePriceLabel]="filterSummaryMobilePriceLabel"
+        [mobileRatingLabel]="filterSummaryMobileRatingLabel"
+      ></th-filter-summary>
 
       <div class="search-results-list__inner">
         <p class="search-results-list__count" *ngIf="!isLoading && !errorMessage">

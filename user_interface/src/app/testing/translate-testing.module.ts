@@ -2,6 +2,7 @@ import { ModuleWithProviders } from '@angular/core';
 import { TranslateLoader, TranslateModule, type TranslationObject } from '@ngx-translate/core';
 import { Observable, of } from 'rxjs';
 
+import esTranslations from '../../assets/i18n/es.json';
 import enTranslations from '../../assets/i18n/en.json';
 
 /**
@@ -12,7 +13,11 @@ import enTranslations from '../../assets/i18n/en.json';
  * `translate` pipe / `TranslateService.instant()` paths in production code.
  */
 export class FakeTranslateLoader implements TranslateLoader {
-  getTranslation(): Observable<TranslationObject> {
+  getTranslation(lang?: string): Observable<TranslationObject> {
+    if (lang === 'es') {
+      return of(esTranslations as unknown as TranslationObject);
+    }
+
     return of(enTranslations as unknown as TranslationObject);
   }
 }

@@ -163,6 +163,7 @@ gap: var(--th-space-1);
 // Footer (Price + CTA)
 .th-hotel-card__footer {
   display: flex;
+  flex-wrap: wrap;
   align-items: flex-end;
   justify-content: space-between;
   gap: var(--th-space-3);
@@ -173,7 +174,8 @@ gap: var(--th-space-1);
 .th-hotel-card__price {
   display: flex;
   flex-direction: column;
-gap: var(--th-space-1);
+  gap: var(--th-space-1);
+  min-width: 0;
 }
 
 .th-hotel-card__price-label {
@@ -194,7 +196,14 @@ gap: var(--th-space-1);
 }
 
 .th-hotel-card__cta {
-  display: inline-flex;
+  display: flex;
+  flex: 1 1 140px;
+  min-width: 140px;
+  justify-content: flex-end;
+
+  th-button {
+    width: 100%;
+  }
 }
 
 // Variant: Compact (Default - Card List)
@@ -214,6 +223,11 @@ gap: var(--th-space-2);
 
   .th-hotel-card__footer {
     gap: var(--th-space-2);
+  }
+
+  .th-hotel-card__cta {
+    min-width: 130px;
+    flex-basis: 130px;
   }
 }
 

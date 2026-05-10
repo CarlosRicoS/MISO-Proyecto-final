@@ -176,7 +176,7 @@ describe('BookingListPage', () => {
       { key: 'all', label: 'All', count: 3 },
       { key: 'upcoming', label: 'Upcoming', count: 1 },
       { key: 'completed', label: 'Completed', count: 1 },
-      { key: 'cancelled', label: 'Cancelled', count: 1 },
+      { key: 'cancelled', label: 'Canceled', count: 1 },
     ]);
   });
 

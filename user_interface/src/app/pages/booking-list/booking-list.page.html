@@ -37,7 +37,7 @@
           (ctaClick)="openBookingDetail(reservation)"
         >
           <span th-card-status class="booking-list-tag booking-list-tag--status" [ngClass]="getStatusClass(reservation.status)">
-            {{ reservation.status }}
+            {{ getBookingStatusLabelForDisplay(reservation.status) }}
           </span>
 
           <div th-card-times class="booking-list-card__meta-row">

@@ -302,7 +302,11 @@ describe('SearchResultsPage', () => {
 
     await component.ngOnInit();
 
-    expect(component.filterSummaryParams.guestsValue).toBe('1 Guest');
+    expect(component.filterSummaryParams.locationLabel).toBe('Destination');
+    expect(component.filterSummaryParams.checkInLabel).toBe('Check-in');
+    expect(component.filterSummaryParams.checkOutLabel).toBe('Check-out');
+    expect(component.filterSummaryParams.guestsLabel).toBe('Guests');
+    expect(component.filterSummaryParams.guestsValue).toBe('1 guest');
   });
 
   it('sets error message on load failure', async () => {
