@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input, OnDestroy } from '@angular/core';
+import { Component, Input, OnDestroy, OnInit } from '@angular/core';
 import { IonicModule } from '@ionic/angular';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { Subject } from 'rxjs';
 
 export interface ThAmenityItem {
@@ -16,10 +16,10 @@ export interface ThAmenityItem {
   standalone: true,
   imports: [CommonModule, IonicModule, TranslateModule],
 })
-export class ThAmenitiesSummaryComponent implements OnDestroy {
+export class ThAmenitiesSummaryComponent implements OnDestroy, OnInit {
   private destroy$ = new Subject<void>();
 
-  @Input() title: string | null = null;
+  @Input() title: string | null = 'Popular Amenities';
   @Input() amenities: ThAmenityItem[] = [
     { label: 'Free WiFi', icon: 'wifi-outline' },
     { label: 'Pool', icon: 'water-outline' },
@@ -31,9 +31,17 @@ export class ThAmenitiesSummaryComponent implements OnDestroy {
   @Input() totalAmenities = 32;
   @Input() viewAllLabel = 'View all amenities';
 
+  constructor(private translate: TranslateService) {}
+
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  ngOnInit(): void {
+    if (!this.title || this.title === 'Popular Amenities') {
+      this.title = this.translate.instant('PROPERTY.POPULAR_AMENITIES');
+    }
   }
 
   
@@ -44,6 +52,18 @@ export class ThAmenitiesSummaryComponent implements OnDestroy {
 
   get desktopViewAllText(): string {
     const viewAll = this.viewAllLabel || 'View all';
-    return `${viewAll} ${this.totalAmenities}`;
+    const trimmed = viewAll.trim();
+
+    // If label contains a count placeholder, replace it
+    if (/{\{?\s*count\s*\}?}|%d/.test(trimmed)) {
+      return trimmed.replace(/\{\{\s*count\s*\}\}|\{count\}|%d/, String(this.totalAmenities));
+    }
+
+    // If the label ends with the word 'amenities', insert the count before it
+    if (/amenities\s*$/i.test(trimmed)) {
+      return trimmed.replace(/amenities\s*$/i, `${this.totalAmenities} amenities`);
+    }
+
+    return `${trimmed} ${this.totalAmenities}`;
   }
 }

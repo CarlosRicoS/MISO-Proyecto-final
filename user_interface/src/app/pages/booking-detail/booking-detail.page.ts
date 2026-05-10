@@ -11,6 +11,7 @@ import { PropertyDetail } from '../../core/models/property-detail.model';
 import { AuthSessionService } from '../../core/services/auth-session.service';
 import { BookingService, CancellationPolicyResponse, Reservation } from '../../core/services/booking.service';
 import { ConfigService } from '../../core/services/config.service';
+import { LocaleService } from '../../core/services/locale.service';
 import { PropertyDetailService } from '../../core/services/property-detail.service';
 import { PricingService } from '../../core/services/pricing.service';
 import { ImageCacheService } from '../../core/services/image-cache.service';
@@ -128,12 +129,24 @@ export class BookingDetailPage implements OnInit, OnDestroy {
   private currentReservation: Reservation | null = null;
   private hasInitialized = false;
   private isRefreshingPageData = false;
+  private isBookingStatusFromFallback = false;
+  private bookingSummaryState = {
+    nightlyPrice: 0,
+    stayTotal: 0,
+    serviceFee: 0,
+    taxes: 0,
+    totalPrice: 0,
+    nights: 0,
+    currency: '$',
+    layout: 'detailed' as 'detailed' | 'preview',
+  };
   constructor(
     private propertyDetailService: PropertyDetailService,
     private bookingService: BookingService,
     private authSessionService: AuthSessionService,
     private configService: ConfigService,
     private pricingService: PricingService,
+    private localeService: LocaleService,
     private route: ActivatedRoute,
     private router: Router,
     private imageCache: ImageCacheService,
@@ -169,18 +182,18 @@ export class BookingDetailPage implements OnInit, OnDestroy {
             const currency = this.currentReservation ? (this.property.price.charAt(0) || '$') : '$';
             const perNight = nights > 0 ? Math.round(result.price / nights) : result.price;
 
-            this.paymentSummary = {
-              ...this.paymentSummary,
-              title: this.formatAmount(perNight, currency),
-              totalAmount: this.formatAmount(result.price, currency),
+            this.bookingSummaryState = {
+              nightlyPrice: perNight,
+              stayTotal: result.price,
+              serviceFee: 0,
+              taxes: 0,
+              totalPrice: result.price,
+              nights,
+              currency,
+              layout: 'preview',
             };
 
-            this.summaryItems = [
-              {
-                label: `${this.formatAmount(perNight, currency)} x ${nights} nights`,
-                amount: this.formatAmount(result.price, currency),
-              },
-            ];
+            this.refreshLocalizedBookingSummary();
           }),
           catchError(() => {
             this.isPricingLoading = false;
@@ -200,9 +213,7 @@ export class BookingDetailPage implements OnInit, OnDestroy {
     this.translate.onLangChange
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => {
-        if (this.rawBookingStatus) {
-          this.bookingStatus = this.getBookingStatusLabel(this.rawBookingStatus);
-        }
+        this.refreshLocalizedBookingSummary();
       });
 
     await this.refreshPageData();
@@ -271,9 +282,15 @@ export class BookingDetailPage implements OnInit, OnDestroy {
     if (stateReservation?.status) {
       this.rawBookingStatus = stateReservation.status;
       this.bookingStatus = this.getBookingStatusLabel(this.rawBookingStatus);
+      this.isBookingStatusFromFallback = false;
     } else if (stateBookingStatus) {
       // Fallback for when only translated status is in state
+      // Normalize to uppercase status code for consistency
+      const normalizedStatus = stateBookingStatus.trim().toUpperCase();
+      this.rawBookingStatus = normalizedStatus;
       this.bookingStatus = stateBookingStatus;
+      this.bookingStatusVariant = this.getBookingStatusVariant(normalizedStatus);
+      this.isBookingStatusFromFallback = true;
     }
 
     this.isLoading = true;
@@ -851,13 +868,7 @@ export class BookingDetailPage implements OnInit, OnDestroy {
     };
 
     this.rawBookingStatus = detailReservation.status || this.rawBookingStatus;
-    this.bookingStatus = this.getBookingStatusLabel(this.rawBookingStatus);
     this.bookingStatusVariant = this.getBookingStatusVariant(this.rawBookingStatus);
-    this.bookingDateRange = this.formatBookingDateRange(
-      detailReservation.period_start,
-      detailReservation.period_end,
-    );
-    this.bookingNights = `${nights} ${nights === 1 ? 'night' : 'nights'}`;
 
     this.descriptionParagraphs = propertyDetail.description ? [propertyDetail.description] : [];
     this.amenities = (propertyDetail.amenities || []).map((amenity) => ({
@@ -876,38 +887,29 @@ export class BookingDetailPage implements OnInit, OnDestroy {
     }));
 
     this.reviewCategoryScores = [];
-    this.summaryItems = [
-      {
-        label: `${this.formatAmount(nightlyPrice, currency)} × ${nights} nights`,
-        amount: this.formatAmount(stayTotal, currency),
-      },
-      {
-        label: 'Service fee',
-        amount: this.formatAmount(serviceFee, currency),
-        muted: true,
-      },
-      {
-        label: 'Taxes',
-        amount: this.formatAmount(taxes, currency),
-        muted: true,
-      },
-    ];
+    this.bookingSummaryState = {
+      nightlyPrice,
+      stayTotal,
+      serviceFee,
+      taxes,
+      totalPrice,
+      nights,
+      currency,
+      layout: 'detailed',
+    };
 
     this.paymentSummary = {
-      title: this.formatAmount(nightlyPrice, currency),
-      subtitle: 'per night',
-      promoText: 'Reservation details',
+      ...this.paymentSummary,
       checkInValue: detailReservation.period_start,
       checkOutValue: detailReservation.period_end,
       guestsValue: String(detailReservation.guests || ''),
-      roomTypeValue: 'Standard Room',
-      totalAmount: this.formatAmount(totalPrice, currency),
     };
 
     this.mobileConfirmedTab = 'cancel';
 
     this.paymentSummaryResetVersion += 1;
     this.hasDateChanges = false;
+    this.refreshLocalizedBookingSummary();
   }
 
   private getBookingId(navState: Record<string, unknown> | undefined): string {
@@ -946,8 +948,8 @@ export class BookingDetailPage implements OnInit, OnDestroy {
       return `${periodStart} - ${periodEnd}`;
     }
 
-    const startMonth = new Intl.DateTimeFormat('en-US', { month: 'short' }).format(startDate);
-    const endMonth = new Intl.DateTimeFormat('en-US', { month: 'short' }).format(endDate);
+    const startMonth = new Intl.DateTimeFormat(this.localeService.localeCode, { month: 'short' }).format(startDate);
+    const endMonth = new Intl.DateTimeFormat(this.localeService.localeCode, { month: 'short' }).format(endDate);
     const startYear = startDate.getFullYear();
     const endYear = endDate.getFullYear();
 
@@ -997,7 +999,7 @@ export class BookingDetailPage implements OnInit, OnDestroy {
 
   private formatAmount(value: number, currency: string): string {
     const safeValue = Number.isFinite(value) ? value : 0;
-    const formattedValue = new Intl.NumberFormat('en-US', {
+    const formattedValue = new Intl.NumberFormat(this.localeService.localeCode, {
       maximumFractionDigits: 0,
     }).format(safeValue);
 
@@ -1006,7 +1008,7 @@ export class BookingDetailPage implements OnInit, OnDestroy {
 
   private formatAmountWithDecimals(value: number, currency: string): string {
     const safeValue = Number.isFinite(value) ? value : 0;
-    const formattedValue = new Intl.NumberFormat('en-US', {
+    const formattedValue = new Intl.NumberFormat(this.localeService.localeCode, {
       minimumFractionDigits: safeValue % 1 === 0 ? 0 : 2,
       maximumFractionDigits: 2,
     }).format(safeValue);
@@ -1181,7 +1183,7 @@ export class BookingDetailPage implements OnInit, OnDestroy {
 
   private formatMoneyAmount(value: number, currency: string): string {
     const safe = Number.isFinite(value) ? value : 0;
-    const formatted = new Intl.NumberFormat('en-US', {
+    const formatted = new Intl.NumberFormat(this.localeService.localeCode, {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     }).format(safe);
@@ -1192,6 +1194,60 @@ export class BookingDetailPage implements OnInit, OnDestroy {
   private getCurrencySymbol(): string {
     const symbol = (this.property.price || '').trim().charAt(0);
     return symbol || '$';
+  }
+
+  private refreshLocalizedBookingSummary(): void {
+    if (!this.isBookingStatusFromFallback) {
+      this.bookingStatus = this.getBookingStatusLabel(this.rawBookingStatus);
+    }
+
+    if (!this.currentReservation) {
+      return;
+    }
+
+    const state = this.bookingSummaryState;
+    // Build nights label with count
+    const nightsKey = state.nights === 1 ? 'BOOKING_LIST.NIGHT_ONE' : 'BOOKING_LIST.NIGHTS';
+    const nightsLabel = `${state.nights} ${this.translate.instant(nightsKey)}`;
+
+    this.bookingDateRange = this.formatBookingDateRange(
+      this.currentReservation.period_start,
+      this.currentReservation.period_end,
+    );
+    this.bookingNights = nightsLabel;
+
+    this.summaryItems = [
+      ...(state.layout === 'preview'
+        ? [{
+            label: `${this.formatAmount(state.nightlyPrice, state.currency)} × ${nightsLabel}`,
+            amount: this.formatAmount(state.totalPrice, state.currency),
+          }]
+        : [
+            {
+              label: `${this.formatAmount(state.nightlyPrice, state.currency)} × ${nightsLabel}`,
+              amount: this.formatAmount(state.stayTotal, state.currency),
+            },
+            {
+              label: this.translate.instant('BOOKING_DETAIL.SERVICE_FEE'),
+              amount: this.formatAmount(state.serviceFee, state.currency),
+              muted: true,
+            },
+            {
+              label: this.translate.instant('BOOKING_DETAIL.TAXES'),
+              amount: this.formatAmount(state.taxes, state.currency),
+              muted: true,
+            },
+          ]),
+    ];
+
+    this.paymentSummary = {
+      ...this.paymentSummary,
+      title: this.formatAmount(state.nightlyPrice, state.currency),
+      subtitle: this.translate.instant('BOOKING_DETAIL.PER_NIGHT'),
+      promoText: this.translate.instant('BOOKING_DETAIL.RESERVATION_DETAILS_PROMO'),
+      roomTypeValue: this.translate.instant('BOOKING_DETAIL.STANDARD_ROOM'),
+      totalAmount: this.formatAmount(state.totalPrice, state.currency),
+    };
   }
 
   private showAlert(title: string, message: string, variant: ThPopupVariant = 'info'): void {

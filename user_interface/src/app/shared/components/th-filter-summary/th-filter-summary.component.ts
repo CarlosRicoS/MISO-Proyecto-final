@@ -23,6 +23,11 @@ export interface FilterSummaryParams {
 export class ThFilterSummaryComponent {
   @Input() alt = 'Filter summary';
   @Input() filterParams: FilterSummaryParams | null = null;
+  @Input() topActionLabel = 'Filter';
+  @Input() sortActionLabel = 'Sort';
+  @Input() mobileFiltersLabel = 'Filters';
+  @Input() mobilePriceLabel = 'Price';
+  @Input() mobileRatingLabel = 'Rating';
 
   get resolvedAlt(): string {
     if (this.alt && this.alt !== 'Filter summary') {

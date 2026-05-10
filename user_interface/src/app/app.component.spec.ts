@@ -4,6 +4,7 @@ import { ActivatedRoute, Router, NavigationEnd } from '@angular/router';
 import { of, Subject } from 'rxjs';
 
 import { AppComponent } from './app.component';
+import { translateTestingModule } from './testing/translate-testing.module';
 import { AuthSessionService } from './core/services/auth-session.service';
 import { ConnectivityService } from './core/services/connectivity.service';
 import { NotificationService } from './core/services/notification.service';
@@ -57,6 +58,7 @@ describe('AppComponent', () => {
     notificationServiceMock = new NotificationServiceMock();
 
     await TestBed.configureTestingModule({
+      imports: [translateTestingModule()],
       declarations: [AppComponent],
       schemas: [CUSTOM_ELEMENTS_SCHEMA],
       providers: [
