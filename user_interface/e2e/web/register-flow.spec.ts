@@ -29,7 +29,7 @@ test.describe('Register page', () => {
     await fillRegistrationForm(page);
     await page.getByRole('button', { name: 'Create Account' }).click();
 
-    await expect(page.getByText('Account Created')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Account Created' })).toBeVisible();
     await expect(page.getByText('Account created successfully.')).toBeVisible();
     await page.locator('th-popup').getByRole('button', { name: 'Accept' }).click();
     await expect(page).toHaveURL(/\/login/);

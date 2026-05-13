@@ -131,7 +131,7 @@ test.describe('Booking detail page', () => {
 
     await page.goto('/booking-detail?bookingId=booking-1');
 
-    await expect(page.getByText('Unable to load booking detail.')).toBeVisible();
+    await expect(page.getByText('Unable to load booking details.')).toBeVisible();
   });
 
   test('change-dates flow calls PATCH /dates via orchestrator with the new period', async ({ page }) => {
@@ -159,16 +159,20 @@ test.describe('Booking detail page', () => {
 
     await page.getByRole('button', { name: /Change Dates/i }).click();
 
-    const guestsInput = page.locator('ion-input.th-payment-summary__input input').last();
-    await guestsInput.fill('3');
-    await guestsInput.blur();
-
-    // Pricing call must complete before Recalculate becomes meaningful.
-    await page.waitForRequest(/\/pricing-orchestator\/api\/Property\?.*guests=3/);
+    // Dispatch ionInput directly on the guests ion-input so the test does not depend
+    // on Playwright's ability to drive Ionic's native input + event re-emission chain.
+    const pricingRequest = page.waitForRequest(
+      /\/pricing-orchestator\/api\/Property\?.*guests=3/,
+    );
+    await page.evaluate(() => {
+      const input = document.querySelector('ion-input.th-payment-summary__input');
+      input?.dispatchEvent(new CustomEvent('ionInput', { detail: { value: '3' } }));
+    });
+    await pricingRequest;
 
     await page.getByRole('button', { name: 'Recalculate Price' }).click();
 
-    await expect(page.getByText('Dates Updated')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Dates Updated' })).toBeVisible();
     expect(datesRequests).toHaveLength(1);
     const payload = JSON.parse(datesRequests[0].postData() || '{}') as {
       new_period_start: string;

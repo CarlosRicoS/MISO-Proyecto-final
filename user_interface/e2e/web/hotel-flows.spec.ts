@@ -489,8 +489,8 @@ test.describe('TravelHub core journeys', () => {
 
     await expect(page).toHaveURL(/\/propertydetail\/hotel-1/);
     await expect(page.getByRole('heading', { name: 'Guest Reviews' })).toBeVisible();
-    await expect(page.getByText('Ana')).toBeVisible();
-    await expect(page.getByText('Great stay!')).toBeVisible();
+    await expect(page.getByText('Ana').first()).toBeVisible();
+    await expect(page.getByText('Great stay!').first()).toBeVisible();
   });
 
   test('property detail renders the photo mosaic for the hotel', async ({ page }) => {
