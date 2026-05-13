@@ -66,10 +66,10 @@
                 size="small"
                 icon-only
                 class="portal-hoteles-pricing-table__actions-button"
-                [attr.aria-label]="'PRICING.ROW_ACTIONS' | translate"
+                [attr.aria-label]="'PRICING.EDIT_PRICE_ACTION' | translate"
                 (click)="openPriceEditor(row)"
               >
-                <ion-icon slot="icon-only" name="pencil"></ion-icon>
+                <ion-icon slot="icon-only" name="pencil" aria-hidden="true"></ion-icon>
               </ion-button>
             </td>
           </tr>
@@ -186,9 +186,9 @@
                 size="small"
                 icon-only
                 class="portal-hoteles-pricing-table__actions-button"
-                [attr.aria-label]="'PRICING.ROW_ACTIONS' | translate"
+                [attr.aria-label]="'PRICING.EDIT_PRICE_ACTION' | translate"
               >
-                <ion-icon slot="icon-only" name="pencil"></ion-icon>
+                <ion-icon slot="icon-only" name="pencil" aria-hidden="true"></ion-icon>
               </ion-button>
             </td>
           </tr>

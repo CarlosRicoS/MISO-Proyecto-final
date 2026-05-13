@@ -128,6 +128,7 @@
     "VISIBLE_ONE": "Showing 1-1 of 1 pricing record",
     "SEARCH_LABEL": "Search room types",
     "ROW_ACTIONS": "Row actions",
+    "EDIT_PRICE_ACTION": "Edit base price",
     "EDIT_PRICE_TITLE": "Edit base price",
     "EDIT_PRICE_SUBTITLE": "Review the property details and update the base price.",
     "EDIT_PRICE_PROPERTY_NAME": "Property name",
