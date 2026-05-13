@@ -15,6 +15,21 @@
       </section>
 
       <aside class="portal-hoteles-dashboard-reservation__right">
+        <label
+          *ngIf="!isRejectButtonDisabled"
+          class="portal-hoteles-dashboard-reservation__reason"
+          for="rejection-reason"
+        >
+          <span>{{ 'DASHBOARD_RESERVATION.REJECT_REASON_LABEL' | translate }}</span>
+          <textarea
+            id="rejection-reason"
+            data-testid="rejection-reason"
+            rows="3"
+            [placeholder]="'DASHBOARD_RESERVATION.REJECT_REASON_PLACEHOLDER' | translate"
+            [(ngModel)]="rejectionReason"
+          ></textarea>
+        </label>
+
         <th-payment-summary
           variant="admin"
           [title]="paymentSummary.title"

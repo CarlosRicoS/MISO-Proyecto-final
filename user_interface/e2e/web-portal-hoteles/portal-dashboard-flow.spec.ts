@@ -220,6 +220,35 @@ test.describe('Portal Hoteles — dashboard reservations', () => {
     await expect(page.getByText('Page 2 of 2')).toBeVisible();
   });
 
+  test('status filter limits the table to reservations matching the chosen status', async ({ page }) => {
+    await page.goto('/dashboard');
+    await expect(page.getByText('#res-001')).toBeVisible();
+
+    await page.evaluate(() => {
+      const select = document.querySelector('[data-testid="status-filter"]');
+      select?.dispatchEvent(new CustomEvent('ionChange', { detail: { value: 'CONFIRMED' } }));
+    });
+
+    await expect(page.getByText('#res-002')).toBeVisible();
+    await expect(page.getByText('#res-001')).not.toBeVisible();
+    await expect(page.getByText('#res-003')).not.toBeVisible();
+    await expect(page.getByText('Showing 1-1 of 1 reservations')).toBeVisible();
+  });
+
+  test('Previous button returns to the first page after going forward', async ({ page }) => {
+    await page.goto('/dashboard');
+
+    await expect(page.getByText('Page 1 of 2')).toBeVisible();
+    await page.getByRole('button', { name: 'Next' }).click();
+    await expect(page.getByText('Page 2 of 2')).toBeVisible();
+
+    await page.getByRole('button', { name: 'Previous' }).click();
+
+    await expect(page.getByText('Page 1 of 2')).toBeVisible();
+    await expect(page.getByText('#res-001')).toBeVisible();
+    await expect(page.getByText('#res-005')).not.toBeVisible();
+  });
+
   test('shows empty state when no reservations', async ({ page }) => {
     await mockBookingApis(page, []);
     await page.goto('/dashboard');
@@ -308,6 +337,51 @@ test.describe('Portal Hoteles — reservation detail', () => {
     await page.goto('/dashboard/res-003');
 
     await expect(page.getByText('Rejected')).toBeVisible();
+
+    const acceptButton = page.getByRole('button', { name: 'Accept' });
+    const rejectButton = page.getByRole('button', { name: 'Reject' });
+    await expect(acceptButton).toBeDisabled();
+    await expect(rejectButton).toBeDisabled();
+  });
+
+  test('both buttons are disabled for completed reservations', async ({ page }) => {
+    await page.goto('/dashboard/res-004');
+
+    await expect(page.getByText('Completed')).toBeVisible();
+
+    const acceptButton = page.getByRole('button', { name: 'Accept' });
+    const rejectButton = page.getByRole('button', { name: 'Reject' });
+    await expect(acceptButton).toBeDisabled();
+    await expect(rejectButton).toBeDisabled();
+  });
+
+  test('reject sends the typed rejection reason in the admin-reject request', async ({ page }) => {
+    let capturedBody: { reason?: string } | null = null;
+
+    await page.route(/\/booking-orchestrator\/api\/reservations\/[^/]+\/admin-reject$/, async (route) => {
+      capturedBody = JSON.parse(route.request().postData() || '{}') as { reason?: string };
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ id: 'res-001', status: 'REJECTED' }),
+      });
+    });
+
+    await page.goto('/dashboard/res-001');
+    await expect(page.getByText('Andes Palace Hotel')).toBeVisible();
+
+    await page.getByTestId('rejection-reason').fill('Property under maintenance until June.');
+    await page.getByRole('button', { name: 'Reject' }).click();
+
+    await expect(page).toHaveURL(/\/dashboard$/);
+    expect(capturedBody).not.toBeNull();
+    expect(capturedBody!.reason).toBe('Property under maintenance until June.');
+  });
+
+  test('both buttons are disabled for canceled reservations', async ({ page }) => {
+    await page.goto('/dashboard/res-005');
+
+    await expect(page.getByText('Canceled')).toBeVisible();
 
     const acceptButton = page.getByRole('button', { name: 'Accept' });
     const rejectButton = page.getByRole('button', { name: 'Reject' });

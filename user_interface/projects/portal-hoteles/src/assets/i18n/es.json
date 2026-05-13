@@ -68,7 +68,9 @@
     "STATUS_CANCELED": "Cancelada",
     "STATUS_REJECTED": "Rechazada",
     "STATUS_COMPLETED": "Completada",
-    "STATUS_UNKNOWN": "Desconocido"
+    "STATUS_UNKNOWN": "Desconocido",
+    "FILTER_STATUS_LABEL": "Filtrar por estado",
+    "FILTER_STATUS_ALL": "Todos los estados"
   },
   "DASHBOARD_RESERVATION": {
     "ACCEPT": "Aceptar",
@@ -82,6 +84,8 @@
     "ERROR_ACCEPT": "No fue posible aceptar la reserva.",
     "ERROR_REJECT": "No fue posible rechazar la reserva.",
     "REJECT_REASON_DEFAULT": "Rechazada desde el panel",
+    "REJECT_REASON_LABEL": "Motivo del rechazo",
+    "REJECT_REASON_PLACEHOLDER": "Opcional — comparte contexto con el viajero",
     "LOCATION_UNAVAILABLE": "Ubicación no disponible",
     "NIGHT_ONE": "noche",
     "NIGHTS": "noches"

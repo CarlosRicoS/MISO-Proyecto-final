@@ -68,7 +68,9 @@
     "STATUS_CANCELED": "Canceled",
     "STATUS_REJECTED": "Rejected",
     "STATUS_COMPLETED": "Completed",
-    "STATUS_UNKNOWN": "Unknown"
+    "STATUS_UNKNOWN": "Unknown",
+    "FILTER_STATUS_LABEL": "Filter by status",
+    "FILTER_STATUS_ALL": "All statuses"
   },
   "DASHBOARD_RESERVATION": {
     "ACCEPT": "Accept",
@@ -82,6 +84,8 @@
     "ERROR_ACCEPT": "Unable to accept reservation.",
     "ERROR_REJECT": "Unable to reject reservation.",
     "REJECT_REASON_DEFAULT": "Rejected from dashboard",
+    "REJECT_REASON_LABEL": "Rejection reason",
+    "REJECT_REASON_PLACEHOLDER": "Optional — share context with the traveler",
     "LOCATION_UNAVAILABLE": "Location unavailable",
     "NIGHT_ONE": "night",
     "NIGHTS": "nights"

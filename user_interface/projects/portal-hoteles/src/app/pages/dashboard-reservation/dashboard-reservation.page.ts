@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { IonicModule } from '@ionic/angular';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -22,6 +23,7 @@ import { PortalHotelesReservationOverviewCardComponent } from '@travelhub/shared
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     IonicModule,
     TranslateModule,
     ThPaymentSummaryComponent,
@@ -32,6 +34,7 @@ export class PortalHotelesDashboardReservationPage {
   reservationId = '';
   isLoading = false;
   errorMessage = '';
+  rejectionReason = '';
 
   overview = {
     hotelName: 'Hotel',
@@ -66,7 +69,7 @@ export class PortalHotelesDashboardReservationPage {
       return true;
     }
 
-    return this.isRejectedOrCanceledStatus(normalizedStatus);
+    return this.isTerminalStatus(normalizedStatus);
   }
 
   get isRejectButtonDisabled(): boolean {
@@ -75,7 +78,7 @@ export class PortalHotelesDashboardReservationPage {
       return true;
     }
 
-    return this.isRejectedOrCanceledStatus(normalizedStatus);
+    return this.isTerminalStatus(normalizedStatus);
   }
 
   private readonly translate = inject(TranslateService);
@@ -119,9 +122,10 @@ export class PortalHotelesDashboardReservationPage {
     }
 
     try {
+      const trimmedReason = this.rejectionReason.trim();
       const payload: ReservationAdminRejectRequest = {
         traveler_email: this.authSession.userEmail || '',
-        reason: this.translate.instant('DASHBOARD_RESERVATION.REJECT_REASON_DEFAULT'),
+        reason: trimmedReason || this.translate.instant('DASHBOARD_RESERVATION.REJECT_REASON_DEFAULT'),
       };
       await firstValueFrom(
         this.bookingService.adminRejectReservation(this.reservationId, payload, this.authSession.idToken),
@@ -307,7 +311,12 @@ export class PortalHotelesDashboardReservationPage {
     return (this.overview.statusLabel || '').trim().toLowerCase();
   }
 
-  private isRejectedOrCanceledStatus(status: string): boolean {
-    return status === 'rejected' || status === 'canceled' || status === 'cancelled';
+  private isTerminalStatus(status: string): boolean {
+    return (
+      status === 'rejected' ||
+      status === 'canceled' ||
+      status === 'cancelled' ||
+      status === 'completed'
+    );
   }
 }

@@ -40,6 +40,17 @@
       [subtitle]="'DASHBOARD.RESERVATIONS_SUBTITLE' | translate"
     >
       <div slot="header-actions" class="portal-hoteles-dashboard-toolbar-header" role="group" [attr.aria-label]="'DASHBOARD.EXPORT_ACTIONS_LABEL' | translate">
+        <ion-select
+          data-testid="status-filter"
+          interface="popover"
+          [value]="statusFilter"
+          [attr.aria-label]="'DASHBOARD.FILTER_STATUS_LABEL' | translate"
+          (ionChange)="onStatusFilterChange($event.detail.value)"
+        >
+          <ion-select-option *ngFor="let option of statusFilterOptions" [value]="option.value">
+            {{ option.labelKey | translate }}
+          </ion-select-option>
+        </ion-select>
         <div class="portal-hoteles-dashboard-toolbar-header__export">
           <ion-button
             fill="clear"

@@ -151,4 +151,25 @@ test.describe('Portal Hoteles — authentication flow', () => {
     await expect(page).toHaveURL(/\/dashboard/);
     await expect(page.getByRole('strong').filter({ hasText: 'admin@hotel.com' })).toBeVisible();
   });
+
+  test('logout clears the session and redirects to login', async ({ page }) => {
+    await mockLoginApi(page);
+    await mockBookingListApi(page);
+
+    await page.goto('/dashboard');
+    await fillLoginForm(page, 'admin@hotel.com', 'Admin1234!');
+    await page.getByRole('button', { name: 'Sign In' }).click();
+
+    await expect(page).toHaveURL(/\/dashboard/);
+    await expect(
+      page.evaluate(() => window.localStorage.getItem('th_auth_session')),
+    ).resolves.not.toBeNull();
+
+    await page.getByRole('button', { name: 'Sign out' }).click();
+
+    await expect(page).toHaveURL(/\/login$/);
+    await expect(
+      page.evaluate(() => window.localStorage.getItem('th_auth_session')),
+    ).resolves.toBeNull();
+  });
 });
