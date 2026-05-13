@@ -104,9 +104,26 @@ export class PricingEngineService {
     );
   }
 
+  updatePropertyPrice(id: string, propertyId: string, basePrice: number): Observable<unknown> {
+    return this.http.put(
+      this.buildUrl(`pricing-engine/api/propertyprice/pricing/${id}`),
+      { basePrice, PropertyId: propertyId },
+      {
+        headers: this.updateHeaders,
+      },
+    );
+  }
+
   private get defaultHeaders(): HttpHeaders {
     return new HttpHeaders({
       'Content-Type': 'application/json',
+    });
+  }
+
+  private get updateHeaders(): HttpHeaders {
+    return new HttpHeaders({
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${this.config.propertyApiToken}`,
     });
   }
 

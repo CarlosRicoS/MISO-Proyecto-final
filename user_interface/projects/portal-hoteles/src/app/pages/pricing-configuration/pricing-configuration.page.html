@@ -1,137 +1,122 @@
 <ion-content class="portal-hoteles-pricing-content">
-  <h1 class="portal-hoteles-pricing-hero__h1 sr-only">{{ 'PRICING.TITLE' | translate }}</h1>
+  <h1 class="portal-hoteles-pricing-hero__h1 sr-only">
+    {{ 'PRICING.TITLE' | translate }}
+  </h1>
 
-  <section class="portal-hoteles-pricing-grid portal-hoteles-pricing-grid--full-width">
+  <section
+    class="portal-hoteles-pricing-grid portal-hoteles-pricing-grid--full-width"
+  >
     <portal-hoteles-grid-card
       cardClass="portal-hoteles-grid-card--panel portal-hoteles-grid-card--wide"
       [title]="'PRICING.TITLE' | translate"
       [subtitle]="'PRICING.SUBTITLE' | translate"
     >
-      <div slot="header-actions" class="portal-hoteles-pricing-toolbar-header" role="group" [attr.aria-label]="'PRICING.ROOM_FILTERS_LABEL' | translate">
-        <div class="portal-hoteles-pricing-toolbar-header__filters">
-          <ion-select
-            class="portal-hoteles-pricing-toolbar-header__select"
-            interface="popover"
-            [attr.aria-label]="'PRICING.FILTER_ROOM_TYPE' | translate"
-          >
-            <ion-select-option>{{ 'PRICING.ALL_ROOM_TYPES' | translate }}</ion-select-option>
-            <ion-select-option>{{ 'PRICING.ROOM_SUPERIOR_DOUBLE' | translate }}</ion-select-option>
-            <ion-select-option>{{ 'PRICING.ROOM_DELUXE_SUITE' | translate }}</ion-select-option>
-            <ion-select-option>{{ 'PRICING.ROOM_STANDARD' | translate }}</ion-select-option>
-            <ion-select-option>{{ 'PRICING.ROOM_JUNIOR_SUITE' | translate }}</ion-select-option>
-          </ion-select>
-
-          <ion-select
-            class="portal-hoteles-pricing-toolbar-header__select"
-            interface="popover"
-            [attr.aria-label]="'PRICING.FILTER_CURRENCY' | translate"
-          >
-            <ion-select-option>USD</ion-select-option>
-            <ion-select-option>EUR</ion-select-option>
-            <ion-select-option>COP</ion-select-option>
-          </ion-select>
-
-          <ion-select
-            class="portal-hoteles-pricing-toolbar-header__select"
-            interface="popover"
-            [attr.aria-label]="'PRICING.FILTER_SEASON' | translate"
-          >
-            <ion-select-option>{{ 'PRICING.ALL_SEASONS' | translate }}</ion-select-option>
-            <ion-select-option>{{ 'PRICING.HIGH_SEASON' | translate }}</ion-select-option>
-            <ion-select-option>{{ 'PRICING.LOW_SEASON' | translate }}</ion-select-option>
-          </ion-select>
-        </div>
-
-        <ion-button
-          size="small"
-          fill="solid"
-          class="portal-hoteles-pricing-toolbar-header__action-button"
-        >
-          {{ 'PRICING.NEW_RATE' | translate }}
-        </ion-button>
-      </div>
-
       <div class="portal-hoteles-pricing-content-toolbar">
-        <label class="sr-only" for="pricing-search-input">{{ 'PRICING.SEARCH_LABEL' | translate }}</label>
+        <label class="sr-only" for="pricing-search-input"
+          >{{ 'PRICING.SEARCH_LABEL' | translate }}</label
+        >
         <ion-input
           [id]="'pricing-search-input'"
           class="portal-hoteles-pricing-content-toolbar__search"
           [placeholder]="'PRICING.SEARCH_PLACEHOLDER' | translate"
+          [value]="searchTerm"
+          (ionChange)="onSearchChange($any($event).detail.value)"
         ></ion-input>
       </div>
 
-      <p class="portal-hoteles-pricing-table__message" *ngIf="isLoading" aria-live="polite" aria-atomic="true">
+      <p
+        class="portal-hoteles-pricing-table__message"
+        *ngIf="isLoading"
+        aria-live="polite"
+        aria-atomic="true"
+      >
         {{ 'PRICING.LOADING' | translate }}
       </p>
 
-      <table class="portal-hoteles-pricing-table" *ngIf="roomRateRows.length > 0">
+      <table
+        class="portal-hoteles-pricing-table"
+        *ngIf="filteredRoomRateRows.length > 0"
+      >
         <thead>
           <tr class="portal-hoteles-pricing-table__header">
-            <th scope="col">{{ 'PRICING.TABLE_ROOM_TYPE' | translate }}</th>
-            <th scope="col">{{ 'PRICING.TABLE_CAPACITY' | translate }}</th>
+            <th scope="col">{{ 'PRICING.TABLE_PROPERTY_NAME' | translate }}</th>
+            <th scope="col">
+              {{ 'PRICING.TABLE_GUESTS_CAPACITY' | translate }}
+            </th>
             <th scope="col">{{ 'PRICING.TABLE_BASE_RATE' | translate }}</th>
-            <th scope="col">{{ 'PRICING.TABLE_DISCOUNT' | translate }}</th>
-            <th scope="col">{{ 'PRICING.TABLE_FINAL_RATE' | translate }}</th>
-            <th scope="col">{{ 'PRICING.TABLE_STATUS' | translate }}</th>
             <th scope="col">{{ 'PRICING.TABLE_ACTIONS' | translate }}</th>
           </tr>
         </thead>
         <tbody>
-          <tr class="portal-hoteles-pricing-table__row" *ngFor="let row of roomRateRows; trackBy: trackByRoomType">
+          <tr
+            class="portal-hoteles-pricing-table__row"
+            *ngFor="let row of paginatedRoomRateRows; trackBy: trackByRoomType"
+          >
             <td class="portal-hoteles-pricing-table__room-type">
-              <strong>{{ row.roomType }}</strong>
-              <span class="portal-hoteles-pricing-table__meta">{{ row.roomTypeId }}</span>
+              <strong>{{ row.propertyName }}</strong>
+              <span class="portal-hoteles-pricing-table__meta"
+                >{{ row.propertyCity }}</span
+              >
             </td>
-            <td>{{ row.capacityLabel }}</td>
+            <td>{{ row.guestsCapacityLabel }}</td>
             <td><strong>{{ row.baseRateLabel }}</strong></td>
-            <td><span [class]="row.discountClass">{{ row.discountLabel }}</span></td>
-            <td><strong class="portal-hoteles-pricing-table__accent">{{ row.finalRateLabel }}</strong></td>
-            <td><span [class]="row.statusClass">{{ row.status }}</span></td>
             <td>
               <ion-button
                 fill="clear"
                 size="small"
+                icon-only
                 class="portal-hoteles-pricing-table__actions-button"
-                [attr.aria-label]="'PRICING.ROW_ACTIONS' | translate"
-              >⋮</ion-button>
+                [attr.aria-label]="'PRICING.EDIT_PRICE_ACTION' | translate"
+                (click)="openPriceEditor(row)"
+              >
+                <ion-icon slot="icon-only" name="pencil" aria-hidden="true"></ion-icon>
+              </ion-button>
             </td>
           </tr>
         </tbody>
-        <tfoot>
-          <tr>
-            <td colspan="7" class="portal-hoteles-pricing-table__footer">
-              <span>{{ 'PRICING.SHOWING_ROWS' | translate: { rows: roomRateRows.length } }}</span>
-              <div class="portal-hoteles-pricing-table__pagination">
-                <ion-button
-                  fill="outline"
-                  size="small"
-                  class="portal-hoteles-pricing-table__pagination-button"
-                  [attr.aria-label]="'PRICING.PREV_PAGE' | translate"
-                  [disabled]="true"
-                >‹</ion-button>
-                <span
-                  class="portal-hoteles-pricing-table__page portal-hoteles-pricing-table__page--active"
-                  aria-current="page"
-                >1</span>
-                <span class="portal-hoteles-pricing-table__page">2</span>
-                <ion-button
-                  fill="outline"
-                  size="small"
-                  class="portal-hoteles-pricing-table__pagination-button"
-                  [attr.aria-label]="'PRICING.NEXT_PAGE' | translate"
-                >›</ion-button>
-              </div>
-            </td>
-          </tr>
-        </tfoot>
       </table>
 
-      <p class="portal-hoteles-pricing-table__message" *ngIf="!isLoading && errorMessage" role="alert">
+      <div
+        class="portal-hoteles-pricing-pagination"
+        *ngIf="filteredRoomRateRows.length > 0"
+      >
+        <div
+          class="portal-hoteles-pricing-pagination__info"
+          aria-live="polite"
+          aria-atomic="true"
+        >
+          {{ 'PRICING.PAGINATION_PAGE' | translate: { current: currentPage,
+          total: totalPages } }}
+        </div>
+        <div
+          class="portal-hoteles-pricing-pagination__controls"
+          role="group"
+          [attr.aria-label]="'PRICING.PAGINATION_LABEL' | translate"
+        >
+          <ion-button
+            *ngFor="let pageNum of pageNumbers"
+            fill="outline"
+            size="small"
+            (click)="goToPage(pageNum)"
+            [class.portal-hoteles-pricing-pagination__button--active]="currentPage === pageNum"
+            [attr.aria-current]="currentPage === pageNum ? 'page' : null"
+            [attr.aria-label]="'PRICING.PAGE_ARIA' | translate: { page: pageNum }"
+          >
+            {{ pageNum }}
+          </ion-button>
+        </div>
+      </div>
+
+      <p
+        class="portal-hoteles-pricing-table__message"
+        *ngIf="!isLoading && errorMessage"
+        role="alert"
+      >
         {{ errorMessage }}
       </p>
       <p
         class="portal-hoteles-pricing-table__message"
-        *ngIf="!isLoading && !errorMessage && roomRateRows.length === 0"
+        *ngIf="!isLoading && !errorMessage && filteredRoomRateRows.length === 0"
         aria-live="polite"
         aria-atomic="true"
       >
@@ -144,41 +129,12 @@
       [title]="'PRICING.SEASONAL_TITLE' | translate"
       [subtitle]="'PRICING.SEASONAL_SUBTITLE' | translate"
     >
-      <div slot="header-actions" class="portal-hoteles-pricing-toolbar-header" role="group" [attr.aria-label]="'PRICING.SEASONAL_FILTERS_LABEL' | translate">
-        <div class="portal-hoteles-pricing-toolbar-header__filters">
-          <ion-select
-            class="portal-hoteles-pricing-toolbar-header__select"
-            interface="popover"
-            [attr.aria-label]="'PRICING.FILTER_ROOM_TYPE' | translate"
-          >
-            <ion-select-option>{{ 'PRICING.ALL_ROOM_TYPES' | translate }}</ion-select-option>
-            <ion-select-option>{{ 'PRICING.ROOM_SUPERIOR_DOUBLE' | translate }}</ion-select-option>
-            <ion-select-option>{{ 'PRICING.ROOM_DELUXE_SUITE' | translate }}</ion-select-option>
-            <ion-select-option>{{ 'PRICING.ROOM_STANDARD' | translate }}</ion-select-option>
-            <ion-select-option>{{ 'PRICING.ROOM_JUNIOR_SUITE' | translate }}</ion-select-option>
-          </ion-select>
-
-          <ion-select
-            class="portal-hoteles-pricing-toolbar-header__select"
-            interface="popover"
-            [attr.aria-label]="'PRICING.FILTER_CURRENCY' | translate"
-          >
-            <ion-select-option>USD</ion-select-option>
-            <ion-select-option>EUR</ion-select-option>
-            <ion-select-option>COP</ion-select-option>
-          </ion-select>
-
-          <ion-select
-            class="portal-hoteles-pricing-toolbar-header__select"
-            interface="popover"
-            [attr.aria-label]="'PRICING.FILTER_SEASON' | translate"
-          >
-            <ion-select-option>{{ 'PRICING.ALL_SEASONS' | translate }}</ion-select-option>
-            <ion-select-option>{{ 'PRICING.HIGH_SEASON' | translate }}</ion-select-option>
-            <ion-select-option>{{ 'PRICING.LOW_SEASON' | translate }}</ion-select-option>
-          </ion-select>
-        </div>
-
+      <div
+        slot="header-actions"
+        class="portal-hoteles-pricing-toolbar-header"
+        role="group"
+        [attr.aria-label]="'PRICING.SEASONAL_FILTERS_LABEL' | translate"
+      >
         <ion-button
           size="small"
           fill="solid"
@@ -188,9 +144,14 @@
         </ion-button>
       </div>
 
-      <table class="portal-hoteles-pricing-table" *ngIf="seasonalRulesRows.length > 0">
+      <table
+        class="portal-hoteles-pricing-table"
+        *ngIf="seasonalRulesRows.length > 0"
+      >
         <thead>
-          <tr class="portal-hoteles-pricing-table__header portal-hoteles-pricing-table__header--seasonal">
+          <tr
+            class="portal-hoteles-pricing-table__header portal-hoteles-pricing-table__header--seasonal"
+          >
             <th scope="col">{{ 'PRICING.TABLE_SEASON' | translate }}</th>
             <th scope="col">{{ 'PRICING.TABLE_DATE_RANGE' | translate }}</th>
             <th scope="col">{{ 'PRICING.TABLE_MODIFIER' | translate }}</th>
@@ -199,24 +160,36 @@
           </tr>
         </thead>
         <tbody>
-          <tr class="portal-hoteles-pricing-table__row portal-hoteles-pricing-table__row--seasonal" *ngFor="let row of seasonalRulesRows; trackBy: trackBySeason">
+          <tr
+            class="portal-hoteles-pricing-table__row portal-hoteles-pricing-table__row--seasonal"
+            *ngFor="let row of seasonalRulesRows; trackBy: trackBySeason"
+          >
             <td>
               <strong>{{ row.season }}</strong>
-              <span class="portal-hoteles-pricing-table__meta">{{ row.description }}</span>
+              <span class="portal-hoteles-pricing-table__meta"
+                >{{ row.description }}</span
+              >
             </td>
             <td>
               <span>{{ row.dateRange }}</span>
-              <span class="portal-hoteles-pricing-table__meta">{{ row.helperDateRange }}</span>
+              <span class="portal-hoteles-pricing-table__meta"
+                >{{ row.helperDateRange }}</span
+              >
             </td>
-            <td><span [class]="row.modifierClass">{{ row.modifierLabel }}</span></td>
+            <td>
+              <span [class]="row.modifierClass">{{ row.modifierLabel }}</span>
+            </td>
             <td><span [class]="row.statusClass">{{ row.status }}</span></td>
             <td>
               <ion-button
                 fill="clear"
                 size="small"
+                icon-only
                 class="portal-hoteles-pricing-table__actions-button"
-                [attr.aria-label]="'PRICING.ROW_ACTIONS' | translate"
-              >⋮</ion-button>
+                [attr.aria-label]="'PRICING.EDIT_PRICE_ACTION' | translate"
+              >
+                <ion-icon slot="icon-only" name="pencil" aria-hidden="true"></ion-icon>
+              </ion-button>
             </td>
           </tr>
         </tbody>
@@ -231,5 +204,108 @@
         {{ 'PRICING.NO_SEASONAL' | translate }}
       </p>
     </portal-hoteles-grid-card>
+
+    <ion-modal
+      [isOpen]="isEditPriceModalOpen"
+      [backdropDismiss]="false"
+      [cssClass]="'portal-hoteles-pricing-modal-shell'"
+      (didDismiss)="closePriceEditor()"
+    >
+      <ng-template>
+        <ion-header>
+          <ion-toolbar>
+            <ion-title>{{ 'PRICING.EDIT_PRICE_TITLE' | translate }}</ion-title>
+            <ion-buttons slot="end">
+              <ion-button
+                fill="clear"
+                [attr.aria-label]="'PRICING.EDIT_PRICE_CLOSE' | translate"
+                (click)="closePriceEditor()"
+              >
+                <ion-icon slot="icon-only" name="close"></ion-icon>
+              </ion-button>
+            </ion-buttons>
+          </ion-toolbar>
+        </ion-header>
+
+        <div class="portal-hoteles-pricing-modal__surface">
+          <div
+            class="portal-hoteles-pricing-modal__body"
+            *ngIf="selectedRoomRateRow as selectedRow"
+          >
+            <div class="portal-hoteles-pricing-modal__grid">
+              <div class="portal-hoteles-pricing-modal__field">
+                <span class="portal-hoteles-pricing-modal__label">
+                  {{ 'PRICING.EDIT_PRICE_PROPERTY_NAME' | translate }}
+                </span>
+                <span class="portal-hoteles-pricing-modal__value">
+                  {{ selectedRow.propertyName }}
+                </span>
+              </div>
+
+              <div class="portal-hoteles-pricing-modal__field">
+                <span class="portal-hoteles-pricing-modal__label">
+                  {{ 'PRICING.EDIT_PRICE_LOCATION' | translate }}
+                </span>
+                <span class="portal-hoteles-pricing-modal__value">
+                  {{ selectedRow.propertyCity }}
+                </span>
+              </div>
+
+              <div class="portal-hoteles-pricing-modal__field">
+                <span class="portal-hoteles-pricing-modal__label">
+                  {{ 'PRICING.EDIT_PRICE_GUESTS' | translate }}
+                </span>
+                <span class="portal-hoteles-pricing-modal__value">
+                  {{ selectedRow.guestsCapacity }}
+                </span>
+              </div>
+
+              <div class="portal-hoteles-pricing-modal__field">
+                <span class="portal-hoteles-pricing-modal__label">
+                  {{ 'PRICING.EDIT_PRICE_BASE_RATE' | translate }}
+                </span>
+                <div class="portal-hoteles-pricing-modal__input-wrap">
+                  <span class="portal-hoteles-pricing-modal__currency-prefix" aria-hidden="true">$</span>
+                  <input
+                    class="portal-hoteles-pricing-modal__input"
+                    type="number"
+                    inputmode="decimal"
+                    min="0"
+                    step="0.01"
+                    [value]="editBaseRateValue"
+                    (input)="onEditBaseRateInput($any($event.target).value)"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div class="portal-hoteles-pricing-modal__actions-wrapper">
+              <p
+                class="portal-hoteles-pricing-modal__error-message"
+                *ngIf="errorMessage"
+                role="alert"
+              >
+                {{ errorMessage }}
+              </p>
+              <div class="portal-hoteles-pricing-modal__actions">
+                <ion-button
+                  class="portal-hoteles-pricing-modal__save-button"
+                  [disabled]="!canSaveEditedPrice"
+                  (click)="savePriceChanges()"
+                >
+                  <ion-spinner
+                    *ngIf="isPriceEditorSaving"
+                    slot="start"
+                    name="crescent"
+                    class="portal-hoteles-pricing-modal__save-button-spinner"
+                  ></ion-spinner>
+                  {{ 'PRICING.EDIT_PRICE_SAVE' | translate }}
+                </ion-button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </ng-template>
+    </ion-modal>
   </section>
 </ion-content>

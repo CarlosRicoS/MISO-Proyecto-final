@@ -8,19 +8,15 @@ function buildJwt(payload: Record<string, string>): string {
 const idToken = buildJwt({ email: 'admin@hotel.com', sub: 'admin-123' });
 const accessToken = buildJwt({ email: 'admin@hotel.com', sub: 'admin-123' });
 
-const pricingPropertyResponse = {
-  id: 'prop-1',
-  name: 'Andes Palace Hotel',
-  city: 'Bogota',
-  country: 'Colombia',
-  price: 275,
-  maxCapacity: 4,
-  description: 'Modern stay in the heart of Bogota.',
-  urlBucketPhotos: 'https://example.com/hotel-1.jpg',
-  checkInTime: '15:00:00',
-  checkOutTime: '11:00:00',
-  adminGroupId: 'hotel-admins',
-};
+const pricingEntries = [
+  { id: 1, propertyId: 'prop-1', basePrice: 240 },
+  { id: 2, propertyId: 'prop-2', basePrice: 410 },
+];
+
+const properties = [
+  { id: 'prop-1', name: 'Andes Palace Hotel', city: 'Bogota', maxCapacity: 2 },
+  { id: 'prop-2', name: 'Coffee Hills Lodge', city: 'Armenia', maxCapacity: 4 },
+];
 
 async function injectAuthSession(page: Page): Promise<void> {
   await page.addInitScript(
@@ -42,19 +38,19 @@ async function injectAuthSession(page: Page): Promise<void> {
 }
 
 async function mockPricingApis(page: Page): Promise<void> {
-  await page.route('**/pricing-engine/api/PropertyPrice**', async (route) => {
+  await page.route('**/pricing-engine/api/propertyprice/pricing', async (route) => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify(pricingPropertyResponse),
+      body: JSON.stringify(pricingEntries),
     });
   });
 
-  await page.route('**/pricing-orchestator/api/Property**', async (route) => {
+  await page.route('**/poc-properties/api/property**', async (route) => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify(pricingPropertyResponse),
+      body: JSON.stringify(properties),
     });
   });
 }
@@ -72,42 +68,44 @@ test.describe('Portal Hoteles — pricing configuration', () => {
     await expect(page).toHaveURL(/\/login\?returnUrl=%2Fpricing/);
   });
 
-  test('authenticated page loads the pricing table and fetches current property pricing', async ({ page }) => {
+  test('authenticated page renders the pricing table from the pricing and properties APIs', async ({ page }) => {
     await injectAuthSession(page);
     await mockPricingApis(page);
 
-    const pricingRequest = page.waitForRequest((req) =>
-      /\/pricing-engine\/api\/PropertyPrice/.test(req.url()),
+    const pricingRequest = page.waitForRequest(
+      (req) => /\/pricing-engine\/api\/propertyprice\/pricing$/.test(req.url()),
     );
 
     await page.goto('/pricing');
     await pricingRequest;
 
-    await expect(page.getByRole('columnheader', { name: 'Room Type' })).toBeVisible();
-    await expect(page.getByRole('columnheader', { name: 'Final Rate' })).toBeVisible();
-    // After the API resolves, the first row's base rate reflects the API price.
-    await expect(page.getByText('$275.00').first()).toBeVisible();
+    await expect(page.getByRole('columnheader', { name: 'Property' })).toBeVisible();
+    await expect(page.getByRole('columnheader', { name: 'Base Rate' })).toBeVisible();
+    await expect(page.getByText('Andes Palace Hotel')).toBeVisible();
+    await expect(page.getByText('Coffee Hills Lodge')).toBeVisible();
+    await expect(page.getByText('$240.00')).toBeVisible();
+    await expect(page.getByText('$410.00')).toBeVisible();
   });
 
-  test('falls back to pricing-orchestrator when pricing-engine returns 5xx', async ({ page }) => {
+  test('shows the error state when the pricing API fails', async ({ page }) => {
     await injectAuthSession(page);
-    await page.route('**/pricing-engine/api/PropertyPrice**', async (route) => {
+    await page.route('**/pricing-engine/api/propertyprice/pricing', async (route) => {
       await route.fulfill({
         status: 500,
         contentType: 'application/json',
-        body: JSON.stringify({ detail: 'engine down' }),
+        body: JSON.stringify({ detail: 'server error' }),
       });
     });
-    await page.route('**/pricing-orchestator/api/Property**', async (route) => {
+    await page.route('**/poc-properties/api/property**', async (route) => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify({ ...pricingPropertyResponse, price: 310 }),
+        body: JSON.stringify(properties),
       });
     });
 
     await page.goto('/pricing');
 
-    await expect(page.getByText('$310.00').first()).toBeVisible();
+    await expect(page.getByText('Unable to load pricing data.')).toBeVisible();
   });
 });
