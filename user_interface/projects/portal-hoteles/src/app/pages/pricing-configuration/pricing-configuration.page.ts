@@ -52,6 +52,10 @@ export class PortalHotelesPricingConfigurationPage implements OnInit {
   pageSize = 10;
   currentPage = 1;
   searchTerm = '';
+  isEditPriceModalOpen = false;
+  selectedRoomRateRow: RoomRateRow | null = null;
+  editBaseRateValue = '';
+  isPriceEditorSaving = false;
 
   constructor(
     private readonly authSession: AuthSessionService,
@@ -170,6 +174,76 @@ export class PortalHotelesPricingConfigurationPage implements OnInit {
     this.cdr.markForCheck();
   }
 
+  get canSaveEditedPrice(): boolean {
+    if (!this.selectedRoomRateRow || this.isPriceEditorSaving) {
+      return false;
+    }
+
+    const nextBaseRate = Number(this.editBaseRateValue);
+    return Number.isFinite(nextBaseRate) && nextBaseRate >= 0;
+  }
+
+  openPriceEditor(row: RoomRateRow): void {
+    this.selectedRoomRateRow = row;
+    this.editBaseRateValue = row.baseRate.toFixed(2);
+    this.isEditPriceModalOpen = true;
+    this.cdr.markForCheck();
+  }
+
+  closePriceEditor(): void {
+    this.isEditPriceModalOpen = false;
+    this.selectedRoomRateRow = null;
+    this.editBaseRateValue = '';
+    this.errorMessage = '';
+    this.cdr.markForCheck();
+  }
+
+  onEditBaseRateInput(value: string | null | undefined): void {
+    this.editBaseRateValue = value ?? '';
+    this.cdr.markForCheck();
+  }
+
+  async savePriceChanges(): Promise<void> {
+    if (!this.selectedRoomRateRow) {
+      return;
+    }
+
+    const nextBaseRate = Number(this.editBaseRateValue);
+    if (!Number.isFinite(nextBaseRate) || nextBaseRate < 0) {
+      return;
+    }
+
+    if (!this.selectedRoomRateRow.pricingRecordId) {
+      this.errorMessage = this.translate.instant('PRICING.ERROR');
+      this.cdr.markForCheck();
+      return;
+    }
+
+    this.isPriceEditorSaving = true;
+    this.cdr.markForCheck();
+
+    try {
+      await firstValueFrom(
+        this.pricingEngineService.updatePropertyPrice(
+          this.selectedRoomRateRow.pricingRecordId,
+          this.selectedRoomRateRow.propertyId,
+          nextBaseRate,
+        ),
+      );
+    } catch {
+      this.isPriceEditorSaving = false;
+      this.errorMessage = this.translate.instant('PRICING.EDIT_PRICE_ERROR');
+      this.cdr.markForCheck();
+      return;
+    }
+
+    this.selectedRoomRateRow.baseRate = nextBaseRate;
+    this.selectedRoomRateRow.baseRateLabel = this.formatRate(nextBaseRate, this.currencyFilter);
+    this.isPriceEditorSaving = false;
+    this.closePriceEditor();
+    this.cdr.markForCheck();
+  }
+
   trackBySeason(_index: number, row: SeasonalRuleRow): string {
     return row.season;
   }
@@ -227,10 +301,12 @@ export class PortalHotelesPricingConfigurationPage implements OnInit {
           const prop = propMap.get(entry.propertyId);
           const capacity = prop?.maxCapacity ?? 0;
           return {
+            pricingRecordId: entry.id ? String(entry.id) : '',
             propertyName: prop.name,
             propertyId: prop.id,
             propertyCity: prop.city || '',
             guestsCapacityLabel: this.translate.instant('PRICING.CAPACITY_LABEL', { count: capacity }),
+            guestsCapacity: capacity,
             baseRateLabel: this.formatRate(Number(entry.basePrice) || 0, this.currencyFilter),
             baseRate: Number(entry.basePrice) || 0,
           } as RoomRateRow;
@@ -267,10 +343,12 @@ export class PortalHotelesPricingConfigurationPage implements OnInit {
 }
 
 interface RoomRateRow {
+  pricingRecordId: string;
   propertyName: string;
   propertyId: string;
   propertyCity: string;
   guestsCapacityLabel: string;
+  guestsCapacity: number;
   baseRateLabel: string;
   baseRate: number;
 }

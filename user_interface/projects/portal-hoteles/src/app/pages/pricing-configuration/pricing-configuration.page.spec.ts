@@ -36,7 +36,7 @@ describe('PortalHotelesPricingConfigurationPage', () => {
   };
 
   beforeEach(async () => {
-    pricingEngineServiceSpy = jasmine.createSpyObj<PricingEngineService>('PricingEngineService', ['getPropertyPricing']);
+    pricingEngineServiceSpy = jasmine.createSpyObj<PricingEngineService>('PricingEngineService', ['getPropertyPricing', 'updatePropertyPrice']);
 
     await TestBed.configureTestingModule({
       imports: [PortalHotelesPricingConfigurationPage, translateTestingModule(), HttpClientTestingModule],
@@ -134,7 +134,7 @@ describe('PortalHotelesPricingConfigurationPage', () => {
       component.dateFinish = '2026-05-12';
 
       // Prepare HTTP responses: one pricing entry matching a property
-      const pricingEntries = [ { propertyId: 'property-1', basePrice: 150 } ];
+      const pricingEntries = [ { id: 'pricing-1', propertyId: 'property-1', basePrice: 150 } ];
       const properties = [ { id: 'property-1', name: 'Test Property', city: 'Bogota', country: 'Colombia', maxCapacity: 4 } ];
 
       const http = TestBed.inject(HttpClient);
@@ -143,6 +143,7 @@ describe('PortalHotelesPricingConfigurationPage', () => {
       await component.loadTableData();
 
       expect(component.roomRateRows.length).toBe(1);
+      expect(component.roomRateRows[0].pricingRecordId).toBe('pricing-1');
       expect(component.roomRateRows[0].propertyName).toBe('Test Property');
       expect(component.roomRateRows[0].propertyCity).toBe('Bogota');
       expect(component.roomRateRows[0].baseRate).toBe(150);
@@ -253,6 +254,121 @@ describe('PortalHotelesPricingConfigurationPage', () => {
 
       // Assert
       expect(operator).toBe('test@example.com');
+    });
+
+    it('opens the price editor with the selected row data', () => {
+      // Arrange
+      const row = {
+        pricingRecordId: 'pricing-1',
+        propertyName: 'Test Property',
+        propertyId: 'property-1',
+        propertyCity: 'Bogota',
+        guestsCapacityLabel: '4 guests',
+        guestsCapacity: 4,
+        baseRateLabel: '$150.00',
+        baseRate: 150,
+      } as any;
+
+      // Act
+      component.openPriceEditor(row);
+
+      // Assert
+      expect(component.isEditPriceModalOpen).toBeTrue();
+      expect(component.selectedRoomRateRow).toBe(row);
+      expect(component.editBaseRateValue).toBe('150.00');
+    });
+
+    it('saves the edited base price back into the selected row', async () => {
+      // Arrange
+      const row = {
+        pricingRecordId: 'pricing-1',
+        propertyName: 'Test Property',
+        propertyId: 'property-1',
+        propertyCity: 'Bogota',
+        guestsCapacityLabel: '4 guests',
+        guestsCapacity: 4,
+        baseRateLabel: '$150.00',
+        baseRate: 150,
+      } as any;
+
+      pricingEngineServiceSpy.updatePropertyPrice.and.returnValue(of({}));
+      component.openPriceEditor(row);
+      component.editBaseRateValue = '175.5';
+
+      // Act
+      await component.savePriceChanges();
+
+      // Assert
+      expect(pricingEngineServiceSpy.updatePropertyPrice).toHaveBeenCalledWith('pricing-1', 'property-1', 175.5);
+      expect(row.baseRate).toBe(175.5);
+      expect(row.baseRateLabel).toBe('$175.50');
+      expect(component.isEditPriceModalOpen).toBeFalse();
+      expect(component.selectedRoomRateRow).toBeNull();
+    });
+
+    it('shows error message when updatePropertyPrice fails', async () => {
+      // Arrange
+      const row = {
+        pricingRecordId: 'pricing-1',
+        propertyName: 'Test Property',
+        propertyId: 'property-1',
+        propertyCity: 'Bogota',
+        guestsCapacityLabel: '4 guests',
+        guestsCapacity: 4,
+        baseRateLabel: '$150.00',
+        baseRate: 150,
+      } as any;
+
+      pricingEngineServiceSpy.updatePropertyPrice.and.returnValue(throwError(() => new Error('Update failed')));
+      component.openPriceEditor(row);
+      component.editBaseRateValue = '175.5';
+
+      // Act
+      await component.savePriceChanges();
+
+      // Assert
+      expect(component.errorMessage).toBeDefined();
+      expect(component.errorMessage.length).toBeGreaterThan(0);
+      expect(component.isEditPriceModalOpen).toBeTrue(); // Modal stays open on error
+      expect(component.isPriceEditorSaving).toBeFalse(); // Loading state reset on error
+    });
+
+    it('disables the save button while the price update is in progress', async () => {
+      // Arrange
+      const row = {
+        pricingRecordId: 'pricing-1',
+        propertyName: 'Test Property',
+        propertyId: 'property-1',
+        propertyCity: 'Bogota',
+        guestsCapacityLabel: '4 guests',
+        guestsCapacity: 4,
+        baseRateLabel: '$150.00',
+        baseRate: 150,
+      } as any;
+
+      pricingEngineServiceSpy.updatePropertyPrice.and.returnValue(of({}));
+      component.openPriceEditor(row);
+      component.editBaseRateValue = '175.5';
+
+      // Act
+      await component.savePriceChanges();
+
+      // Assert - After save completes, loading state should be false
+      expect(component.isPriceEditorSaving).toBeFalse();
+      expect(row.baseRate).toBe(175.5);
+    });
+
+    it('clears error message when closing the price editor', () => {
+      // Arrange
+      component.errorMessage = 'Some error message';
+      component.isEditPriceModalOpen = true;
+
+      // Act
+      component.closePriceEditor();
+
+      // Assert
+      expect(component.errorMessage).toBe('');
+      expect(component.isEditPriceModalOpen).toBeFalse();
     });
   });
 
