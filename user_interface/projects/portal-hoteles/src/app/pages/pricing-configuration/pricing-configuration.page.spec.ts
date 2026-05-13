@@ -466,7 +466,7 @@ describe('PortalHotelesPricingConfigurationPage', () => {
       expect(activeButton).toBeTruthy();
     });
 
-    it('labels every "⋮" row-actions ion-button with aria-label="Row actions" (AC-5)', () => {
+    it('labels every "⋮" row-actions ion-button with aria-label="Edit base price" (AC-5)', () => {
       // Arrange
 
       spyOn(component, 'loadTableData').and.returnValue(Promise.resolve());
@@ -479,7 +479,7 @@ describe('PortalHotelesPricingConfigurationPage', () => {
       // Assert — both room-rate rows (4) and seasonal-rule rows (2) expose row actions.
       expect(rowActionButtons.length).toBeGreaterThanOrEqual(2);
       rowActionButtons.forEach((button) => {
-        expect(button.getAttribute('aria-label')).toBe('Row actions');
+        expect(button.getAttribute('aria-label')).toBe('Edit base price');
       });
     });
 
