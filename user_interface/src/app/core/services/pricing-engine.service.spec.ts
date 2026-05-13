@@ -278,6 +278,19 @@ describe('PricingEngineService', () => {
     req.flush({ id: 'prop-1', price: 123000 });
   });
 
+  it('updates a pricing record with PUT, base price, property id, and bearer token', () => {
+    service.updatePropertyPrice('pricing-1', 'property-1', 175.5).subscribe((response) => {
+      expect(response).toEqual({ ok: true });
+    });
+
+    const req = httpMock.expectOne('https://api.example.com/pricing-engine/api/propertyprice/pricing/pricing-1');
+    expect(req.request.method).toBe('PUT');
+    expect(req.request.body).toEqual({ basePrice: 175.5, PropertyId: 'property-1' });
+    expect(req.request.headers.get('Authorization')).toBe('Bearer property-token');
+
+    req.flush({ ok: true });
+  });
+
   it('returns pricing engine result without fallback when engine succeeds', () => {
     service.getPropertyPricing({
       propertyId: 'prop-2',
