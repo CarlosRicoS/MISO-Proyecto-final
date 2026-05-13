@@ -190,6 +190,42 @@ test.describe('Portal Hoteles — reports page', () => {
     expect(csvRequest.url()).toContain('/incomings-report/api/reports/incoming/csv');
   });
 
+  test('changing the chart period triggers a new revenue-overview request with months=12', async ({ page }) => {
+    await page.goto('/reports');
+    // Wait for the initial chart load before switching period.
+    await expect(page.locator('portal-hoteles-revenue-chart-card')).toBeVisible();
+
+    const nextRequest = page.waitForRequest(
+      (req) =>
+        /\/incomings-report\/api\/reports\/revenue-overview/.test(req.url()) &&
+        new URL(req.url()).searchParams.get('months') === '12',
+    );
+
+    await page.evaluate(() => {
+      const select = document.querySelector('portal-hoteles-revenue-chart-card ion-select');
+      select?.dispatchEvent(new CustomEvent('ionChange', { detail: { value: 'Last 12 months' } }));
+    });
+
+    const request = await nextRequest;
+    expect(request.url()).toContain('months=12');
+  });
+
+  test('renders the revenue chart card after fetching revenue-overview', async ({ page }) => {
+    const overviewRequest = page.waitForRequest(/\/incomings-report\/api\/reports\/revenue-overview/);
+
+    await page.goto('/reports');
+    const request = await overviewRequest;
+    expect(request.url()).toContain('/incomings-report/api/reports/revenue-overview');
+
+    const chartCard = page.locator('portal-hoteles-revenue-chart-card');
+    await expect(chartCard).toBeVisible();
+    await expect(chartCard.getByRole('img')).toHaveAttribute(
+      'aria-label',
+      /Revenue overview chart for period/,
+    );
+    await expect(chartCard.getByText('Revenue Overview')).toBeVisible();
+  });
+
   test('shows correct table columns for financial data', async ({ page }) => {
     await page.goto('/reports');
 

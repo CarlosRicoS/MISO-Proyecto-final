@@ -26,6 +26,15 @@ export class PortalHotelesDashboardPage {
   visibleReservations: DashboardReservation[] = [];
   isLoadingReservations = false;
   reservationsErrorMessage = '';
+  statusFilter: 'ALL' | 'PENDING' | 'CONFIRMED' | 'REJECTED' | 'COMPLETED' | 'CANCELED' = 'ALL';
+  readonly statusFilterOptions: Array<{ value: string; labelKey: string }> = [
+    { value: 'ALL', labelKey: 'DASHBOARD.FILTER_STATUS_ALL' },
+    { value: 'PENDING', labelKey: 'DASHBOARD.STATUS_PENDING' },
+    { value: 'CONFIRMED', labelKey: 'DASHBOARD.STATUS_CONFIRMED' },
+    { value: 'COMPLETED', labelKey: 'DASHBOARD.STATUS_COMPLETED' },
+    { value: 'CANCELED', labelKey: 'DASHBOARD.STATUS_CANCELED' },
+    { value: 'REJECTED', labelKey: 'DASHBOARD.STATUS_REJECTED' },
+  ];
 
   metrics: DashboardMetricsResponse | null = null;
 
@@ -83,7 +92,39 @@ export class PortalHotelesDashboardPage {
   }
 
   get totalReservations(): number {
-    return this.reservations.length;
+    return this.filteredReservations.length;
+  }
+
+  get filteredReservations(): DashboardReservation[] {
+    if (this.statusFilter === 'ALL') {
+      return this.reservations;
+    }
+
+    const target = this.statusFilter.toLowerCase();
+    return this.reservations.filter((reservation) => {
+      const normalized = (reservation.statusValue || '').trim().toLowerCase();
+      if (target === 'canceled') {
+        return normalized === 'canceled' || normalized === 'cancelled';
+      }
+      return normalized === target;
+    });
+  }
+
+  onStatusFilterChange(value: string): void {
+    const normalized = (value || 'ALL').toString().toUpperCase();
+    const allowed: typeof this.statusFilter[] = [
+      'ALL',
+      'PENDING',
+      'CONFIRMED',
+      'REJECTED',
+      'COMPLETED',
+      'CANCELED',
+    ];
+    this.statusFilter = (allowed.includes(normalized as typeof this.statusFilter)
+      ? normalized
+      : 'ALL') as typeof this.statusFilter;
+    this.currentPage = 1;
+    this.updateVisibleReservations();
   }
 
   get visibleRangeLabel(): string {
@@ -230,7 +271,7 @@ export class PortalHotelesDashboardPage {
   private updateVisibleReservations(): void {
     const startIndex = (this.currentPage - 1) * this.pageSize;
     const endIndex = startIndex + this.pageSize;
-    this.visibleReservations = this.reservations.slice(startIndex, endIndex);
+    this.visibleReservations = this.filteredReservations.slice(startIndex, endIndex);
   }
 
   private buildOccupancyCsvForCurrentMonth(): string {

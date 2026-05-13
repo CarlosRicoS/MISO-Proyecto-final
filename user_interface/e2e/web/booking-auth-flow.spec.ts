@@ -190,6 +190,20 @@ test.describe('Booking auth and booking-list journeys', () => {
       .toBe(reservations.length);
   });
 
+  test('register link navigates to /register', async ({ page }) => {
+    await page.goto('/login');
+
+    await page.getByRole('button', { name: 'Sign Up' }).click();
+
+    await expect(page).toHaveURL(/\/register/);
+  });
+
+  test('login page exposes the forgot password link', async ({ page }) => {
+    await page.goto('/login');
+
+    await expect(page.getByRole('button', { name: 'Forgot Password?' })).toBeVisible();
+  });
+
   test('keeps user in login and shows error alert when credentials are rejected', async ({ page }) => {
     await mockAuthAndBookingApis(page, { forceLoginFailure: true });
 
@@ -202,5 +216,115 @@ test.describe('Booking auth and booking-list journeys', () => {
     await expect(page).toHaveURL(/\/login\?returnUrl=%2Fbooking-list/);
     await expect(page.getByText('Login Failed')).toBeVisible();
     await expect(page.getByText('Invalid email or password.')).toBeVisible();
+  });
+
+  test('shows the empty state when the user has no reservations', async ({ page }) => {
+    const idToken = buildJwt({ email: 'traveler@example.com', sub: 'user-123' });
+    const accessToken = buildJwt({ email: 'traveler@example.com', sub: 'user-123' });
+    await page.addInitScript(
+      ([id, access]) => {
+        window.localStorage.setItem(
+          'th_auth_session',
+          JSON.stringify({
+            id_token: id,
+            access_token: access,
+            refresh_token: 'refresh-token',
+            expires_in: 3600,
+            token_type: 'Bearer',
+          }),
+        );
+      },
+      [idToken, accessToken],
+    );
+
+    await page.route('**/booking/api/booking**', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: '[]',
+      });
+    });
+
+    await page.goto('/booking-list');
+
+    await expect(page).toHaveURL(/\/booking-list/);
+    await expect(page.getByText('No reservations available.')).toBeVisible();
+  });
+
+  test('shows an error message when the booking list API fails', async ({ page }) => {
+    const idToken = buildJwt({ email: 'traveler@example.com', sub: 'user-123' });
+    const accessToken = buildJwt({ email: 'traveler@example.com', sub: 'user-123' });
+    await page.addInitScript(
+      ([id, access]) => {
+        window.localStorage.setItem(
+          'th_auth_session',
+          JSON.stringify({
+            id_token: id,
+            access_token: access,
+            refresh_token: 'refresh-token',
+            expires_in: 3600,
+            token_type: 'Bearer',
+          }),
+        );
+      },
+      [idToken, accessToken],
+    );
+
+    await page.route('**/booking/api/booking**', async (route) => {
+      await route.fulfill({
+        status: 500,
+        contentType: 'application/json',
+        body: JSON.stringify({ detail: 'server error' }),
+      });
+    });
+
+    await page.goto('/booking-list');
+
+    await expect(page.getByText('Unable to load reservations.')).toBeVisible();
+  });
+
+  test('renders status labels for CONFIRMED and PENDING reservations', async ({ page }) => {
+    const idToken = buildJwt({ email: 'traveler@example.com', sub: 'user-123' });
+    const accessToken = buildJwt({ email: 'traveler@example.com', sub: 'user-123' });
+    await page.addInitScript(
+      ([id, access]) => {
+        window.localStorage.setItem(
+          'th_auth_session',
+          JSON.stringify({
+            id_token: id,
+            access_token: access,
+            refresh_token: 'refresh-token',
+            expires_in: 3600,
+            token_type: 'Bearer',
+          }),
+        );
+      },
+      [idToken, accessToken],
+    );
+
+    await page.route('**/booking/api/booking**', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(reservations),
+      });
+    });
+
+    await page.route('**/poc-properties/api/property/**', async (route) => {
+      const propertyId = new URL(route.request().url()).pathname.split('/').pop() ?? '';
+      const detail = propertyDetailsById[propertyId];
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ id: propertyId, ...(detail ?? { name: '', city: '', country: '', photos: [] }) }),
+      });
+    });
+
+    await page.goto('/booking-list');
+
+    await expect(page.getByText('Andes Palace Hotel')).toBeVisible();
+    // booking-1 status CONFIRMED, booking-2 status PENDING (label "Upcoming")
+    await expect(page.getByText('Confirmed').first()).toBeVisible();
+    await expect(page.getByText('Upcoming').first()).toBeVisible();
   });
 });

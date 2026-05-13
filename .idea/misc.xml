@@ -14,7 +14,4 @@
     </option>
   </component>
   <component name="ProjectRootManager" version="2" project-jdk-name="25" project-jdk-type="JavaSDK" />
-  <component name="RuffConfiguration">
-    <option name="enabled" value="true" />
-  </component>
 </project>

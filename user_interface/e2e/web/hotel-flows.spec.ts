@@ -483,6 +483,50 @@ test.describe('TravelHub core journeys', () => {
     await expect(page.getByText('Unable to load property details.')).toBeVisible();
   });
 
+  test('property detail renders the reviews section with guest reviews', async ({ page }) => {
+    await page.goto('/search-results?city=Bogota');
+    await page.getByRole('button', { name: 'View Details' }).first().click();
+
+    await expect(page).toHaveURL(/\/propertydetail\/hotel-1/);
+    await expect(page.getByRole('heading', { name: 'Guest Reviews' })).toBeVisible();
+    await expect(page.getByText('Ana').first()).toBeVisible();
+    await expect(page.getByText('Great stay!').first()).toBeVisible();
+  });
+
+  test('property detail renders the photo mosaic for the hotel', async ({ page }) => {
+    await page.goto('/search-results?city=Bogota');
+    await page.getByRole('button', { name: 'View Details' }).first().click();
+
+    await expect(page).toHaveURL(/\/propertydetail\/hotel-1/);
+    const gallery = page.getByRole('region', { name: 'Hotel image gallery' });
+    await expect(gallery).toBeVisible();
+    await expect(gallery.getByRole('button', { name: /Open photo 1 of/ })).toBeVisible();
+  });
+
+  test('property detail issues a pricing request that reflects the URL dates and guest count', async ({ page }) => {
+    const pricingRequest = page.waitForRequest((req) => {
+      const url = req.url();
+      if (!url.includes('/pricing-orchestator/api/Property')) {
+        return false;
+      }
+      const parsed = new URL(url);
+      return (
+        parsed.searchParams.get('propertyId') === 'hotel-1' &&
+        parsed.searchParams.get('guests') === '3'
+      );
+    });
+
+    await page.goto(
+      '/search-results?city=Bogota&startDate=2026-05-10&endDate=2026-05-12&capacity=3',
+    );
+    await page.getByRole('button', { name: 'View Details' }).first().click();
+
+    const captured = await pricingRequest;
+    const capturedUrl = new URL(captured.url());
+    expect(capturedUrl.searchParams.get('dateInit')).toBe('2026-05-10');
+    expect(capturedUrl.searchParams.get('dateFinish')).toBe('2026-05-12');
+  });
+
   test('view details shows error when property detail API fails', async ({ page }) => {
     await page.route('**/api/property**', async (route) => {
       const requestUrl = new URL(route.request().url());
