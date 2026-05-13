@@ -13,7 +13,7 @@ const pricingPropertyResponse = {
   name: 'Andes Palace Hotel',
   city: 'Bogota',
   country: 'Colombia',
-  price: 240,
+  price: 275,
   maxCapacity: 4,
   description: 'Modern stay in the heart of Bogota.',
   urlBucketPhotos: 'https://example.com/hotel-1.jpg',
@@ -85,8 +85,8 @@ test.describe('Portal Hoteles — pricing configuration', () => {
 
     await expect(page.getByRole('columnheader', { name: 'Room Type' })).toBeVisible();
     await expect(page.getByRole('columnheader', { name: 'Final Rate' })).toBeVisible();
-    // Component seeds rows synchronously, so the first base-rate cell uses the API price.
-    await expect(page.getByText('$240.00').first()).toBeVisible();
+    // After the API resolves, the first row's base rate reflects the API price.
+    await expect(page.getByText('$275.00').first()).toBeVisible();
   });
 
   test('falls back to pricing-orchestrator when pricing-engine returns 5xx', async ({ page }) => {

@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, Input, OnInit, inject } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit, inject } from '@angular/core';
 import { IonicModule } from '@ionic/angular';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { firstValueFrom } from 'rxjs';
@@ -21,6 +21,7 @@ export class PortalHotelesPricingConfigurationPage implements OnInit {
   private readonly defaultPropertyId = '7b2f2f2f-8a9b-4f25-ae6d-1d2a1f0c1c33';
 
   private readonly translate = inject(TranslateService);
+  private readonly cdr = inject(ChangeDetectorRef);
 
   @Input() propertyId = '';
   @Input() guests = 1;
@@ -272,6 +273,7 @@ export class PortalHotelesPricingConfigurationPage implements OnInit {
       this.refreshRoomRateRows();
     } finally {
       this.isLoading = false;
+      this.cdr.markForCheck();
     }
   }
 
