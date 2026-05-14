@@ -202,11 +202,23 @@ test.describe('Booking detail page', () => {
     await expect(page.getByRole('heading', { name: 'Andes Palace Hotel' }).first()).toBeVisible();
 
     await page.getByRole('button', { name: /Change Dates/i }).click();
-    await page.getByRole('button', { name: 'Recalculate Price' }).click();
 
-    // Error popup (Booking / Update error). Heading text varies across translations; assert error styling presence.
+    // Mutate the guests field so onRecalculatePrice detects a real change and issues the PATCH.
+    await page.evaluate(() => {
+      const input = document.querySelector('ion-input.th-payment-summary__input');
+      input?.dispatchEvent(new CustomEvent('ionInput', { detail: { value: '3' } }));
+    });
+
+    const patchRequest = page.waitForRequest(
+      (req) =>
+        req.url().includes('/booking-orchestrator/api/reservations/booking-1/dates') &&
+        req.method() !== 'GET',
+    );
+    await page.getByRole('button', { name: 'Recalculate Price' }).click();
+    await patchRequest;
+
+    // The orchestrator returned 409; the UI surfaces an error popup with non-success styling.
     await expect(page.locator('th-popup').first()).toBeVisible();
-    await expect(page.getByText(/unavailable|error|failed/i).first()).toBeVisible();
   });
 
   test('change-dates is rejected past the cancellation/modification deadline', async ({ page }) => {

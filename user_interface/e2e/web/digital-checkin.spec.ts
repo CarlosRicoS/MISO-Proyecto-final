@@ -111,6 +111,9 @@ test.describe('Digital check-in (web)', () => {
   });
 
   test('availability endpoint is queried when viewing a CONFIRMED booking', async ({ page }) => {
+    await mockApis(page, { reservation: confirmedReservation, available: true });
+
+    // Register the tracker LAST so it takes precedence over mockApis' default handler.
     let availabilityCalled = false;
     await page.route('**/checkin/api/check-in/available**', async (route) => {
       availabilityCalled = true;
@@ -121,11 +124,9 @@ test.describe('Digital check-in (web)', () => {
       });
     });
 
-    await mockApis(page, { reservation: confirmedReservation, available: true });
     await page.goto('/booking-detail?bookingId=booking-1');
-
     await expect(page.getByRole('heading', { name: 'Andes Palace Hotel' }).first()).toBeVisible();
-    await expect.poll(() => availabilityCalled).toBe(true);
+    await expect.poll(() => availabilityCalled, { timeout: 5000 }).toBe(true);
   });
 
   test('booking detail loads cleanly for a non-CONFIRMED booking (check-in unavailable)', async ({

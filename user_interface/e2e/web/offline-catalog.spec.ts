@@ -86,18 +86,21 @@ test.describe('Offline catalog (web)', () => {
     });
   });
 
-  test('catalog request errors gracefully when the browser is offline', async ({ page, context }) => {
+  test('catalog request errors gracefully when the API is unreachable', async ({ page }) => {
     await mockPropertyApis(page);
 
     // Seed by loading once online so any in-memory caches are populated
     await page.goto('/search-results?city=Bogota');
     await expect(page.getByText('1 hotel found')).toBeVisible();
 
-    // Now disconnect and reload — the app should not crash and should surface an error
-    // state (search-results renders "Unable to load hotels." on failure).
-    await context.setOffline(true);
-    await page.reload();
+    // Simulate a network failure by aborting subsequent property API calls. Using `route.abort`
+    // rather than `context.setOffline(true)` keeps the dev server reachable for `page.reload()`.
+    await page.unroute('**/api/property**');
+    await page.route('**/api/property**', async (route) => {
+      await route.abort('failed');
+    });
 
+    await page.reload();
     await expect(page.locator('ion-content')).toBeVisible();
     // Either the cached list is still rendered OR an error message is shown; both are acceptable.
     const errorVisible = await page
@@ -106,8 +109,6 @@ test.describe('Offline catalog (web)', () => {
       .isVisible()
       .catch(() => false);
     expect(errorVisible).toBe(true);
-
-    await context.setOffline(false);
   });
 
   // The current TravelHub web app caches images via ImageCacheService but does NOT cache the
