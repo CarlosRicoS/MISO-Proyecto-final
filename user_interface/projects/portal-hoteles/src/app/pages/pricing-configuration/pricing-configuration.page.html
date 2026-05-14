@@ -146,28 +146,28 @@
 
       <table
         class="portal-hoteles-pricing-table"
-        *ngIf="seasonalRulesRows.length > 0"
+        *ngIf="filteredSeasonalRulesRows.length > 0"
       >
         <thead>
           <tr
             class="portal-hoteles-pricing-table__header portal-hoteles-pricing-table__header--seasonal"
           >
-            <th scope="col">{{ 'PRICING.TABLE_SEASON' | translate }}</th>
+            <th scope="col">{{ 'PRICING.TABLE_PROPERTY_NAME' | translate }}</th>
             <th scope="col">{{ 'PRICING.TABLE_DATE_RANGE' | translate }}</th>
-            <th scope="col">{{ 'PRICING.TABLE_MODIFIER' | translate }}</th>
-            <th scope="col">{{ 'PRICING.TABLE_STATUS' | translate }}</th>
+            <th scope="col">{{ 'PRICING.TABLE_GUESTS_RANGE' | translate }}</th>
+            <th scope="col">{{ 'PRICING.TABLE_PRICE_ADJUSTMENT' | translate }}</th>
             <th scope="col">{{ 'PRICING.TABLE_ACTIONS' | translate }}</th>
           </tr>
         </thead>
         <tbody>
           <tr
             class="portal-hoteles-pricing-table__row portal-hoteles-pricing-table__row--seasonal"
-            *ngFor="let row of seasonalRulesRows; trackBy: trackBySeason"
+            *ngFor="let row of paginatedSeasonalRulesRows; trackBy: trackBySeason"
           >
-            <td>
-              <strong>{{ row.season }}</strong>
+            <td class="portal-hoteles-pricing-table__property-name">
+              <strong>{{ row.propertyName }}</strong>
               <span class="portal-hoteles-pricing-table__meta"
-                >{{ row.description }}</span
+                >{{ row.propertyCity }}</span
               >
             </td>
             <td>
@@ -177,27 +177,70 @@
               >
             </td>
             <td>
+              <span>{{ formatGuestsRange(row.guestsMin, row.guestsMax) }}</span>
+            </td>
+            <td>
               <span [class]="row.modifierClass">{{ row.modifierLabel }}</span>
             </td>
-            <td><span [class]="row.statusClass">{{ row.status }}</span></td>
             <td>
               <ion-button
                 fill="clear"
                 size="small"
                 icon-only
                 class="portal-hoteles-pricing-table__actions-button"
-                [attr.aria-label]="'PRICING.EDIT_PRICE_ACTION' | translate"
+                [attr.aria-label]="'PRICING.EDIT_SEASONAL_RULE' | translate"
+                (click)="openSeasonalEditor(row)"
               >
                 <ion-icon slot="icon-only" name="pencil" aria-hidden="true"></ion-icon>
+              </ion-button>
+              <ion-button
+                fill="clear"
+                size="small"
+                icon-only
+                class="portal-hoteles-pricing-table__actions-button portal-hoteles-pricing-table__actions-button--delete"
+                [attr.aria-label]="'PRICING.DELETE_SEASONAL_RULE' | translate"
+                (click)="deleteSeasonalRule(row)"
+              >
+                <ion-icon slot="icon-only" name="trash" aria-hidden="true"></ion-icon>
               </ion-button>
             </td>
           </tr>
         </tbody>
       </table>
 
+      <div
+        class="portal-hoteles-pricing-pagination"
+        *ngIf="filteredSeasonalRulesRows.length > 0"
+      >
+        <div
+          class="portal-hoteles-pricing-pagination__info"
+          aria-live="polite"
+          aria-atomic="true"
+        >
+          {{ 'PRICING.SEASONAL_PAGINATION_PAGE' | translate: { current: seasonalCurrentPage, total: totalSeasonalPages } }}
+        </div>
+        <div
+          class="portal-hoteles-pricing-pagination__controls"
+          role="group"
+          [attr.aria-label]="'PRICING.SEASONAL_PAGINATION_LABEL' | translate"
+        >
+          <ion-button
+            *ngFor="let pageNum of seasonalPageNumbers"
+            fill="outline"
+            size="small"
+            (click)="goToSeasonalPage(pageNum)"
+            [class.portal-hoteles-pricing-pagination__button--active]="seasonalCurrentPage === pageNum"
+            [attr.aria-current]="seasonalCurrentPage === pageNum ? 'page' : null"
+            [attr.aria-label]="'PRICING.PAGE_ARIA' | translate: { page: pageNum }"
+          >
+            {{ pageNum }}
+          </ion-button>
+        </div>
+      </div>
+
       <p
         class="portal-hoteles-pricing-table__message"
-        *ngIf="seasonalRulesRows.length === 0"
+        *ngIf="filteredSeasonalRulesRows.length === 0"
         aria-live="polite"
         aria-atomic="true"
       >
@@ -300,6 +343,152 @@
                     class="portal-hoteles-pricing-modal__save-button-spinner"
                   ></ion-spinner>
                   {{ 'PRICING.EDIT_PRICE_SAVE' | translate }}
+                </ion-button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </ng-template>
+    </ion-modal>
+
+    <ion-modal
+      [isOpen]="isEditSeasonalModalOpen"
+      [backdropDismiss]="false"
+      [cssClass]="'portal-hoteles-pricing-modal-shell'"
+      (didDismiss)="closeSeasonalEditor()"
+    >
+      <ng-template>
+        <ion-header>
+          <ion-toolbar>
+            <ion-title>{{ 'PRICING.EDIT_SEASONAL_TITLE' | translate }}</ion-title>
+            <ion-buttons slot="end">
+              <ion-button
+                fill="clear"
+                [attr.aria-label]="'PRICING.EDIT_SEASONAL_CLOSE' | translate"
+                (click)="closeSeasonalEditor()"
+              >
+                <ion-icon slot="icon-only" name="close"></ion-icon>
+              </ion-button>
+            </ion-buttons>
+          </ion-toolbar>
+        </ion-header>
+
+        <div class="portal-hoteles-pricing-modal__surface">
+          <div
+            class="portal-hoteles-pricing-modal__body"
+            *ngIf="selectedSeasonalRuleRow as selectedRow"
+          >
+            <div class="portal-hoteles-pricing-modal__grid">
+              <div class="portal-hoteles-pricing-modal__field">
+                <span class="portal-hoteles-pricing-modal__label">
+                  {{ 'PRICING.EDIT_SEASONAL_PROPERTY_NAME' | translate }}
+                </span>
+                <span class="portal-hoteles-pricing-modal__value">
+                  {{ selectedRow.propertyName }}
+                </span>
+              </div>
+
+              <div class="portal-hoteles-pricing-modal__field">
+                <span class="portal-hoteles-pricing-modal__label">
+                  {{ 'PRICING.EDIT_SEASONAL_DATE_RANGE_START' | translate }}
+                </span>
+                <div class="portal-hoteles-pricing-modal__input-wrap">
+                  <input
+                    class="portal-hoteles-pricing-modal__input"
+                    type="date"
+                    [value]="editDateRangeStart"
+                    (input)="onEditDateRangeStartChange($any($event.target).value)"
+                  />
+                </div>
+              </div>
+
+              <div class="portal-hoteles-pricing-modal__field">
+                <span class="portal-hoteles-pricing-modal__label">
+                  {{ 'PRICING.EDIT_SEASONAL_DATE_RANGE_END' | translate }}
+                </span>
+                <div class="portal-hoteles-pricing-modal__input-wrap">
+                  <input
+                    class="portal-hoteles-pricing-modal__input"
+                    type="date"
+                    [value]="editDateRangeEnd"
+                    (input)="onEditDateRangeEndChange($any($event.target).value)"
+                  />
+                </div>
+              </div>
+
+              <div class="portal-hoteles-pricing-modal__field">
+                <span class="portal-hoteles-pricing-modal__label">
+                  {{ 'PRICING.EDIT_SEASONAL_GUESTS_MIN' | translate }}
+                </span>
+                <div class="portal-hoteles-pricing-modal__input-wrap">
+                  <input
+                    class="portal-hoteles-pricing-modal__input"
+                    type="number"
+                    inputmode="numeric"
+                    min="0"
+                    [value]="editGuestsMin"
+                    (input)="onEditGuestsMinChange($any($event.target).value)"
+                  />
+                </div>
+              </div>
+
+              <div class="portal-hoteles-pricing-modal__field">
+                <span class="portal-hoteles-pricing-modal__label">
+                  {{ 'PRICING.EDIT_SEASONAL_GUESTS_MAX' | translate }}
+                </span>
+                <div class="portal-hoteles-pricing-modal__input-wrap">
+                  <input
+                    class="portal-hoteles-pricing-modal__input"
+                    type="number"
+                    inputmode="numeric"
+                    min="0"
+                    [value]="editGuestsMax"
+                    (input)="onEditGuestsMaxChange($any($event.target).value)"
+                  />
+                </div>
+              </div>
+
+              <div class="portal-hoteles-pricing-modal__field">
+                <span class="portal-hoteles-pricing-modal__label">
+                  {{ 'PRICING.EDIT_SEASONAL_MODIFIER' | translate }}
+                </span>
+                <div class="portal-hoteles-pricing-modal__input-wrap">
+                  <input
+                    class="portal-hoteles-pricing-modal__input"
+                    type="number"
+                    inputmode="numeric"
+                    min="-100"
+                    max="100"
+                    step="1"
+                    [value]="editSeasonalModifierValue"
+                    (input)="onEditSeasonalModifierInput($any($event.target).value)"
+                  />
+                  <span class="portal-hoteles-pricing-modal__currency-prefix" aria-hidden="true">%</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="portal-hoteles-pricing-modal__actions-wrapper">
+              <p
+                class="portal-hoteles-pricing-modal__error-message"
+                *ngIf="errorMessage"
+                role="alert"
+              >
+                {{ errorMessage }}
+              </p>
+              <div class="portal-hoteles-pricing-modal__actions">
+                <ion-button
+                  class="portal-hoteles-pricing-modal__save-button"
+                  [disabled]="!canSaveEditedSeasonalModifier"
+                  (click)="saveSeasonalChanges()"
+                >
+                  <ion-spinner
+                    *ngIf="isSeasonalEditorSaving"
+                    slot="start"
+                    name="crescent"
+                    class="portal-hoteles-pricing-modal__save-button-spinner"
+                  ></ion-spinner>
+                  {{ 'PRICING.EDIT_SEASONAL_SAVE' | translate }}
                 </ion-button>
               </div>
             </div>
