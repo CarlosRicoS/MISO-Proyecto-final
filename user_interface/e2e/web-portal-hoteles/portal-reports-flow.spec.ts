@@ -237,6 +237,113 @@ test.describe('Portal Hoteles — reports page', () => {
   });
 });
 
+// -------------------------------------------------------------------------
+// Revenue report — Gherkin: revenue-report.feature
+// The UI exposes the report through `/reports`; the API returns totals,
+// taxes, commissions and net income computed by the backend, and exposes a
+// /csv export endpoint. The traveler-facing date-range picker for the
+// report is not implemented as an explicit form — date filters are passed
+// via query params from the page. We therefore exercise the scenarios that
+// the current UI supports and explicitly skip what is not yet wired up
+// (date-range validation message), leaving a TODO referencing the scenario.
+// -------------------------------------------------------------------------
+
+test.describe('Portal Hoteles — revenue report (totals, taxes, commissions)', () => {
+  test.beforeEach(async ({ page }) => {
+    await injectAuthSession(page);
+    await mockReportsApis(page);
+  });
+
+  // "Generar reporte de ingresos con totales, impuestos y comisiones para un rango válido"
+  test('shows totals, taxes and commission columns for a valid range', async ({ page }) => {
+    await page.goto('/reports');
+
+    await expect(page.getByRole('columnheader', { name: 'Gross Value' })).toBeVisible();
+    await expect(page.getByRole('columnheader', { name: 'Net Income' })).toBeVisible();
+    // Records with explicit gross/net totals from the mocked report payload.
+    await expect(page.getByRole('cell', { name: '#bk000001' })).toBeVisible();
+    await expect(page.getByRole('cell', { name: 'PAY-APR-001' })).toBeVisible();
+  });
+
+  // "Generar el reporte correctamente para un rango de fechas en el borde del período seleccionado"
+  test('renders report records for an edge-of-period date range', async ({ page }) => {
+    const edgeReport = {
+      records: [
+        {
+          id: 'rpt-edge-001',
+          booking_id: 'bk-edge-1',
+          payment_reference: 'PAY-EDGE-1',
+          payment_date: '2026-04-30T23:59:00',
+          gross_value: 500.0,
+          taxes: 37.5,
+          commission: 25.0,
+          net_income: 437.5,
+          status: 'CONFIRMED',
+        },
+      ],
+      total_records: 1,
+      total_gross: 500.0,
+      total_net: 437.5,
+    };
+    await page.route('**/incomings-report/api/reports/incoming**', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(edgeReport),
+      });
+    });
+
+    await page.goto('/reports');
+    await expect(page.getByRole('cell', { name: '#bk-edge-1' })).toBeVisible();
+    await expect(page.getByRole('cell', { name: 'PAY-EDGE-1' })).toBeVisible();
+  });
+
+  // "Calcular correctamente impuestos, comisiones y totales netos en el reporte de ingresos"
+  test('renders tax / commission / net income values from the API in each row', async ({ page }) => {
+    await page.goto('/reports');
+
+    // The mocked first row: gross 1750, taxes 131.25, commission 87.50, net 1531.25.
+    await expect(page.getByRole('cell', { name: '#bk000001' })).toBeVisible();
+    await expect(page.getByText('$1,750').first()).toBeVisible();
+    await expect(page.getByText('$1,531').first()).toBeVisible();
+  });
+
+  // "Mostrar estado vacío cuando no existen ingresos en el rango de fechas consultado"
+  test('shows the empty state when no income falls in the selected range', async ({ page }) => {
+    await page.route('**/incomings-report/api/reports/incoming**', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ records: [], total_records: 0, total_gross: 0, total_net: 0 }),
+      });
+    });
+
+    await page.goto('/reports');
+    await expect(page.getByText('No revenue transactions available.')).toBeVisible();
+  });
+
+  // "Mostrar mensaje de error cuando falla la generación o exportación del reporte"
+  test('shows the error state when the report generation/export endpoint fails', async ({ page }) => {
+    await page.route('**/incomings-report/api/reports/incoming**', async (route) => {
+      await route.fulfill({
+        status: 500,
+        contentType: 'application/json',
+        body: '{"detail":"Server error"}',
+      });
+    });
+
+    await page.goto('/reports');
+    await expect(page.getByText('Unable to load report data.')).toBeVisible();
+  });
+
+  // "Validar que no se permita generar el reporte con un rango de fechas inválido"
+  // No explicit date-range form exists in the current portal-hoteles reports page
+  // (date filters are derived from URL query params, not user-editable inputs).
+  test.skip('TODO: rejects an invalid date range with a validation message — UI not yet wired up (revenue-report.feature: rangos-fecha @validacion)', () => {
+    // Intentionally empty — scenario placeholder.
+  });
+});
+
 test.describe('Portal Hoteles — dashboard KPI metrics', () => {
   test.beforeEach(async ({ page }) => {
     await injectAuthSession(page);

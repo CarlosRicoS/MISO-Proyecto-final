@@ -57,4 +57,34 @@ test.describe('Notifications page', () => {
     await expect(list.getByText('We received your payment for Coffee Hills Lodge.')).toBeVisible();
     await expect(page.getByRole('heading', { name: 'No notifications yet' })).toHaveCount(0);
   });
+
+  test('renders BOOKING_CONFIRMED notification with the updated status', async ({ page }) => {
+    const stored = [
+      {
+        id: 'notif-confirmed',
+        type: 'BOOKING_CONFIRMED',
+        title: 'Booking confirmed',
+        subtitle: 'Reservation #booking-1',
+        message: 'Your reservation is now CONFIRMED.',
+        receivedAt: new Date().toISOString(),
+        iconName: 'checkmark-circle-outline',
+        iconColor: '#16A34A',
+        data: { bookingId: 'booking-1', status: 'CONFIRMED' },
+      },
+    ];
+
+    await page.addInitScript((items) => {
+      window.localStorage.setItem('th_notifications_history', JSON.stringify(items));
+    }, stored);
+
+    await page.goto('/notifications');
+
+    const list = page.locator('th-notifications-list');
+    await expect(list.getByRole('heading', { name: 'Booking confirmed' })).toBeVisible();
+    await expect(list.getByText('Your reservation is now CONFIRMED.')).toBeVisible();
+  });
+
+  // The current th-notifications-list component renders cards but does not expose a click handler
+  // that navigates to /booking-detail. Tapping a notification updates internal state only.
+  test.skip('TODO: notifications.feature — opening a notification navigates to booking detail with updated status — navigation handler not implemented on th-notifications-list', () => {});
 });

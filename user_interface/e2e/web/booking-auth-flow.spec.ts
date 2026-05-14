@@ -283,6 +283,124 @@ test.describe('Booking auth and booking-list journeys', () => {
     await expect(page.getByText('Unable to load reservations.')).toBeVisible();
   });
 
+  test('shows generic 401 error for wrong password with valid email (no email-existence leak)', async ({ page }) => {
+    await mockAuthAndBookingApis(page, { forceLoginFailure: true });
+
+    await page.goto('/login');
+    await fillLoginForm(page, 'usuario@valido.com', 'WrongPassword!');
+    await page.getByRole('button', { name: 'Sign In' }).click();
+
+    await expect(page.getByText('Login Failed')).toBeVisible();
+    await expect(page.getByText('Invalid email or password.')).toBeVisible();
+    // generic message must NOT mention the email existing or not
+    await expect(page.getByText(/email .*exist|account .*exist/i)).toHaveCount(0);
+    await expect(page).toHaveURL(/\/login/);
+  });
+
+  test('shows generic 401 error for non-existent email (no existence leak)', async ({ page }) => {
+    await mockAuthAndBookingApis(page, { forceLoginFailure: true });
+
+    await page.goto('/login');
+    await fillLoginForm(page, 'noexiste@travelhub.com', 'Password123');
+    await page.getByRole('button', { name: 'Sign In' }).click();
+
+    await expect(page.getByText('Login Failed')).toBeVisible();
+    await expect(page.getByText('Invalid email or password.')).toBeVisible();
+    await expect(page.getByText(/does not exist|no such account/i)).toHaveCount(0);
+    await expect(page).toHaveURL(/\/login/);
+  });
+
+  test('shows required-field validation when login is submitted empty', async ({ page }) => {
+    let loginCalled = false;
+    await page.route('**/auth/api/auth/login', async (route) => {
+      loginCalled = true;
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({}),
+      });
+    });
+
+    await page.goto('/login');
+    await page.getByRole('button', { name: 'Sign In' }).click();
+
+    // Required-field helper messages from LOGIN.EMAIL_REQUIRED / PASSWORD_REQUIRED translations
+    await expect(page.locator('app-login').getByText(/required/i).first()).toBeVisible();
+    // The form must not call the API when required fields are missing
+    expect(loginCalled).toBe(false);
+    await expect(page).toHaveURL(/\/login/);
+  });
+
+  // Login does not perform client-side password-policy validation — only required + email
+  // format. The password policy (min length, uppercase, number) is enforced server-side at
+  // registration. These scenarios remain as documentation of the Gherkin coverage.
+  test.skip('TODO: Login client-side password-policy errors (auth.feature: short / no uppercase / no number) — not implemented in LoginPage', () => {
+    // see src/app/pages/login/login.page.ts — passwordState only checks .trim()
+  });
+
+  test.skip('TODO: Token-expired redirect to login (auth.feature: token JWT expirado) — bookingListAuthGuard does not validate expiry', () => {
+    // see src/app/core/guards/booking-list-auth.guard.ts — only checks isLoggedIn flag, no exp claim parsing
+  });
+
+  test.skip('TODO: my-bookings filter by status (my-bookings.feature) — booking-list page has no status filter UI', () => {
+    // see src/app/pages/booking-list/booking-list.page.html
+  });
+
+  test.skip('TODO: my-bookings filter by check-in/check-out date (my-bookings.feature) — booking-list page has no date filter UI', () => {});
+
+  test.skip('TODO: my-bookings no-match filter state (my-bookings.feature) — depends on filter UI which is not implemented', () => {});
+
+  test('my-bookings refreshes data on revisit (recent status change reflected after refresh)', async ({ page }) => {
+    const idToken = buildJwt({ email: 'traveler@example.com', sub: 'user-123' });
+    const accessToken = buildJwt({ email: 'traveler@example.com', sub: 'user-123' });
+    await page.addInitScript(
+      ([id, access]) => {
+        window.localStorage.setItem(
+          'th_auth_session',
+          JSON.stringify({
+            id_token: id,
+            access_token: access,
+            refresh_token: 'refresh-token',
+            expires_in: 3600,
+            token_type: 'Bearer',
+          }),
+        );
+      },
+      [idToken, accessToken],
+    );
+
+    let bookingFetchCount = 0;
+    await page.route('**/booking/api/booking**', async (route) => {
+      bookingFetchCount += 1;
+      const payload =
+        bookingFetchCount === 1
+          ? [{ ...reservations[1] }] // PENDING
+          : [{ ...reservations[1], status: 'CONFIRMED' }]; // status changed after refresh
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(payload),
+      });
+    });
+
+    await page.route('**/poc-properties/api/property/**', async (route) => {
+      const propertyId = new URL(route.request().url()).pathname.split('/').pop() ?? '';
+      const detail = propertyDetailsById[propertyId];
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ id: propertyId, ...(detail ?? { name: '', city: '', country: '', photos: [] }) }),
+      });
+    });
+
+    await page.goto('/booking-list');
+    await expect(page.getByText('Upcoming').first()).toBeVisible();
+
+    await page.reload();
+    await expect(page.getByText('Confirmed').first()).toBeVisible();
+    expect(bookingFetchCount).toBeGreaterThanOrEqual(2);
+  });
+
   test('renders status labels for CONFIRMED and PENDING reservations', async ({ page }) => {
     const idToken = buildJwt({ email: 'traveler@example.com', sub: 'user-123' });
     const accessToken = buildJwt({ email: 'traveler@example.com', sub: 'user-123' });

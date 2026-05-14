@@ -1,0 +1,16 @@
+{
+  "request": {
+    "method": "PUT",
+    "urlPathPattern": "^/(pricing-engine/)?api/propertyprice/pricing/[^/]+$"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json",
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, PUT, POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization, X-User-Id"
+    },
+    "bodyFileName": "pricingengine-update-response.json"
+  }
+}
