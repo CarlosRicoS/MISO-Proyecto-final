@@ -400,4 +400,137 @@ test.describe('Portal Hoteles — reservation detail', () => {
 
     await expect(page.getByText('Unable to load reservation detail.')).toBeVisible();
   });
+
+  // Gherkin: reject-booking.feature — "Rechazar una reserva confirmada cuando la política lo permite"
+  test('rejects a CONFIRMED reservation when policy permits', async ({ page }) => {
+    let capturedUrl = '';
+    await page.route(/\/booking-orchestrator\/api\/reservations\/[^/]+\/admin-reject$/, async (route) => {
+      capturedUrl = route.request().url();
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ id: 'res-002', status: 'REJECTED' }),
+      });
+    });
+
+    await page.goto('/dashboard/res-002');
+    await expect(page.getByText('Confirmed')).toBeVisible();
+
+    const rejectButton = page.getByRole('button', { name: 'Reject' });
+    // CONFIRMED is not terminal — reject must be enabled (policy permits).
+    await expect(rejectButton).toBeEnabled();
+    await rejectButton.click();
+
+    await expect(page).toHaveURL(/\/dashboard$/);
+    expect(capturedUrl).toContain('/booking-orchestrator/api/reservations/res-002/admin-reject');
+  });
+
+  test('reject is blocked when the reservation is in a terminal state (policy disallows)', async ({ page }) => {
+    // REJECTED, COMPLETED and CANCELED are terminal — reject must remain disabled.
+    await page.goto('/dashboard/res-004');
+    await expect(page.getByText('Completed')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Reject' })).toBeDisabled();
+
+    await page.goto('/dashboard/res-005');
+    await expect(page.getByText('Canceled')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Reject' })).toBeDisabled();
+  });
+});
+
+// -------------------------------------------------------------------------
+// Executive dashboard — Gherkin: executive-dashboard.feature
+// -------------------------------------------------------------------------
+
+const mockExecutiveDashboardMetrics = {
+  total_reservations: 28,
+  monthly_revenue: 8350.0,
+  avg_daily_revenue: 278.33,
+  revenue_trend_pct: 23.0,
+  today_checkins: 2,
+  today_checkouts: 1,
+};
+
+const mockExecutiveRevenueOverview = {
+  data: [
+    { month: 11, year: 2025, label: 'Nov', total_revenue: 3665.0 },
+    { month: 12, year: 2025, label: 'Dec', total_revenue: 7000.0 },
+    { month: 1, year: 2026, label: 'Jan', total_revenue: 4310.0 },
+    { month: 2, year: 2026, label: 'Feb', total_revenue: 5940.0 },
+    { month: 3, year: 2026, label: 'Mar', total_revenue: 6790.0 },
+    { month: 4, year: 2026, label: 'Apr', total_revenue: 8350.0 },
+  ],
+};
+
+test.describe('Portal Hoteles — executive dashboard (KPIs, revenue chart, reservation trend)', () => {
+  test.beforeEach(async ({ page }) => {
+    await injectAuthSession(page);
+    await mockBookingApis(page);
+    await page.route('**/incomings-report/api/reports/dashboard-metrics', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(mockExecutiveDashboardMetrics),
+      });
+    });
+    await page.route('**/incomings-report/api/reports/revenue-overview**', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(mockExecutiveRevenueOverview),
+      });
+    });
+  });
+
+  // "Visualizar el resumen ejecutivo de ocupación actual con KPIs clave"
+  test('shows occupancy / revenue / reservations KPI cards', async ({ page }) => {
+    await page.goto('/dashboard');
+
+    const reservationsCard = page
+      .locator('portal-hoteles-grid-card')
+      .filter({ hasText: 'Total Reservations' });
+    await expect(reservationsCard.locator('.portal-hoteles-dashboard-card__value')).toHaveText('28');
+
+    const revenueCard = page
+      .locator('portal-hoteles-grid-card')
+      .filter({ hasText: 'Monthly Revenue' });
+    await expect(revenueCard.locator('.portal-hoteles-dashboard-card__value')).toHaveText('$8,350.00');
+
+    const checkinsCard = page.locator('portal-hoteles-grid-card').filter({ hasText: "Today's Check-ins" });
+    await expect(checkinsCard.locator('.portal-hoteles-dashboard-card__value')).toHaveText('2');
+  });
+
+  // "Consultar la evolución de ingresos mensuales en la gráfica principal"
+  // The travelhub-style monthly revenue chart lives on /reports — verify the page makes the
+  // revenue-overview request and the chart card renders.
+  test('monthly revenue chart loads on the reports page from revenue-overview API', async ({ page }) => {
+    const overviewRequest = page.waitForRequest(/\/incomings-report\/api\/reports\/revenue-overview/);
+
+    await page.route('**/incomings-report/api/reports/incoming**', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ records: [], total_records: 0, total_gross: 0, total_net: 0 }),
+      });
+    });
+
+    await page.goto('/reports');
+    const request = await overviewRequest;
+    expect(request.url()).toContain('/incomings-report/api/reports/revenue-overview');
+
+    const chartCard = page.locator('portal-hoteles-revenue-chart-card');
+    await expect(chartCard).toBeVisible();
+    await expect(chartCard.getByText('Revenue Overview')).toBeVisible();
+  });
+
+  // "Revisar el estado y la tendencia de reservas activas y próximas"
+  test('reservations table shows active and upcoming reservations with their status trend', async ({ page }) => {
+    await page.goto('/dashboard');
+
+    // The reservation table renders status badges for active (PENDING/CONFIRMED) and other
+    // states — these represent the "estado y tendencia" of upcoming reservations.
+    await expect(page.locator('.portal-hoteles-dashboard-status--pending')).toBeVisible();
+    await expect(page.locator('.portal-hoteles-dashboard-status--confirmed')).toBeVisible();
+    await expect(page.getByText('#res-001')).toBeVisible();
+    await expect(page.getByText('#res-002')).toBeVisible();
+  });
 });

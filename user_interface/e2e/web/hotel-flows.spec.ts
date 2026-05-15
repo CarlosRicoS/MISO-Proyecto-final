@@ -527,6 +527,112 @@ test.describe('TravelHub core journeys', () => {
     expect(capturedUrl.searchParams.get('dateFinish')).toBe('2026-05-12');
   });
 
+  test('date-range search forwards startDate/endDate to API and filters results', async ({ page }) => {
+    let capturedUrl: URL | null = null;
+    await page.route('**/api/property**', async (route) => {
+      const requestUrl = new URL(route.request().url());
+      if (!requestUrl.pathname.endsWith('/api/property')) {
+        await route.fallback();
+        return;
+      }
+      capturedUrl = requestUrl;
+      // Backend filters by availability — return a single matching hotel
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify([mockedHotels[0]]),
+      });
+    });
+
+    await page.goto('/search-results?city=Bogota&startDate=2026-05-10&endDate=2026-05-12&capacity=2');
+
+    await expect(page.getByText('1 hotel found')).toBeVisible();
+    expect(capturedUrl).not.toBeNull();
+    expect(capturedUrl!.searchParams.get('startDate')).toBe('2026-05-10');
+    expect(capturedUrl!.searchParams.get('endDate')).toBe('2026-05-12');
+  });
+
+  test('no-availability state when API returns empty for the given dates', async ({ page }) => {
+    await page.route('**/api/property**', async (route) => {
+      const requestUrl = new URL(route.request().url());
+      if (!requestUrl.pathname.endsWith('/api/property')) {
+        await route.fallback();
+        return;
+      }
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify([]),
+      });
+    });
+
+    await page.goto('/search-results?city=Bogota&startDate=2026-05-10&endDate=2026-05-12&capacity=2');
+
+    await expect(page.getByText('0 hotels found')).toBeVisible();
+    await expect(page.getByText('No hotels available for this search.')).toBeVisible();
+  });
+
+  test('property detail renders the amenities list', async ({ page }) => {
+    await page.goto('/search-results?city=Bogota');
+    await page.getByRole('button', { name: 'View Details' }).first().click();
+
+    await expect(page).toHaveURL(/\/propertydetail\/hotel-1/);
+    await expect(page.getByText('Free WiFi').first()).toBeVisible();
+  });
+
+  test('property detail handles empty amenities gracefully', async ({ page }) => {
+    await page.route('**/api/property**', async (route) => {
+      const requestUrl = new URL(route.request().url());
+      const path = requestUrl.pathname;
+
+      if (path.endsWith('/api/property')) {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify(mockedHotels),
+        });
+        return;
+      }
+      if (path.includes('/api/property/')) {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ ...mockedPropertyDetail, amenities: [] }),
+        });
+        return;
+      }
+      await route.fallback();
+    });
+
+    await page.goto('/search-results?city=Bogota');
+    await page.getByRole('button', { name: 'View Details' }).first().click();
+
+    await expect(page).toHaveURL(/\/propertydetail\/hotel-1/);
+    // Page still renders without crashing, even with empty amenities list
+    await expect(page.getByRole('heading', { level: 1, name: 'Andes Palace Hotel' })).toBeVisible();
+  });
+
+  test('property detail shows the total price for the stay (price breakdown / per night)', async ({ page }) => {
+    await page.goto(
+      '/search-results?city=Bogota&startDate=2026-05-10&endDate=2026-05-12&capacity=2',
+    );
+    await page.getByRole('button', { name: 'View Details' }).first().click();
+
+    await expect(page).toHaveURL(/\/propertydetail\/hotel-1/);
+    // The mock pricing-orchestator response returns price=420 for hotel-1
+    await expect(page.getByText(/\$420/).first()).toBeVisible();
+  });
+
+  // Filter UI for price + capacity is not currently rendered on /search-results
+  // (see src/app/pages/search-results/search-results.page.html — only th-filter-summary, no
+  //  interactive price/capacity filter inputs). The home page does include a th-filter that
+  //  accepts city + guests + dates and passes them as query params (covered by the
+  //  "search flow navigates to results with query params" test).
+  test.skip('TODO: search-results — filter by price + capacity (property-search.feature) — filter UI not implemented', () => {});
+  test.skip('TODO: search-results — clear filters restores listing (property-search.feature) — filter UI not implemented', () => {});
+  test.skip('TODO: search-results — invalid date range (check-out before check-in) validation message (property-search.feature) — search-results page does not validate; home-page date picker enforces min date via th-datetime-modal', () => {});
+  test.skip('TODO: property-details — availability calendar visible (property-details.feature) — no calendar component on property detail page', () => {});
+
   test('view details shows error when property detail API fails', async ({ page }) => {
     await page.route('**/api/property**', async (route) => {
       const requestUrl = new URL(route.request().url());

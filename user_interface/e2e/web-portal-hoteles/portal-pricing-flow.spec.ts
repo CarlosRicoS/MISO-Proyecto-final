@@ -87,6 +87,59 @@ test.describe('Portal Hoteles — pricing configuration', () => {
     await expect(page.getByText('$410.00')).toBeVisible();
   });
 
+  // Gherkin: pricing-management.feature — "Editar un precio existente y guardar correctamente"
+  test('edits an existing base price and saves successfully (PUT to pricing-engine)', async ({ page }) => {
+    await injectAuthSession(page);
+    await mockPricingApis(page);
+
+    let capturedUrl = '';
+    let capturedBody: { basePrice?: number; PropertyId?: string } | null = null;
+    await page.route(/\/pricing-engine\/api\/propertyprice\/pricing\/\d+$/, async (route) => {
+      if (route.request().method() !== 'PUT') {
+        await route.fallback();
+        return;
+      }
+      capturedUrl = route.request().url();
+      capturedBody = JSON.parse(route.request().postData() || '{}') as {
+        basePrice?: number;
+        PropertyId?: string;
+      };
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ id: 1, propertyId: 'prop-1', basePrice: 275.5 }),
+      });
+    });
+
+    await page.goto('/pricing');
+    await expect(page.getByText('Andes Palace Hotel')).toBeVisible();
+    await expect(page.getByText('$240.00')).toBeVisible();
+
+    // Open the edit modal for the first property row.
+    await page
+      .locator('.portal-hoteles-pricing-table__row')
+      .first()
+      .getByRole('button')
+      .first()
+      .click();
+
+    const modalInput = page.locator('.portal-hoteles-pricing-modal__input');
+    await expect(modalInput).toBeVisible();
+    await modalInput.fill('275.50');
+
+    const saveButton = page.getByRole('button', { name: 'Save' }).or(
+      page.locator('.portal-hoteles-pricing-modal__save-button'),
+    );
+    await saveButton.first().click();
+
+    // Updated value reflected in the list.
+    await expect(page.getByText('$275.50')).toBeVisible();
+    expect(capturedUrl).toMatch(/\/pricing-engine\/api\/propertyprice\/pricing\/1$/);
+    expect(capturedBody).not.toBeNull();
+    expect(capturedBody!.basePrice).toBe(275.5);
+    expect(capturedBody!.PropertyId).toBe('prop-1');
+  });
+
   test('shows the error state when the pricing API fails', async ({ page }) => {
     await injectAuthSession(page);
     await page.route('**/pricing-engine/api/propertyprice/pricing', async (route) => {

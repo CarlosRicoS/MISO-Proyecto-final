@@ -1,0 +1,8 @@
+{
+  "id": "checkin-001",
+  "booking_id": "booking-1",
+  "property_id": "prop-1",
+  "user_id": "user-123",
+  "checked_in_at": "2026-08-10T15:00:00Z",
+  "status": "COMPLETED"
+}
