@@ -217,8 +217,10 @@ test.describe('Booking detail page', () => {
     await page.getByRole('button', { name: 'Recalculate Price' }).click();
     await patchRequest;
 
-    // The orchestrator returned 409; the UI surfaces an error popup with non-success styling.
-    await expect(page.locator('th-popup').first()).toBeVisible();
+    // The orchestrator returned 409; the UI surfaces the conflict alert message.
+    await expect(
+      page.getByText('The property is not available for the selected dates. Please choose different dates.'),
+    ).toBeVisible();
   });
 
   test('change-dates is rejected past the cancellation/modification deadline', async ({ page }) => {

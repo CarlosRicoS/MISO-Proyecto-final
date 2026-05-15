@@ -271,7 +271,7 @@ test.describe('Portal Hoteles — revenue report (totals, taxes, commissions)', 
       records: [
         {
           id: 'rpt-edge-001',
-          booking_id: 'bkedge001-0000-0000-0000-000000000001',
+          booking_id: 'bkedge11-0000-0000-0000-000000000001',
           payment_reference: 'PAY-EDGE-1',
           payment_date: '2026-04-30T23:59:00',
           gross_value: 500.0,
@@ -294,7 +294,7 @@ test.describe('Portal Hoteles — revenue report (totals, taxes, commissions)', 
     });
 
     await page.goto('/reports');
-    await expect(page.getByRole('cell', { name: '#bkedge001' })).toBeVisible();
+    await expect(page.getByRole('cell', { name: '#bkedge11' })).toBeVisible();
     await expect(page.getByRole('cell', { name: 'PAY-EDGE-1' })).toBeVisible();
   });
 
