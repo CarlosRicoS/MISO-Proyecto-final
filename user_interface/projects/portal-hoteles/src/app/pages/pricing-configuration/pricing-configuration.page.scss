@@ -556,6 +556,11 @@ ion-input {
   text-align: left;
 }
 
+.portal-hoteles-pricing-modal__input--select {
+  padding-left: 12px;
+  padding-right: 32px;
+}
+
 .portal-hoteles-pricing-modal__input:focus {
   box-shadow: 0 0 0 3px var(--th-primary-100);
 }

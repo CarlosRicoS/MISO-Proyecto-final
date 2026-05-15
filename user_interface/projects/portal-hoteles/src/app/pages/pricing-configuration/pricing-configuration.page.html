@@ -139,6 +139,7 @@
           size="small"
           fill="solid"
           class="portal-hoteles-pricing-toolbar-header__action-button"
+          (click)="openCreateSeasonalRuleModal()"
         >
           {{ 'PRICING.NEW_RATE' | translate }}
         </ion-button>
@@ -360,7 +361,13 @@
       <ng-template>
         <ion-header>
           <ion-toolbar>
-            <ion-title>{{ 'PRICING.EDIT_SEASONAL_TITLE' | translate }}</ion-title>
+            <ion-title>
+              {{
+                isSeasonalEditorCreateMode
+                  ? ('PRICING.CREATE_SEASONAL_TITLE' | translate)
+                  : ('PRICING.EDIT_SEASONAL_TITLE' | translate)
+              }}
+            </ion-title>
             <ion-buttons slot="end">
               <ion-button
                 fill="clear"
@@ -376,16 +383,34 @@
         <div class="portal-hoteles-pricing-modal__surface">
           <div
             class="portal-hoteles-pricing-modal__body"
-            *ngIf="selectedSeasonalRuleRow as selectedRow"
+            *ngIf="isSeasonalEditorCreateMode || selectedSeasonalRuleRow"
           >
             <div class="portal-hoteles-pricing-modal__grid">
               <div class="portal-hoteles-pricing-modal__field">
                 <span class="portal-hoteles-pricing-modal__label">
                   {{ 'PRICING.EDIT_SEASONAL_PROPERTY_NAME' | translate }}
                 </span>
-                <span class="portal-hoteles-pricing-modal__value">
-                  {{ selectedRow.propertyName }}
-                </span>
+                <ng-container *ngIf="isSeasonalEditorCreateMode">
+                  <div class="portal-hoteles-pricing-modal__input-wrap">
+                    <select
+                      class="portal-hoteles-pricing-modal__input portal-hoteles-pricing-modal__input--select"
+                      [value]="selectedPropertyForCreate?.propertyId || ''"
+                      (change)="onPropertyChange($any($event.target).value)"
+                    >
+                      <option value="" disabled selected>
+                        {{ 'PRICING.SELECT_PROPERTY' | translate }}
+                      </option>
+                      <option *ngFor="let prop of uniqueProperties" [value]="prop.propertyId">
+                        {{ prop.propertyName }} ({{ prop.propertyCity }})
+                      </option>
+                    </select>
+                  </div>
+                </ng-container>
+                <ng-container *ngIf="!isSeasonalEditorCreateMode">
+                  <span class="portal-hoteles-pricing-modal__value">
+                    {{ selectedSeasonalRuleRow?.propertyName }}
+                  </span>
+                </ng-container>
               </div>
 
               <div class="portal-hoteles-pricing-modal__field">

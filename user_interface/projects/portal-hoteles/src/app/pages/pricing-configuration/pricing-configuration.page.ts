@@ -59,7 +59,9 @@ export class PortalHotelesPricingConfigurationPage implements OnInit {
   editBaseRateValue = '';
   isPriceEditorSaving = false;
   isEditSeasonalModalOpen = false;
+  isSeasonalEditorCreateMode = false;
   selectedSeasonalRuleRow: SeasonalRuleRow | null = null;
+  selectedPropertyForCreate: RoomRateRow | null = null;
   editSeasonalModifierValue = '';
   editDateRangeStart = '';
   editDateRangeEnd = '';
@@ -298,7 +300,9 @@ export class PortalHotelesPricingConfigurationPage implements OnInit {
   }
 
   openSeasonalEditor(row: SeasonalRuleRow): void {
+    this.isSeasonalEditorCreateMode = false;
     this.selectedSeasonalRuleRow = row;
+    this.selectedPropertyForCreate = null;
     this.editSeasonalModifierValue = row.modifier.toString();
     this.editDateRangeStart = row.dateRangeStart ? this.formatDateForInput(row.dateRangeStart) : '';
     this.editDateRangeEnd = row.dateRangeEnd ? this.formatDateForInput(row.dateRangeEnd) : '';
@@ -308,9 +312,36 @@ export class PortalHotelesPricingConfigurationPage implements OnInit {
     this.cdr.markForCheck();
   }
 
+  openCreateSeasonalRuleModal(): void {
+    this.isSeasonalEditorCreateMode = true;
+    this.selectedSeasonalRuleRow = null;
+    this.selectedPropertyForCreate = null;
+    this.editSeasonalModifierValue = '';
+    this.editDateRangeStart = '';
+    this.editDateRangeEnd = '';
+    this.editGuestsMin = '';
+    this.editGuestsMax = '';
+    this.errorMessage = '';
+    this.isEditSeasonalModalOpen = true;
+    this.cdr.markForCheck();
+  }
+
+  get uniqueProperties(): RoomRateRow[] {
+    const seen = new Set<string>();
+    return this.roomRateRows.filter((row) => {
+      if (seen.has(row.propertyId)) {
+        return false;
+      }
+      seen.add(row.propertyId);
+      return true;
+    });
+  }
+
   closeSeasonalEditor(): void {
     this.isEditSeasonalModalOpen = false;
+    this.isSeasonalEditorCreateMode = false;
     this.selectedSeasonalRuleRow = null;
+    this.selectedPropertyForCreate = null;
     this.editSeasonalModifierValue = '';
     this.editDateRangeStart = '';
     this.editDateRangeEnd = '';
@@ -345,9 +376,26 @@ export class PortalHotelesPricingConfigurationPage implements OnInit {
     this.cdr.markForCheck();
   }
 
+  onPropertyChange(propertyId: string): void {
+    this.selectedPropertyForCreate = this.roomRateRows.find((row) => row.propertyId === propertyId) || null;
+    this.cdr.markForCheck();
+  }
+
   get canSaveEditedSeasonalModifier(): boolean {
-    if (!this.selectedSeasonalRuleRow || this.isSeasonalEditorSaving) {
+    if (this.isSeasonalEditorSaving) {
       return false;
+    }
+
+    // In create mode, property must be selected
+    if (this.isSeasonalEditorCreateMode) {
+      if (!this.selectedPropertyForCreate) {
+        return false;
+      }
+    } else {
+      // In edit mode, a rule must be selected
+      if (!this.selectedSeasonalRuleRow) {
+        return false;
+      }
     }
 
     const nextModifier = Number(this.editSeasonalModifierValue);
@@ -395,8 +443,14 @@ export class PortalHotelesPricingConfigurationPage implements OnInit {
   }
 
   async saveSeasonalChanges(): Promise<void> {
-    if (!this.selectedSeasonalRuleRow) {
-      return;
+    if (this.isSeasonalEditorCreateMode) {
+      if (!this.selectedPropertyForCreate) {
+        return;
+      }
+    } else {
+      if (!this.selectedSeasonalRuleRow) {
+        return;
+      }
     }
 
     const nextModifier = Number(this.editSeasonalModifierValue);
@@ -446,51 +500,120 @@ export class PortalHotelesPricingConfigurationPage implements OnInit {
     this.cdr.markForCheck();
 
     try {
-      const baseUrl = (this.config.apiBaseUrl || '').replace(/\/$/, '');
-      const rulesPath = 'pricing-engine/api/propertyprice/pricing';
-      const baseRulesUrl = baseUrl ? `${baseUrl}/${rulesPath}` : `/${rulesPath}`;
-
-      const updateUrl = `${baseRulesUrl}/${this.selectedSeasonalRuleRow.priceId}/rules/${this.selectedSeasonalRuleRow.id}`;
-
-      const requestBody = {
-        dateInit: this.editDateRangeStart ? new Date(this.editDateRangeStart).toISOString() : null,
-        dateFinish: this.editDateRangeEnd ? new Date(this.editDateRangeEnd).toISOString() : null,
-        minGuests: guestsMin,
-        maxGuests: guestsMax,
-        percentage: nextModifier,
-      };
-
-      await firstValueFrom(this.http.put<any>(updateUrl, requestBody));
-
-      // Update the local row data
-      this.selectedSeasonalRuleRow.modifier = nextModifier;
-      this.selectedSeasonalRuleRow.modifierLabel = this.formatModifier(nextModifier);
-      this.selectedSeasonalRuleRow.modifierClass = this.getModifierClass(nextModifier);
-
-      // Update dates
-      if (this.editDateRangeStart) {
-        this.selectedSeasonalRuleRow.dateRangeStart = new Date(this.editDateRangeStart).toISOString();
+      if (this.isSeasonalEditorCreateMode) {
+        await this.createSeasonalRule(nextModifier, guestsMin, guestsMax);
+      } else {
+        await this.updateSeasonalRule(nextModifier, guestsMin, guestsMax);
       }
-      if (this.editDateRangeEnd) {
-        this.selectedSeasonalRuleRow.dateRangeEnd = new Date(this.editDateRangeEnd).toISOString();
-      }
-      this.selectedSeasonalRuleRow.dateRange = this.formatDateRange(
-        this.selectedSeasonalRuleRow.dateRangeStart,
-        this.selectedSeasonalRuleRow.dateRangeEnd
-      );
-
-      // Update guests range
-      this.selectedSeasonalRuleRow.guestsMin = guestsMin;
-      this.selectedSeasonalRuleRow.guestsMax = guestsMax;
 
       this.isSeasonalEditorSaving = false;
       this.closeSeasonalEditor();
       this.cdr.markForCheck();
     } catch (error) {
       this.isSeasonalEditorSaving = false;
-      this.errorMessage = this.translate.instant('PRICING.EDIT_SEASONAL_ERROR');
+      this.errorMessage = this.translate.instant(
+        this.isSeasonalEditorCreateMode ? 'PRICING.CREATE_SEASONAL_ERROR' : 'PRICING.EDIT_SEASONAL_ERROR'
+      );
       this.cdr.markForCheck();
     }
+  }
+
+  private async updateSeasonalRule(nextModifier: number, guestsMin: number | null, guestsMax: number | null): Promise<void> {
+    if (!this.selectedSeasonalRuleRow) {
+      throw new Error('No seasonal rule selected');
+    }
+
+    const baseUrl = (this.config.apiBaseUrl || '').replace(/\/$/, '');
+    const rulesPath = 'pricing-engine/api/propertyprice/pricing';
+    const baseRulesUrl = baseUrl ? `${baseUrl}/${rulesPath}` : `/${rulesPath}`;
+
+    const updateUrl = `${baseRulesUrl}/${this.selectedSeasonalRuleRow.priceId}/rules/${this.selectedSeasonalRuleRow.id}`;
+
+    const requestBody = {
+      dateInit: this.editDateRangeStart ? new Date(this.editDateRangeStart).toISOString() : null,
+      dateFinish: this.editDateRangeEnd ? new Date(this.editDateRangeEnd).toISOString() : null,
+      minGuests: guestsMin,
+      maxGuests: guestsMax,
+      percentage: nextModifier,
+    };
+
+    await firstValueFrom(this.http.put<any>(updateUrl, requestBody));
+
+    // Update the local row data
+    this.selectedSeasonalRuleRow.modifier = nextModifier;
+    this.selectedSeasonalRuleRow.modifierLabel = this.formatModifier(nextModifier);
+    this.selectedSeasonalRuleRow.modifierClass = this.getModifierClass(nextModifier);
+
+    // Update dates
+    if (this.editDateRangeStart) {
+      this.selectedSeasonalRuleRow.dateRangeStart = new Date(this.editDateRangeStart).toISOString();
+    }
+    if (this.editDateRangeEnd) {
+      this.selectedSeasonalRuleRow.dateRangeEnd = new Date(this.editDateRangeEnd).toISOString();
+    }
+    this.selectedSeasonalRuleRow.dateRange = this.formatDateRange(
+      this.selectedSeasonalRuleRow.dateRangeStart,
+      this.selectedSeasonalRuleRow.dateRangeEnd
+    );
+
+    // Update guests range
+    this.selectedSeasonalRuleRow.guestsMin = guestsMin;
+    this.selectedSeasonalRuleRow.guestsMax = guestsMax;
+  }
+
+  private async createSeasonalRule(nextModifier: number, guestsMin: number | null, guestsMax: number | null): Promise<void> {
+    if (!this.selectedPropertyForCreate) {
+      throw new Error('No property selected');
+    }
+
+    const baseUrl = (this.config.apiBaseUrl || '').replace(/\/$/, '');
+    const rulesPath = 'pricing-engine/api/propertyprice/pricing';
+    const baseRulesUrl = baseUrl ? `${baseUrl}/${rulesPath}` : `/${rulesPath}`;
+
+    const createUrl = `${baseRulesUrl}/${this.selectedPropertyForCreate.pricingRecordId}/rules`;
+
+    const requestBody = {
+      dateInit: this.editDateRangeStart ? new Date(this.editDateRangeStart).toISOString() : null,
+      dateFinish: this.editDateRangeEnd ? new Date(this.editDateRangeEnd).toISOString() : null,
+      minGuests: guestsMin,
+      maxGuests: guestsMax,
+      percentage: nextModifier,
+    };
+
+    const response = await firstValueFrom(this.http.post<any>(createUrl, requestBody));
+
+    // Create a new seasonal rule row from the response
+    const newRow: SeasonalRuleRow = {
+      id: response.id || '',
+      ruleId: response.ruleId || '',
+      priceId: this.selectedPropertyForCreate.pricingRecordId,
+      propertyName: this.selectedPropertyForCreate.propertyName,
+      propertyCity: this.selectedPropertyForCreate.propertyCity,
+      propertyId: this.selectedPropertyForCreate.propertyId,
+      season: '', // Season might not be applicable for created rules
+      description: this.formatDateRange(
+        this.editDateRangeStart ? new Date(this.editDateRangeStart).toISOString() : null,
+        this.editDateRangeEnd ? new Date(this.editDateRangeEnd).toISOString() : null
+      ),
+      dateRangeStart: this.editDateRangeStart ? new Date(this.editDateRangeStart).toISOString() : null,
+      dateRangeEnd: this.editDateRangeEnd ? new Date(this.editDateRangeEnd).toISOString() : null,
+      dateRange: this.formatDateRange(
+        this.editDateRangeStart ? new Date(this.editDateRangeStart).toISOString() : null,
+        this.editDateRangeEnd ? new Date(this.editDateRangeEnd).toISOString() : null
+      ),
+      helperDateRange: '',
+      guestsMin,
+      guestsMax,
+      modifier: nextModifier,
+      modifierLabel: this.formatModifier(nextModifier),
+      modifierClass: this.getModifierClass(nextModifier),
+      status: this.translate.instant('PRICING.STATUS_ACTIVE'),
+      statusClass: this.getStatusClass('Active'),
+    };
+
+    // Add the new row to the top of the seasonal rules data
+    this.seasonalRulesRows = [newRow, ...this.seasonalRulesRows];
+    this.cdr.markForCheck();
   }
 
   deleteSeasonalRule(row: SeasonalRuleRow): void {
