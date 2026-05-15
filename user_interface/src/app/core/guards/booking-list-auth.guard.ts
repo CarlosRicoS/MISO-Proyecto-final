@@ -6,8 +6,13 @@ export const bookingListAuthGuard: CanActivateFn = (_route, state) => {
   const authSessionService = inject(AuthSessionService);
   const router = inject(Router);
 
-  if (authSessionService.isLoggedIn) {
+  if (authSessionService.isLoggedIn && !authSessionService.isTokenExpired) {
     return true;
+  }
+
+  // Token expired (or no session at all) — clear and redirect to login.
+  if (authSessionService.isLoggedIn) {
+    authSessionService.clearSession();
   }
 
   return router.createUrlTree(['/login'], {

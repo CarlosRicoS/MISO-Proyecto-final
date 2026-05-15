@@ -74,6 +74,17 @@
                     (endIconClick)="onTogglePasswordVisibility()"
                   ></th-input>
 
+                  <ion-item lines="full" class="register-form__birthdate" [class.register-form__birthdate--error]="birthdateState === 'error'">
+                    <ion-label position="stacked">{{ 'REGISTER.BIRTHDATE_LABEL' | translate }}</ion-label>
+                    <ion-input
+                      type="date"
+                      data-testid="register-birthdate"
+                      [value]="birthdate"
+                      (ionInput)="onBirthdateChange($any($event.target).value)"
+                    ></ion-input>
+                  </ion-item>
+                  <p class="register-form__field-helper" *ngIf="birthdateHelper" role="alert">{{ birthdateHelper }}</p>
+
                   <th-input
                     [label]="'REGISTER.CONFIRM_PASSWORD_LABEL' | translate"
                     [placeholder]="'REGISTER.CONFIRM_PASSWORD_PLACEHOLDER' | translate"

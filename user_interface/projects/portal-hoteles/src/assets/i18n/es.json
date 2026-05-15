@@ -217,7 +217,11 @@
     "ARIA_REVENUE_CHART": "Gráfico de resumen de ingresos para el período {{period}}",
     "ERROR": "No fue posible cargar los datos del reporte.",
     "EMPTY": "No hay transacciones de ingresos disponibles.",
-    "TOTAL_LABEL": "TOTAL"
+    "TOTAL_LABEL": "TOTAL",
+    "DATE_FROM_LABEL": "Desde",
+    "DATE_TO_LABEL": "Hasta",
+    "INVALID_DATE_RANGE": "La fecha final debe ser igual o posterior a la inicial",
+    "REGENERATE": "Regenerar"
   },
   "COMMON": {
     "ACCEPT": "Aceptar",

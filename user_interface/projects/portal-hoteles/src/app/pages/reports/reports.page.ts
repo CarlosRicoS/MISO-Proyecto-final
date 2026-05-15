@@ -45,6 +45,8 @@ export class PortalHotelesReportsPage implements OnInit, OnDestroy {
   selectedTablePeriod = '';
   selectedCurrency: SupportedCurrencyCode = 'USD';
 
+  reportDateFrom = '';
+  reportDateTo = '';
   kpiCards: ReportKpiCard[] = [];
   chartCategories: string[] = [];
   chartValues: number[] = [];
@@ -177,6 +179,35 @@ export class PortalHotelesReportsPage implements OnInit, OnDestroy {
     this.selectedTablePeriod = nextPeriod;
   }
 
+  get reportDateRangeError(): string {
+    if (!this.reportDateFrom || !this.reportDateTo) {
+      return '';
+    }
+    if (this.reportDateTo < this.reportDateFrom) {
+      return this.translate.instant('REPORTS.INVALID_DATE_RANGE');
+    }
+    return '';
+  }
+
+  get isExportDisabled(): boolean {
+    return Boolean(this.reportDateRangeError) || this.isLoadingReport;
+  }
+
+  onReportDateFromChange(value: string): void {
+    this.reportDateFrom = value || '';
+  }
+
+  onReportDateToChange(value: string): void {
+    this.reportDateTo = value || '';
+  }
+
+  onRegenerateReport(): void {
+    if (this.reportDateRangeError) {
+      return;
+    }
+    void this.loadReportData();
+  }
+
   onCurrencyChange(nextCurrency: string): void {
     if (!this.isSupportedCurrencyCode(nextCurrency)) return;
     this.selectedCurrency = nextCurrency;
@@ -248,7 +279,13 @@ export class PortalHotelesReportsPage implements OnInit, OnDestroy {
 
     try {
       const [incomingResp, overviewResp, metricsResp] = await Promise.all([
-        firstValueFrom(this.reportsService.getIncomingReport(token)),
+        firstValueFrom(
+          this.reportsService.getIncomingReport(
+            token,
+            this.reportDateFrom || undefined,
+            this.reportDateTo || undefined,
+          ),
+        ),
         firstValueFrom(this.reportsService.getRevenueOverview(token, months)),
         firstValueFrom(this.reportsService.getDashboardMetrics(token)),
       ]);

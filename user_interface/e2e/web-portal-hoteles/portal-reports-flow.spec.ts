@@ -336,11 +336,47 @@ test.describe('Portal Hoteles — revenue report (totals, taxes, commissions)', 
     await expect(page.getByText('Unable to load report data.')).toBeVisible();
   });
 
-  // "Validar que no se permita generar el reporte con un rango de fechas inválido"
-  // No explicit date-range form exists in the current portal-hoteles reports page
-  // (date filters are derived from URL query params, not user-editable inputs).
-  test.skip('TODO: rejects an invalid date range with a validation message — UI not yet wired up (revenue-report.feature: rangos-fecha @validacion)', () => {
-    // Intentionally empty — scenario placeholder.
+  test('rejects an invalid date range with an inline error and disables export/regenerate', async ({ page }) => {
+    await page.goto('/reports');
+    await expect(page.getByRole('cell', { name: '#bk000001' })).toBeVisible();
+
+    // Set reportDateFrom = 2026-04-30, reportDateTo = 2026-04-01 (To < From).
+    await page.evaluate(() => {
+      const fromEl = document.querySelector('[data-testid="reports-date-from"]') as HTMLElement | null;
+      fromEl?.dispatchEvent(new CustomEvent('ionInput', {
+        detail: { value: '2026-04-30' },
+        bubbles: true,
+      }));
+      // The component reads value off event.target — set value on the host element too.
+      Object.defineProperty(fromEl ?? {}, 'value', { value: '2026-04-30', configurable: true });
+    });
+    await page.evaluate(() => {
+      const toEl = document.querySelector('[data-testid="reports-date-to"]') as HTMLElement | null;
+      toEl?.dispatchEvent(new CustomEvent('ionInput', {
+        detail: { value: '2026-04-01' },
+        bubbles: true,
+      }));
+      Object.defineProperty(toEl ?? {}, 'value', { value: '2026-04-01', configurable: true });
+    });
+
+    // Fallback path: drive the component via Angular debug API to guarantee state is set.
+    await page.evaluate(() => {
+      const hostEl = document.querySelector('portal-hoteles-reports');
+      const win = window as unknown as {
+        ng?: { getComponent: (el: Element) => unknown; applyChanges: (cmp: unknown) => void };
+      };
+      if (!hostEl || !win.ng) return;
+      const cmp = win.ng.getComponent(hostEl) as { reportDateFrom?: string; reportDateTo?: string } | null;
+      if (!cmp) return;
+      cmp.reportDateFrom = '2026-04-30';
+      cmp.reportDateTo = '2026-04-01';
+      win.ng.applyChanges(cmp);
+    });
+
+    await expect(page.locator('[data-testid="reports-date-range-error"]')).toBeVisible();
+    await expect(page.getByText('End date must be on or after start date')).toBeVisible();
+    await expect(page.locator('[data-testid="reports-regenerate"]')).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Excel' })).toBeDisabled();
   });
 });
 

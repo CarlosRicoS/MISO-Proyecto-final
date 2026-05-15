@@ -113,16 +113,118 @@ test.describe('Register page', () => {
     expect(registerCalled).toBe(false);
   });
 
-  // The register form does NOT perform client-side password strength validation — the password
-  // policy (uppercase, number, min length) is enforced by the backend and surfaced as a 400 with
-  // detail "Password does not meet criteria.". The matrix below documents the Gherkin coverage and
-  // is validated server-side by the existing "400 password-policy error" test above.
-  test.skip('TODO: Weak-password matrix — no uppercase (registration.feature) — client side does not validate', () => {});
-  test.skip('TODO: Weak-password matrix — no number (registration.feature) — client side does not validate', () => {});
-  test.skip('TODO: Weak-password matrix — too short (registration.feature) — client side does not validate', () => {});
+  test('weak password (no uppercase) is rejected client-side and does not call the API', async ({ page }) => {
+    let registerCalled = false;
+    await page.route('**/auth/api/auth/register', async (route) => {
+      registerCalled = true;
+      await route.fulfill({ status: 201, contentType: 'application/json', body: '{}' });
+    });
 
-  test.skip('TODO: Invalid birthdate / underage (registration.feature) — register page has no birthdate field', () => {
-    // see src/app/pages/register/register.page.ts — only fullName, email, password, confirm, terms
+    await page.goto('/register');
+    await fillRegistrationForm(page, 'nouppercase1');
+    await page.getByRole('button', { name: 'Create Account' }).click();
+
+    await expect(
+      page.locator('app-register').getByText('Password must contain at least one uppercase letter'),
+    ).toBeVisible();
+    expect(registerCalled).toBe(false);
+    await expect(page).toHaveURL(/\/register/);
+  });
+
+  test('weak password (no number) is rejected client-side and does not call the API', async ({ page }) => {
+    let registerCalled = false;
+    await page.route('**/auth/api/auth/register', async (route) => {
+      registerCalled = true;
+      await route.fulfill({ status: 201, contentType: 'application/json', body: '{}' });
+    });
+
+    await page.goto('/register');
+    await fillRegistrationForm(page, 'NoNumberHere');
+    await page.getByRole('button', { name: 'Create Account' }).click();
+
+    await expect(
+      page.locator('app-register').getByText('Password must contain at least one number'),
+    ).toBeVisible();
+    expect(registerCalled).toBe(false);
+    await expect(page).toHaveURL(/\/register/);
+  });
+
+  test('weak password (too short) is rejected client-side and does not call the API', async ({ page }) => {
+    let registerCalled = false;
+    await page.route('**/auth/api/auth/register', async (route) => {
+      registerCalled = true;
+      await route.fulfill({ status: 201, contentType: 'application/json', body: '{}' });
+    });
+
+    await page.goto('/register');
+    await fillRegistrationForm(page, 'Ab1!');
+    await page.getByRole('button', { name: 'Create Account' }).click();
+
+    await expect(
+      page.locator('app-register').getByText('Password must be at least 8 characters'),
+    ).toBeVisible();
+    expect(registerCalled).toBe(false);
+    await expect(page).toHaveURL(/\/register/);
+  });
+
+  test('future birthdate is rejected client-side', async ({ page }) => {
+    let registerCalled = false;
+    await page.route('**/auth/api/auth/register', async (route) => {
+      registerCalled = true;
+      await route.fulfill({ status: 201, contentType: 'application/json', body: '{}' });
+    });
+
+    await page.goto('/register');
+    await fillRegistrationForm(page);
+    // Set a date in the year 2099 via the date input's data-testid.
+    await page.evaluate(() => {
+      const el = document.querySelector('[data-testid="register-birthdate"]') as HTMLElement | null;
+      if (!el) return;
+      const inner = el.querySelector('input');
+      if (inner) {
+        (inner as HTMLInputElement).value = '2099-01-01';
+      }
+      el.dispatchEvent(new CustomEvent('ionInput', { detail: { value: '2099-01-01' }, bubbles: true }));
+    });
+
+    await page.getByRole('button', { name: 'Create Account' }).click();
+
+    await expect(
+      page.locator('app-register').getByText('Date of birth cannot be in the future'),
+    ).toBeVisible();
+    expect(registerCalled).toBe(false);
+    await expect(page).toHaveURL(/\/register/);
+  });
+
+  test('underage birthdate is rejected client-side', async ({ page }) => {
+    let registerCalled = false;
+    await page.route('**/auth/api/auth/register', async (route) => {
+      registerCalled = true;
+      await route.fulfill({ status: 201, contentType: 'application/json', body: '{}' });
+    });
+
+    await page.goto('/register');
+    await fillRegistrationForm(page);
+    // Pick a date 5 years ago — clearly underage.
+    const today = new Date();
+    const isoFiveYearsAgo = `${today.getFullYear() - 5}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    await page.evaluate((iso) => {
+      const el = document.querySelector('[data-testid="register-birthdate"]') as HTMLElement | null;
+      if (!el) return;
+      const inner = el.querySelector('input');
+      if (inner) {
+        (inner as HTMLInputElement).value = iso;
+      }
+      el.dispatchEvent(new CustomEvent('ionInput', { detail: { value: iso }, bubbles: true }));
+    }, isoFiveYearsAgo);
+
+    await page.getByRole('button', { name: 'Create Account' }).click();
+
+    await expect(
+      page.locator('app-register').getByText('You must be at least 18 years old'),
+    ).toBeVisible();
+    expect(registerCalled).toBe(false);
+    await expect(page).toHaveURL(/\/register/);
   });
 
   test('400 password-policy error surfaces the criteria message', async ({ page }) => {

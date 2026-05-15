@@ -3,7 +3,7 @@
     <div class="th-notifications-list__section">
       <div class="th-notifications-list__section-title">{{ group.title }}</div>
       <ion-list class="th-notifications-list__list" lines="none">
-        <ion-item *ngFor="let notification of group.items" detail="false" class="th-notifications-list__item">
+        <ion-item *ngFor="let notification of group.items" detail="false" button="true" data-testid="notification-item" class="th-notifications-list__item" (click)="onNotificationTap(notification)">
           <ion-avatar slot="start" class="th-notifications-list__item-icon" [style.background]="notification.iconColor">
             <ion-icon [name]="notification.iconName" aria-hidden="true"></ion-icon>
           </ion-avatar>

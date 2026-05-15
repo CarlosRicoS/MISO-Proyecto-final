@@ -217,7 +217,11 @@
     "ARIA_REVENUE_CHART": "Revenue overview chart for period {{period}}",
     "ERROR": "Unable to load report data.",
     "EMPTY": "No revenue transactions available.",
-    "TOTAL_LABEL": "TOTAL"
+    "TOTAL_LABEL": "TOTAL",
+    "DATE_FROM_LABEL": "From",
+    "DATE_TO_LABEL": "To",
+    "INVALID_DATE_RANGE": "End date must be on or after start date",
+    "REGENERATE": "Regenerate"
   },
   "COMMON": {
     "ACCEPT": "Accept",

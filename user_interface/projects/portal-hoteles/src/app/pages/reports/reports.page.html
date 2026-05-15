@@ -22,6 +22,46 @@
     </portal-hoteles-grid-card>
   </section>
 
+  <section
+    class="portal-hoteles-reports-date-range"
+    role="group"
+    [attr.aria-label]="'REPORTS.FILTERS_LABEL' | translate"
+  >
+    <ion-item lines="none" class="portal-hoteles-reports-date-range__item">
+      <ion-label position="stacked">{{ 'REPORTS.DATE_FROM_LABEL' | translate }}</ion-label>
+      <ion-input
+        type="date"
+        data-testid="reports-date-from"
+        [value]="reportDateFrom"
+        (ionInput)="onReportDateFromChange($any($event.target).value)"
+      ></ion-input>
+    </ion-item>
+    <ion-item lines="none" class="portal-hoteles-reports-date-range__item">
+      <ion-label position="stacked">{{ 'REPORTS.DATE_TO_LABEL' | translate }}</ion-label>
+      <ion-input
+        type="date"
+        data-testid="reports-date-to"
+        [value]="reportDateTo"
+        (ionInput)="onReportDateToChange($any($event.target).value)"
+      ></ion-input>
+    </ion-item>
+    <ion-button
+      size="small"
+      fill="solid"
+      data-testid="reports-regenerate"
+      [disabled]="isExportDisabled"
+      (click)="onRegenerateReport()"
+    >
+      {{ 'REPORTS.REGENERATE' | translate }}
+    </ion-button>
+    <p
+      *ngIf="reportDateRangeError"
+      class="portal-hoteles-reports-date-range__error"
+      data-testid="reports-date-range-error"
+      role="alert"
+    >{{ reportDateRangeError }}</p>
+  </section>
+
   <section class="portal-hoteles-reports-grid portal-hoteles-reports-grid--content portal-hoteles-reports-grid--full-width">
     <portal-hoteles-revenue-chart-card
       #chartComponent
@@ -70,6 +110,7 @@
             fill="outline"
             class="portal-hoteles-reports-toolbar-header__export-button portal-hoteles-reports-toolbar-header__export-button--secondary"
             aria-label="Export report as PDF"
+            [disabled]="isExportDisabled"
             (click)="onDownloadPdf()"
           >
             {{ 'REPORTS.EXPORT_PDF' | translate }}
@@ -79,6 +120,7 @@
             fill="solid"
             class="portal-hoteles-reports-toolbar-header__export-button portal-hoteles-reports-toolbar-header__export-button--primary"
             aria-label="Download report as Excel"
+            [disabled]="isExportDisabled"
             (click)="onDownloadCsv()"
           >
             {{ 'REPORTS.EXPORT_EXCEL' | translate }}

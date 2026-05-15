@@ -57,6 +57,28 @@ export class AuthSessionService {
     return this.stateSubject.value.loginResponse?.refresh_token ?? '';
   }
 
+  get isTokenExpired(): boolean {
+    const loginResponse = this.stateSubject.value.loginResponse;
+    if (!loginResponse) {
+      return true;
+    }
+
+    const claims =
+      this.decodeJwtPayload(loginResponse.id_token ?? '') ??
+      this.decodeJwtPayload(loginResponse.access_token ?? '');
+
+    if (!claims) {
+      return false;
+    }
+
+    const exp = claims['exp'];
+    if (typeof exp !== 'number' || !Number.isFinite(exp)) {
+      return false;
+    }
+
+    return exp * 1000 <= Date.now();
+  }
+
   get userId(): string {
     return this.getClaimValue('sub', 'user_id', 'cognito:username');
   }

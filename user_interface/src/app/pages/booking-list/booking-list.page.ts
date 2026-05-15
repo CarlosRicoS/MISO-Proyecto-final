@@ -25,6 +25,9 @@ export class BookingListPage implements OnInit, OnDestroy {
   reservations: BookingListReservation[] = [];
   visibleReservations: BookingListReservation[] = [];
   selectedFilter: BookingFilterKey = 'all';
+  selectedStatus: BookingStatusFilter = 'ALL';
+  filterDateFrom = '';
+  filterDateTo = '';
   isLoading = false;
   isPaging = false;
   canLoadNext = false;
@@ -82,17 +85,92 @@ export class BookingListPage implements OnInit, OnDestroy {
   }
 
   get filteredReservations(): BookingListReservation[] {
+    let result = this.reservations;
+
     switch (this.selectedFilter) {
       case 'upcoming':
-        return this.reservations.filter((reservation) => this.isUpcoming(reservation));
+        result = result.filter((reservation) => this.isUpcoming(reservation));
+        break;
       case 'completed':
-        return this.reservations.filter((reservation) => this.isCompleted(reservation));
+        result = result.filter((reservation) => this.isCompleted(reservation));
+        break;
       case 'cancelled':
-        return this.reservations.filter((reservation) => this.isCancelled(reservation));
-      case 'all':
+        result = result.filter((reservation) => this.isCancelled(reservation));
+        break;
       default:
-        return this.reservations;
+        break;
     }
+
+    if (this.selectedStatus && this.selectedStatus !== 'ALL') {
+      const expectedStatus = this.selectedStatus;
+      result = result.filter((reservation) => {
+        const normalized = (reservation.status || '').trim().toUpperCase();
+        if (expectedStatus === 'CANCELED') {
+          return normalized === 'CANCELED' || normalized === 'CANCELLED';
+        }
+        return normalized === expectedStatus;
+      });
+    }
+
+    const fromMs = this.parseDateOnly(this.filterDateFrom);
+    const toMs = this.parseDateOnly(this.filterDateTo);
+
+    if (fromMs !== null) {
+      result = result.filter((reservation) => {
+        const startMs = this.parseDateOnly(reservation.period_start);
+        return startMs === null || startMs >= fromMs;
+      });
+    }
+
+    if (toMs !== null) {
+      result = result.filter((reservation) => {
+        const endMs = this.parseDateOnly(reservation.period_end);
+        return endMs === null || endMs <= toMs;
+      });
+    }
+
+    return result;
+  }
+
+  get hasActiveFilters(): boolean {
+    return (
+      this.selectedFilter !== 'all' ||
+      this.selectedStatus !== 'ALL' ||
+      Boolean(this.filterDateFrom) ||
+      Boolean(this.filterDateTo)
+    );
+  }
+
+  get hasNoFilterMatches(): boolean {
+    return this.hasActiveFilters && this.reservations.length > 0 && this.visibleReservations.length === 0;
+  }
+
+  setStatusFilter(status: string): void {
+    const allowed: BookingStatusFilter[] = ['ALL', 'PENDING', 'CONFIRMED', 'COMPLETED', 'CANCELED', 'REJECTED'];
+    const next = (status || 'ALL').toUpperCase() as BookingStatusFilter;
+    this.selectedStatus = allowed.includes(next) ? next : 'ALL';
+    this.resetPagination();
+  }
+
+  setFilterDateFrom(value: string): void {
+    this.filterDateFrom = value || '';
+    this.resetPagination();
+  }
+
+  setFilterDateTo(value: string): void {
+    this.filterDateTo = value || '';
+    this.resetPagination();
+  }
+
+  private parseDateOnly(value: string | undefined | null): number | null {
+    if (!value) {
+      return null;
+    }
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) {
+      return null;
+    }
+    return Date.UTC(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
   }
 
   get bookingFilters(): BookingFilterItem[] {
@@ -449,6 +527,7 @@ export class BookingListPage implements OnInit, OnDestroy {
 }
 
 type BookingFilterKey = 'all' | 'upcoming' | 'completed' | 'cancelled';
+type BookingStatusFilter = 'ALL' | 'PENDING' | 'CONFIRMED' | 'COMPLETED' | 'CANCELED' | 'REJECTED';
 
 interface BookingFilterItem {
   key: BookingFilterKey;

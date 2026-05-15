@@ -31,6 +31,12 @@
 					[actionDisabled]="isSearchDisabled"
 					(action)="onSearchHotels()"
 				></th-filter>
+				<p
+					class="home-hero__date-error"
+					*ngIf="dateRangeError"
+					data-testid="home-date-range-error"
+					role="alert"
+				>{{ dateRangeError }}</p>
 			</div>
 
 			<!-- Check-in Date Picker Modal -->

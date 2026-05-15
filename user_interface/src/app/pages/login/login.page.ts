@@ -81,7 +81,31 @@ export class LoginPage {
       return this.hasSubmitted ? 'error' : 'default';
     }
 
+    if (this.hasSubmitted && this.passwordPolicyError) {
+      return 'error';
+    }
+
     return 'default';
+  }
+
+  get passwordPolicyError(): string {
+    if (!this.password) {
+      return '';
+    }
+
+    if (this.password.length < 8) {
+      return 'LOGIN.PASSWORD_TOO_SHORT';
+    }
+
+    if (!/[A-Z]/.test(this.password)) {
+      return 'LOGIN.PASSWORD_NO_UPPERCASE';
+    }
+
+    if (!/[0-9]/.test(this.password)) {
+      return 'LOGIN.PASSWORD_NO_NUMBER';
+    }
+
+    return '';
   }
 
   get passwordInputType(): ThInputType {
@@ -109,6 +133,10 @@ export class LoginPage {
       return this.translate.instant('LOGIN.PASSWORD_REQUIRED');
     }
 
+    if (this.hasSubmitted && this.passwordPolicyError) {
+      return this.translate.instant(this.passwordPolicyError);
+    }
+
     return '';
   }
 
@@ -131,7 +159,7 @@ export class LoginPage {
   async onSignIn(): Promise<void> {
     this.hasSubmitted = true;
 
-    if (this.emailState === 'error' || this.passwordState === 'error') {
+    if (this.emailState === 'error' || this.passwordState === 'error' || this.passwordPolicyError) {
       return;
     }
 

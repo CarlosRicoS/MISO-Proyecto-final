@@ -58,7 +58,7 @@ const propertyDetailsById: Record<string, { name: string; city: string; country:
   },
 };
 
-function buildJwt(payload: Record<string, string>): string {
+function buildJwt(payload: Record<string, string | number>): string {
   const encodedPayload = Buffer.from(JSON.stringify(payload)).toString('base64url');
   return `header.${encodedPayload}.signature`;
 }
@@ -331,24 +331,259 @@ test.describe('Booking auth and booking-list journeys', () => {
     await expect(page).toHaveURL(/\/login/);
   });
 
-  // Login does not perform client-side password-policy validation — only required + email
-  // format. The password policy (min length, uppercase, number) is enforced server-side at
-  // registration. These scenarios remain as documentation of the Gherkin coverage.
-  test.skip('TODO: Login client-side password-policy errors (auth.feature: short / no uppercase / no number) — not implemented in LoginPage', () => {
-    // see src/app/pages/login/login.page.ts — passwordState only checks .trim()
+  test('login rejects too-short password client-side and does not call the API', async ({ page }) => {
+    let loginCalled = false;
+    await page.route('**/auth/api/auth/login', async (route) => {
+      loginCalled = true;
+      await route.fulfill({ status: 200, contentType: 'application/json', body: '{}' });
+    });
+
+    await page.goto('/login');
+    await fillLoginForm(page, 'traveler@example.com', 'Sh0rt');
+    await page.getByRole('button', { name: 'Sign In' }).click();
+
+    await expect(
+      page.locator('app-login').getByText('Password must be at least 8 characters'),
+    ).toBeVisible();
+    expect(loginCalled).toBe(false);
+    await expect(page).toHaveURL(/\/login/);
   });
 
-  test.skip('TODO: Token-expired redirect to login (auth.feature: token JWT expirado) — bookingListAuthGuard does not validate expiry', () => {
-    // see src/app/core/guards/booking-list-auth.guard.ts — only checks isLoggedIn flag, no exp claim parsing
+  test('login rejects password with no uppercase client-side and does not call the API', async ({ page }) => {
+    let loginCalled = false;
+    await page.route('**/auth/api/auth/login', async (route) => {
+      loginCalled = true;
+      await route.fulfill({ status: 200, contentType: 'application/json', body: '{}' });
+    });
+
+    await page.goto('/login');
+    await fillLoginForm(page, 'traveler@example.com', 'nouppercase1');
+    await page.getByRole('button', { name: 'Sign In' }).click();
+
+    await expect(
+      page.locator('app-login').getByText('Password must contain at least one uppercase letter'),
+    ).toBeVisible();
+    expect(loginCalled).toBe(false);
+    await expect(page).toHaveURL(/\/login/);
   });
 
-  test.skip('TODO: my-bookings filter by status (my-bookings.feature) — booking-list page has no status filter UI', () => {
-    // see src/app/pages/booking-list/booking-list.page.html
+  test('login rejects password with no number client-side and does not call the API', async ({ page }) => {
+    let loginCalled = false;
+    await page.route('**/auth/api/auth/login', async (route) => {
+      loginCalled = true;
+      await route.fulfill({ status: 200, contentType: 'application/json', body: '{}' });
+    });
+
+    await page.goto('/login');
+    await fillLoginForm(page, 'traveler@example.com', 'NoNumberHere');
+    await page.getByRole('button', { name: 'Sign In' }).click();
+
+    await expect(
+      page.locator('app-login').getByText('Password must contain at least one number'),
+    ).toBeVisible();
+    expect(loginCalled).toBe(false);
+    await expect(page).toHaveURL(/\/login/);
   });
 
-  test.skip('TODO: my-bookings filter by check-in/check-out date (my-bookings.feature) — booking-list page has no date filter UI', () => {});
+  test('expired JWT redirects /booking-list to /login (booking-list-auth.guard checks exp)', async ({ page }) => {
+    // exp: 1 (1970) is well in the past — guard must redirect.
+    const expiredIdToken = buildJwt({ email: 'traveler@example.com', sub: 'user-123', exp: 1 });
+    const expiredAccessToken = buildJwt({ email: 'traveler@example.com', sub: 'user-123', exp: 1 });
 
-  test.skip('TODO: my-bookings no-match filter state (my-bookings.feature) — depends on filter UI which is not implemented', () => {});
+    await page.addInitScript(
+      ([id, access]) => {
+        window.localStorage.setItem(
+          'th_auth_session',
+          JSON.stringify({
+            id_token: id,
+            access_token: access,
+            refresh_token: 'refresh-token',
+            expires_in: 3600,
+            token_type: 'Bearer',
+          }),
+        );
+      },
+      [expiredIdToken, expiredAccessToken],
+    );
+
+    let bookingFetched = false;
+    await page.route('**/booking/api/booking**', async (route) => {
+      bookingFetched = true;
+      await route.fulfill({ status: 200, contentType: 'application/json', body: '[]' });
+    });
+
+    await page.goto('/booking-list');
+
+    await expect(page).toHaveURL(/\/login\?returnUrl=%2Fbooking-list/);
+    expect(bookingFetched).toBe(false);
+  });
+
+  test('my-bookings filter by status hides reservations whose status does not match', async ({ page }) => {
+    const idToken = buildJwt({ email: 'traveler@example.com', sub: 'user-123' });
+    const accessToken = buildJwt({ email: 'traveler@example.com', sub: 'user-123' });
+    await page.addInitScript(
+      ([id, access]) => {
+        window.localStorage.setItem(
+          'th_auth_session',
+          JSON.stringify({
+            id_token: id,
+            access_token: access,
+            refresh_token: 'refresh-token',
+            expires_in: 3600,
+            token_type: 'Bearer',
+          }),
+        );
+      },
+      [idToken, accessToken],
+    );
+
+    await page.route('**/booking/api/booking**', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(reservations),
+      });
+    });
+    await page.route('**/poc-properties/api/property/**', async (route) => {
+      const propertyId = new URL(route.request().url()).pathname.split('/').pop() ?? '';
+      const detail = propertyDetailsById[propertyId];
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ id: propertyId, ...(detail ?? { name: '', city: '', country: '', photos: [] }) }),
+      });
+    });
+
+    await page.goto('/booking-list');
+    await expect(page.getByText('Andes Palace Hotel')).toBeVisible();
+    await expect(page.getByText('Coffee Hills Lodge')).toBeVisible();
+
+    // Switch the status filter to PENDING via the ion-select ionChange event.
+    await page.evaluate(() => {
+      const select = document.querySelector('[data-testid="booking-list-status-filter"]');
+      select?.dispatchEvent(new CustomEvent('ionChange', { detail: { value: 'PENDING' } }));
+    });
+
+    // booking-2 has status PENDING (Coffee Hills Lodge); booking-1 CONFIRMED should be hidden.
+    await expect(page.getByText('Coffee Hills Lodge')).toBeVisible();
+    await expect(page.getByText('Andes Palace Hotel')).toHaveCount(0);
+  });
+
+  test('my-bookings filter by date-range only shows reservations whose period falls inside', async ({ page }) => {
+    const idToken = buildJwt({ email: 'traveler@example.com', sub: 'user-123' });
+    const accessToken = buildJwt({ email: 'traveler@example.com', sub: 'user-123' });
+    await page.addInitScript(
+      ([id, access]) => {
+        window.localStorage.setItem(
+          'th_auth_session',
+          JSON.stringify({
+            id_token: id,
+            access_token: access,
+            refresh_token: 'refresh-token',
+            expires_in: 3600,
+            token_type: 'Bearer',
+          }),
+        );
+      },
+      [idToken, accessToken],
+    );
+
+    await page.route('**/booking/api/booking**', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(reservations),
+      });
+    });
+    await page.route('**/poc-properties/api/property/**', async (route) => {
+      const propertyId = new URL(route.request().url()).pathname.split('/').pop() ?? '';
+      const detail = propertyDetailsById[propertyId];
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ id: propertyId, ...(detail ?? { name: '', city: '', country: '', photos: [] }) }),
+      });
+    });
+
+    await page.goto('/booking-list');
+    await expect(page.getByText('Andes Palace Hotel')).toBeVisible();
+    await expect(page.getByText('Coffee Hills Lodge')).toBeVisible();
+
+    // booking-1: 2026-08-10 → 2026-08-14, booking-2: 2026-09-03 → 2026-09-05.
+    // Filter from 2026-09-01 → only booking-2 should remain.
+    await page.evaluate(() => {
+      const fromEl = document.querySelector('[data-testid="booking-list-date-from"]') as HTMLElement | null;
+      fromEl?.dispatchEvent(new CustomEvent('ionInput', { detail: { value: '2026-09-01' }, bubbles: true }));
+      // Some Ionic events read from event.target.value — set value on inner input too.
+      const inner = fromEl?.querySelector('input');
+      if (inner) {
+        (inner as HTMLInputElement).value = '2026-09-01';
+      }
+      fromEl?.dispatchEvent(new Event('ionInput', { bubbles: true }));
+    });
+    // Apply the filter directly through Ionic's event target shape used in the handler.
+    await page.evaluate(() => {
+      const fromEl = document.querySelector('[data-testid="booking-list-date-from"]') as HTMLElement & {
+        value?: string;
+      } | null;
+      if (fromEl) {
+        (fromEl as unknown as { value: string }).value = '2026-09-01';
+        fromEl.dispatchEvent(new CustomEvent('ionInput', { bubbles: true }));
+      }
+    });
+
+    await expect(page.getByText('Coffee Hills Lodge')).toBeVisible();
+    await expect(page.getByText('Andes Palace Hotel')).toHaveCount(0);
+  });
+
+  test('my-bookings shows the distinct no-match message when filters exclude every reservation', async ({ page }) => {
+    const idToken = buildJwt({ email: 'traveler@example.com', sub: 'user-123' });
+    const accessToken = buildJwt({ email: 'traveler@example.com', sub: 'user-123' });
+    await page.addInitScript(
+      ([id, access]) => {
+        window.localStorage.setItem(
+          'th_auth_session',
+          JSON.stringify({
+            id_token: id,
+            access_token: access,
+            refresh_token: 'refresh-token',
+            expires_in: 3600,
+            token_type: 'Bearer',
+          }),
+        );
+      },
+      [idToken, accessToken],
+    );
+
+    await page.route('**/booking/api/booking**', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(reservations),
+      });
+    });
+    await page.route('**/poc-properties/api/property/**', async (route) => {
+      const propertyId = new URL(route.request().url()).pathname.split('/').pop() ?? '';
+      const detail = propertyDetailsById[propertyId];
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ id: propertyId, ...(detail ?? { name: '', city: '', country: '', photos: [] }) }),
+      });
+    });
+
+    await page.goto('/booking-list');
+    await expect(page.getByText('Andes Palace Hotel')).toBeVisible();
+
+    // Pick a status that no reservation matches — REJECTED.
+    await page.evaluate(() => {
+      const select = document.querySelector('[data-testid="booking-list-status-filter"]');
+      select?.dispatchEvent(new CustomEvent('ionChange', { detail: { value: 'REJECTED' } }));
+    });
+
+    await expect(page.locator('[data-testid="booking-list-no-match"]')).toBeVisible();
+    await expect(page.getByText('No reservations match the selected filters.')).toBeVisible();
+  });
 
   test('my-bookings refreshes data on revisit (recent status change reflected after refresh)', async ({ page }) => {
     const idToken = buildJwt({ email: 'traveler@example.com', sub: 'user-123' });

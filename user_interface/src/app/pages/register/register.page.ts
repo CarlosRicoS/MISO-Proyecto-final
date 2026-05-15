@@ -39,6 +39,7 @@ export class RegisterPage {
   email = '';
   password = '';
   confirmPassword = '';
+  birthdate = '';
   acceptedTerms = false;
   hasSubmitted = false;
   isPasswordVisible = false;
@@ -80,7 +81,88 @@ export class RegisterPage {
       return this.hasSubmitted ? 'error' : 'default';
     }
 
+    if (this.passwordPolicyError) {
+      return 'error';
+    }
+
     return 'default';
+  }
+
+  get passwordPolicyError(): string {
+    if (!this.password) {
+      return '';
+    }
+
+    if (this.password.length < 8) {
+      return 'REGISTER.PASSWORD_TOO_SHORT';
+    }
+
+    if (!/[A-Z]/.test(this.password)) {
+      return 'REGISTER.PASSWORD_NO_UPPERCASE';
+    }
+
+    if (!/[0-9]/.test(this.password)) {
+      return 'REGISTER.PASSWORD_NO_NUMBER';
+    }
+
+    return '';
+  }
+
+  get birthdateState(): ThInputState {
+    if (!this.birthdate) {
+      return this.hasSubmitted ? 'error' : 'default';
+    }
+
+    if (this.birthdateError) {
+      return 'error';
+    }
+
+    return 'default';
+  }
+
+  get birthdateError(): string {
+    if (!this.birthdate) {
+      return '';
+    }
+
+    const parsed = new Date(this.birthdate);
+    if (Number.isNaN(parsed.getTime())) {
+      return 'REGISTER.BIRTHDATE_REQUIRED';
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (parsed.getTime() > today.getTime()) {
+      return 'REGISTER.BIRTHDATE_FUTURE';
+    }
+
+    const age = this.calculateAgeYears(parsed, today);
+    if (age < 18) {
+      return 'REGISTER.BIRTHDATE_UNDERAGE';
+    }
+
+    return '';
+  }
+
+  get birthdateHelper(): string {
+    if (!this.birthdate && this.hasSubmitted) {
+      return this.translate.instant('REGISTER.BIRTHDATE_REQUIRED');
+    }
+
+    if (this.birthdateError) {
+      return this.translate.instant(this.birthdateError);
+    }
+
+    return '';
+  }
+
+  private calculateAgeYears(birthdate: Date, reference: Date): number {
+    let age = reference.getFullYear() - birthdate.getFullYear();
+    const monthDelta = reference.getMonth() - birthdate.getMonth();
+    if (monthDelta < 0 || (monthDelta === 0 && reference.getDate() < birthdate.getDate())) {
+      age -= 1;
+    }
+    return age;
   }
 
   get confirmPasswordState(): ThInputState {
@@ -136,6 +218,10 @@ export class RegisterPage {
       return this.translate.instant('REGISTER.PASSWORD_REQUIRED');
     }
 
+    if (this.passwordPolicyError) {
+      return this.translate.instant(this.passwordPolicyError);
+    }
+
     return '';
   }
 
@@ -175,6 +261,10 @@ export class RegisterPage {
     this.confirmPassword = value;
   }
 
+  onBirthdateChange(value: string): void {
+    this.birthdate = value;
+  }
+
   onTogglePasswordVisibility(): void {
     this.isPasswordVisible = !this.isPasswordVisible;
   }
@@ -195,6 +285,7 @@ export class RegisterPage {
       this.emailState === 'error' ||
       this.passwordState === 'error' ||
       this.confirmPasswordState === 'error' ||
+      this.birthdateState === 'error' ||
       !this.acceptedTerms
     ) {
       return;
@@ -203,7 +294,7 @@ export class RegisterPage {
     this.isLoading = true;
     try {
       const response = await firstValueFrom(
-        this.authService.register(this.fullName.trim(), this.email.trim(), this.password)
+        this.authService.register(this.fullName.trim(), this.email.trim(), this.password, this.birthdate || undefined)
       );
       this.showAlert(
         this.translate.instant('REGISTER.ALERT_TITLE_SUCCESS'),

@@ -21,6 +21,7 @@ export interface RegisterRequest {
   email: string;
   password: string;
   role: string;
+  birthdate?: string;
 }
 
 export interface RegisterResponse {
@@ -57,7 +58,7 @@ export class AuthService {
     return this.http.post<LoginResponse>(url, body, { headers });
   }
 
-  register(fullName: string, email: string, password: string): Observable<RegisterResponse> {
+  register(fullName: string, email: string, password: string, birthdate?: string): Observable<RegisterResponse> {
     const baseUrl = this.config.apiBaseUrl?.replace(/\/$/, '');
     const authPath = 'auth/api/auth/register';
     const url = baseUrl ? `${baseUrl}/${authPath}` : `/${authPath}`;
@@ -67,6 +68,7 @@ export class AuthService {
       email,
       password,
       role: 'travelers',
+      ...(birthdate ? { birthdate } : {}),
     };
 
     const headers = new HttpHeaders({

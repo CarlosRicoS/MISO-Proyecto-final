@@ -118,6 +118,18 @@ export class BookingDetailPage implements OnInit, OnDestroy {
   isCancelAccordionOpen = true;
   isChangeDatesAccordionOpen = false;
 
+  get changeDatesRangeError(): string {
+    const start = this.normalizeDateForApi(this.paymentSummary.checkInValue);
+    const end = this.normalizeDateForApi(this.paymentSummary.checkOutValue);
+    if (!start || !end) {
+      return '';
+    }
+    if (end <= start) {
+      return this.translate.instant('BOOKING_DETAIL.ALERT_INVALID_RANGE_BODY');
+    }
+    return '';
+  }
+
   previewedNewPrice: number | null = null;
   isPricingLoading = false;
   pricingError = '';

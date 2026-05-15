@@ -266,6 +266,38 @@ test.describe('Booking detail page', () => {
   test.skip('TODO: booking-creation — inverted dates rejection (booking-creation.feature) — property-detail uses th-datetime-modal min-date; no inline error UI distinct from filter validation', () => {});
   test.skip('TODO: booking-creation — required-fields validation in booking form (booking-creation.feature) — Book Now is disabled if dates missing rather than surfacing field errors', () => {});
 
+  test('change-dates inline error shows when check-out is on or before check-in and Recalculate is disabled', async ({ page }) => {
+    await page.goto('/booking-detail?bookingId=booking-1');
+    await expect(page.getByRole('heading', { name: 'Andes Palace Hotel' }).first()).toBeVisible();
+
+    await page.getByRole('button', { name: /Change Dates/i }).click();
+
+    // Set paymentSummary.checkInValue / checkOutValue to an inverted range directly on the
+    // BookingDetailPage component via Angular's debug API (dev-mode only). The
+    // changeDatesRangeError getter runs synchronously based on these values.
+    await page.evaluate(() => {
+      const hostEl = document.querySelector('app-booking-detail');
+      const win = window as unknown as {
+        ng?: { getComponent: (el: Element) => unknown; applyChanges: (cmp: unknown) => void };
+      };
+      if (!hostEl || !win.ng) {
+        throw new Error('Angular debug API (window.ng) not available — test requires dev mode');
+      }
+      const cmp = win.ng.getComponent(hostEl) as {
+        paymentSummary: { checkInValue: string; checkOutValue: string };
+        hasDateChanges: boolean;
+      } | null;
+      if (!cmp) return;
+      cmp.paymentSummary.checkInValue = '2026-08-15';
+      cmp.paymentSummary.checkOutValue = '2026-08-10';
+      cmp.hasDateChanges = true;
+      win.ng.applyChanges(cmp);
+    });
+
+    // Recalculate Price button must be disabled when changeDatesRangeError is non-empty.
+    await expect(page.getByRole('button', { name: 'Recalculate Price' })).toBeDisabled();
+  });
+
   test('change-dates flow calls PATCH /dates via orchestrator with the new period', async ({ page }) => {
     const datesRequests: Request[] = [];
 

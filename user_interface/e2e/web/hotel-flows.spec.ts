@@ -623,14 +623,68 @@ test.describe('TravelHub core journeys', () => {
     await expect(page.getByText(/\$420/).first()).toBeVisible();
   });
 
-  // Filter UI for price + capacity is not currently rendered on /search-results
-  // (see src/app/pages/search-results/search-results.page.html — only th-filter-summary, no
-  //  interactive price/capacity filter inputs). The home page does include a th-filter that
-  //  accepts city + guests + dates and passes them as query params (covered by the
-  //  "search flow navigates to results with query params" test).
-  test.skip('TODO: search-results — filter by price + capacity (property-search.feature) — filter UI not implemented', () => {});
-  test.skip('TODO: search-results — clear filters restores listing (property-search.feature) — filter UI not implemented', () => {});
-  test.skip('TODO: search-results — invalid date range (check-out before check-in) validation message (property-search.feature) — search-results page does not validate; home-page date picker enforces min date via th-datetime-modal', () => {});
+  test('search-results — filter by min price hides hotels below the threshold', async ({ page }) => {
+    await page.goto('/search-results?city=Bogota');
+    await expect(page.getByText('Andes Palace Hotel')).toBeVisible();
+    await expect(page.getByText('Caribe Sunset Resort')).toBeVisible();
+
+    // Set min price to 300 — hotel-2 (price 280) should be filtered out.
+    await page.evaluate(() => {
+      const el = document.querySelector('[data-testid="search-filter-min-price"]') as HTMLElement | null;
+      el?.dispatchEvent(new CustomEvent('ionInput', { detail: { value: '300' }, bubbles: true }));
+    });
+
+    await expect(page.getByText('Andes Palace Hotel')).toBeVisible();
+    await expect(page.getByText('Caribe Sunset Resort')).toHaveCount(0);
+  });
+
+  test('search-results — clear filters restores the original listing', async ({ page }) => {
+    await page.goto('/search-results?city=Bogota');
+    await expect(page.getByText('Andes Palace Hotel')).toBeVisible();
+    await expect(page.getByText('Caribe Sunset Resort')).toBeVisible();
+
+    // Filter out Caribe (price 280) with min price 300.
+    await page.evaluate(() => {
+      const el = document.querySelector('[data-testid="search-filter-min-price"]') as HTMLElement | null;
+      el?.dispatchEvent(new CustomEvent('ionInput', { detail: { value: '300' }, bubbles: true }));
+    });
+    await expect(page.getByText('Caribe Sunset Resort')).toHaveCount(0);
+
+    // Clear filters — full list returns.
+    await page.locator('[data-testid="search-clear-filters"]').click();
+    await expect(page.getByText('Andes Palace Hotel')).toBeVisible();
+    await expect(page.getByText('Caribe Sunset Resort')).toBeVisible();
+  });
+
+  test('home — inline error shows when check-out is on or before check-in and search is disabled', async ({ page }) => {
+    await page.goto('/home');
+    await expect(page.getByRole('heading', { name: 'Find Your Perfect Stay' })).toBeVisible();
+
+    // Force an inverted range via the AppComponent state — the date picker enforces minDate so
+    // the user-facing flow auto-corrects. The dateRangeError getter is a defensive validator we
+    // exercise by setting the page state through Angular's debug API (available in dev mode).
+    await page.evaluate(() => {
+      const hostEl = document.querySelector('app-home');
+      // window.ng is exposed by Angular in dev mode (see angular.io/api/core/ApplicationRef).
+      const win = window as unknown as {
+        ng?: { getComponent: (el: Element) => unknown; applyChanges: (cmp: unknown) => void };
+      };
+      if (!hostEl || !win.ng) {
+        throw new Error('Angular debug API (window.ng) not available — test requires dev mode');
+      }
+      const cmp = win.ng.getComponent(hostEl) as { searchStartDate: string; searchEndDate: string } | null;
+      if (!cmp) return;
+      cmp.searchStartDate = '15/08/2026';
+      cmp.searchEndDate = '10/08/2026';
+      win.ng.applyChanges(cmp);
+    });
+
+    await expect(page.locator('[data-testid="home-date-range-error"]')).toBeVisible();
+    await expect(page.getByText('Check-out must be after check-in')).toBeVisible();
+    // Search button is disabled when the validator fires.
+    await expect(page.getByRole('button', { name: 'Search Hotels' })).toBeDisabled();
+  });
+
   test.skip('TODO: property-details — availability calendar visible (property-details.feature) — no calendar component on property detail page', () => {});
 
   test('view details shows error when property detail API fails', async ({ page }) => {

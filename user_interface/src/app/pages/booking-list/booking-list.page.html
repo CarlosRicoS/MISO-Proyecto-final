@@ -16,6 +16,43 @@
           {{ filter.label }} ({{ filter.count }})
         </button>
       </div>
+
+      <div class="booking-list__advanced-filters" role="group" [attr.aria-label]="'BOOKING_LIST.FILTERS_LABEL' | translate">
+        <ion-item lines="none" class="booking-list__advanced-filter">
+          <ion-label position="stacked">{{ 'BOOKING_LIST.FILTER_STATUS_LABEL' | translate }}</ion-label>
+          <ion-select
+            data-testid="booking-list-status-filter"
+            interface="popover"
+            [value]="selectedStatus"
+            (ionChange)="setStatusFilter($event.detail.value)"
+          >
+            <ion-select-option value="ALL">{{ 'BOOKING_LIST.FILTER_STATUS_ALL' | translate }}</ion-select-option>
+            <ion-select-option value="PENDING">{{ 'BOOKING_LIST.FILTER_STATUS_PENDING' | translate }}</ion-select-option>
+            <ion-select-option value="CONFIRMED">{{ 'BOOKING_LIST.FILTER_STATUS_CONFIRMED' | translate }}</ion-select-option>
+            <ion-select-option value="COMPLETED">{{ 'BOOKING_LIST.FILTER_STATUS_COMPLETED' | translate }}</ion-select-option>
+            <ion-select-option value="CANCELED">{{ 'BOOKING_LIST.FILTER_STATUS_CANCELED' | translate }}</ion-select-option>
+            <ion-select-option value="REJECTED">{{ 'BOOKING_LIST.FILTER_STATUS_REJECTED' | translate }}</ion-select-option>
+          </ion-select>
+        </ion-item>
+        <ion-item lines="none" class="booking-list__advanced-filter">
+          <ion-label position="stacked">{{ 'BOOKING_LIST.FILTER_DATE_FROM' | translate }}</ion-label>
+          <ion-input
+            type="date"
+            data-testid="booking-list-date-from"
+            [value]="filterDateFrom"
+            (ionInput)="setFilterDateFrom($any($event.target).value)"
+          ></ion-input>
+        </ion-item>
+        <ion-item lines="none" class="booking-list__advanced-filter">
+          <ion-label position="stacked">{{ 'BOOKING_LIST.FILTER_DATE_TO' | translate }}</ion-label>
+          <ion-input
+            type="date"
+            data-testid="booking-list-date-to"
+            [value]="filterDateTo"
+            (ionInput)="setFilterDateTo($any($event.target).value)"
+          ></ion-input>
+        </ion-item>
+      </div>
     </div>
 
     <div class="booking-list__inner" role="tabpanel" [attr.aria-label]="'BOOKING_LIST.PANEL_LABEL' | translate">
@@ -66,7 +103,8 @@
 
       <p class="booking-list-empty" *ngIf="isLoading" aria-live="polite" aria-atomic="true">{{ 'BOOKING_LIST.LOADING' | translate }}</p>
       <p class="booking-list-empty" *ngIf="!isLoading && errorMessage" role="alert" aria-live="assertive">{{ errorMessage }}</p>
-      <p class="booking-list-empty" *ngIf="!isLoading && !errorMessage && !visibleReservations.length" aria-live="polite" aria-atomic="true">{{ emptyLabel }}</p>
+      <p class="booking-list-empty" *ngIf="!isLoading && !errorMessage && hasNoFilterMatches" data-testid="booking-list-no-match" aria-live="polite" aria-atomic="true">{{ 'BOOKING_LIST.EMPTY_FILTER_NO_MATCH' | translate }}</p>
+      <p class="booking-list-empty" *ngIf="!isLoading && !errorMessage && !hasNoFilterMatches && !visibleReservations.length" aria-live="polite" aria-atomic="true">{{ emptyLabel }}</p>
     </div>
   </section>
 </ion-content>

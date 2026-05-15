@@ -18,16 +18,55 @@
 
       <div class="search-results-list__inner">
         <p class="search-results-list__count" *ngIf="!isLoading && !errorMessage">
-          {{ hotels.length }} {{ (hotels.length === 1 ? 'SEARCH.HOTEL_FOUND_ONE' : 'SEARCH.HOTELS_FOUND') | translate }}
+          {{ filteredHotels.length }} {{ (filteredHotels.length === 1 ? 'SEARCH.HOTEL_FOUND_ONE' : 'SEARCH.HOTELS_FOUND') | translate }}
           <span class="search-results-list__page-indicator">{{ currentPageLabel }}</span>
         </p>
+
+        <form class="search-results-list__filters" role="group" [attr.aria-label]="'SEARCH.FILTERS_ACTION' | translate" (submit)="$event.preventDefault()">
+          <ion-item lines="none">
+            <ion-label position="stacked">{{ 'SEARCH.MIN_PRICE_LABEL' | translate }}</ion-label>
+            <ion-input
+              type="number"
+              min="0"
+              data-testid="search-filter-min-price"
+              [placeholder]="'SEARCH.MIN_PRICE_PLACEHOLDER' | translate"
+              [value]="minPrice"
+              (ionInput)="onMinPriceChange($any($event.target).value)"
+            ></ion-input>
+          </ion-item>
+          <ion-item lines="none">
+            <ion-label position="stacked">{{ 'SEARCH.MAX_PRICE_LABEL' | translate }}</ion-label>
+            <ion-input
+              type="number"
+              min="0"
+              data-testid="search-filter-max-price"
+              [placeholder]="'SEARCH.MAX_PRICE_PLACEHOLDER' | translate"
+              [value]="maxPrice"
+              (ionInput)="onMaxPriceChange($any($event.target).value)"
+            ></ion-input>
+          </ion-item>
+          <ion-item lines="none">
+            <ion-label position="stacked">{{ 'SEARCH.MIN_GUESTS_LABEL' | translate }}</ion-label>
+            <ion-input
+              type="number"
+              min="1"
+              data-testid="search-filter-min-guests"
+              [placeholder]="'SEARCH.MIN_GUESTS_PLACEHOLDER' | translate"
+              [value]="minGuests"
+              (ionInput)="onMinGuestsChange($any($event.target).value)"
+            ></ion-input>
+          </ion-item>
+          <ion-button fill="outline" size="small" type="button" data-testid="search-clear-filters" (click)="clearFilters()">
+            {{ 'SEARCH.CLEAR_FILTERS' | translate }}
+          </ion-button>
+        </form>
       </div>
     </div>
 
     <div class="search-results-list__inner">
-      <div class="search-results-list__cards" *ngIf="!isLoading && hotels.length">
+      <div class="search-results-list__cards" *ngIf="!isLoading && filteredHotels.length">
         <th-hotel-card
-          *ngFor="let hotel of hotels"
+          *ngFor="let hotel of filteredHotels"
           class="search-results-card"
           variant="list"
           [title]="hotel.name || 'Hotel'"
@@ -55,7 +94,7 @@
 
       <p class="search-results-empty" *ngIf="isLoading" aria-live="polite" aria-atomic="true">{{ 'SEARCH.LOADING' | translate }}</p>
       <p class="search-results-empty" *ngIf="!isLoading && errorMessage" role="alert" aria-live="assertive">{{ errorMessage }}</p>
-      <p class="search-results-empty" *ngIf="!isLoading && !errorMessage && !hotels.length" aria-live="polite" aria-atomic="true">{{ 'SEARCH.NO_RESULTS' | translate }}</p>
+      <p class="search-results-empty" *ngIf="!isLoading && !errorMessage && !filteredHotels.length" aria-live="polite" aria-atomic="true">{{ 'SEARCH.NO_RESULTS' | translate }}</p>
     </div>
   </section>
 </ion-content>

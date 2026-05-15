@@ -65,7 +65,17 @@ export class HomePage implements OnInit, OnDestroy {
   }
 
   get isSearchDisabled(): boolean {
-    return false;
+    return Boolean(this.dateRangeError);
+  }
+
+  get dateRangeError(): string {
+    if (!this.searchStartDate || !this.searchEndDate) {
+      return '';
+    }
+    if (this.compareDates(this.searchEndDate, this.searchStartDate) <= 0) {
+      return this.translate.instant('SEARCH.INVALID_DATE_RANGE');
+    }
+    return '';
   }
 
   async loadHotels(): Promise<void> {

@@ -84,7 +84,73 @@ test.describe('Notifications page', () => {
     await expect(list.getByText('Your reservation is now CONFIRMED.')).toBeVisible();
   });
 
-  // The current th-notifications-list component renders cards but does not expose a click handler
-  // that navigates to /booking-detail. Tapping a notification updates internal state only.
-  test.skip('TODO: notifications.feature — opening a notification navigates to booking detail with updated status — navigation handler not implemented on th-notifications-list', () => {});
+  test('tapping a notification navigates to /booking-detail with the bookingId query param', async ({ page }) => {
+    const stored = [
+      {
+        id: 'notif-tap',
+        type: 'BOOKING_CONFIRMED',
+        title: 'Booking confirmed',
+        subtitle: 'Reservation #booking-1',
+        message: 'Your reservation at Andes Palace Hotel is confirmed.',
+        receivedAt: new Date().toISOString(),
+        iconName: 'checkmark-circle-outline',
+        iconColor: '#16A34A',
+        data: { bookingId: 'booking-1' },
+      },
+    ];
+
+    await page.addInitScript((items) => {
+      window.localStorage.setItem('th_notifications_history', JSON.stringify(items));
+    }, stored);
+
+    // The booking-detail page fetches data once navigated; stub the endpoints so we don't 404.
+    await page.route('**/booking/api/booking/booking-1', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          id: 'booking-1',
+          property_id: 'prop-1',
+          user_id: 'user-123',
+          guests: 2,
+          period_start: '2026-08-10',
+          period_end: '2026-08-14',
+          price: 620,
+          status: 'CONFIRMED',
+          admin_group_id: 'hotel-admins',
+          payment_reference: 'pay-001',
+          created_at: '2026-07-01T10:00:00Z',
+        }),
+      });
+    });
+    await page.route('**/api/property/prop-1', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          id: 'prop-1',
+          name: 'Andes Palace Hotel',
+          city: 'Bogota',
+          country: 'Colombia',
+          maxCapacity: 4,
+          description: 'Stay',
+          photos: ['https://example.com/h.jpg'],
+          checkInTime: '15:00:00',
+          checkOutTime: '11:00:00',
+          adminGroupId: 'hotel-admins',
+          amenities: [],
+          reviews: [],
+        }),
+      });
+    });
+
+    await page.goto('/notifications');
+
+    const list = page.locator('th-notifications-list');
+    await expect(list).toBeVisible();
+
+    await list.locator('[data-testid="notification-item"]').first().click();
+
+    await expect(page).toHaveURL(/\/booking-detail\?bookingId=booking-1/);
+  });
 });

@@ -26,6 +26,9 @@ export class SearchResultsPage implements OnInit, OnDestroy {
 
   @ViewChild(IonContent) content?: IonContent;
   hotels: Hotel[] = [];
+  minPrice: number | null = null;
+  maxPrice: number | null = null;
+  minGuests: number | null = null;
   isLoading = false;
   isPaging = false;
   canLoadNext = true;
@@ -214,6 +217,46 @@ export class SearchResultsPage implements OnInit, OnDestroy {
     } finally {
       this.isPaging = false;
     }
+  }
+
+  get filteredHotels(): Hotel[] {
+    return this.hotels.filter((hotel) => {
+      const price = hotel.pricePerNight ?? 0;
+      if (this.minPrice !== null && Number.isFinite(this.minPrice) && price < this.minPrice) {
+        return false;
+      }
+      if (this.maxPrice !== null && Number.isFinite(this.maxPrice) && price > this.maxPrice) {
+        return false;
+      }
+      if (this.minGuests !== null && Number.isFinite(this.minGuests)) {
+        const capacity = (hotel as Hotel & { capacity?: number }).capacity;
+        if (typeof capacity === 'number' && capacity < this.minGuests) {
+          return false;
+        }
+      }
+      return true;
+    });
+  }
+
+  onMinPriceChange(value: string): void {
+    const parsed = Number.parseFloat(value);
+    this.minPrice = Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
+  }
+
+  onMaxPriceChange(value: string): void {
+    const parsed = Number.parseFloat(value);
+    this.maxPrice = Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
+  }
+
+  onMinGuestsChange(value: string): void {
+    const parsed = Number.parseInt(value, 10);
+    this.minGuests = Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+  }
+
+  clearFilters(): void {
+    this.minPrice = null;
+    this.maxPrice = null;
+    this.minGuests = null;
   }
 
   getHotelLocation(hotel: Hotel): string {
