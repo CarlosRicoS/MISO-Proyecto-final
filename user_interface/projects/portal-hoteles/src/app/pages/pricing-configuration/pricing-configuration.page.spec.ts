@@ -224,8 +224,20 @@ describe('PortalHotelesPricingConfigurationPage', () => {
       // Act
 
       // Assert
-      expect(component.formatDateRange('Dec 15 - Jan 15')).toBe('Dec 15 - Jan 15');
-      expect(component.formatDateRange('')).toBe('-');
+      expect((component as any).formatDateRange('2026-12-15', '2027-01-15')).toBe('Dec 15, 26 - Jan 15, 27');
+      expect((component as any).formatDateRange(undefined, undefined)).toBe('-');
+    });
+
+    it('should format one-sided guest ranges with comparison symbols', () => {
+      expect(component.formatGuestsRange(7, null)).toBe('≥ 7 guests');
+      expect(component.formatGuestsRange(null, 7)).toBe('≤ 7 guests');
+      expect(component.formatGuestsRange(3, 7)).toBe('3-7 guests');
+      expect(component.formatGuestsRange(null, null)).toBe('-');
+    });
+
+    it('should map positive modifiers to success and negative modifiers to danger', () => {
+      expect(component.getModifierClass(10)).toContain('portal-hoteles-pricing-badge--success');
+      expect(component.getModifierClass(-10)).toContain('portal-hoteles-pricing-badge--danger');
     });
 
     it('should get status class for active status', () => {
@@ -244,6 +256,58 @@ describe('PortalHotelesPricingConfigurationPage', () => {
 
       // Assert
       expect(component.getStatusClass('Inactive')).toContain('portal-hoteles-pricing-status--inactive');
+    });
+
+    it('filters seasonal rows using the shared search term', () => {
+      component.seasonalRulesRows = [
+        {
+          id: 'season-1',
+          ruleId: 'rule-1',
+          priceId: 'price-1',
+          propertyName: 'Ocean View',
+          propertyCity: 'Cartagena',
+          propertyId: 'property-1',
+          season: 'Custom Period',
+          description: '',
+          dateRangeStart: null,
+          dateRangeEnd: null,
+          dateRange: 'Jan 1, 2026 - Jan 10, 2026',
+          helperDateRange: '',
+          guestsMin: 2,
+          guestsMax: 4,
+          modifier: 10,
+          modifierLabel: '+10%',
+          modifierClass: 'portal-hoteles-pricing-badge portal-hoteles-pricing-badge--success',
+          status: 'Active',
+          statusClass: 'portal-hoteles-pricing-status portal-hoteles-pricing-status--active',
+        } as any,
+        {
+          id: 'season-2',
+          ruleId: 'rule-2',
+          priceId: 'price-2',
+          propertyName: 'Mountain Lodge',
+          propertyCity: 'Medellin',
+          propertyId: 'property-2',
+          season: 'Custom Period',
+          description: '',
+          dateRangeStart: null,
+          dateRangeEnd: null,
+          dateRange: 'Feb 1, 2026 - Feb 10, 2026',
+          helperDateRange: '',
+          guestsMin: 1,
+          guestsMax: 2,
+          modifier: -5,
+          modifierLabel: '-5%',
+          modifierClass: 'portal-hoteles-pricing-badge portal-hoteles-pricing-badge--danger',
+          status: 'Active',
+          statusClass: 'portal-hoteles-pricing-status portal-hoteles-pricing-status--active',
+        } as any,
+      ];
+      component.searchTerm = 'ocean';
+
+      expect(component.filteredSeasonalRulesRows.length).toBe(1);
+      expect(component.filteredSeasonalRulesRows[0].propertyName).toBe('Ocean View');
+      expect(component.totalSeasonalPages).toBe(1);
     });
 
     it('returns operator name from authenticated session', () => {
@@ -393,6 +457,18 @@ describe('PortalHotelesPricingConfigurationPage', () => {
     it('renders the room-rate listing as a semantic <table> with thead/tbody and th[scope="col"] (AC-2)', () => {
       // Arrange
       spyOn(component, 'loadTableData').and.returnValue(Promise.resolve());
+      component.roomRateRows = [
+        {
+          pricingRecordId: 'pricing-1',
+          propertyName: 'Test Property',
+          propertyId: 'property-1',
+          propertyCity: 'Bogota',
+          guestsCapacityLabel: '4 guests',
+          guestsCapacity: 4,
+          baseRateLabel: '$150.00',
+          baseRate: 150,
+        } as any,
+      ];
 
       // Act
       fixture.detectChanges();
@@ -417,6 +493,29 @@ describe('PortalHotelesPricingConfigurationPage', () => {
       // Arrange
 
       spyOn(component, 'loadTableData').and.returnValue(Promise.resolve());
+      component.seasonalRulesRows = [
+        {
+          id: 'season-1',
+          ruleId: 'rule-1',
+          priceId: 'price-1',
+          propertyName: 'Ocean View',
+          propertyCity: 'Cartagena',
+          propertyId: 'property-1',
+          season: 'Custom Period',
+          description: '',
+          dateRangeStart: null,
+          dateRangeEnd: null,
+          dateRange: 'Jan 1, 26 - Jan 10, 26',
+          helperDateRange: '',
+          guestsMin: 2,
+          guestsMax: 4,
+          modifier: 10,
+          modifierLabel: '+10%',
+          modifierClass: 'portal-hoteles-pricing-badge portal-hoteles-pricing-badge--success',
+          status: 'Active',
+          statusClass: 'portal-hoteles-pricing-status portal-hoteles-pricing-status--active',
+        } as any,
+      ];
 
       // Act
       fixture.detectChanges();
@@ -466,21 +565,58 @@ describe('PortalHotelesPricingConfigurationPage', () => {
       expect(activeButton).toBeTruthy();
     });
 
-    it('labels every "⋮" row-actions ion-button with aria-label="Edit base price" (AC-5)', () => {
+    it('labels every row-actions ion-button with the correct aria-label (AC-5)', () => {
       // Arrange
 
       spyOn(component, 'loadTableData').and.returnValue(Promise.resolve());
+      component.roomRateRows = [
+        {
+          pricingRecordId: 'pricing-1',
+          propertyName: 'Test Property',
+          propertyId: 'property-1',
+          propertyCity: 'Bogota',
+          guestsCapacityLabel: '4 guests',
+          guestsCapacity: 4,
+          baseRateLabel: '$150.00',
+          baseRate: 150,
+        } as any,
+      ];
+      component.seasonalRulesRows = [
+        {
+          id: 'season-1',
+          ruleId: 'rule-1',
+          priceId: 'price-1',
+          propertyName: 'Test Property',
+          propertyCity: 'Bogota',
+          propertyId: 'property-1',
+          season: 'Custom Period',
+          description: '',
+          dateRangeStart: null,
+          dateRangeEnd: null,
+          dateRange: 'Jan 1, 26 - Jan 10, 26',
+          helperDateRange: '',
+          guestsMin: 2,
+          guestsMax: 4,
+          modifier: 10,
+          modifierLabel: '+10%',
+          modifierClass: 'portal-hoteles-pricing-badge portal-hoteles-pricing-badge--success',
+          status: 'Active',
+          statusClass: 'portal-hoteles-pricing-status portal-hoteles-pricing-status--active',
+        } as any,
+      ];
 
       // Act
       fixture.detectChanges();
       const element = fixture.nativeElement as HTMLElement;
-      const rowActionButtons = element.querySelectorAll('.portal-hoteles-pricing-table__actions-button');
+      const rowActionButtons = Array.from(
+        element.querySelectorAll('.portal-hoteles-pricing-table__actions-button'),
+      ) as HTMLElement[];
+      const labels = rowActionButtons.map((button) => button.getAttribute('aria-label'));
 
-      // Assert — both room-rate rows (4) and seasonal-rule rows (2) expose row actions.
-      expect(rowActionButtons.length).toBeGreaterThanOrEqual(2);
-      rowActionButtons.forEach((button) => {
-        expect(button.getAttribute('aria-label')).toBe('Edit base price');
-      });
+      // Assert
+      expect(labels.filter((label) => label === 'Edit base price').length).toBe(1);
+      expect(labels.filter((label) => label === 'Edit seasonal rule').length).toBe(1);
+      expect(labels.filter((label) => label === 'Delete seasonal rule').length).toBe(1);
     });
 
     it('shows a polite live-region loading paragraph when isLoading=true (AC-6)', () => {

@@ -150,6 +150,11 @@
   flex-direction: column;
 }
 
+.portal-hoteles-pricing-table__property-name {
+  display: flex;
+  flex-direction: column;
+}
+
 .portal-hoteles-pricing-table__meta {
   display: block;
   margin-top: 2px;
@@ -220,6 +225,10 @@
 .portal-hoteles-pricing-table__actions-button {
   --color: var(--th-neutral-500);
   margin: 0;
+}
+
+.portal-hoteles-pricing-table__actions-button--delete {
+  --color: var(--th-error-600);
 }
 
 /* Date Range Column */
@@ -446,7 +455,7 @@
 
 .portal-hoteles-pricing-table__header--seasonal,
 .portal-hoteles-pricing-table__row--seasonal {
-  grid-template-columns: minmax(200px, 1.4fr) minmax(180px, 1.2fr) minmax(100px, 0.8fr) minmax(72px, 0.5fr) 46px;
+  grid-template-columns: minmax(180px, 1.2fr) minmax(140px, 1fr) minmax(120px, 0.8fr) minmax(100px, 0.8fr) 90px;
 }
 
 /* Pagination Styles */
@@ -545,6 +554,11 @@ ion-input {
   outline: none;
   box-sizing: border-box;
   text-align: left;
+}
+
+.portal-hoteles-pricing-modal__input--select {
+  padding-left: 12px;
+  padding-right: 32px;
 }
 
 .portal-hoteles-pricing-modal__input:focus {
