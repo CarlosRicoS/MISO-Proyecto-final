@@ -187,7 +187,7 @@ namespace PricingEngine.Database
 
 		public async Task<PricingRuleResponse> CreatePricingRule(Guid pricingId, CreatePricingRuleRequest request)
 		{
-			if (request.Percentage < 0 || request.Percentage > 100)
+			if (request.Percentage > 100)
 				throw new ArgumentException("Percentage must be between 0 and 100");
 
 			// Verify that the Pricing exists
@@ -263,7 +263,7 @@ namespace PricingEngine.Database
 
 		public async Task<PricingRuleResponse> UpdatePricingRule(Guid pricingId, Guid ruleId, UpdatePricingRuleRequest request)
 		{
-			if (request.Percentage < 0 || request.Percentage > 100)
+			if (request.Percentage > 100)
 				throw new ArgumentException("Percentage must be between 0 and 100");
 
 			var rule = await context.PricingRules
