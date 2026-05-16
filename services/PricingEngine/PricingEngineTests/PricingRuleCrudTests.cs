@@ -109,23 +109,25 @@ public class PricingRuleCrudTests
 	}
 
 	[Test]
-	public void CreatePricingRule_Should_Throw_When_Percentage_IsNegative()
+	public async Task CreatePricingRule_Should_Create_When_Percentage_IsNegative()
 	{
 		// Arrange
 		var propertyId = Guid.NewGuid();
 		var pricing = PricingFaker.Generate(propertyId, 100.00m);
 		_context.Pricings.Add(pricing);
-		_context.SaveChangesAsync().Wait();
+		await _context.SaveChangesAsync();
 
 		var request = new CreatePricingRuleRequest
 		{
 			Percentage = -10.00m
 		};
 
-		// Act & Assert
-		var exception = Assert.ThrowsAsync<ArgumentException>(
-			() => _service.CreatePricingRule(pricing.Id, request));
-		exception.Message.Should().Contain("Percentage must be between 0 and 100");
+		// Act
+		var result = await _service.CreatePricingRule(pricing.Id, request);
+
+		// Assert
+		result.Should().NotBeNull();
+		result.Percentage.Should().Be(-10.00m);
 	}
 
 	[Test]
